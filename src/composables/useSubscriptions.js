@@ -116,10 +116,12 @@ export function useSubscriptions(initialSubsRef, markDirty) {
         const result = await batchUpdateNodes(subsToUpdate.map(sub => sub.id));
 
         if (result.success) {
-          // 更新本地数据
+          // 优化：使用Map提升查找性能
+          const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
+          
           result.results.forEach(updateResult => {
             if (updateResult.success) {
-              const sub = subscriptions.value.find(s => s.id === updateResult.id);
+              const sub = subsMap.get(updateResult.id);
               if (sub) {
                 if (typeof updateResult.nodeCount === 'number') {
                   sub.nodeCount = updateResult.nodeCount;

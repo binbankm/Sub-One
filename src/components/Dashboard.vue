@@ -142,8 +142,11 @@ const initializeState = () => {
   isLoading.value = true;
   if (props.data) {
     const subsData = props.data.subs || [];
-    initialSubs.value = subsData.filter(item => item.url && /^https?:\/\//.test(item.url));
-    initialNodes.value = subsData.filter(item => !item.url || !/^https?:\/\//.test(item.url));
+    // 优化：预编译正则表达式，提升性能
+    const httpRegex = /^https?:\/\//;
+    
+    initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
+    initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
     
     profiles.value = (props.data.profiles || []).map(p => ({
         ...p,
@@ -203,9 +206,17 @@ const handleDiscard = () => {
 };
 const handleSave = async () => {
   saveState.value = 'saving';
+  
+  // 优化：使用更高效的对象创建方式
   const combinedSubs = [
-      ...subscriptions.value.map(sub => ({ ...sub, isUpdating: undefined })),
-      ...manualNodes.value.map(node => ({ ...node, isUpdating: undefined }))
+      ...subscriptions.value.map(sub => {
+        const { isUpdating, ...rest } = sub;
+        return rest;
+      }),
+      ...manualNodes.value.map(node => {
+        const { isUpdating, ...rest } = node;
+        return rest;
+      })
   ];
 
   try {
@@ -216,29 +227,37 @@ const handleSave = async () => {
 
     const result = await saveSubs(combinedSubs, profiles.value);
 
-            if (result.success) {
-            saveState.value = 'success';
-            showToast('保存成功！', 'success');
-            // 保存成功后自动退出排序模式
-            isSortingSubs.value = false;
-            isSortingNodes.value = false;
-            setTimeout(() => { dirty.value = false; saveState.value = 'idle'; }, 1500);
-        } else {
-        // 显示服务器返回的具体错误信息
-        const errorMessage = result.message || result.error || '保存失败，请稍后重试';
-        throw new Error(errorMessage);
+    if (result.success) {
+      saveState.value = 'success';
+      showToast('保存成功！', 'success');
+      // 保存成功后自动退出排序模式
+      isSortingSubs.value = false;
+      isSortingNodes.value = false;
+      setTimeout(() => { 
+        dirty.value = false; 
+        saveState.value = 'idle'; 
+      }, 1500);
+    } else {
+      // 显示服务器返回的具体错误信息
+      const errorMessage = result.message || result.error || '保存失败，请稍后重试';
+      throw new Error(errorMessage);
     }
   } catch (error) {
     console.error('保存数据时发生错误:', error);
 
-    // 根据错误类型提供不同的用户提示
+    // 优化：使用Map提升查找性能
+    const errorMessageMap = new Map([
+      ['网络', '网络连接异常，请检查网络后重试'],
+      ['格式', '数据格式异常，请刷新页面后重试'],
+      ['存储', '存储服务暂时不可用，请稍后重试']
+    ]);
+    
     let userMessage = error.message;
-    if (error.message.includes('网络')) {
-      userMessage = '网络连接异常，请检查网络后重试';
-    } else if (error.message.includes('格式')) {
-      userMessage = '数据格式异常，请刷新页面后重试';
-    } else if (error.message.includes('存储')) {
-      userMessage = '存储服务暂时不可用，请稍后重试';
+    for (const [key, message] of errorMessageMap) {
+      if (error.message.includes(key)) {
+        userMessage = message;
+        break;
+      }
     }
 
     showToast(userMessage, 'error');
@@ -247,30 +266,40 @@ const handleSave = async () => {
 };
 const handleDeleteSubscriptionWithCleanup = async (subId) => {
   deleteSubscription(subId);
+  // 优化：使用更高效的数组操作
   profiles.value.forEach(p => {
-    p.subscriptions = p.subscriptions.filter(id => id !== subId);
+    const index = p.subscriptions.indexOf(subId);
+    if (index !== -1) {
+      p.subscriptions.splice(index, 1);
+    }
   });
   await handleDirectSave('订阅删除');
 };
 const handleDeleteNodeWithCleanup = async (nodeId) => {
   deleteNode(nodeId);
+  // 优化：使用更高效的数组操作
   profiles.value.forEach(p => {
-    p.manualNodes = p.manualNodes.filter(id => id !== nodeId);
+    const index = p.manualNodes.indexOf(nodeId);
+    if (index !== -1) {
+      p.manualNodes.splice(index, 1);
+    }
   });
   await handleDirectSave('节点删除');
 };
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
   deleteAllSubscriptions();
+  // 优化：直接清空数组，避免forEach
   profiles.value.forEach(p => {
-    p.subscriptions = [];
+    p.subscriptions.length = 0;
   });
   await handleDirectSave('订阅清空');
   showDeleteSubsModal.value = false;
 };
 const handleDeleteAllNodesWithCleanup = async () => {
   deleteAllNodes();
+  // 优化：直接清空数组，避免forEach
   profiles.value.forEach(p => {
-    p.manualNodes = [];
+    p.manualNodes.length = 0;
   });
   await handleDirectSave('节点清空');
   showDeleteNodesModal.value = false;
@@ -281,18 +310,35 @@ const handleAutoSortNodes = async () => {
 };
 const handleBulkImport = async (importText) => {
   if (!importText) return;
+  
+  // 优化：使用更高效的字符串处理
   const lines = importText.split('\n').map(line => line.trim()).filter(Boolean);
-  const newSubs = [], newNodes = [];
+  const newSubs = [];
+  const newNodes = [];
+  
+  // 预编译正则表达式，提升性能
+  const httpRegex = /^https?:\/\//;
+  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+  
   for (const line of lines) {
-      const newItem = { id: crypto.randomUUID(), name: extractNodeName(line) || '未命名', url: line, enabled: true, status: 'unchecked' };
-      if (/^https?:\/\//.test(line)) {
+      const newItem = { 
+          id: crypto.randomUUID(), 
+          name: extractNodeName(line) || '未命名', 
+          url: line, 
+          enabled: true, 
+          status: 'unchecked' 
+      };
+      
+      if (httpRegex.test(line)) {
           newSubs.push(newItem);
-      } else if (/^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//.test(line)) {
+      } else if (nodeRegex.test(line)) {
           newNodes.push(newItem);
       }
   }
+  
   if (newSubs.length > 0) addSubscriptionsFromBulk(newSubs);
   if (newNodes.length > 0) addNodesFromBulk(newNodes);
+  
   await handleDirectSave('批量导入');
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
 };
@@ -310,14 +356,24 @@ const handleEditSubscription = (subId) => {
   }
 };
 const handleSaveSubscription = async () => {
-  if (!editingSubscription.value || !editingSubscription.value.url) { showToast('订阅链接不能为空', 'error'); return; }
-  if (!/^https?:\/\//.test(editingSubscription.value.url)) { showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error'); return; }
+  if (!editingSubscription.value?.url) { 
+    showToast('订阅链接不能为空', 'error'); 
+    return; 
+  }
+  
+  // 预编译正则表达式，提升性能
+  const httpRegex = /^https?:\/\//;
+  if (!httpRegex.test(editingSubscription.value.url)) { 
+    showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error'); 
+    return; 
+  }
   
   if (isNewSubscription.value) {
     addSubscription({ ...editingSubscription.value, id: crypto.randomUUID() });
   } else {
     updateSubscription(editingSubscription.value);
   }
+  
   await handleDirectSave('订阅');
   showSubModal.value = false;
 };
@@ -342,12 +398,17 @@ const handleNodeUrlInput = (event) => {
   }
 };
 const handleSaveNode = async () => {
-    if (!editingNode.value || !editingNode.value.url) { showToast('节点链接不能为空', 'error'); return; }
+    if (!editingNode.value?.url) { 
+        showToast('节点链接不能为空', 'error'); 
+        return; 
+    }
+    
     if (isNewNode.value) {
         addNode(editingNode.value);
     } else {
         updateNode(editingNode.value);
     }
+    
     await handleDirectSave('节点');
     showNodeModal.value = false;
 };
@@ -373,9 +434,16 @@ const handleEditProfile = (profileId) => {
     }
 };
 const handleSaveProfile = async (profileData) => {
-    if (!profileData || !profileData.name) { showToast('订阅组名称不能为空', 'error'); return; }
+    if (!profileData?.name) { 
+        showToast('订阅组名称不能为空', 'error'); 
+        return; 
+    }
+    
     if (profileData.customId) {
-        profileData.customId = profileData.customId.replace(/[^a-zA-Z0-9-_]/g, '');
+        // 预编译正则表达式，提升性能
+        const customIdRegex = /[^a-zA-Z0-9-_]/g;
+        profileData.customId = profileData.customId.replace(customIdRegex, '');
+        
         if (profileData.customId && profiles.value.some(p => p.id !== profileData.id && p.customId === profileData.customId)) {
             showToast(`自定义 ID "${profileData.customId}" 已存在`, 'error');
             return;
@@ -475,11 +543,13 @@ const handleUpdateAllSubscriptions = async () => {
         const result = await batchUpdateNodes(subscriptionIds);
         
         if (result.success) {
-            // 更新本地订阅数据以同步节点数和用户信息
+            // 优化：使用Map提升查找性能
             if (result.results && Array.isArray(result.results)) {
+                const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
+                
                 result.results.forEach(updateResult => {
                     if (updateResult.success) {
-                        const sub = subscriptions.value.find(s => s.id === updateResult.id);
+                        const sub = subsMap.get(updateResult.id);
                         if (sub) {
                             if (typeof updateResult.nodeCount === 'number') {
                                 sub.nodeCount = updateResult.nodeCount;
@@ -516,10 +586,7 @@ const handleSubscriptionDragEnd = async (evt) => {
         showToast('保存排序失败', 'error');
     }
     
-    console.log('拖拽排序完成:', {
-        newOrder: subscriptions.value.map(s => s.name),
-        totalSubscriptions: subscriptions.value.length
-    });
+    // 拖拽排序完成
 };
 
 const handleNodeDragEnd = async (evt) => {
@@ -532,10 +599,7 @@ const handleNodeDragEnd = async (evt) => {
         showToast('保存排序失败', 'error');
     }
     
-    console.log('拖拽排序完成:', {
-        newOrder: manualNodes.value.map(n => n.name),
-        totalNodes: manualNodes.value.length
-    });
+    // 拖拽排序完成
 };
 
 </script>
@@ -762,67 +826,65 @@ const handleNodeDragEnd = async (evt) => {
             </div>
             <span class="px-3 py-1 text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-xl shadow-sm">{{ manualNodes.length }}</span>
           </div>
-                      <div class="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
-              <!-- 搜索框 -->
-              <div class="relative w-full sm:w-48 flex-shrink-0">
-                <input 
-                  type="text" 
-                  v-model="searchTerm"
-                  placeholder="搜索节点..."
-                  class="search-input-unified w-full text-sm"
-                />
-                <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              
-              <!-- 按钮组 -->
-              <div class="flex flex-wrap items-center gap-2">
-                <!-- 视图切换 -->
-                <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center flex-shrink-0">
-                    <button @click="setViewMode('card')" class="p-2 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                    </button>
-                    <button @click="setViewMode('list')" class="p-2 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
-                    </button>
-                </div>
-
-                <!-- 主要操作按钮 -->
-                <div class="flex items-center gap-2 flex-shrink-0">
-                  <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-sm font-semibold px-6 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
-                  
-                  <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-sm font-semibold px-6 py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
-                  
-                  <button 
-                    @click="isSortingNodes = !isSortingNodes" 
-                    :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-6 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-6 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                    </svg>
-                    <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
-                    <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
-                  </button>
-                </div>
-                
-                <!-- 更多菜单 -->
-                <div class="relative" ref="nodesMoreMenuRef">
-                  <button @click="showNodesMoreMenu = !showNodesMoreMenu" class="p-3 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
-                  </button>
-                   <Transition name="slide-fade-sm">
-                    <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
-                      <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">导入订阅</button>
-                      <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键排序</button>
-                      <button @click="handleDeduplicateNodes" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键去重</button>
-                      <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                      <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">清空所有</button>
-                    </div>
-                  </Transition>
-                </div>
-              </div>
+          
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
+            <!-- 搜索框 -->
+            <div class="relative w-full sm:w-48 flex-shrink-0">
+              <input 
+                type="text" 
+                v-model="searchTerm"
+                placeholder="搜索节点..."
+                class="search-input-unified w-full text-sm"
+              />
+              <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
+            
+            <!-- 视图切换 -->
+            <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center flex-shrink-0">
+                <button @click="setViewMode('card')" class="p-2 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                </button>
+                <button @click="setViewMode('list')" class="p-2 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+
+            <!-- 主要操作按钮 -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-sm font-semibold px-6 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
+              
+              <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-sm font-semibold px-6 py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
+              
+              <button 
+                @click="isSortingNodes = !isSortingNodes" 
+                :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-6 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-6 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                </svg>
+                <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
+                <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
+              </button>
+            </div>
+            
+            <!-- 更多菜单 -->
+            <div class="relative" ref="nodesMoreMenuRef">
+              <button @click="showNodesMoreMenu = !showNodesMoreMenu" class="p-3 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+              </button>
+               <Transition name="slide-fade-sm">
+                <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
+                  <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">导入订阅</button>
+                  <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键排序</button>
+                  <button @click="handleDeduplicateNodes" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键去重</button>
+                  <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                  <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">清空所有</button>
+                </div>
+              </Transition>
+            </div>
+          </div>
         </div>
         
         <!-- 节点内容区域 -->

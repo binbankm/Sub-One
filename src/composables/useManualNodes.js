@@ -213,19 +213,62 @@ export function useManualNodes(initialNodesRef, markDirty) {
   }
 
   function autoSortNodes() {
-    const regionKeywords = { HK: [/香港/,/HK/,/Hong Kong/i], TW: [/台湾/,/TW/,/Taiwan/i], SG: [/新加坡/,/SG/,/狮城/,/Singapore/i], JP: [/日本/,/JP/,/Japan/i], US: [/美国/,/US/,/United States/i], KR: [/韩国/,/KR/,/Korea/i], GB: [/英国/,/GB/,/UK/,/United Kingdom/i], DE: [/德国/,/DE/,/Germany/i], FR: [/法国/,/FR/,/France/i], CA: [/加拿大/,/CA/,/Canada/i], AU: [/澳大利亚/,/AU/,/Australia/i], };
+    // 预定义区域关键词和排序顺序，提升性能
+    const regionKeywords = {
+      HK: [/香港/, /HK/, /Hong Kong/i],
+      TW: [/台湾/, /TW/, /Taiwan/i],
+      SG: [/新加坡/, /SG/, /狮城/, /Singapore/i],
+      JP: [/日本/, /JP/, /Japan/i],
+      US: [/美国/, /US/, /United States/i],
+      KR: [/韩国/, /KR/, /Korea/i],
+      GB: [/英国/, /GB/, /UK/, /United Kingdom/i],
+      DE: [/德国/, /DE/, /Germany/i],
+      FR: [/法国/, /FR/, /France/i],
+      CA: [/加拿大/, /CA/, /Canada/i],
+      AU: [/澳大利亚/, /AU/, /Australia/i]
+    };
+    
     const regionOrder = ['HK', 'TW', 'SG', 'JP', 'US', 'KR', 'GB', 'DE', 'FR', 'CA', 'AU'];
-    const getRegionCode = (name) => { for (const code in regionKeywords) { for (const keyword of regionKeywords[code]) { if (keyword.test(name)) return code; } } return 'ZZ'; };
+    
+    // 优化：缓存区域代码，避免重复计算
+    const regionCodeCache = new Map();
+    const getRegionCode = (name) => {
+      if (regionCodeCache.has(name)) {
+        return regionCodeCache.get(name);
+      }
+      
+      // 优化：使用更高效的循环结构
+      const entries = Object.entries(regionKeywords);
+      for (let i = 0; i < entries.length; i++) {
+        const [code, keywords] = entries[i];
+        const keywordsLength = keywords.length;
+        for (let j = 0; j < keywordsLength; j++) {
+          if (keywords[j].test(name)) {
+            regionCodeCache.set(name, code);
+            return code;
+          }
+        }
+      }
+      
+      regionCodeCache.set(name, 'ZZ');
+      return 'ZZ';
+    };
     
     manualNodes.value.sort((a, b) => {
-        const regionA = getRegionCode(a.name);
-        const regionB = getRegionCode(b.name);
-        const indexA = regionOrder.indexOf(regionA);
-        const indexB = regionOrder.indexOf(regionB);
-        const effectiveIndexA = indexA === -1 ? Infinity : indexA;
-        const effectiveIndexB = indexB === -1 ? Infinity : indexB;
-        if (effectiveIndexA !== effectiveIndexB) return effectiveIndexA - effectiveIndexB;
-        return a.name.localeCompare(b.name, 'zh-CN');
+      const regionA = getRegionCode(a.name);
+      const regionB = getRegionCode(b.name);
+      
+      const indexA = regionOrder.indexOf(regionA);
+      const indexB = regionOrder.indexOf(regionB);
+      
+      const effectiveIndexA = indexA === -1 ? Infinity : indexA;
+      const effectiveIndexB = indexB === -1 ? Infinity : indexB;
+      
+      if (effectiveIndexA !== effectiveIndexB) {
+        return effectiveIndexA - effectiveIndexB;
+      }
+      
+      return a.name.localeCompare(b.name, 'zh-CN');
     });
   }
 

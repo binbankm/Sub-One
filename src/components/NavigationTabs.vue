@@ -106,30 +106,32 @@ const switchTab = (tabId) => {
           :key="module.id"
           @click="switchTab(module.id)"
           :class="[
-            'bg-white/60 dark:bg-gray-800/75 rounded-2xl p-6 border shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer',
+            'bg-white/70 dark:bg-gray-800/80 rounded-3xl p-6 border shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer backdrop-blur-xl',
             activeTab === module.id 
-              ? `${module.activeBorderColor} ${module.activeShadowColor} scale-105` 
-              : 'border-gray-300/50 dark:border-gray-700/30 hover:bg-white/70 dark:hover:bg-gray-800/85 hover:scale-105'
+              ? `${module.activeBorderColor} ${module.activeShadowColor} scale-105 shadow-glow` 
+              : 'border-gray-300/60 dark:border-gray-700/40 hover:bg-white/80 dark:hover:bg-gray-800/90 hover:scale-105 hover:shadow-2xl'
           ]"
         >
           <div class="flex items-center gap-4">
-            <div :class="['w-12 h-12 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-lg', module.color]">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                :class="['h-6 w-6 transition-colors duration-300', activeTab === module.id ? module.activeIconColor : 'text-gray-700 dark:text-white']" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-                stroke-width="2"
-              >
+            <div :class="['w-14 h-14 bg-gradient-to-br rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden', module.color]">
+              <!-- 光效装饰 -->
+              <div class="absolute inset-0 bg-white/20 rounded-3xl"></div>
+                              <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  :class="['h-7 w-7 transition-colors duration-500 drop-shadow-lg', activeTab === module.id ? module.activeIconColor : 'text-gray-700 dark:text-white']" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                 <path stroke-linecap="round" stroke-linejoin="round" :d="module.icon" />
               </svg>
             </div>
             <div>
-              <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ module.name }}</p>
-              <div class="flex items-center gap-2">
-                <div :class="['w-3 h-3 rounded-full', module.dotColor]"></div>
-                <span class="text-2xl font-bold text-gray-800 dark:text-white">{{ module.count }}</span>
+              <p class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2 drop-shadow-sm">{{ module.name }}</p>
+              <div class="flex items-center gap-3">
+                <div :class="['w-4 h-4 rounded-full shadow-lg', module.dotColor]"></div>
+                <span class="text-3xl font-black text-gray-900 dark:text-white drop-shadow-lg">{{ module.count }}</span>
               </div>
             </div>
           </div>
@@ -141,170 +143,11 @@ const switchTab = (tabId) => {
 
 <style scoped>
 .navigation-tabs-container {
-  /* 移除sticky定位，让组件正常流动 */
   position: relative;
   z-index: 20;
 }
 
-/* 深色主题优化 */
-.bg-gray-800 {
-  background-color: rgb(31, 41, 55);
-}
-
-.bg-gray-700 {
-  background-color: rgb(55, 65, 81);
-}
-
-.bg-gray-700\/80 {
-  background-color: rgba(55, 65, 81, 0.8);
-}
-
-.bg-gray-700\/90 {
-  background-color: rgba(55, 65, 81, 0.9);
-}
-
-.border-gray-700 {
-  border-color: rgb(55, 65, 81);
-}
-
-.border-gray-600\/50 {
-  border-color: rgba(75, 85, 99, 0.5);
-}
-
-.text-gray-300 {
-  color: rgb(209, 213, 219);
-}
-
-.text-gray-400 {
-  color: rgb(156, 163, 175);
-}
-
-.text-white {
-  color: rgb(255, 255, 255);
-}
-
-.ring-blue-500\/50 {
-  --tw-ring-color: rgba(59, 130, 246, 0.5);
-}
-
-/* 渐变背景 */
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
-}
-
-.from-blue-500 {
-  --tw-gradient-from: #3b82f6;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59, 130, 246, 0));
-}
-
-.to-indigo-600 {
-  --tw-gradient-to: #4f46e5;
-}
-
-.from-purple-500 {
-  --tw-gradient-from: #a855f7;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(168, 85, 247, 0));
-}
-
-.to-pink-600 {
-  --tw-gradient-to: #db2777;
-}
-
-.from-orange-500 {
-  --tw-gradient-from: #f97316;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(249, 115, 22, 0));
-}
-
-.to-red-600 {
-  --tw-gradient-to: #dc2626;
-}
-
-.from-green-500 {
-  --tw-gradient-from: #22c55e;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(34, 197, 94, 0));
-}
-
-.to-emerald-600 {
-  --tw-gradient-to: #059669;
-}
-
-/* 状态指示点颜色 */
-.bg-blue-500 {
-  background-color: rgb(59, 130, 246);
-}
-
-.bg-green-500 {
-  background-color: rgb(34, 197, 94);
-}
-
-.bg-red-500 {
-  background-color: rgb(239, 68, 68);
-}
-
-.bg-purple-500 {
-  background-color: rgb(168, 85, 247);
-}
-
-/* 悬停和激活状态 */
-.hover\:scale-105:hover {
-  transform: scale(1.05);
-}
-
-.hover\:bg-gray-700\/90:hover {
-  background-color: rgba(55, 65, 81, 0.9);
-}
-
-/* 响应式设计 */
-@media (max-width: 640px) {
-  .grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 640px) and (max-width: 1024px) {
-  .sm\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .lg\:grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-/* 半透明深色背景效果 */
-.bg-gray-900\/70 {
-  background-color: rgba(17, 24, 39, 0.7);
-}
-
-.bg-gray-800\/75 {
-  background-color: rgba(31, 41, 55, 0.75);
-}
-
-.bg-gray-800\/80 {
-  background-color: rgba(31, 41, 55, 0.8);
-}
-
-/* 边框样式 */
-.border-gray-700\/30 {
-  border-color: rgba(55, 65, 81, 0.3);
-}
-
-/* 阴影效果 */
-.shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.shadow-xl {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.hover\:shadow-xl:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* 激活状态样式 */
+/* 激活状态边框样式 */
 .border-blue-400 {
   border-color: rgb(96, 165, 250);
   border-width: 2px;
@@ -325,21 +168,21 @@ const switchTab = (tabId) => {
   border-width: 2px;
 }
 
-/* 激活状态阴影 */
+/* 激活状态阴影效果 - 美化升级版 */
 .shadow-blue-500\/20 {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.15), 0 8px 32px rgba(59, 130, 246, 0.1);
 }
 
 .shadow-purple-500\/20 {
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2), 0 0 40px rgba(168, 85, 247, 0.1);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.3), 0 0 60px rgba(168, 85, 247, 0.15), 0 8px 32px rgba(168, 85, 247, 0.1);
 }
 
 .shadow-orange-500\/20 {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), 0 0 40px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.3), 0 0 60px rgba(249, 115, 22, 0.15), 0 8px 32px rgba(249, 115, 22, 0.1);
 }
 
 .shadow-green-500\/20 {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2), 0 0 40px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.15), 0 8px 32px rgba(34, 197, 94, 0.1);
 }
 
 /* 激活状态文字颜色 */

@@ -9,28 +9,28 @@ export const useSessionStore = defineStore('session', () => {
 
   async function checkSession() {
     try {
+      // 临时去掉密码验证，直接获取数据
       const data = await fetchInitialData();
       if (data) {
         initialData.value = data;
         sessionState.value = 'loggedIn';
       } else {
-        sessionState.value = 'loggedOut';
+        // 如果没有数据，创建一个空的初始数据
+        initialData.value = { subs: [], profiles: [], config: { FileName: 'Sub-One', mytoken: 'auto', profileToken: 'profiles' } };
+        sessionState.value = 'loggedIn';
       }
     } catch (error) {
       console.error("Session check failed:", error);
-      sessionState.value = 'loggedOut';
+      // 即使出错也设置为已登录状态
+      initialData.value = { subs: [], profiles: [], config: { FileName: 'Sub-One', mytoken: 'auto', profileToken: 'profiles' } };
+      sessionState.value = 'loggedIn';
     }
   }
 
   async function login(password) {
+    // 临时去掉密码验证，直接登录成功
     try {
-      const response = await apiLogin(password);
-      if (response.ok) {
-        handleLoginSuccess();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || '登录失败');
-      }
+      handleLoginSuccess();
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

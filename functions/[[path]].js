@@ -779,46 +779,7 @@ async function handleApiRequest(request, env) {
 
 
 
-        case '/wallpaper': {
-            if (request.method === 'GET') {
-                try {
-                    const wallpaperData = await env.SUB_ONE_KV.get('sub_one_wallpaper_v1', 'json') || null;
-                    return new Response(JSON.stringify({ success: true, data: wallpaperData }), { headers: { 'Content-Type': 'application/json' } });
-                } catch (e) {
-                    console.error('[API Error /wallpaper GET]', 'Failed to read wallpaper from KV:', e);
-                    return new Response(JSON.stringify({ error: '读取壁纸设置失败' }), { status: 500 });
-                }
-            }
-            if (request.method === 'POST') {
-                try {
-                    const wallpaperData = await request.json();
-                    
-                    // 验证壁纸数据格式
-                    if (!wallpaperData || typeof wallpaperData !== 'object') {
-                        return new Response(JSON.stringify({ error: '壁纸数据格式错误' }), { status: 400 });
-                    }
-                    
-                    // 保存壁纸数据到KV存储
-                    await env.SUB_ONE_KV.put('sub_one_wallpaper_v1', JSON.stringify(wallpaperData));
-                    
-                    return new Response(JSON.stringify({ success: true, message: '壁纸设置已保存' }));
-                } catch (e) {
-                    console.error('[API Error /wallpaper POST]', 'Failed to save wallpaper to KV:', e);
-                    return new Response(JSON.stringify({ error: '保存壁纸设置失败' }), { status: 500 });
-                }
-            }
-            if (request.method === 'DELETE') {
-                try {
-                    // 删除壁纸数据
-                    await env.SUB_ONE_KV.delete('sub_one_wallpaper_v1');
-                    return new Response(JSON.stringify({ success: true, message: '壁纸设置已删除' }));
-                } catch (e) {
-                    console.error('[API Error /wallpaper DELETE]', 'Failed to delete wallpaper from KV:', e);
-                    return new Response(JSON.stringify({ error: '删除壁纸设置失败' }), { status: 500 });
-                }
-            }
-            return new Response('Method Not Allowed', { status: 405 });
-        }
+
 
         case '/settings': {
             if (request.method === 'GET') {

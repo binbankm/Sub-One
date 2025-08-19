@@ -3,59 +3,84 @@
 //
 export function extractNodeName(url) {
     if (!url) return '';
-    url = url.trim();
+    
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return '';
+    
     try {
-        const hashIndex = url.indexOf('#');
-        if (hashIndex !== -1 && hashIndex < url.length - 1) {
-            return decodeURIComponent(url.substring(hashIndex + 1)).trim();
+        // 优先检查URL片段（#后面的内容）
+        const hashIndex = trimmedUrl.indexOf('#');
+        if (hashIndex !== -1 && hashIndex < trimmedUrl.length - 1) {
+            return decodeURIComponent(trimmedUrl.substring(hashIndex + 1)).trim();
         }
-        const protocolIndex = url.indexOf('://');
+        
+        // 检查协议
+        const protocolIndex = trimmedUrl.indexOf('://');
         if (protocolIndex === -1) return '';
-        const protocol = url.substring(0, protocolIndex);
-        const mainPart = url.substring(protocolIndex + 3).split('#')[0];
+        
+        const protocol = trimmedUrl.substring(0, protocolIndex);
+        const mainPart = trimmedUrl.substring(protocolIndex + 3).split('#')[0];
+        
         switch (protocol) {
             case 'vmess': {
-                // 修正：使用现代方法正确解码包含UTF-8字符的Base64
-                let padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
-                let ps = '';
                 try {
-                    // 1. 使用 atob 将 Base64 解码为二进制字符串
+                    // 优化Base64解码：使用更高效的方法
+                    const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
                     const binaryString = atob(padded);
                     
-                    // 2. 将二进制字符串转换为 Uint8Array 字节数组
+                    // 优化：使用更高效的字节转换方法
                     const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
+                    // 使用 Uint8Array.from 和 Array.from 的组合，提升性能
+                    const charCodes = Array.from(binaryString, char => char.charCodeAt(0));
+                    bytes.set(charCodes);
                     
-                    // 3. 使用 TextDecoder 将字节解码为正确的 UTF-8 字符串
                     const jsonString = new TextDecoder('utf-8').decode(bytes);
-                    
-                    // 4. 解析 JSON
                     const node = JSON.parse(jsonString);
-                    
-                    // 5. 直接获取节点名称，此时已是正确解码的字符串，无需再次处理
-                    ps = node.ps || '';
+                    return node.ps || '';
                 } catch (e) {
-                    // 如果解码失败，可以保留一个回退逻辑，或者直接返回空字符串
                     console.error("Failed to decode vmess link:", e);
+                    return '';
                 }
-                return ps;
             }
+            
             case 'trojan':
-            case 'vless': return mainPart.substring(mainPart.indexOf('@') + 1).split(':')[0] || '';
-            case 'ss':
-                const atIndexSS = mainPart.indexOf('@');
-                if (atIndexSS !== -1) return mainPart.substring(atIndexSS + 1).split(':')[0] || '';
-                const decodedSS = atob(mainPart);
-                const ssDecodedAtIndex = decodedSS.indexOf('@');
-                if (ssDecodedAtIndex !== -1) return decodedSS.substring(ssDecodedAtIndex + 1).split(':')[0] || '';
+            case 'vless': {
+                const atIndex = mainPart.indexOf('@');
+                if (atIndex === -1) return '';
+                return mainPart.substring(atIndex + 1).split(':')[0] || '';
+            }
+            
+            case 'ss': {
+                const atIndex = mainPart.indexOf('@');
+                if (atIndex !== -1) {
+                    return mainPart.substring(atIndex + 1).split(':')[0] || '';
+                }
+                
+                try {
+                    const decodedSS = atob(mainPart);
+                    const ssDecodedAtIndex = decodedSS.indexOf('@');
+                    if (ssDecodedAtIndex !== -1) {
+                        return decodedSS.substring(ssDecodedAtIndex + 1).split(':')[0] || '';
+                    }
+                } catch (e) {
+                    // Base64解码失败，静默处理
+                }
                 return '';
+            }
+            
             default:
-                if(url.startsWith('http')) return new URL(url).hostname;
+                if (trimmedUrl.startsWith('http')) {
+                    try {
+                        return new URL(trimmedUrl).hostname;
+                    } catch (e) {
+                        return '';
+                    }
+                }
                 return '';
         }
-    } catch (e) { return url.substring(0, 50); }
+    } catch (e) { 
+        return trimmedUrl.substring(0, 50); 
+    }
 }
 
 
@@ -66,11 +91,11 @@ export function extractNodeName(url) {
  * @returns {string} - 添加了前缀的新链接
  */
 export function prependNodeName(link, prefix) {
-  if (!prefix) return link; // 如果没有前缀，直接返回原链接
+  if (!prefix || !link) return link;
 
   const hashIndex = link.lastIndexOf('#');
   
-  // 如果链接没有 #fragment
+  // 如果链接没有 #fragment，直接添加前缀
   if (hashIndex === -1) {
     return `${link}#${encodeURIComponent(prefix)}`;
   }
