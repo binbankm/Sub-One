@@ -132,12 +132,6 @@ const expiryInfo = computed(() => {
     :class="{ 'opacity-50': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
     @mousedown="handleMouseDown"
   >
-    <!-- 装饰性背景 -->
-    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full -translate-y-16 translate-x-16 animate-float"></div>
-    
-    <!-- 顶部装饰线 -->
-    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-60"></div>
-    
     <div class="relative z-10 flex-1 flex flex-col">
       <!-- 头部区域 -->
       <div class="flex items-start justify-between gap-3 mb-4 sm:mb-6">
