@@ -1,0 +1,931 @@
+/* 现代化类似OpenResty Manager的样式 */
+
+/* 
+ * Tailwind CSS 指令 - 这些指令会被Tailwind CSS处理器处理
+ * @tailwind base - 包含Tailwind的基础样式重置
+ * @tailwind components - 包含Tailwind的组件类
+ * @tailwind utilities - 包含Tailwind的工具类
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 确保根元素充满整个视口高度 */
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background 0.3s ease;
+  /* 移动端优化 */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* 防止移动端滚动时的缩放 */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 暗黑模式下的背景色 */
+html.dark, html.dark body, html.dark #app {
+  background: #111827;
+}
+
+/* 移动端壁纸显示优化 - 全局样式 */
+* {
+  /* 防止移动端滚动时的意外变换 */
+  box-sizing: border-box;
+}
+
+/* 移动端滚动优化 */
+@media (max-width: 768px) {
+  html, body {
+    /* 移动端滚动优化 */
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    /* 防止移动端滚动时的缩放 */
+    touch-action: manipulation;
+    /* 优化移动端性能 */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* 移动端壁纸容器优化 */
+  .wallpaper-container {
+    /* 确保在移动端完全覆盖 */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    /* 防止移动端滚动时的位置偏移 */
+    transform: none !important;
+    -webkit-transform: none !important;
+    /* 优化移动端性能 */
+    will-change: auto !important;
+    /* 防止移动端滚动时的变形 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* 移动端壁纸图片优化 */
+  .wallpaper-image {
+    /* 移动端图片尺寸优化 */
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    /* 防止移动端滚动时的变形 */
+    transform: none !important;
+    -webkit-transform: none !important;
+    /* 优化移动端性能 */
+    will-change: auto !important;
+    /* 防止移动端滚动时的缩放 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* 优化移动端图片渲染 */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  /* 移动端遮罩层优化 */
+  .wallpaper-overlay {
+    /* 移动端遮罩层尺寸优化 */
+    width: 100vw !important;
+    height: 100vh !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    /* 防止移动端滚动时的变形 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+/* 全局字体渲染优化 */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+/* 暗黑模式下的滚动条 */
+.dark ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 100%);
+}
+
+/* 现代化按钮样式 */
+.btn-modern {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-modern:hover {
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-modern:active {
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+/* 暗黑模式下的按钮 */
+.dark .btn-modern {
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
+
+.dark .btn-modern:hover {
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.6);
+}
+
+.dark .btn-modern:active {
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
+}
+
+/* 现代化卡片样式 */
+.card-modern {
+  @apply rounded-2xl p-6 transition-all duration-300;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .card-modern {
+  background: rgba(30, 41, 59, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.card-modern:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.dark .card-modern:hover {
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* 玻璃态效果 - 移除毛玻璃 */
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 暗黑模式下的玻璃态效果 - 移除毛玻璃 */
+.dark .glass {
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 主题切换动画 */
+.theme-transition {
+  transition: all 0.3s ease;
+}
+
+/* 暗黑模式下的文字颜色 */
+.dark {
+  color: #e2e8f0;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #f1f5f9;
+}
+
+.dark .text-gray-800 {
+  color: #e2e8f0;
+}
+
+.dark .text-gray-600 {
+  color: #cbd5e1;
+}
+
+.dark .text-gray-500 {
+  color: #94a3b8;
+}
+
+.dark .text-gray-400 {
+  color: #64748b;
+}
+
+/* 暗黑模式下的背景装饰 */
+.dark .bg-gradient-enhanced {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.dark .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.dark .bg-white\/30 {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark .border-white\/30 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 暗黑模式下的悬停效果 */
+.dark .hover\:bg-white\/30:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark .hover\:text-gray-800:hover {
+  color: #f1f5f9;
+}
+
+/* 现代化输入框样式 */
+.input-modern {
+  @apply px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all duration-300;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .input-modern {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.input-modern:focus {
+  @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 现代化导航栏 */
+.nav-modern {
+  background: transparent;
+  backdrop-filter: blur(20px);
+}
+
+.dark .nav-modern {
+  background: transparent;
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
+}
+
+/* 按钮悬停效果 */
+button {
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* 状态指示器 */
+.status-indicator {
+  @apply w-3 h-3 rounded-full;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.offline {
+  @apply bg-red-500;
+}
+
+.status-indicator.warning {
+  @apply bg-yellow-500;
+}
+
+/* 加载动画 */
+.loading-spinner {
+  @apply border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .card-modern {
+    @apply p-4;
+  }
+  
+  .btn-modern {
+    @apply px-4 py-2;
+  }
+}
+
+/* 新增的布局优化样式 */
+
+/* 优化的容器布局 */
+.container-optimized {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* 响应式网格系统 */
+.grid-responsive {
+  @apply grid gap-4 sm:gap-6 lg:gap-8;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* 优化的卡片悬停效果 */
+.card-hover-optimized {
+  @apply transition-all duration-300 ease-out;
+  transform: translateZ(0);
+}
+
+.card-hover-optimized:hover {
+  transform: translateY(-8px) translateZ(0);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 现代化的分割线 */
+.divider-modern {
+  @apply border-t border-gray-200 dark:border-gray-700;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+}
+
+/* 优化的按钮组 */
+.button-group-optimized {
+  @apply flex flex-wrap items-center gap-2 sm:gap-3;
+}
+
+/* 响应式文本大小 */
+.text-responsive {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+/* 优化的间距系统 */
+.space-optimized {
+  @apply space-y-4 sm:space-y-6 lg:space-y-8;
+}
+
+/* 现代化的阴影系统 */
+.shadow-modern {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-modern-dark {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* 优化的背景色 */
+.bg-gradient-optimized {
+  background: #ffffff;
+}
+
+.dark .bg-gradient-optimized {
+  background: #111827;
+}
+
+/* 现代化的边框半径 */
+.rounded-modern {
+  @apply rounded-2xl;
+}
+
+/* 优化的过渡效果 */
+.transition-optimized {
+  @apply transition-all duration-300 ease-out;
+}
+
+/* 响应式隐藏/显示 */
+.hidden-responsive {
+  @apply hidden sm:block;
+}
+
+.visible-responsive {
+  @apply block sm:hidden;
+}
+
+/* 优化的焦点状态 */
+.focus-optimized:focus {
+  @apply outline-none ring-2 ring-indigo-500 ring-offset-2;
+}
+
+/* 现代化的加载状态 */
+.loading-modern {
+  @apply relative overflow-hidden;
+}
+
+.loading-modern::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 新增的美化样式 */
+
+/* 更现代的卡片设计 */
+.card-modern-enhanced {
+  @apply rounded-3xl p-6 lg:p-8 transition-all duration-500 ease-out;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-modern-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+}
+
+.dark .card-modern-enhanced {
+  background: rgba(31, 41, 55, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.card-modern-enhanced:hover {
+  transform: translateY(-8px) scale(1.02);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.dark .card-modern-enhanced:hover {
+  background: rgba(31, 41, 55, 0.85);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+/* 优化的按钮设计 */
+.btn-modern-enhanced {
+  @apply px-4 py-2 rounded-xl font-semibold transition-all duration-300 ease-out;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(102, 126, 234, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 新增按钮特殊样式 */
+.btn-add {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+  box-shadow: 
+    0 6px 20px rgba(6, 182, 212, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-add:hover {
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(6, 182, 212, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 一键更新按钮特殊样式 */
+.btn-update {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 
+    0 6px 20px rgba(245, 158, 11, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-update:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(245, 158, 11, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 批量导入按钮特殊样式 */
+.btn-import {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  box-shadow: 
+    0 6px 20px rgba(139, 92, 246, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-import:hover {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(139, 92, 246, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 手动排序按钮特殊样式 */
+.btn-sort {
+  background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
+  box-shadow: 
+    0 6px 20px rgba(236, 72, 153, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+}
+
+.btn-sort:hover {
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(236, 72, 153, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 排序中状态的按钮样式 */
+.btn-sort.sorting {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+  box-shadow: 
+    0 8px 25px rgba(107, 114, 128, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn-sort.sorting:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+  box-shadow: 
+    0 12px 35px rgba(107, 114, 128, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-modern-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-modern-enhanced:hover::before {
+  left: 100%;
+}
+
+.btn-modern-enhanced:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(102, 126, 234, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+/* 现代化的输入框 */
+.input-modern-enhanced {
+  @apply px-4 py-3 rounded-2xl border border-indigo-500/50 dark:border-indigo-400/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all duration-300;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.input-modern-enhanced:focus {
+  @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+  box-shadow: 
+    0 4px 16px rgba(99, 102, 241, 0.15),
+    0 0 0 1px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+/* 统一的搜索框样式 */
+.search-input-unified {
+  @apply py-3 rounded-2xl border border-indigo-500/50 dark:border-indigo-400/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-all duration-300;
+  padding-left: 3.5rem; /* 增加左内边距，避免与搜索图标重合 */
+  padding-right: 1rem;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.search-input-unified:focus {
+  @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
+  box-shadow: 
+    0 4px 16px rgba(99, 102, 241, 0.15),
+    0 0 0 1px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.search-input-unified::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.dark .search-input-unified::placeholder {
+  color: #6b7280;
+}
+
+/* 优化的渐变文字 */
+.gradient-text-enhanced {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 现代化的导航栏 */
+.nav-modern-enhanced {
+  background: transparent;
+  /* 移除毛玻璃效果 */
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.dark .nav-modern-enhanced {
+  background: transparent;
+  /* 移除毛玻璃效果 */
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 优化的动画效果 */
+@keyframes fadeInUpEnhanced {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInRightEnhanced {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-fade-in-up-enhanced {
+  animation: fadeInUpEnhanced 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-slide-in-right-enhanced {
+  animation: slideInRightEnhanced 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 优化的状态指示器 */
+.status-indicator-enhanced {
+  @apply w-4 h-4 rounded-full;
+  animation: pulseEnhanced 2s infinite;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+@keyframes pulseEnhanced {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* 现代化的加载动画 */
+.loading-spinner-enhanced {
+  @apply border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* 优化的响应式设计 */
+@media (max-width: 768px) {
+  .card-modern-enhanced {
+    @apply p-4 rounded-2xl;
+  }
+  
+  .btn-modern-enhanced {
+    @apply px-4 py-2 rounded-xl;
+  }
+  
+  .input-modern-enhanced {
+    @apply px-3 py-2 rounded-xl;
+  }
+}
+
+/* 新增的交互效果 */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 优化的焦点状态 */
+.focus-enhanced:focus {
+  @apply outline-none;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+/* 现代化的分割线 */
+.divider-modern-enhanced {
+  @apply border-t border-gray-200 dark:border-gray-700;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+  height: 1px;
+  margin: 1rem 0;
+}
+
+/* 优化的阴影系统 */
+.shadow-modern-enhanced {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.shadow-modern-enhanced-dark {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* 优化的背景色 */
+.bg-gradient-enhanced {
+  background: #ffffff;
+}
+
+.dark .bg-gradient-enhanced {
+  background: #111827;
+}
+
+/* ===== 移动端壁纸显示优化 ===== */
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+  .wallpaper-container {
+    /* 确保在超小屏幕上完全覆盖 */
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+  }
+  
+  .wallpaper-image {
+    /* 超小屏幕图片优化 */
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+  }
+}
+
+/* iOS Safari特定优化 */
+@supports (-webkit-touch-callout: none) {
+  .wallpaper-container {
+    /* iOS Safari特定优化 */
+    position: fixed !important;
+    -webkit-overflow-scrolling: touch;
+    /* 防止iOS Safari的滚动问题 */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  .wallpaper-image {
+    /* iOS Safari图片优化 */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* 防止iOS Safari的图片变形 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* Android Chrome特定优化 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .wallpaper-container {
+    /* Android Chrome特定优化 */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  
+  .wallpaper-image {
+    /* Android Chrome图片优化 */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 移动端滚动性能优化 */
+@media (max-width: 768px) {
+  /* 优化移动端滚动性能 */
+  .wallpaper-container,
+  .wallpaper-image,
+  .wallpaper-overlay {
+    /* 使用硬件加速 */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* 防止滚动时的变形 */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* 优化性能 */
+    will-change: auto;
+  }
+  
+  /* 防止移动端滚动时的意外缩放 */
+  html, body {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
