@@ -89,17 +89,17 @@ html, body, #app {
   margin: 0;
   padding: 0;
   /* 主背景渐变 - 柔和日落渐变 */
-  background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 50%, #e6e6fa 100%);
-  /* 备选方案1: 更柔和的日落渐变 */
-  /* background: linear-gradient(135deg, #f8b5a7 0%, #f4d4a3 50%, #f8b5a7 100%); */
-  /* 备选方案2: 天空蓝渐变 */
-  /* background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 50%, #89f7fe 100%); */
-  /* 备选方案3: 薄荷绿渐变 */
-  /* background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 50%, #d4fc79 100%); */
-  /* 备选方案4: 柔和清新渐变 */
-  /* background: linear-gradient(135deg, #a8edea 0%, #fed6e3 50%, #a8edea 100%); */
-  /* 备选方案5: 蓝紫粉渐变 */
-  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%); */
+  /* background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 50%, #e6e6fa 100%); */
+  /* 备选方案1: 更暗的日落渐变 */
+  /* background: linear-gradient(135deg, #c19a95 0%, #b08a5a 50%, #c19a95 100%); */
+  /* 备选方案2: 更暗的天空蓝渐变 */
+  background: linear-gradient(135deg, #8fb3c4 0%, #6a92af 50%, #8fb3c4 100%);
+  /* 备选方案3: 更暗的绿灰渐变 */
+  /*  background: linear-gradient(135deg, #458777 0%, #115347 50%, #458777 100%); */
+  /* 备选方案4: 更暗的清新渐变 */
+  /* background: linear-gradient(135deg, #8bc5c2 0%, #d4b4c1 50%, #8bc5c2 100%); */
+  /* 备选方案5: 更暗的蓝紫渐变 */
+  /* background: linear-gradient(135deg, #8b9afc 0%, #7c3aed 25%, #a855f7 50%, #d946ef 75%, #8b9afc 100%); */
   background-attachment: fixed;
   background-size: 300% 300%;
   animation: gradientMove 25s ease infinite;

@@ -22,7 +22,7 @@ const showHelpModal = ref(false);
 </script>
 
 <template>
-  <header class="nav-modern-enhanced sticky top-0 z-30 bg-gray-900/80 backdrop-blur-xl border-b border-gray-700/40 shadow-2xl">
+  <header class="nav-modern-enhanced sticky top-0 z-30 bg-white/90 dark:bg-transparent backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/40 shadow-2xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 顶部导航栏 -->
       <div class="flex justify-between items-center h-16 lg:h-20">
@@ -40,8 +40,8 @@ const showHelpModal = ref(false);
             <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 animate-ping"></div>
           </div>
           <div class="ml-5 flex flex-col sm:flex-row sm:items-center">
-            <span class="text-2xl lg:text-3xl font-black bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-lg">Sub-One</span>
-            <span class="text-sm lg:text-base text-gray-200 font-semibold ml-0 sm:ml-3 drop-shadow-lg opacity-90">Manager</span>
+            <span class="text-2xl lg:text-3xl font-black text-gray-900 dark:bg-gradient-to-r dark:from-white dark:via-blue-100 dark:to-purple-100 dark:bg-clip-text dark:text-transparent drop-shadow-lg shadow-sm">Sub-One</span>
+            <span class="text-sm lg:text-base text-gray-700 dark:text-gray-200 font-semibold ml-0 sm:ml-3 drop-shadow-lg opacity-90">Manager</span>
           </div>
         </div>
         
@@ -106,9 +106,9 @@ const showHelpModal = ref(false);
             title="登出"
           >
             <!-- 背景光效 -->
-            <div class="absolute inset-0 bg-gradient-to-r from-red-400/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-gray-400/20 to-gray-500/20 dark:from-red-400/20 dark:to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 group-hover:text-red-300 transition-colors duration-300 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 group-hover:text-gray-700 dark:text-red-400 dark:group-hover:text-red-300 transition-colors duration-300 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
@@ -153,27 +153,39 @@ const showHelpModal = ref(false);
 
 /* 登出按钮特殊样式 */
 .btn-logout {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-logout:hover {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: rgba(255, 255, 255, 0.98);
+  color: #374151;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗黑模式下的登出按钮样式 */
+.dark .btn-logout {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.dark .btn-logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fecaca;
 }
 
 /* 暗黑模式适配 */
 .dark .btn-header-modern {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
 }
 
 .dark .btn-header-modern:hover {
-  background: rgba(30, 41, 59, 0.95);
-  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 /* 标签页悬停效果 */
@@ -183,6 +195,15 @@ const showHelpModal = ref(false);
 
 .dark .group:hover .group-hover\:bg-gray-700 {
   background-color: rgb(55 65 81);
+}
+
+/* 标题样式优化 - 明亮模式 */
+.nav-modern-enhanced:not(.dark) .text-2xl {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-modern-enhanced:not(.dark) .text-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 /* 响应式设计 */
