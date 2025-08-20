@@ -23,6 +23,7 @@ import ProfileNodeDetailsModal from './ProfileNodeDetailsModal.vue';
 
 const SettingsModal = defineAsyncComponent(() => import('./SettingsModal.vue'));
 const BulkImportModal = defineAsyncComponent(() => import('./BulkImportModal.vue'));
+const LatencyTestModal = defineAsyncComponent(() => import('./LatencyTestModal.vue'));
 import Modal from './Modal.vue';
 const ProfileModal = defineAsyncComponent(() => import('./ProfileModal.vue'));
 
@@ -116,6 +117,7 @@ const selectedSubscription = ref(null);
 const showProfileNodeDetailsModal = ref(false);
 const selectedProfile = ref(null);
 const isUpdatingAllSubs = ref(false);
+const showLatencyTestModal = ref(false);
 
 const nodesMoreMenuRef = ref(null);
 const subsMoreMenuRef = ref(null);
@@ -658,6 +660,17 @@ const handleNodeDragEnd = async (evt) => {
                   <span class="hidden sm:inline">{{ isUpdatingAllSubs ? '更新中...' : '一键更新' }}</span>
                   <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
                 </button>
+                
+                <button 
+                  @click="showLatencyTestModal = true" 
+                  class="btn-modern-enhanced btn-test text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span class="hidden sm:inline">延迟测试</span>
+                  <span class="sm:hidden">测试</span>
+                </button>
               </div>
               <div class="flex items-center gap-3 flex-shrink-0">
                 <button 
@@ -861,11 +874,22 @@ const handleNodeDragEnd = async (evt) => {
                 @click="isSortingNodes = !isSortingNodes" 
                 :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 2 4" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
                 <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
                 <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
+              </button>
+              
+              <button 
+                @click="showLatencyTestModal = true" 
+                class="btn-modern-enhanced btn-test text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="hidden sm:inline">延迟测试</span>
+                <span class="sm:hidden">测试</span>
               </button>
             </div>
             
@@ -1014,7 +1038,13 @@ const handleNodeDragEnd = async (evt) => {
     @update:show="showProfileNodeDetailsModal = $event" 
   />
   
-
+  <!-- 延迟测试模态框 -->
+  <LatencyTestModal 
+    :show="showLatencyTestModal" 
+    :subscriptions="subscriptions"
+    :manual-nodes="manualNodes"
+    @close="showLatencyTestModal = false" 
+  />
   
 </template>
 

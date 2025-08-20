@@ -72,7 +72,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
             </slot>
           </div>
 
-          <div class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+          <div v-if="$slots.footer" class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+            <slot name="footer"></slot>
+          </div>
+          <div v-else class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
             <button @click="emit('update:show', false)" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-sm rounded-xl transition-all duration-200">取消</button>
             <button 
                 @click="handleConfirm" 
