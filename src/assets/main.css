@@ -1654,37 +1654,5 @@ button:active {
   }
 }
 
-/* 延迟测试按钮样式 */
-.btn-test {
-  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-}
 
-.btn-test:hover {
-  background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-  transform: translateY(-2px);
-}
-
-.btn-test:focus {
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
-}
-
-/* 导出报告按钮样式 */
-.btn-report {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-.btn-report:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-  transform: translateY(-2px);
-}
-
-.btn-report:focus {
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-}
 
