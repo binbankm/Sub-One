@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
+import { useLatencyTest } from '../composables/useLatencyTest.js';
 
 const props = defineProps({
   show: Boolean,
@@ -18,6 +19,16 @@ const selectedNodes = ref(new Set());
 
 
 const toastStore = useToastStore();
+const { 
+  isTesting, 
+  testResults, 
+  testProgress, 
+  testBatchLatency, 
+  getNodeLatency, 
+  getLatencyStatusStyle,
+  clearResults,
+  exportLatencyData
+} = useLatencyTest();
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
@@ -131,6 +142,36 @@ const refreshNodes = async () => {
   toastStore.showToast('节点信息已刷新', 'success');
 };
 
+// 开始延迟测试
+const startLatencyTest = async () => {
+  if (filteredNodes.value.length === 0) {
+    toastStore.showToast('没有可测试的节点', 'warning');
+    return;
+  }
+  
+  await testBatchLatency(filteredNodes.value, {
+    maxConcurrent: 3,
+    timeout: 8000,
+    onProgress: (node, result, progress) => {
+      console.log(`节点 ${node.name} 测试完成:`, result);
+    }
+  });
+};
+
+// 测试选中的节点
+const testSelectedNodes = async () => {
+  if (selectedNodes.value.size === 0) {
+    toastStore.showToast('请先选择要测试的节点', 'warning');
+    return;
+  }
+  
+  const selectedNodeList = filteredNodes.value.filter(node => selectedNodes.value.has(node.id));
+  await testBatchLatency(selectedNodeList, {
+    maxConcurrent: 3,
+    timeout: 8000
+  });
+};
+
 
 </script>
 
@@ -193,6 +234,46 @@ const refreshNodes = async () => {
                 <span v-else>刷新</span>
               </button>
 
+              <!-- 延迟测试按钮组 -->
+              <div class="flex items-center gap-2">
+                <button
+                  @click="startLatencyTest"
+                  :disabled="isTesting || filteredNodes.length === 0"
+                  class="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 flex items-center gap-2"
+                >
+                  <svg v-if="isTesting" class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {{ isTesting ? '测试中...' : '测试全部' }}
+                </button>
+
+                <button
+                  @click="testSelectedNodes"
+                  :disabled="isTesting || selectedNodes.size === 0"
+                  class="px-4 py-2 text-sm bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 flex items-center gap-2"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  测试选中
+                </button>
+
+                <button
+                  v-if="testResults.size > 0"
+                  @click="exportLatencyData"
+                  class="px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  导出结果
+                </button>
+              </div>
+
               <button
                 @click="copySelectedNodes"
                 :disabled="selectedNodes.size === 0"
@@ -206,6 +287,65 @@ const refreshNodes = async () => {
           <!-- 错误信息 -->
           <div v-if="errorMessage" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
+          </div>
+
+          <!-- 延迟测试进度 -->
+          <div v-if="isTesting" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200">延迟测试进行中...</h4>
+              <span class="text-xs text-blue-600 dark:text-blue-300">{{ testProgress.current }}/{{ testProgress.total }}</span>
+            </div>
+            <div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 overflow-hidden">
+              <div 
+                class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300"
+                :style="{ width: testProgress.total > 0 ? (testProgress.current / testProgress.total * 100) + '%' : '0%' }"
+              ></div>
+            </div>
+            <p class="text-xs text-blue-600 dark:text-blue-300 mt-2">
+              正在测试节点延迟，请稍候...
+            </p>
+          </div>
+
+          <!-- 延迟测试结果统计 -->
+          <div v-if="testResults.size > 0 && !isTesting" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-medium text-green-800 dark:text-green-200">延迟测试结果</h4>
+              <button 
+                @click="clearResults"
+                class="text-xs text-green-600 dark:text-green-300 hover:text-green-800 dark:hover:text-green-100 transition-colors"
+              >
+                清除结果
+              </button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div class="text-center">
+                <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                  {{ testResults.size }}
+                </div>
+                <div class="text-green-500 dark:text-green-300">总测试数</div>
+              </div>
+              <div class="text-center">
+                <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                  {{ Array.from(testResults.values()).filter(r => r.status === 'success').length }}
+                </div>
+                <div class="text-green-500 dark:text-green-300">成功连接</div>
+              </div>
+              <div class="text-center">
+                <div class="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                  {{ Array.from(testResults.values()).filter(r => r.status === 'error').length }}
+                </div>
+                <div class="text-yellow-500 dark:text-yellow-300">连接失败</div>
+              </div>
+              <div class="text-center">
+                <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {{ (() => {
+                    const successful = Array.from(testResults.values()).filter(r => r.status === 'success' && r.latency !== null);
+                    return successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + r.latency, 0) / successful.length) : 0;
+                  })() }}ms
+                </div>
+                <div class="text-blue-500 dark:text-blue-300">平均延迟</div>
+              </div>
+            </div>
           </div>
 
           <!-- 加载状态 -->
@@ -254,6 +394,16 @@ const refreshNodes = async () => {
                     >
                       {{ getProtocolInfo(node.protocol).icon }} {{ node.protocol.toUpperCase() }}
                     </span>
+                    
+                    <!-- 延迟测试结果显示 -->
+                    <div v-if="testResults.has(node.id)" class="flex items-center gap-1">
+                      <span 
+                        class="text-xs px-2 py-1 rounded-full font-mono"
+                        :class="getLatencyStatusStyle(getNodeLatency(node.id)?.latency).style"
+                      >
+                        {{ getLatencyStatusStyle(getNodeLatency(node.id)?.latency).text }}
+                      </span>
+                    </div>
                   </div>
                   <p class="font-medium text-gray-900 dark:text-gray-100 truncate" :title="node.name">
                     {{ node.name }}
