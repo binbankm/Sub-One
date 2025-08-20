@@ -7,6 +7,7 @@ import { useToastStore } from '../stores/toast.js';
 import { useUIStore } from '../stores/ui.js';
 import { useSubscriptions } from '../composables/useSubscriptions.js';
 import { useManualNodes } from '../composables/useManualNodes.js';
+import { useLatencyTest } from '../composables/useLatencyTest.js';
 
 // --- 元件導入 ---
 import Card from './Card.vue';
@@ -62,6 +63,18 @@ const {
   changeManualNodesPage, addNode, updateNode, deleteNode, deleteAllNodes,
   addNodesFromBulk, autoSortNodes, deduplicateNodes,
 } = useManualNodes(initialNodes, markDirty);
+
+// 延迟测试功能
+const { 
+  isTesting, 
+  testResults, 
+  testProgress, 
+  testBatchLatency, 
+  getNodeLatency, 
+  getLatencyStatusStyle,
+  clearResults,
+  exportLatencyData
+} = useLatencyTest();
 
 const manualNodesPerPage = 24;
 
@@ -136,6 +149,27 @@ const handleDeduplicateNodes = async () => {
     deduplicateNodes();
     await handleDirectSave('节点去重');
     showNodesMoreMenu.value = false; // 操作后关闭菜单
+};
+
+// 延迟测试相关函数
+const handleTestAllNodesLatency = async () => {
+  if (manualNodes.length === 0) {
+    showToast('没有可测试的节点', 'warning');
+    return;
+  }
+  
+  await testBatchLatency(manualNodes, {
+    maxConcurrent: 3,
+    onProgress: (node, result, progress) => {
+      console.log(`节点 ${node.name} 测试完成:`, result);
+    }
+  });
+};
+
+const handleTestSelectedNodesLatency = async () => {
+  // 这里可以实现选择特定节点进行测试的逻辑
+  // 暂时测试所有节点
+  await handleTestAllNodesLatency();
 };
 // --- 初始化與生命週期 ---
 const initializeState = () => {
@@ -859,6 +893,23 @@ const handleNodeDragEnd = async (evt) => {
               
               <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">批量导入</button>
               
+              <!-- 延迟测试按钮 -->
+              <button 
+                @click="handleTestAllNodesLatency"
+                :disabled="isTesting || manualNodes.length === 0"
+                class="btn-modern-enhanced btn-test text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <svg v-if="isTesting" class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="hidden sm:inline">{{ isTesting ? '测试中...' : '一键测试' }}</span>
+                <span class="sm:hidden">{{ isTesting ? '测试中' : '测试' }}</span>
+              </button>
+              
               <button 
                 @click="isSortingNodes = !isSortingNodes" 
                 :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
@@ -882,6 +933,24 @@ const handleNodeDragEnd = async (evt) => {
                   <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">导入订阅</button>
                   <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键排序</button>
                   <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键去重</button>
+                  
+                  <!-- 延迟测试相关选项 -->
+                  <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                  <button 
+                    v-if="testResults.size > 0"
+                    @click="exportLatencyData(); showNodesMoreMenu=false" 
+                    class="w-full text-left px-5 py-3 text-base text-green-600 hover:bg-green-500/10"
+                  >
+                    导出测试结果
+                  </button>
+                  <button 
+                    v-if="testResults.size > 0"
+                    @click="clearResults(); showNodesMoreMenu=false" 
+                    class="w-full text-left px-5 py-3 text-base text-gray-600 hover:bg-gray-500/10"
+                  >
+                    清除测试结果
+                  </button>
+                  
                   <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                   <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
                 </div>
@@ -890,6 +959,76 @@ const handleNodeDragEnd = async (evt) => {
           </div>
         </div>
         
+        <!-- 延迟测试进度和结果 -->
+        <div v-if="isTesting || testResults.size > 0" class="mb-6 space-y-4">
+          <!-- 延迟测试进度 -->
+          <div v-if="isTesting" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-lg font-medium text-blue-800 dark:text-blue-200">延迟测试进行中...</h4>
+              <span class="text-sm text-blue-600 dark:text-blue-300">{{ testProgress.current }}/{{ testProgress.total }}</span>
+            </div>
+            <div class="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-3 overflow-hidden">
+              <div 
+                class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300"
+                :style="{ width: testProgress.total > 0 ? (testProgress.current / testProgress.total * 100) + '%' : '0%' }"
+              ></div>
+            </div>
+            <p class="text-sm text-blue-600 dark:text-blue-300 mt-2">
+              正在测试节点延迟，请稍候...
+            </p>
+          </div>
+
+          <!-- 延迟测试结果统计 -->
+          <div v-if="testResults.size > 0 && !isTesting" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-lg font-medium text-green-800 dark:text-green-200">延迟测试结果</h4>
+              <div class="flex items-center gap-2">
+                <button 
+                  @click="exportLatencyData"
+                  class="px-3 py-1.5 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                >
+                  导出结果
+                </button>
+                <button 
+                  @click="clearResults"
+                  class="px-3 py-1.5 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  清除结果
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div class="text-center">
+                <div class="text-xl font-bold text-green-600 dark:text-green-400">
+                  {{ testResults.size }}
+                </div>
+                <div class="text-green-500 dark:text-green-300">总测试数</div>
+              </div>
+              <div class="text-center">
+                <div class="text-xl font-bold text-green-600 dark:text-green-400">
+                  {{ Array.from(testResults.values()).filter(r => r.status === 'success').length }}
+                </div>
+                <div class="text-green-500 dark:text-green-300">成功连接</div>
+              </div>
+              <div class="text-center">
+                <div class="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {{ Array.from(testResults.values()).filter(r => r.status === 'error').length }}
+                </div>
+                <div class="text-yellow-500 dark:text-yellow-300">连接失败</div>
+              </div>
+              <div class="text-center">
+                <div class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  {{ (() => {
+                    const successful = Array.from(testResults.values()).filter(r => r.status === 'success' && r.latency !== null);
+                    return successful.length > 0 ? Math.round(successful.reduce((sum, r) => sum + r.latency, 0) / successful.length) : 0;
+                  })() }}ms
+                </div>
+                <div class="text-blue-500 dark:text-blue-300">平均延迟</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 节点内容区域 -->
         <div v-if="manualNodes.length > 0">
           <div v-if="manualNodeViewMode === 'card'">
@@ -908,6 +1047,7 @@ const handleNodeDragEnd = async (evt) => {
                  <div class="cursor-move">
                     <ManualNodeCard 
                         :node="node" 
+                        :latency-result="testResults.get(node.id)"
                         @edit="handleEditNode(node.id)" 
                         @delete="handleDeleteNodeWithCleanup(node.id)" />
                 </div>
@@ -917,6 +1057,7 @@ const handleNodeDragEnd = async (evt) => {
               <div v-for="node in paginatedManualNodes" :key="node.id">
                 <ManualNodeCard 
                   :node="node" 
+                  :latency-result="testResults.get(node.id)"
                   @edit="handleEditNode(node.id)" 
                   @delete="handleDeleteNodeWithCleanup(node.id)" />
               </div>
@@ -929,6 +1070,7 @@ const handleNodeDragEnd = async (evt) => {
                   :key="node.id"
                   :node="node"
                   :index="(manualNodesCurrentPage - 1) * manualNodesPerPage + index + 1"
+                  :latency-result="testResults.get(node.id)"
                   @edit="handleEditNode(node.id)"
                   @delete="handleDeleteNodeWithCleanup(node.id)"
               />

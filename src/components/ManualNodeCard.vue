@@ -10,6 +10,9 @@ const props = defineProps({
 
 const emit = defineEmits(['delete', 'edit', 'testLatency']);
 
+// 延迟测试结果（从父组件传递）
+const latencyResult = computed(() => props.latencyResult);
+
 const getProtocol = (url) => {
   try {
     if (!url) return 'unknown';
@@ -64,6 +67,23 @@ const protocolStyle = computed(() => {
       return { text: 'LINK', style: 'bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30' };
   }
 });
+
+// 延迟状态样式
+const getLatencyStatusStyle = (latency) => {
+  if (!latency || typeof latency !== 'number') {
+    return { text: '未测试', style: 'text-gray-500 bg-gray-100 dark:bg-gray-800' };
+  }
+  
+  if (latency < 100) {
+    return { text: `${latency}ms`, style: 'text-green-600 bg-green-100 dark:bg-green-900/30' };
+  } else if (latency < 300) {
+    return { text: `${latency}ms`, style: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30' };
+  } else if (latency < 1000) {
+    return { text: `${latency}ms`, style: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30' };
+  } else {
+    return { text: `${latency}ms`, style: 'text-red-600 bg-red-100 dark:bg-red-900/30' };
+  }
+};
 </script>
 
 <template>
@@ -92,6 +112,16 @@ const protocolStyle = computed(() => {
           <p class="font-medium text-sm text-gray-800 dark:text-gray-100 truncate" :title="node.name">
             {{ node.name || '未命名节点' }}
           </p>
+          
+          <!-- 延迟测试结果显示 -->
+          <div v-if="latencyResult && latencyResult.status === 'success'" class="flex-shrink-0">
+            <span 
+              class="text-xs px-2 py-1 rounded-full font-mono font-bold"
+              :class="getLatencyStatusStyle(latencyResult.latency).style"
+            >
+              {{ getLatencyStatusStyle(latencyResult.latency).text }}
+            </span>
+          </div>
         </div>
         <p class="text-xs text-gray-500 dark:text-gray-400 truncate" :title="node.url">
           {{ node.url.substring(0, 50) }}{{ node.url.length > 50 ? '...' : '' }}

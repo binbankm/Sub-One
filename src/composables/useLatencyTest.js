@@ -14,30 +14,99 @@ export function useLatencyTest() {
     }
 
     try {
-      // 调用后端API进行延迟测试
-      const response = await fetch('/api/test_latency', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodes: [node] })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // 使用更准确的本地测试方法
+      const { host, port } = extractHostAndPort(node.url);
+      
+      if (!host || !port) {
+        throw new Error('无法解析节点地址');
       }
 
-      const data = await response.json();
-      if (data.success && data.results && data.results.length > 0) {
-        return data.results[0];
-      } else {
-        throw new Error('API返回数据格式错误');
+      // 多次测试取平均值，提高准确性
+      const testCount = 3;
+      const latencies = [];
+      
+      for (let i = 0; i < testCount; i++) {
+        try {
+          const startTime = performance.now();
+          
+          // 使用Image对象测试连接（更准确）
+          const img = new Image();
+          const testPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('连接超时'));
+            }, 3000);
+
+            img.onload = () => {
+              clearTimeout(timeout);
+              const endTime = performance.now();
+              resolve(endTime - startTime);
+            };
+            
+            img.onerror = () => {
+              clearTimeout(timeout);
+              const endTime = performance.now();
+              resolve(endTime - startTime);
+            };
+          });
+
+          // 尝试多种连接方式
+          try {
+            // 方式1: 尝试HTTPS连接
+            img.src = `https://${host}:${port}/favicon.ico?t=${Date.now()}&test=${i}`;
+            const latency = await testPromise;
+            latencies.push(latency);
+          } catch (httpsError) {
+            try {
+              // 方式2: 尝试HTTP连接
+              img.src = `http://${host}:${port}/favicon.ico?t=${Date.now()}&test=${i}`;
+              const latency = await testPromise;
+              latencies.push(latency);
+            } catch (httpError) {
+              // 方式3: 使用fetch测试
+              const fetchStart = performance.now();
+              await fetch(`https://${host}:${port}`, {
+                method: 'HEAD',
+                mode: 'no-cors',
+                cache: 'no-cache'
+              });
+              const fetchLatency = performance.now() - fetchStart;
+              latencies.push(fetchLatency);
+            }
+          }
+          
+          // 短暂延迟，避免过于频繁的请求
+          if (i < testCount - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          
+        } catch (testError) {
+          console.warn(`第${i + 1}次测试失败:`, testError);
+        }
       }
+
+      if (latencies.length === 0) {
+        throw new Error('所有测试都失败');
+      }
+
+      // 计算平均延迟，去除异常值
+      const sortedLatencies = latencies.sort((a, b) => a - b);
+      const avgLatency = Math.round(
+        sortedLatencies.slice(1, -1).reduce((sum, lat) => sum + lat, 0) / 
+        Math.max(sortedLatencies.length - 2, 1)
+      );
+
+      return {
+        latency: avgLatency,
+        status: 'success',
+        error: null
+      };
 
     } catch (err) {
       console.error('延迟测试失败:', err);
       return { 
         latency: null, 
         status: 'error', 
-        error: err.message || '网络请求失败' 
+        error: err.message || '连接测试失败' 
       };
     }
   };
@@ -82,43 +151,63 @@ export function useLatencyTest() {
     testProgress.value = { current: 0, total: nodes.length };
     testResults.value.clear();
 
-    try {
-      // 调用后端API进行批量延迟测试
-      const response = await fetch('/api/test_latency', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodes })
-      });
+    const { 
+      maxConcurrent = 3, 
+      onProgress = null 
+    } = options;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      // 分批处理，避免同时发起过多请求
+      const batches = [];
+      for (let i = 0; i < nodes.length; i += maxConcurrent) {
+        batches.push(nodes.slice(i, i + maxConcurrent));
       }
 
-      const data = await response.json();
-      if (data.success && data.results) {
-        // 将结果存储到本地状态
-        data.results.forEach(result => {
-          testResults.value.set(result.nodeId, result);
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        
+        // 并行测试当前批次的节点
+        const batchPromises = batch.map(async (node) => {
+          const result = await testSingleNode(node);
+          testResults.value.set(node.id, result);
+          testProgress.value.current++;
+          
+          if (onProgress) {
+            onProgress(node, result, testProgress.value);
+          }
+          
+          return { node, result };
         });
+
+        // 等待当前批次完成
+        await Promise.allSettled(batchPromises);
         
-        testProgress.value.current = data.results.length;
-        
-        // 显示测试结果
-        if (data.successful > 0) {
-          toastStore.showToast(
-            `延迟测试完成！成功: ${data.successful}/${data.total}，失败: ${data.failed}`,
-            'success'
-          );
-        } else {
-          toastStore.showToast('延迟测试完成，但没有成功的连接', 'warning');
+        // 批次间短暂延迟，避免过于频繁的请求
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
+      }
+
+      // 计算统计信息
+      const successfulTests = Array.from(testResults.value.values())
+        .filter(result => result.status === 'success' && result.latency !== null);
+      
+      if (successfulTests.length > 0) {
+        const avgLatency = successfulTests.reduce((sum, result) => sum + result.latency, 0) / successfulTests.length;
+        const minLatency = Math.min(...successfulTests.map(result => result.latency));
+        const maxLatency = Math.max(...successfulTests.map(result => result.latency));
+        
+        toastStore.showToast(
+          `延迟测试完成！成功: ${successfulTests.length}/${nodes.length}，平均延迟: ${avgLatency.toFixed(0)}ms`,
+          'success'
+        );
       } else {
-        throw new Error('API返回数据格式错误');
+        toastStore.showToast('延迟测试完成，但没有成功的连接', 'warning');
       }
 
     } catch (error) {
       console.error('批量延迟测试失败:', error);
-      toastStore.showToast(`延迟测试失败: ${error.message}`, 'error');
+      toastStore.showToast('延迟测试过程中发生错误', 'error');
     } finally {
       isTesting.value = false;
       testProgress.value = { current: 0, total: 0 };
