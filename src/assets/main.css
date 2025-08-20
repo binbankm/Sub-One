@@ -737,28 +737,6 @@ button:active {
     0 0 0 1px rgba(255, 255, 255, 0.2) !important;
 }
 
-.btn-test {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  box-shadow: 
-    0 6px 20px rgba(16, 185, 129, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
-}
-
-.btn-test:hover {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
-  box-shadow: 
-    0 8px 25px rgba(16, 185, 129, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
-}
-
-.btn-test:disabled {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
-  box-shadow: 
-    0 4px 15px rgba(156, 163, 175, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.2) !important;
-  cursor: not-allowed;
-}
-
 .btn-sort.sorting:hover {
   background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
   box-shadow: 
@@ -1675,6 +1653,4 @@ button:active {
     display: none;
   }
 }
-
-
 
