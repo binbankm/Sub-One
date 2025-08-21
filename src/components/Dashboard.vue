@@ -86,9 +86,9 @@ const {
   recordWarning,
   getPerformanceReport
 } = usePerformanceMonitor({
-  enableRenderTiming: true,
-  enableInteractionTiming: true,
-  logThreshold: 16
+  enableRenderTiming: false, // 禁用渲染时间监控以减少性能开销
+  enableInteractionTiming: false, // 禁用交互时间监控
+  logThreshold: 100 // 提高阈值，减少不必要的警告
 });
 
 // 标记数据已更改
@@ -275,7 +275,7 @@ const handleSave = async () => {
 });
 };
 
-// 使用防抖优化保存操作
+// 创建防抖保存函数
 const { debouncedFn: debouncedSave } = useDebounce(handleSave, DELAYS.DEBOUNCE_SAVE);
 
 // 通用直接保存函数
