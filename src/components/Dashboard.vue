@@ -689,7 +689,7 @@ const handleNodeDragEnd = async (evt) => {
           <draggable 
             v-if="isSortingSubs" 
             tag="div" 
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
+            class="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8" 
             v-model="subscriptions" 
             :item-key="item => item.id"
             animation="300" 
@@ -708,7 +708,7 @@ const handleNodeDragEnd = async (evt) => {
               </div>
             </template>
           </draggable>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div v-else class="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
                   <Card 
                       :sub="subscription" 
@@ -766,7 +766,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
         </div>
         
-        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div v-if="profiles.length > 0" class="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           <ProfileCard
             v-for="profile in paginatedProfiles"
             :key="profile.id"
@@ -893,7 +893,7 @@ const handleNodeDragEnd = async (evt) => {
              <draggable 
               v-if="isSortingNodes"
               tag="div" 
-              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8" 
+              class="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8" 
               v-model="manualNodes" 
               :item-key="item => item.id" 
               animation="300" 
@@ -910,7 +910,7 @@ const handleNodeDragEnd = async (evt) => {
                 </div>
               </template>
             </draggable>
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div v-else class="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
               <div v-for="node in paginatedManualNodes" :key="node.id">
                 <ManualNodeCard 
                   :node="node" 

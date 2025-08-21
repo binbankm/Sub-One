@@ -1654,3 +1654,189 @@ button:active {
   }
 }
 
+/* 基础样式 */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* 自定义字体 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* 全局样式 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 响应式优化样式 */
+@media (max-width: 474px) {
+  /* 超小屏幕优化 */
+  .container-optimized {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* 卡片在小屏幕下的优化 */
+  .card-modern-enhanced {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* 按钮在小屏幕下的触摸优化 */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 输入框在小屏幕下的优化 */
+  input, textarea {
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 触摸设备下的悬停效果优化 */
+  .group:hover .opacity-0 {
+    opacity: 1;
+  }
+  
+  /* 触摸设备下的按钮状态优化 */
+  button:active {
+    transform: scale(0.95);
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .border-gray-200 {
+    border-color: #000000;
+  }
+  
+  .dark .border-gray-700 {
+    border-color: #ffffff;
+  }
+}
+
+/* 减少动画偏好支持 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.7);
+}
+
+/* 焦点样式优化 */
+.focus-enhanced:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* 悬停提升效果 */
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* 现代化阴影 */
+.shadow-modern-enhanced {
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-modern-enhanced-dark {
+  box-shadow: 0 20px 50px -3px rgba(0, 0, 0, 0.25), 0 8px 12px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* 渐变文字效果 */
+.gradient-text-enhanced {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 按钮样式 */
+.btn-modern-enhanced {
+  @apply relative overflow-hidden transition-all duration-300 transform hover:scale-105 active:scale-95;
+}
+
+.btn-add {
+  @apply bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl;
+}
+
+.btn-update {
+  @apply bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl;
+}
+
+.btn-import {
+  @apply bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl;
+}
+
+.btn-sort {
+  @apply bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl;
+}
+
+.btn-sort.sorting {
+  @apply bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700;
+}
+
+/* 搜索输入框统一样式 */
+.search-input-unified {
+  @apply w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white transition-all duration-200;
+}
+
+/* 过渡动画 */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-fade-sm-enter-active,
+.slide-fade-sm-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-fade-sm-enter-from,
+.slide-fade-sm-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
