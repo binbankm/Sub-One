@@ -105,17 +105,21 @@ const {
   logThreshold: 16
 });
 
+// 初始化数据
+const initialSubs = ref([]);
+const initialNodes = ref([]);
+
 // 使用 composables
 const {
   subscriptions, subsCurrentPage, subsTotalPages, paginatedSubscriptions,
   changeSubsPage, addSubscription, updateSubscription, deleteSubscription, deleteAllSubscriptions,
-  addSubscriptionsFromBulk, handleUpdateNodeCount,
+  addSubscriptionsFromBulk, handleUpdateNodeCount, initializeSubscriptions,
 } = useSubscriptions(initialSubs, markDirty);
 
 const {
   manualNodes, manualNodesCurrentPage, manualNodesTotalPages, paginatedManualNodes, searchTerm,
   changeManualNodesPage, addNode, updateNode, deleteNode, deleteAllNodes,
-  addNodesFromBulk, autoSortNodes, deduplicateNodes,
+  addNodesFromBulk, autoSortNodes, deduplicateNodes, initializeManualNodes,
 } = useManualNodes(initialNodes, markDirty);
 
 const {
@@ -149,10 +153,6 @@ const isSortingNodes = ref(false);
 const manualNodeViewMode = ref('card');
 const isUpdatingAllSubs = ref(false);
 
-// 初始化数据
-const initialSubs = ref([]);
-const initialNodes = ref([]);
-
 // 标记数据已更改
 const markDirty = () => { 
   dirty.value = true; 
@@ -172,6 +172,11 @@ const initializeState = async () => {
       
       // 使用 useProfiles 的初始化方法
       initializeProfiles(props.data.profiles || []);
+      
+      // 初始化订阅和手动节点
+      initializeSubscriptions(initialSubs.value);
+      initializeManualNodes(initialNodes.value);
+      
       config.value = props.data.config || {};
     }
     dirty.value = false;
@@ -625,25 +630,27 @@ const updateSearchTerm = (term) => {
     <!-- 主要内容区域 -->
     <div class="space-y-6 lg:space-y-8">
       
-      <!-- 订阅管理标签页 -->
-      <SubscriptionsTab
-        v-if="currentTab === 'subscriptions'"
-        :subscriptions="subscriptions"
-        :subs-current-page="subsCurrentPage"
-        :subs-total-pages="subsTotalPages"
-        :paginated-subscriptions="paginatedSubscriptions"
-        :is-updating-all-subs="isUpdatingAllSubs"
-        @add-subscription="handleAddSubscription"
-        @edit-subscription="handleEditSubscription"
-        @delete-subscription="handleDeleteSubscriptionWithCleanup"
-        @toggle-subscription="handleSubscriptionToggle"
-        @update-subscription="handleSubscriptionUpdate"
-        @show-node-details="handleShowNodeDetails"
-        @update-all-subscriptions="handleUpdateAllSubscriptions"
-        @sort-drag-end="handleSubscriptionDragEnd"
-        @change-page="changeSubsPage"
-        @delete-all-subscriptions="handleDeleteAllSubscriptionsWithCleanup"
-      />
+             <!-- 订阅管理标签页 -->
+       <SubscriptionsTab
+         v-if="currentTab === 'subscriptions'"
+         :subscriptions="subscriptions"
+         :subs-current-page="subsCurrentPage"
+         :subs-total-pages="subsTotalPages"
+         :paginated-subscriptions="paginatedSubscriptions"
+         :is-updating-all-subs="isUpdatingAllSubs"
+         :is-sorting-subs="isSortingSubs"
+         @add-subscription="handleAddSubscription"
+         @edit-subscription="handleEditSubscription"
+         @delete-subscription="handleDeleteSubscriptionWithCleanup"
+         @toggle-subscription="handleSubscriptionToggle"
+         @update-subscription="handleSubscriptionUpdate"
+         @show-node-details="handleShowNodeDetails"
+         @update-all-subscriptions="handleUpdateAllSubscriptions"
+         @sort-drag-end="handleSubscriptionDragEnd"
+         @change-page="changeSubsPage"
+         @delete-all-subscriptions="handleDeleteAllSubscriptionsWithCleanup"
+         @toggle-sorting="isSortingSubs = !isSortingSubs"
+       />
 
       <!-- 订阅组标签页 -->
       <ProfilesTab

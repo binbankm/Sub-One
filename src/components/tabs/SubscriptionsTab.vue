@@ -33,10 +33,10 @@
         </div>
         
         <div class="flex items-center gap-3 flex-shrink-0">
-          <button 
-            @click="isSortingSubs = !isSortingSubs" 
-            :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
-          >
+                  <button 
+          @click="$emit('toggle-sorting')" 
+          :class="props.isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+        >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
             </svg>
@@ -61,7 +61,7 @@
     <!-- 订阅卡片网格 -->
     <div v-if="subscriptions.length > 0">
       <draggable 
-        v-if="isSortingSubs" 
+        v-if="props.isSortingSubs"
         tag="div" 
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
         v-model="subscriptions" 
@@ -95,7 +95,7 @@
         </div>
       </div>
       
-      <div v-if="subsTotalPages > 1 && !isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
+      <div v-if="subsTotalPages > 1 && !props.isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
         <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
         <span class="text-gray-500 dark:text-gray-400">第 {{ subsCurrentPage }} / {{ subsTotalPages }} 页</span>
         <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
@@ -140,6 +140,10 @@ const props = defineProps({
   isUpdatingAllSubs: {
     type: Boolean,
     required: true
+  },
+  isSortingSubs: {
+    type: Boolean,
+    required: true
   }
 });
 
@@ -154,11 +158,11 @@ const emit = defineEmits([
   'update-all-subscriptions',
   'sort-drag-end',
   'change-page',
-  'delete-all-subscriptions'
+  'delete-all-subscriptions',
+  'toggle-sorting'
 ]);
 
 // Local state
-const isSortingSubs = ref(false);
 const showSubsMoreMenu = ref(false);
 const showDeleteSubsModal = ref(false);
 const subsMoreMenuRef = ref(null);
