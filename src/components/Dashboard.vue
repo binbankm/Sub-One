@@ -492,12 +492,20 @@ const copyProfileLink = (profileId) => {
 };
 
 
-const handleShowNodeDetails = (subscription) => {
+const handleShowNodeDetails = (subscription, event) => {
+    // 记录点击位置，用于模态框定位
+    if (event) {
+        window.lastClickY = event.clientY;
+    }
     selectedSubscription.value = subscription;
     showNodeDetailsModal.value = true;
 };
 
-const handleShowProfileNodeDetails = (profile) => {
+const handleShowProfileNodeDetails = (profile, event) => {
+    // 记录点击位置，用于模态框定位
+    if (event) {
+        window.lastClickY = event.clientY;
+    }
     selectedProfile.value = profile;
     showProfileNodeDetailsModal.value = true;
 };
@@ -704,7 +712,7 @@ const handleNodeDragEnd = async (evt) => {
                       @change="handleSubscriptionToggle(subscription)" 
                       @update="handleSubscriptionUpdate(subscription.id)" 
                       @edit="handleEditSubscription(subscription.id)"
-                      @showNodes="handleShowNodeDetails(subscription)" />
+                      @showNodes="(event) => handleShowNodeDetails(subscription, event)" />
               </div>
             </template>
           </draggable>
@@ -716,7 +724,7 @@ const handleNodeDragEnd = async (evt) => {
                       @change="handleSubscriptionToggle(subscription)" 
                       @update="handleSubscriptionUpdate(subscription.id)" 
                       @edit="handleEditSubscription(subscription.id)"
-                      @showNodes="handleShowNodeDetails(subscription)" />
+                      @showNodes="(event) => handleShowNodeDetails(subscription, event)" />
               </div>
           </div>
           <div v-if="subsTotalPages > 1 && !isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
@@ -776,7 +784,7 @@ const handleNodeDragEnd = async (evt) => {
             @delete="handleDeleteProfile(profile.id)"
             @change="handleProfileToggle($event)"
             @copy-link="copyProfileLink(profile.id)"
-            @showNodes="handleShowProfileNodeDetails(profile)"
+            @showNodes="(event) => handleShowProfileNodeDetails(profile, event)"
           />
         </div>
         <div v-if="profilesTotalPages > 1" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">

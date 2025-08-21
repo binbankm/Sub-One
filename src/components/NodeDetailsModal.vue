@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
 
@@ -15,7 +15,8 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
-
+const modalRef = ref(null);
+const modalPosition = ref({ top: '50%', transform: 'translateY(-50%)' });
 
 const toastStore = useToastStore();
 
@@ -23,6 +24,10 @@ const toastStore = useToastStore();
 watch(() => props.show, async (newVal) => {
   if (newVal && props.subscription) {
     await fetchNodes();
+    // 延迟计算位置，确保DOM已渲染
+    nextTick(() => {
+      calculateModalPosition();
+    });
   } else {
     nodes.value = [];
     searchTerm.value = '';
@@ -30,6 +35,49 @@ watch(() => props.show, async (newVal) => {
     errorMessage.value = '';
   }
 });
+
+// 计算模态框的最佳显示位置
+const calculateModalPosition = () => {
+  if (!modalRef.value) return;
+  
+  const modal = modalRef.value;
+  const modalRect = modal.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  
+  // 获取点击位置（从事件中获取，如果没有则使用默认值）
+  const clickY = window.lastClickY || viewportHeight / 2;
+  
+  // 计算模态框的理想位置
+  let top = '50%';
+  let transform = 'translateY(-50%)';
+  
+  // 如果点击位置在视窗下半部分，将模态框向上偏移
+  if (clickY > viewportHeight / 2) {
+    const availableSpace = viewportHeight - modalRect.height;
+    if (availableSpace > 0) {
+      // 计算向上偏移的距离，确保模态框完全可见
+      const offset = Math.min(100, (clickY - viewportHeight / 2) / 2);
+      top = `calc(50% - ${offset}px)`;
+      transform = 'translateY(-50%)';
+    } else {
+      // 如果模态框太高，固定在顶部
+      top = '20px';
+      transform = 'none';
+    }
+  }
+  
+  // 如果点击位置在视窗上半部分，保持居中
+  if (clickY <= viewportHeight / 2) {
+    top = '50%';
+    transform = 'translateY(-50%)';
+  }
+  
+  modalPosition.value = { top, transform };
+};
+
+// 监听窗口大小变化，重新计算位置
+window.addEventListener('resize', calculateModalPosition);
 
 // 过滤后的节点列表
 const filteredNodes = computed(() => {
@@ -135,8 +183,13 @@ const refreshNodes = async () => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
-    <div class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh]" @click.stop>
+  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-start justify-center p-4 overflow-y-auto" @click="emit('update:show', false)">
+    <div 
+      ref="modalRef"
+      class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh] my-8" 
+      :style="modalPosition"
+      @click.stop
+    >
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
         <h3 class="text-xl font-bold gradient-text">节点详情</h3>
