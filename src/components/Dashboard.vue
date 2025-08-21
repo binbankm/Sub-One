@@ -105,6 +105,12 @@ const {
   logThreshold: 16
 });
 
+// 标记数据已更改
+const markDirty = () => { 
+  dirty.value = true; 
+  saveState.value = 'idle'; 
+};
+
 // 初始化数据
 const initialSubs = ref([]);
 const initialNodes = ref([]);
@@ -152,12 +158,6 @@ const isSortingSubs = ref(false);
 const isSortingNodes = ref(false);
 const manualNodeViewMode = ref('card');
 const isUpdatingAllSubs = ref(false);
-
-// 标记数据已更改
-const markDirty = () => { 
-  dirty.value = true; 
-  saveState.value = 'idle'; 
-};
 
 // 初始化状态
 const initializeState = async () => {
