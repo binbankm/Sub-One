@@ -135,29 +135,37 @@ const refreshNodes = async () => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
-    <div class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh]" @click.stop>
-      <!-- 标题 -->
-      <div class="p-6 pb-4 flex-shrink-0">
-        <h3 class="text-xl font-bold gradient-text">节点详情</h3>
+  <div v-if="show" class="fixed inset-0 z-[99] flex items-center justify-center p-2 sm:p-4" @click="emit('update:show', false)">
+    <div class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-left flex flex-col h-[90vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[85vh]" @click.stop>
+      <!-- 标题栏 -->
+      <div class="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">节点详情</h3>
+        <button 
+          @click="emit('update:show', false)" 
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
       </div>
       
-      <!-- 内容 -->
-      <div class="px-6 pb-6 flex-grow overflow-y-auto">
+      <!-- 内容区域 -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
         <div class="space-y-4">
           <!-- 订阅信息头部 -->
-          <div v-if="subscription" class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100">
+          <div v-if="subscription" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
                   {{ subscription.name || '未命名订阅' }}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 break-all">
                   {{ subscription.url }}
                 </p>
               </div>
-              <div class="text-right">
-                <p class="text-sm text-gray-600 dark:text-gray-300">
+              <div class="text-right sm:text-left">
+                <p class="text-sm text-gray-700 dark:text-gray-300">
                   共 {{ nodes.length }} 个节点
                 </p>
                 <p v-if="subscription.nodeCount" class="text-xs text-gray-500 dark:text-gray-400">
@@ -168,23 +176,23 @@ const refreshNodes = async () => {
           </div>
 
           <!-- 搜索和操作栏 -->
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div class="flex-1 relative">
               <input
                 v-model="searchTerm"
                 type="text"
                 placeholder="搜索节点名称或链接..."
-                class="search-input-unified w-full"
+                class="w-full px-4 py-2 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-gray-100"
               />
-              <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 justify-end">
               <button
                 @click="refreshNodes"
                 :disabled="isLoading"
-                class="btn-modern px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <svg v-if="isLoading" class="animate-spin h-4 w-4" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
@@ -196,8 +204,11 @@ const refreshNodes = async () => {
               <button
                 @click="copySelectedNodes"
                 :disabled="selectedNodes.size === 0"
-                class="px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
                 复制选中
               </button>
             </div>
@@ -210,21 +221,21 @@ const refreshNodes = async () => {
 
           <!-- 加载状态 -->
           <div v-if="isLoading" class="flex items-center justify-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            <span class="ml-2 text-gray-600 dark:text-gray-400">正在获取节点信息...</span>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span class="ml-3 text-gray-600 dark:text-gray-400">正在获取节点信息...</span>
           </div>
 
           <!-- 节点列表 -->
-          <div v-else-if="filteredNodes.length > 0" class="space-y-2">
+          <div v-else-if="filteredNodes.length > 0" class="space-y-3">
             <!-- 全选按钮 -->
-            <div class="flex items-center justify-between p-3 bg-gray-50/60 dark:bg-gray-800/75 rounded-lg">
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <label class="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   :checked="selectedNodes.size === filteredNodes.length && filteredNodes.length > 0"
                   :indeterminate="selectedNodes.size > 0 && selectedNodes.size < filteredNodes.length"
                   @change="toggleSelectAll"
-                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   全选 ({{ selectedNodes.size }}/{{ filteredNodes.length }})
@@ -233,85 +244,187 @@ const refreshNodes = async () => {
             </div>
 
             <!-- 节点卡片列表 -->
-            <div class="max-h-96 overflow-y-auto space-y-2">
+            <div class="space-y-2 max-h-[50vh] sm:max-h-[45vh] overflow-y-auto">
               <div
                 v-for="node in filteredNodes"
                 :key="node.id"
-                class="flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                class="flex items-start p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <input
                   type="checkbox"
                   :checked="selectedNodes.has(node.id)"
                   @change="toggleNodeSelection(node.id)"
-                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 mt-1 flex-shrink-0"
                 />
                 
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
+                  <div class="flex items-center gap-2 mb-2">
                     <span 
-                      class="text-xs px-2 py-1 rounded-full"
+                      class="text-xs px-2 py-1 rounded-full font-medium"
                       :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color"
                     >
                       {{ getProtocolInfo(node.protocol).icon }} {{ node.protocol.toUpperCase() }}
                     </span>
                   </div>
-                  <p class="font-medium text-gray-900 dark:text-gray-100 truncate" :title="node.name">
+                  <p class="font-medium text-gray-900 dark:text-gray-100 text-sm break-words" :title="node.name">
                     {{ node.name }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-1" :title="node.url">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 break-all mt-1" :title="node.url">
                     {{ node.url }}
                   </p>
                 </div>
-                
-
               </div>
             </div>
           </div>
 
           <!-- 空状态 -->
           <div v-else class="text-center py-8">
-            <div class="text-gray-400 dark:text-gray-500 mb-2">
+            <div class="text-gray-400 dark:text-gray-500 mb-3">
               <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p class="text-gray-500 dark:text-gray-400">
+            <p class="text-gray-500 dark:text-gray-400 text-sm">
               {{ searchTerm ? '没有找到匹配的节点' : '暂无节点信息' }}
             </p>
           </div>
         </div>
-      </div>
-
-      <!-- 底部按钮 -->
-      <div class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
-        <button 
-          @click="emit('update:show', false)" 
-          class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-sm rounded-lg transition-colors"
-        >
-          关闭
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .fixed {
+    padding: 0.5rem;
+  }
+  
+  .max-w-4xl {
+    height: calc(100vh - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+  }
 }
 
-.modal-inner-enter-active,
-.modal-inner-leave-active {
-  transition: all 0.25s ease;
+@media (max-height: 600px) {
+  .max-w-4xl {
+    height: calc(100vh - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+  }
 }
-.modal-inner-enter-from,
-.modal-inner-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
+
+/* 滚动条样式 */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* 文本换行优化 */
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.fixed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 按钮悬停效果 */
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* 输入框焦点效果 */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 复选框样式优化 */
+input[type="checkbox"] {
+  transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+  transform: scale(1.1);
+}
+
+/* 协议标签悬停效果 */
+.rounded-full {
+  transition: all 0.2s ease;
+}
+
+.rounded-full:hover {
+  transform: scale(1.05);
+}
+
+/* 节点卡片悬停效果 */
+.border {
+  transition: all 0.2s ease;
+}
+
+.border:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗色模式优化 */
+@media (prefers-color-scheme: dark) {
+  .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* 小屏幕优化 */
+@media (max-width: 480px) {
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-y-3 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.375rem;
+  }
 }
 </style> 
