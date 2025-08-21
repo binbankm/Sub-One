@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
 
@@ -15,95 +15,21 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
-const modalPosition = ref('');
+
 
 const toastStore = useToastStore();
-
-// 计算模态框位置
-const calculateModalPosition = () => {
-  nextTick(() => {
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-    const scrollY = window.scrollY;
-    
-    // 获取点击事件的位置，如果没有则使用默认值
-    let clickY = 0;
-    if (window.event) {
-      clickY = window.event.clientY;
-    } else {
-      // 如果没有点击事件，检查滚动位置来判断
-      const scrollPercentage = scrollY / (document.body.scrollHeight - viewportHeight);
-      if (scrollPercentage > 0.7) {
-        // 如果页面滚动到底部附近，模态框向上显示
-        modalPosition.value = 'items-start pt-4 sm:pt-8';
-        return;
-      } else if (scrollPercentage < 0.3) {
-        // 如果页面滚动到顶部附近，模态框向下显示
-        modalPosition.value = 'items-end pb-4 sm:pb-8';
-        return;
-      } else {
-        // 页面在中间位置，模态框居中
-        modalPosition.value = 'items-center';
-        return;
-      }
-    }
-    
-    // 根据点击位置计算模态框位置
-    const clickPercentage = clickY / viewportHeight;
-    
-    if (clickPercentage > 0.7) {
-      // 点击在屏幕下半部分，模态框向上对齐，避免被底部遮挡
-      modalPosition.value = 'items-start pt-4 sm:pt-8';
-    } else if (clickPercentage < 0.3) {
-      // 点击在屏幕上半部分，模态框向下对齐，避免被顶部遮挡
-      modalPosition.value = 'items-end pb-4 sm:pb-8';
-    } else {
-      // 点击在屏幕中间，模态框居中
-      modalPosition.value = 'items-center';
-    }
-    
-    // 在小屏幕上，优先考虑向上对齐，避免内容被底部遮挡
-    if (viewportWidth < 640) {
-      if (clickPercentage > 0.5) {
-        modalPosition.value = 'items-start pt-4 sm:pt-8';
-      }
-    }
-  });
-};
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
   if (newVal && props.subscription) {
-    calculateModalPosition();
     await fetchNodes();
-    // 添加滚动监听，动态调整位置
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleResize);
   } else {
     nodes.value = [];
     searchTerm.value = '';
     selectedNodes.value.clear();
     errorMessage.value = '';
-    modalPosition.value = '';
-    // 移除事件监听
-    window.removeEventListener('scroll', handleScroll);
-    window.removeEventListener('resize', handleResize);
   }
 });
-
-// 处理滚动事件
-const handleScroll = () => {
-  if (props.show) {
-    calculateModalPosition();
-  }
-};
-
-// 处理窗口大小变化
-const handleResize = () => {
-  if (props.show) {
-    calculateModalPosition();
-  }
-};
 
 // 过滤后的节点列表
 const filteredNodes = computed(() => {
@@ -204,44 +130,34 @@ const refreshNodes = async () => {
   await fetchNodes();
   toastStore.showToast('节点信息已刷新', 'success');
 };
+
+
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 z-[99] flex items-center justify-center p-2 sm:p-4" @click="emit('update:show', false)">
-    <div 
-      class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-left flex flex-col h-[90vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[85vh]" 
-      :class="modalPosition"
-      @click.stop
-    >
-      <!-- 标题栏 -->
-      <div class="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">节点详情</h3>
-        <button 
-          @click="emit('update:show', false)" 
-          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
+  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
+    <div class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh]" @click.stop>
+      <!-- 标题 -->
+      <div class="p-6 pb-4 flex-shrink-0">
+        <h3 class="text-xl font-bold gradient-text">节点详情</h3>
       </div>
       
-      <!-- 内容区域 -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
+      <!-- 内容 -->
+      <div class="px-6 pb-6 flex-grow overflow-y-auto">
         <div class="space-y-4">
           <!-- 订阅信息头部 -->
-          <div v-if="subscription" class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base">
+          <div v-if="subscription" class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100">
                   {{ subscription.name || '未命名订阅' }}
                 </h3>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 break-all">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {{ subscription.url }}
                 </p>
               </div>
-              <div class="text-right sm:text-left">
-                <p class="text-sm text-gray-700 dark:text-gray-300">
+              <div class="text-right">
+                <p class="text-sm text-gray-600 dark:text-gray-300">
                   共 {{ nodes.length }} 个节点
                 </p>
                 <p v-if="subscription.nodeCount" class="text-xs text-gray-500 dark:text-gray-400">
@@ -252,23 +168,23 @@ const refreshNodes = async () => {
           </div>
 
           <!-- 搜索和操作栏 -->
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="flex items-center justify-between gap-4">
             <div class="flex-1 relative">
               <input
                 v-model="searchTerm"
                 type="text"
                 placeholder="搜索节点名称或链接..."
-                class="w-full px-4 py-2 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-gray-100"
+                class="search-input-unified w-full"
               />
-              <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div class="flex items-center gap-2 justify-end">
+            <div class="flex items-center gap-2">
               <button
                 @click="refreshNodes"
                 :disabled="isLoading"
-                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                class="btn-modern px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg v-if="isLoading" class="animate-spin h-4 w-4" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
@@ -280,11 +196,8 @@ const refreshNodes = async () => {
               <button
                 @click="copySelectedNodes"
                 :disabled="selectedNodes.size === 0"
-                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                class="px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
                 复制选中
               </button>
             </div>
@@ -297,21 +210,21 @@ const refreshNodes = async () => {
 
           <!-- 加载状态 -->
           <div v-if="isLoading" class="flex items-center justify-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span class="ml-3 text-gray-600 dark:text-gray-400">正在获取节点信息...</span>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <span class="ml-2 text-gray-600 dark:text-gray-400">正在获取节点信息...</span>
           </div>
 
           <!-- 节点列表 -->
-          <div v-else-if="filteredNodes.length > 0" class="space-y-3">
+          <div v-else-if="filteredNodes.length > 0" class="space-y-2">
             <!-- 全选按钮 -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div class="flex items-center justify-between p-3 bg-gray-50/60 dark:bg-gray-800/75 rounded-lg">
               <label class="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   :checked="selectedNodes.size === filteredNodes.length && filteredNodes.length > 0"
                   :indeterminate="selectedNodes.size > 0 && selectedNodes.size < filteredNodes.length"
                   @change="toggleSelectAll"
-                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   全选 ({{ selectedNodes.size }}/{{ filteredNodes.length }})
@@ -320,239 +233,85 @@ const refreshNodes = async () => {
             </div>
 
             <!-- 节点卡片列表 -->
-            <div class="space-y-2 max-h-[50vh] sm:max-h-[45vh] overflow-y-auto">
+            <div class="max-h-96 overflow-y-auto space-y-2">
               <div
                 v-for="node in filteredNodes"
                 :key="node.id"
-                class="flex items-start p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                class="flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <input
                   type="checkbox"
                   :checked="selectedNodes.has(node.id)"
                   @change="toggleNodeSelection(node.id)"
-                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 mt-1 flex-shrink-0"
+                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3"
                 />
                 
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-2">
+                  <div class="flex items-center gap-2 mb-1">
                     <span 
-                      class="text-xs px-2 py-1 rounded-full font-medium"
+                      class="text-xs px-2 py-1 rounded-full"
                       :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color"
                     >
                       {{ getProtocolInfo(node.protocol).icon }} {{ node.protocol.toUpperCase() }}
                     </span>
                   </div>
-                  <p class="font-medium text-gray-900 dark:text-gray-100 text-sm break-words" :title="node.name">
+                  <p class="font-medium text-gray-900 dark:text-gray-100 truncate" :title="node.name">
                     {{ node.name }}
                   </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 break-all mt-1" :title="node.url">
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-1" :title="node.url">
                     {{ node.url }}
                   </p>
                 </div>
+                
+
               </div>
             </div>
           </div>
 
           <!-- 空状态 -->
           <div v-else class="text-center py-8">
-            <div class="text-gray-400 dark:text-gray-500 mb-3">
+            <div class="text-gray-400 dark:text-gray-500 mb-2">
               <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">
+            <p class="text-gray-500 dark:text-gray-400">
               {{ searchTerm ? '没有找到匹配的节点' : '暂无节点信息' }}
             </p>
           </div>
         </div>
+      </div>
+
+      <!-- 底部按钮 -->
+      <div class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+        <button 
+          @click="emit('update:show', false)" 
+          class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-sm rounded-lg transition-colors"
+        >
+          关闭
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 响应式设计 */
-@media (max-width: 640px) {
-  .fixed {
-    padding: 0.5rem;
-  }
-  
-  .max-w-4xl {
-    height: calc(100vh - 1rem) !important;
-    max-height: calc(100vh - 1rem) !important;
-  }
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
 }
 
-@media (max-height: 600px) {
-  .max-w-4xl {
-    height: calc(100vh - 1rem) !important;
-    max-height: calc(100vh - 1rem) !important;
-  }
+.modal-inner-enter-active,
+.modal-inner-leave-active {
+  transition: all 0.25s ease;
 }
-
-/* 模态框位置过渡动画 */
-.fixed {
-  transition: all 0.3s ease-out;
-}
-
-/* 不同位置下的样式调整 */
-.items-start {
-  align-items: flex-start;
-}
-
-.items-end {
-  align-items: flex-end;
-}
-
-.items-center {
-  align-items: center;
-}
-
-/* 顶部对齐时的内边距 */
-.pt-4 {
-  padding-top: 1rem;
-}
-
-.pt-8 {
-  padding-top: 2rem;
-}
-
-/* 底部对齐时的内边距 */
-.pb-4 {
-  padding-bottom: 1rem;
-}
-
-.pb-8 {
-  padding-bottom: 2rem;
-}
-
-/* 滚动条样式 */
-.overflow-y-auto {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.7);
-}
-
-/* 文本换行优化 */
-.break-words {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.break-all {
-  word-break: break-all;
-}
-
-/* 动画效果 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.fixed {
-  animation: fadeIn 0.2s ease-out;
-}
-
-/* 按钮悬停效果 */
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:active {
-  transform: translateY(0);
-}
-
-/* 输入框焦点效果 */
-input:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* 复选框样式优化 */
-input[type="checkbox"] {
-  transition: all 0.2s ease;
-}
-
-input[type="checkbox"]:checked {
-  transform: scale(1.1);
-}
-
-/* 协议标签悬停效果 */
-.rounded-full {
-  transition: all 0.2s ease;
-}
-
-.rounded-full:hover {
-  transform: scale(1.05);
-}
-
-/* 节点卡片悬停效果 */
-.border {
-  transition: all 0.2s ease;
-}
-
-.border:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* 暗色模式优化 */
-@media (prefers-color-scheme: dark) {
-  .shadow-2xl {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-  }
-}
-
-/* 小屏幕优化 */
-@media (max-width: 480px) {
-  .space-y-4 > * + * {
-    margin-top: 0.75rem;
-  }
-  
-  .space-y-3 > * + * {
-    margin-top: 0.5rem;
-  }
-  
-  .space-y-2 > * + * {
-    margin-top: 0.375rem;
-  }
-}
-
-/* 确保模态框在不同位置下都有合适的最大高度 */
-.max-w-4xl {
-  max-height: calc(100vh - 2rem);
-}
-
-/* 在小屏幕上调整内边距 */
-@media (max-width: 640px) {
-  .pt-8 {
-    padding-top: 1rem;
-  }
-  
-  .pb-8 {
-    padding-bottom: 1rem;
-  }
+.modal-inner-enter-from,
+.modal-inner-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 </style> 
