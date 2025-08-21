@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, watch } from 'vue';
 import { saveSubs, batchUpdateNodes } from '../lib/api.js';
 import { extractNodeName } from '../lib/utils.js';
 import { useToastStore } from '../stores/toast.js';
@@ -9,6 +9,8 @@ import { useManualNodes } from '../composables/useManualNodes.js';
 import { useModals } from '../composables/useModals.js';
 import { useProfiles } from '../composables/useProfiles.js';
 import { useDebounce } from '../composables/useDebounce.js';
+import { useLoadingState } from '../composables/useLoadingState.js';
+import { usePerformanceMonitor } from '../composables/usePerformanceMonitor.js';
 import { 
   PAGINATION, 
   VALIDATION, 
@@ -28,6 +30,9 @@ import SubscriptionsTab from './tabs/SubscriptionsTab.vue';
 import ProfilesTab from './tabs/ProfilesTab.vue';
 import LinkGeneratorTab from './tabs/LinkGeneratorTab.vue';
 import ManualNodesTab from './tabs/ManualNodesTab.vue';
+
+// 导航标签页组件
+import NavigationTabs from './NavigationTabs.vue';
 
 // 公共组件
 import SaveStatus from './common/SaveStatus.vue';
@@ -50,14 +55,55 @@ const props = defineProps({
   }
 });
 
+// 本地标签页状态
+const currentTab = ref(props.activeTab);
+
+// Emits
+const emit = defineEmits(['update:activeTab']);
+
+// 处理标签页切换
+const handleTabChange = (tab) => {
+  currentTab.value = tab;
+  emit('update:activeTab', tab);
+};
+
+// 监听 props 变化
+watch(() => props.activeTab, (newTab) => {
+  currentTab.value = newTab;
+});
+
 // Stores
 const { showToast } = useToastStore();
 const uiStore = useUIStore();
 
 // 状态管理
-const isLoading = ref(true);
 const dirty = ref(false);
 const saveState = ref('idle');
+
+// 使用加载状态管理
+const {
+  loadingStates,
+  setLoading,
+  getLoading,
+  withLoading
+} = useLoadingState({
+  initialStates: {
+    page: true,
+    save: false,
+    updateAll: false
+  }
+});
+
+// 使用性能监控
+const {
+  recordError,
+  recordWarning,
+  getPerformanceReport
+} = usePerformanceMonitor({
+  enableRenderTiming: true,
+  enableInteractionTiming: true,
+  logThreshold: 16
+});
 
 // 使用 composables
 const {
@@ -114,27 +160,33 @@ const markDirty = () => {
 };
 
 // 初始化状态
-const initializeState = () => {
-  isLoading.value = true;
-  if (props.data) {
-    const subsData = props.data.subs || [];
-    const httpRegex = VALIDATION.URL_REGEX;
-    
-    initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
-    initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
-    
-    // 使用 useProfiles 的初始化方法
-    initializeProfiles(props.data.profiles || []);
-    config.value = props.data.config || {};
+const initializeState = async () => {
+  try {
+    setLoading('page', true);
+    if (props.data) {
+      const subsData = props.data.subs || [];
+      const httpRegex = VALIDATION.URL_REGEX;
+      
+      initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
+      initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
+      
+      // 使用 useProfiles 的初始化方法
+      initializeProfiles(props.data.profiles || []);
+      config.value = props.data.config || {};
+    }
+    dirty.value = false;
+  } catch (error) {
+    recordError(error, { context: 'initializeState' });
+    throw error;
+  } finally {
+    setLoading('page', false);
   }
-  isLoading.value = false;
-  dirty.value = false;
 };
 
 // 生命周期钩子
 onMounted(async () => {
   try {
-    initializeState();
+    await initializeState();
     window.addEventListener('beforeunload', handleBeforeUnload);
     const savedViewMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
     if (savedViewMode) {
@@ -143,8 +195,6 @@ onMounted(async () => {
   } catch (error) {
     console.error('初始化数据失败:', error);
     showToast('初始化数据失败', 'error');
-  } finally {
-    isLoading.value = false;
   }
 });
 
@@ -176,55 +226,59 @@ const handleDiscard = () => {
 };
 
 const handleSave = async () => {
-  saveState.value = 'saving';
-  
-  const combinedSubs = [
-    ...subscriptions.value.map(sub => {
-      const { isUpdating, ...rest } = sub;
-      return rest;
-    }),
-    ...manualNodes.value.map(node => {
-      const { isUpdating, ...rest } = node;
-      return rest;
-    })
-  ];
-
-  try {
-    if (!Array.isArray(combinedSubs) || !Array.isArray(profiles.value)) {
-      throw new Error('数据格式错误，请刷新页面后重试');
-    }
-
-    const result = await saveSubs(combinedSubs, profiles.value);
-
-    if (result.success) {
-      saveState.value = 'success';
-      showToast(SUCCESS_MESSAGES.SAVE_SUCCESS, 'success');
-      isSortingSubs.value = false;
-      isSortingNodes.value = false;
-      setTimeout(() => { 
-        dirty.value = false; 
-        saveState.value = 'idle'; 
-      }, DELAYS.SAVE_SUCCESS_DISPLAY);
-    } else {
-      const errorMessage = result.message || result.error || '保存失败，请稍后重试';
-      throw new Error(errorMessage);
-    }
-  } catch (error) {
-    console.error('保存数据时发生错误:', error);
-    let userMessage = error.message;
+  return withLoading('save', async () => {
+    saveState.value = 'saving';
     
-    // 使用常量中的错误消息映射
-    if (error.message.includes('网络')) {
-      userMessage = ERROR_MESSAGES.NETWORK_ERROR;
-    } else if (error.message.includes('格式')) {
-      userMessage = ERROR_MESSAGES.FORMAT_ERROR;
-    } else if (error.message.includes('存储')) {
-      userMessage = ERROR_MESSAGES.STORAGE_ERROR;
-    }
+    const combinedSubs = [
+      ...subscriptions.value.map(sub => {
+        const { isUpdating, ...rest } = sub;
+        return rest;
+      }),
+      ...manualNodes.value.map(node => {
+        const { isUpdating, ...rest } = node;
+        return rest;
+      })
+    ];
 
-    showToast(userMessage, 'error');
-    saveState.value = 'idle';
-  }
+    try {
+      if (!Array.isArray(combinedSubs) || !Array.isArray(profiles.value)) {
+        throw new Error('数据格式错误，请刷新页面后重试');
+      }
+
+      const result = await saveSubs(combinedSubs, profiles.value);
+
+      if (result.success) {
+        saveState.value = 'success';
+        showToast(SUCCESS_MESSAGES.SAVE_SUCCESS, 'success');
+        isSortingSubs.value = false;
+        isSortingNodes.value = false;
+        setTimeout(() => { 
+          dirty.value = false; 
+          saveState.value = 'idle'; 
+        }, DELAYS.SAVE_SUCCESS_DISPLAY);
+      } else {
+        const errorMessage = result.message || result.error || '保存失败，请稍后重试';
+        throw new Error(errorMessage);
+      }
+    } catch (error) {
+      console.error('保存数据时发生错误:', error);
+      recordError(error, { context: 'handleSave' });
+      
+      let userMessage = error.message;
+      
+      // 使用常量中的错误消息映射
+      if (error.message.includes('网络')) {
+        userMessage = ERROR_MESSAGES.NETWORK_ERROR;
+      } else if (error.message.includes('格式')) {
+        userMessage = ERROR_MESSAGES.FORMAT_ERROR;
+      } else if (error.message.includes('存储')) {
+        userMessage = ERROR_MESSAGES.STORAGE_ERROR;
+      }
+
+      showToast(userMessage, 'error');
+      saveState.value = 'idle';
+    }
+  });
 };
 
 // 通用直接保存函数
@@ -306,43 +360,46 @@ const handleUpdateAllSubscriptions = async () => {
     return;
   }
   
-  isUpdatingAllSubs.value = true;
-  
-  try {
-    const subscriptionIds = enabledSubs.map(sub => sub.id);
-    const result = await batchUpdateNodes(subscriptionIds);
+  return withLoading('updateAll', async () => {
+    isUpdatingAllSubs.value = true;
     
-    if (result.success) {
-      if (result.results && Array.isArray(result.results)) {
-        const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
-        
-        result.results.forEach(updateResult => {
-          if (updateResult.success) {
-            const sub = subsMap.get(updateResult.id);
-            if (sub) {
-              if (typeof updateResult.nodeCount === 'number') {
-                sub.nodeCount = updateResult.nodeCount;
-              }
-              if (updateResult.userInfo) {
-                sub.userInfo = updateResult.userInfo;
+    try {
+      const subscriptionIds = enabledSubs.map(sub => sub.id);
+      const result = await batchUpdateNodes(subscriptionIds);
+      
+      if (result.success) {
+        if (result.results && Array.isArray(result.results)) {
+          const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
+          
+          result.results.forEach(updateResult => {
+            if (updateResult.success) {
+              const sub = subsMap.get(updateResult.id);
+              if (sub) {
+                if (typeof updateResult.nodeCount === 'number') {
+                  sub.nodeCount = updateResult.nodeCount;
+                }
+                if (updateResult.userInfo) {
+                  sub.userInfo = updateResult.userInfo;
+                }
               }
             }
-          }
-        });
+          });
+        }
+        
+        const successCount = result.results ? result.results.filter(r => r.success).length : enabledSubs.length;
+        showToast(`成功更新了 ${successCount} 个订阅`, 'success');
+        await handleDirectSave('订阅更新');
+      } else {
+        showToast(`更新失败: ${result.message}`, 'error');
       }
-      
-      const successCount = result.results ? result.results.filter(r => r.success).length : enabledSubs.length;
-      showToast(`成功更新了 ${successCount} 个订阅`, 'success');
-      await handleDirectSave('订阅更新');
-    } else {
-      showToast(`更新失败: ${result.message}`, 'error');
+    } catch (error) {
+      console.error('批量更新订阅失败:', error);
+      recordError(error, { context: 'handleUpdateAllSubscriptions' });
+      showToast('批量更新失败', 'error');
+    } finally {
+      isUpdatingAllSubs.value = false;
     }
-  } catch (error) {
-    console.error('批量更新订阅失败:', error);
-    showToast('批量更新失败', 'error');
-  } finally {
-    isUpdatingAllSubs.value = false;
-  }
+  });
 };
 
 const handleSubscriptionDragEnd = async () => {
@@ -542,11 +599,21 @@ const updateSearchTerm = (term) => {
 </script>
 
 <template>
-  <div v-if="isLoading" class="text-center py-16 text-gray-500">
+  <div v-if="getLoading('page')" class="text-center py-16 text-gray-500">
     正在加载...
   </div>
   <div v-else class="w-full container-optimized">
     
+    <!-- 导航标签页 -->
+    <NavigationTabs
+      :model-value="currentTab"
+      @update:model-value="handleTabChange"
+      :subscriptions-count="subscriptions.length"
+      :profiles-count="profiles.length"
+      :manual-nodes-count="manualNodes.length"
+      :generator-count="1"
+    />
+
     <!-- 保存状态提示 -->
     <SaveStatus 
       :dirty="dirty" 
@@ -560,7 +627,7 @@ const updateSearchTerm = (term) => {
       
       <!-- 订阅管理标签页 -->
       <SubscriptionsTab
-        v-if="activeTab === 'subscriptions'"
+        v-if="currentTab === 'subscriptions'"
         :subscriptions="subscriptions"
         :subs-current-page="subsCurrentPage"
         :subs-total-pages="subsTotalPages"
@@ -580,7 +647,7 @@ const updateSearchTerm = (term) => {
 
       <!-- 订阅组标签页 -->
       <ProfilesTab
-        v-if="activeTab === 'profiles'"
+        v-if="currentTab === 'profiles'"
         :profiles="profiles"
         :profiles-current-page="profilesCurrentPage"
         :profiles-total-pages="profilesTotalPages"
@@ -598,14 +665,14 @@ const updateSearchTerm = (term) => {
 
       <!-- 链接生成标签页 -->
       <LinkGeneratorTab
-        v-if="activeTab === 'generator'"
+        v-if="currentTab === 'generator'"
         :config="config"
         :profiles="profiles"
       />
 
       <!-- 手动节点标签页 -->
       <ManualNodesTab
-        v-if="activeTab === 'nodes'"
+        v-if="currentTab === 'nodes'"
         :manual-nodes="manualNodes"
         :manual-nodes-current-page="manualNodesCurrentPage"
         :manual-nodes-total-pages="manualNodesTotalPages"

@@ -152,13 +152,23 @@ src/
 │       ├── SubscriptionEditModal.vue # 订阅编辑模态框
 │       ├── NodeEditModal.vue        # 节点编辑模态框
 │       └── DeleteConfirmModal.vue   # 删除确认模态框
+│   ├── common/         # 公共组件（新增）
+│   │   ├── Pagination.vue          # 分页组件
+│   │   ├── EmptyState.vue          # 空状态组件
+│   │   ├── TabHeader.vue           # 标签页头部组件
+│   │   ├── MoreMenu.vue            # 更多菜单组件
+│   │   ├── SaveStatus.vue          # 保存状态组件
+│   │   ├── ErrorBoundary.vue       # 错误边界组件（新增）
+│   │   └── VirtualList.vue         # 虚拟滚动组件（新增）
 ├── composables/         # 组合式函数
 │   ├── useSubscriptions.js
 │   ├── useManualNodes.js
 │   ├── useModals.js               # 模态框管理（新增）
 │   ├── usePagination.js           # 分页管理（新增）
 │   ├── useProfiles.js             # 订阅组管理（新增）
-│   └── useDebounce.js             # 防抖节流（新增）
+│   ├── useDebounce.js             # 防抖节流（新增）
+│   ├── useLoadingState.js         # 加载状态管理（新增）
+│   └── usePerformanceMonitor.js   # 性能监控（新增）
 ├── stores/             # Pinia状态管理
 ├── lib/                # 工具函数和API
 └── assets/             # 静态资源
@@ -202,12 +212,17 @@ src/
 - **usePagination**: 通用分页逻辑，支持不同数据类型和自动监听
 - **useProfiles**: 订阅组管理逻辑，包含验证和清理方法
 - **useDebounce**: 防抖和节流功能，优化搜索和保存性能
+- **useLoadingState**: 加载状态管理，支持延迟显示和批量操作
+- **usePerformanceMonitor**: 性能监控，包括渲染时间、交互时间和内存使用
 - **Composables**: 业务逻辑与UI分离，提高可测试性
 
 #### 性能优化
 - **懒加载**: 异步组件按需加载
 - **响应式优化**: 减少不必要的响应式数据
 - **事件处理**: 统一的事件管理，避免内存泄漏
+- **虚拟滚动**: 处理大量数据的高效渲染
+- **性能监控**: 实时监控渲染性能和内存使用
+- **加载状态管理**: 智能的加载状态控制，避免闪烁
 
 #### 代码质量
 - **TypeScript**: 类型安全，提高代码可靠性
@@ -215,6 +230,8 @@ src/
 - **组件通信**: 清晰的props和emits定义
 - **常量管理**: 统一常量定义，减少魔法数字
 - **错误处理**: 完善的错误边界和用户友好的错误消息
+- **错误边界**: 全局错误捕获和处理
+- **性能监控**: 自动性能分析和优化建议
 
 ## 🔒 安全特性
 
