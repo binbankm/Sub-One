@@ -7,9 +7,6 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
-      screens: {
-        'xs': '475px',
-      },
       colors: {
         // 现代化渐变色
         gradient: {
