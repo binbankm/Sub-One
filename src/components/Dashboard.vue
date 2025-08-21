@@ -32,7 +32,7 @@ import LinkGeneratorTab from './tabs/LinkGeneratorTab.vue';
 import ManualNodesTab from './tabs/ManualNodesTab.vue';
 
 // 导航标签页组件
-import NavigationTabs from './NavigationTabs.vue';
+
 
 // 公共组件
 import SaveStatus from './common/SaveStatus.vue';
@@ -55,22 +55,8 @@ const props = defineProps({
   }
 });
 
-// 本地标签页状态
-const currentTab = ref(props.activeTab);
-
 // Emits
 const emit = defineEmits(['update:activeTab']);
-
-// 处理标签页切换
-const handleTabChange = (tab) => {
-  currentTab.value = tab;
-  emit('update:activeTab', tab);
-};
-
-// 监听 props 变化
-watch(() => props.activeTab, (newTab) => {
-  currentTab.value = newTab;
-});
 
 // Stores
 const { showToast } = useToastStore();
@@ -163,8 +149,6 @@ const isUpdatingAllSubs = ref(false);
 const initializeState = async () => {
   try {
     setLoading('page', true);
-    console.log('初始化状态 - props.data:', props.data); // 调试信息
-    
     if (props.data) {
       const subsData = props.data.subs || [];
       const httpRegex = VALIDATION.URL_REGEX;
@@ -180,10 +164,7 @@ const initializeState = async () => {
       initializeManualNodes(initialNodes.value);
       
       config.value = props.data.config || {};
-      
-      console.log('初始化完成 - 订阅数量:', initialSubs.value.length, '节点数量:', initialNodes.value.length);
     } else {
-      console.log('props.data 为空，使用默认值初始化');
       // 即使没有数据也要初始化，避免组件不显示
       initializeProfiles([]);
       initializeSubscriptions([]);
@@ -620,16 +601,6 @@ const updateSearchTerm = (term) => {
   </div>
   <div v-else class="w-full container-optimized">
     
-    <!-- 导航标签页 -->
-    <NavigationTabs
-      :model-value="currentTab"
-      @update:model-value="handleTabChange"
-      :subscriptions-count="subscriptions.length"
-      :profiles-count="profiles.length"
-      :manual-nodes-count="manualNodes.length"
-      :generator-count="1"
-    />
-
     <!-- 保存状态提示 -->
     <SaveStatus 
       :dirty="dirty" 
@@ -643,7 +614,7 @@ const updateSearchTerm = (term) => {
       
              <!-- 订阅管理标签页 -->
        <SubscriptionsTab
-         v-if="currentTab === 'subscriptions'"
+         v-if="props.activeTab === 'subscriptions'"
          :subscriptions="subscriptions"
          :subs-current-page="subsCurrentPage"
          :subs-total-pages="subsTotalPages"
@@ -665,7 +636,7 @@ const updateSearchTerm = (term) => {
 
       <!-- 订阅组标签页 -->
       <ProfilesTab
-        v-if="currentTab === 'profiles'"
+        v-if="props.activeTab === 'profiles'"
         :profiles="profiles"
         :profiles-current-page="profilesCurrentPage"
         :profiles-total-pages="profilesTotalPages"
@@ -683,14 +654,14 @@ const updateSearchTerm = (term) => {
 
       <!-- 链接生成标签页 -->
       <LinkGeneratorTab
-        v-if="currentTab === 'generator'"
+        v-if="props.activeTab === 'generator'"
         :config="config"
         :profiles="profiles"
       />
 
       <!-- 手动节点标签页 -->
       <ManualNodesTab
-        v-if="currentTab === 'nodes'"
+        v-if="props.activeTab === 'nodes'"
         :manual-nodes="manualNodes"
         :manual-nodes-current-page="manualNodesCurrentPage"
         :manual-nodes-total-pages="manualNodesTotalPages"
