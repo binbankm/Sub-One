@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
 
@@ -15,21 +15,95 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
-
+const modalPosition = ref('');
 
 const toastStore = useToastStore();
+
+// 计算模态框位置
+const calculateModalPosition = () => {
+  nextTick(() => {
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const scrollY = window.scrollY;
+    
+    // 获取点击事件的位置，如果没有则使用默认值
+    let clickY = 0;
+    if (window.event) {
+      clickY = window.event.clientY;
+    } else {
+      // 如果没有点击事件，检查滚动位置来判断
+      const scrollPercentage = scrollY / (document.body.scrollHeight - viewportHeight);
+      if (scrollPercentage > 0.7) {
+        // 如果页面滚动到底部附近，模态框向上显示
+        modalPosition.value = 'items-start pt-4 sm:pt-8';
+        return;
+      } else if (scrollPercentage < 0.3) {
+        // 如果页面滚动到顶部附近，模态框向下显示
+        modalPosition.value = 'items-end pb-4 sm:pb-8';
+        return;
+      } else {
+        // 页面在中间位置，模态框居中
+        modalPosition.value = 'items-center';
+        return;
+      }
+    }
+    
+    // 根据点击位置计算模态框位置
+    const clickPercentage = clickY / viewportHeight;
+    
+    if (clickPercentage > 0.7) {
+      // 点击在屏幕下半部分，模态框向上对齐，避免被底部遮挡
+      modalPosition.value = 'items-start pt-4 sm:pt-8';
+    } else if (clickPercentage < 0.3) {
+      // 点击在屏幕上半部分，模态框向下对齐，避免被顶部遮挡
+      modalPosition.value = 'items-end pb-4 sm:pb-8';
+    } else {
+      // 点击在屏幕中间，模态框居中
+      modalPosition.value = 'items-center';
+    }
+    
+    // 在小屏幕上，优先考虑向上对齐，避免内容被底部遮挡
+    if (viewportWidth < 640) {
+      if (clickPercentage > 0.5) {
+        modalPosition.value = 'items-start pt-4 sm:pt-8';
+      }
+    }
+  });
+};
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
   if (newVal && props.subscription) {
+    calculateModalPosition();
     await fetchNodes();
+    // 添加滚动监听，动态调整位置
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
   } else {
     nodes.value = [];
     searchTerm.value = '';
     selectedNodes.value.clear();
     errorMessage.value = '';
+    modalPosition.value = '';
+    // 移除事件监听
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', handleResize);
   }
 });
+
+// 处理滚动事件
+const handleScroll = () => {
+  if (props.show) {
+    calculateModalPosition();
+  }
+};
+
+// 处理窗口大小变化
+const handleResize = () => {
+  if (props.show) {
+    calculateModalPosition();
+  }
+};
 
 // 过滤后的节点列表
 const filteredNodes = computed(() => {
@@ -130,13 +204,15 @@ const refreshNodes = async () => {
   await fetchNodes();
   toastStore.showToast('节点信息已刷新', 'success');
 };
-
-
 </script>
 
 <template>
   <div v-if="show" class="fixed inset-0 z-[99] flex items-center justify-center p-2 sm:p-4" @click="emit('update:show', false)">
-    <div class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-left flex flex-col h-[90vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[85vh]" @click.stop>
+    <div 
+      class="bg-white dark:bg-gray-800 w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-left flex flex-col h-[90vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[85vh]" 
+      :class="modalPosition"
+      @click.stop
+    >
       <!-- 标题栏 -->
       <div class="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">节点详情</h3>
@@ -314,6 +390,42 @@ const refreshNodes = async () => {
   }
 }
 
+/* 模态框位置过渡动画 */
+.fixed {
+  transition: all 0.3s ease-out;
+}
+
+/* 不同位置下的样式调整 */
+.items-start {
+  align-items: flex-start;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.items-center {
+  align-items: center;
+}
+
+/* 顶部对齐时的内边距 */
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.pt-8 {
+  padding-top: 2rem;
+}
+
+/* 底部对齐时的内边距 */
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.pb-8 {
+  padding-bottom: 2rem;
+}
+
 /* 滚动条样式 */
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
@@ -425,6 +537,22 @@ input[type="checkbox"]:checked {
   
   .space-y-2 > * + * {
     margin-top: 0.375rem;
+  }
+}
+
+/* 确保模态框在不同位置下都有合适的最大高度 */
+.max-w-4xl {
+  max-height: calc(100vh - 2rem);
+}
+
+/* 在小屏幕上调整内边距 */
+@media (max-width: 640px) {
+  .pt-8 {
+    padding-top: 1rem;
+  }
+  
+  .pb-8 {
+    padding-bottom: 1rem;
   }
 }
 </style> 
