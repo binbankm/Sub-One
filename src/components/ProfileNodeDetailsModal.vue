@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
 
@@ -17,6 +17,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
+const modalRef = ref(null);
 
 const toastStore = useToastStore();
 
@@ -24,6 +25,9 @@ const toastStore = useToastStore();
 watch(() => props.show, async (newVal) => {
   if (newVal && props.profile) {
     await fetchProfileNodes();
+    // 等待DOM更新后自动滚动到模态框位置
+    await nextTick();
+    scrollToModal();
   } else {
     nodes.value = [];
     searchTerm.value = '';
@@ -31,6 +35,46 @@ watch(() => props.show, async (newVal) => {
     errorMessage.value = '';
   }
 });
+
+// 自动滚动到模态框位置
+const scrollToModal = () => {
+  if (modalRef.value) {
+    // 等待一小段时间确保DOM完全渲染
+    setTimeout(() => {
+      const modalRect = modalRef.value.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // 计算模态框在视口中的位置
+      const modalTop = modalRect.top;
+      const modalBottom = modalRect.bottom;
+      const modalHeight = modalRect.height;
+      
+      // 如果模态框高度超过视口高度，则滚动到顶部
+      if (modalHeight > viewportHeight) {
+        window.scrollTo({
+          top: window.pageYOffset + modalTop - 20,
+          behavior: 'smooth'
+        });
+      }
+      // 如果模态框底部超出视口，则调整滚动位置
+      else if (modalBottom > viewportHeight) {
+        const scrollTop = window.pageYOffset + modalTop - (viewportHeight - modalHeight) / 2;
+        window.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'smooth'
+        });
+      }
+      // 如果模态框顶部超出视口，则滚动到合适位置
+      else if (modalTop < 0) {
+        window.scrollTo({
+          top: window.pageYOffset + modalTop - 20,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  }
+};
 
 // 过滤后的节点列表
 const filteredNodes = computed(() => {
@@ -172,25 +216,25 @@ const refreshNodes = async () => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl text-left ring-1 ring-black/5 dark:ring-white/10 flex flex-col max-h-[85vh]" @click.stop>
+  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-start justify-center p-4 overflow-y-auto" @click="emit('update:show', false)">
+    <div ref="modalRef" class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl text-left ring-1 ring-black/5 dark:ring-white/10 flex flex-col max-h-[85vh] my-8" @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">订阅组节点详情</h3>
+        <h3 class="text-xl font-bold gradient-text">订阅组节点详情</h3>
       </div>
       
       <!-- 内容 -->
       <div class="px-6 pb-6 flex-grow overflow-y-auto">
         <div class="space-y-4">
           <!-- 订阅组信息头部 -->
-          <div v-if="profile" class="bg-gray-50/60 dark:bg-gray-800/75 rounded-lg p-4">
+          <div v-if="profile" class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-                  {{ profile.name }}
+                  {{ profile.name || '未命名订阅组' }}
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  包含 {{ profile.subscriptions.length }} 个订阅，{{ profile.manualNodes.length }} 个手动节点
+                  包含 {{ profile.subscriptions.length }} 个订阅和 {{ profile.manualNodes.length }} 个手动节点
                 </p>
               </div>
               <div class="text-right">

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 import { subscriptionParser } from '../lib/subscriptionParser.js';
 
@@ -15,6 +15,7 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
+const modalRef = ref(null);
 
 
 const toastStore = useToastStore();
@@ -23,6 +24,9 @@ const toastStore = useToastStore();
 watch(() => props.show, async (newVal) => {
   if (newVal && props.subscription) {
     await fetchNodes();
+    // 等待DOM更新后自动滚动到模态框位置
+    await nextTick();
+    scrollToModal();
   } else {
     nodes.value = [];
     searchTerm.value = '';
@@ -30,6 +34,46 @@ watch(() => props.show, async (newVal) => {
     errorMessage.value = '';
   }
 });
+
+// 自动滚动到模态框位置
+const scrollToModal = () => {
+  if (modalRef.value) {
+    // 等待一小段时间确保DOM完全渲染
+    setTimeout(() => {
+      const modalRect = modalRef.value.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // 计算模态框在视口中的位置
+      const modalTop = modalRect.top;
+      const modalBottom = modalRect.bottom;
+      const modalHeight = modalRect.height;
+      
+      // 如果模态框高度超过视口高度，则滚动到顶部
+      if (modalHeight > viewportHeight) {
+        window.scrollTo({
+          top: window.pageYOffset + modalTop - 20,
+          behavior: 'smooth'
+        });
+      }
+      // 如果模态框底部超出视口，则调整滚动位置
+      else if (modalBottom > viewportHeight) {
+        const scrollTop = window.pageYOffset + modalTop - (viewportHeight - modalHeight) / 2;
+        window.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'smooth'
+        });
+      }
+      // 如果模态框顶部超出视口，则滚动到合适位置
+      else if (modalTop < 0) {
+        window.scrollTo({
+          top: window.pageYOffset + modalTop - 20,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  }
+};
 
 // 过滤后的节点列表
 const filteredNodes = computed(() => {
@@ -135,8 +179,8 @@ const refreshNodes = async () => {
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
-    <div class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh]" @click.stop>
+  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-start justify-center p-4 overflow-y-auto" @click="emit('update:show', false)">
+    <div ref="modalRef" class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh] my-8" @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
         <h3 class="text-xl font-bold gradient-text">节点详情</h3>
