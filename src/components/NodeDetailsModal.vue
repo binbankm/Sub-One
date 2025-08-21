@@ -23,8 +23,14 @@ const toastStore = useToastStore();
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
   if (newVal && props.subscription) {
+    // 立即滚动到页面顶部，确保模态框可见
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
     await fetchNodes();
-    // 等待DOM更新后自动滚动到模态框位置
+    // 等待DOM更新后再次检查位置
     await nextTick();
     scrollToModal();
   } else {
@@ -37,41 +43,46 @@ watch(() => props.show, async (newVal) => {
 
 // 自动滚动到模态框位置
 const scrollToModal = () => {
+  console.log('scrollToModal 被调用');
   if (modalRef.value) {
+    console.log('modalRef 存在，开始滚动逻辑');
     // 等待一小段时间确保DOM完全渲染
     setTimeout(() => {
-      const modalRect = modalRef.value.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      
-      // 计算模态框在视口中的位置
-      const modalTop = modalRect.top;
-      const modalBottom = modalRect.bottom;
-      const modalHeight = modalRect.height;
-      
-      // 如果模态框高度超过视口高度，则滚动到顶部
-      if (modalHeight > viewportHeight) {
-        window.scrollTo({
-          top: window.pageYOffset + modalTop - 20,
-          behavior: 'smooth'
-        });
-      }
-      // 如果模态框底部超出视口，则调整滚动位置
-      else if (modalBottom > viewportHeight) {
-        const scrollTop = window.pageYOffset + modalTop - (viewportHeight - modalHeight) / 2;
-        window.scrollTo({
-          top: Math.max(0, scrollTop),
-          behavior: 'smooth'
-        });
-      }
-      // 如果模态框顶部超出视口，则滚动到合适位置
-      else if (modalTop < 0) {
-        window.scrollTo({
-          top: window.pageYOffset + modalTop - 20,
-          behavior: 'smooth'
-        });
+      try {
+        // 获取当前滚动位置
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('当前滚动位置:', currentScrollTop, '视口高度:', viewportHeight);
+        
+        // 如果当前不在页面顶部，则滚动到顶部
+        if (currentScrollTop > 0) {
+          console.log('滚动到页面顶部');
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }
+        
+        // 额外的滚动调整，确保模态框完全可见
+        setTimeout(() => {
+          const modalRect = modalRef.value.getBoundingClientRect();
+          console.log('模态框位置:', modalRect);
+          if (modalRect.top < 0) {
+            console.log('调整模态框位置');
+            window.scrollTo({
+              top: window.pageYOffset + modalRect.top - 50,
+              behavior: 'smooth'
+            });
+          }
+        }, 300);
+        
+      } catch (error) {
+        console.error('滚动到模态框失败:', error);
       }
     }, 100);
+  } else {
+    console.log('modalRef 不存在');
   }
 };
 
@@ -180,7 +191,7 @@ const refreshNodes = async () => {
 
 <template>
   <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-start justify-center p-4 overflow-y-auto" @click="emit('update:show', false)">
-    <div ref="modalRef" class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh] my-8" @click.stop>
+    <div ref="modalRef" class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh] my-8 transform transition-all duration-300" @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
         <h3 class="text-xl font-bold gradient-text">节点详情</h3>
