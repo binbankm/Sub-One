@@ -2,6 +2,19 @@
 import { ref, computed } from 'vue';
 import { useToastStore } from '../stores/toast.js';
 
+// 安全的UUID生成函数
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 备用UUID生成方法
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export function useProfiles(initialProfiles = [], markDirty) {
   const { showToast } = useToastStore();
   
@@ -23,7 +36,7 @@ export function useProfiles(initialProfiles = [], markDirty) {
   const addProfile = (profileData) => {
     const newProfile = {
       ...profileData,
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       enabled: profileData.enabled ?? true,
       subscriptions: profileData.subscriptions || [],
       manualNodes: profileData.manualNodes || [],
@@ -147,7 +160,7 @@ export function useProfiles(initialProfiles = [], markDirty) {
     if (initialData) {
       profiles.value = initialData.map(p => ({
         ...p,
-        id: p.id || crypto.randomUUID(),
+        id: p.id || generateUUID(),
         enabled: p.enabled ?? true,
         subscriptions: p.subscriptions || [],
         manualNodes: p.manualNodes || [],

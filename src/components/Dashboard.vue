@@ -91,6 +91,19 @@ const {
   logThreshold: 100 // 提高阈值，减少不必要的警告
 });
 
+// 安全的UUID生成函数
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 备用UUID生成方法
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // 标记数据已更改
 const markDirty = () => { 
   dirty.value = true; 
@@ -314,7 +327,7 @@ const handleSaveSubscription = async () => {
   }
   
   if (isNewSubscription.value) {
-    addSubscription({ ...editingSubscription.value, id: crypto.randomUUID() });
+    addSubscription({ ...editingSubscription.value, id: generateUUID() });
   } else {
     updateSubscription(editingSubscription.value);
   }
@@ -428,7 +441,7 @@ const handleSaveNode = async () => {
   }
   
   if (isNewNode.value) {
-    addNode(editingNode.value);
+    addNode({ ...editingNode.value, id: generateUUID() });
   } else {
     updateNode(editingNode.value);
   }
@@ -564,7 +577,7 @@ const handleBulkImport = async (importText) => {
   
   for (const line of lines) {
     const newItem = { 
-      id: crypto.randomUUID(), 
+      id: generateUUID(), 
       name: extractNodeName(line) || '未命名', 
       url: line, 
       enabled: true, 

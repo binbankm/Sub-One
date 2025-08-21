@@ -3,6 +3,19 @@ import { ref, computed, watch } from 'vue';
 import { fetchNodeCount, batchUpdateNodes } from '../lib/api.js';
 import { useToastStore } from '../stores/toast.js';
 
+// 安全的UUID生成函数
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 备用UUID生成方法
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export function useSubscriptions(initialSubsRef, markDirty) {
   const { showToast } = useToastStore();
   const subscriptions = ref([]);
@@ -12,7 +25,7 @@ export function useSubscriptions(initialSubsRef, markDirty) {
   function initializeSubscriptions(subsData) {
     subscriptions.value = (subsData || []).map(sub => ({
       ...sub,
-      id: sub.id || crypto.randomUUID(),
+      id: sub.id || generateUUID(),
       enabled: sub.enabled ?? true,
       nodeCount: sub.nodeCount || 0,
       isUpdating: false,

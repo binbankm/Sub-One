@@ -2,6 +2,19 @@
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../stores/toast.js'; // 引入 Toast
 
+// 安全的UUID生成函数
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // 备用UUID生成方法
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export function useManualNodes(initialNodesRef, markDirty) {
   const { showToast } = useToastStore(); // 获取 showToast 函数
   const manualNodes = ref([]);
@@ -71,7 +84,7 @@ export function useManualNodes(initialNodesRef, markDirty) {
   function initializeManualNodes(nodesData) {
     manualNodes.value = (nodesData || []).map(node => ({
       ...node,
-      id: node.id || crypto.randomUUID(),
+      id: node.id || generateUUID(),
       enabled: node.enabled ?? true,
     }));
   }
