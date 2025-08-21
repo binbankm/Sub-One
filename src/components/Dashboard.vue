@@ -232,9 +232,6 @@ const setViewMode = (mode) => {
   localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
 };
 
-// 使用防抖优化保存操作
-const { debouncedFn: debouncedSave } = useDebounce(handleSave, DELAYS.DEBOUNCE_SAVE);
-
 // 保存相关方法
 const handleDiscard = () => {
   initializeState();
@@ -276,26 +273,29 @@ const handleSave = async () => {
         const errorMessage = result.message || result.error || '保存失败，请稍后重试';
         throw new Error(errorMessage);
       }
-    } catch (error) {
-      console.error('保存数据时发生错误:', error);
-      recordError(error, { context: 'handleSave' });
-      
-      let userMessage = error.message;
-      
-      // 使用常量中的错误消息映射
-      if (error.message.includes('网络')) {
-        userMessage = ERROR_MESSAGES.NETWORK_ERROR;
-      } else if (error.message.includes('格式')) {
-        userMessage = ERROR_MESSAGES.FORMAT_ERROR;
-      } else if (error.message.includes('存储')) {
-        userMessage = ERROR_MESSAGES.STORAGE_ERROR;
-      }
-
-      showToast(userMessage, 'error');
-      saveState.value = 'idle';
+      } catch (error) {
+    console.error('保存数据时发生错误:', error);
+    recordError(error, { context: 'handleSave' });
+    
+    let userMessage = error.message;
+    
+    // 使用常量中的错误消息映射
+    if (error.message.includes('网络')) {
+      userMessage = ERROR_MESSAGES.NETWORK_ERROR;
+    } else if (error.message.includes('格式')) {
+      userMessage = ERROR_MESSAGES.FORMAT_ERROR;
+    } else if (error.message.includes('存储')) {
+      userMessage = ERROR_MESSAGES.STORAGE_ERROR;
     }
-  });
+
+    showToast(userMessage, 'error');
+    saveState.value = 'idle';
+  }
+});
 };
+
+// 使用防抖优化保存操作
+const { debouncedFn: debouncedSave } = useDebounce(handleSave, DELAYS.DEBOUNCE_SAVE);
 
 // 通用直接保存函数
 const handleDirectSave = async (operationName = '操作') => {
