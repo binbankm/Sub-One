@@ -163,6 +163,8 @@ const isUpdatingAllSubs = ref(false);
 const initializeState = async () => {
   try {
     setLoading('page', true);
+    console.log('初始化状态 - props.data:', props.data); // 调试信息
+    
     if (props.data) {
       const subsData = props.data.subs || [];
       const httpRegex = VALIDATION.URL_REGEX;
@@ -178,6 +180,15 @@ const initializeState = async () => {
       initializeManualNodes(initialNodes.value);
       
       config.value = props.data.config || {};
+      
+      console.log('初始化完成 - 订阅数量:', initialSubs.value.length, '节点数量:', initialNodes.value.length);
+    } else {
+      console.log('props.data 为空，使用默认值初始化');
+      // 即使没有数据也要初始化，避免组件不显示
+      initializeProfiles([]);
+      initializeSubscriptions([]);
+      initializeManualNodes([]);
+      config.value = {};
     }
     dirty.value = false;
   } catch (error) {
