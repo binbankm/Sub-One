@@ -12,13 +12,16 @@ export const useToastStore = defineStore('toast', () => {
   let timeoutId = null;
 
   function showToast(message, type = 'info', duration = 3000) {
-    if (timeoutId) clearTimeout(timeoutId);
-    
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
     toast.id = Date.now();
     toast.message = message;
     toast.type = type;
 
-    timeoutId = setTimeout(hideToast, duration);
+    timeoutId = setTimeout(() => {
+      hideToast();
+    }, duration);
   }
 
   function hideToast() {

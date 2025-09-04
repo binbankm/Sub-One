@@ -2,13 +2,12 @@
 import { ref, computed, watch } from 'vue';
 import { fetchNodeCount, batchUpdateNodes } from '../lib/api.js';
 import { useToastStore } from '../stores/toast.js';
-import { PAGINATION_CONFIG } from '../lib/constants.js';
 
 export function useSubscriptions(initialSubsRef, markDirty) {
   const { showToast } = useToastStore();
   const subscriptions = ref([]);
   const subsCurrentPage = ref(1);
-  const subsItemsPerPage = PAGINATION_CONFIG.SUBSCRIPTIONS_PER_PAGE;
+  const subsItemsPerPage = 6;
 
   function initializeSubscriptions(subsData) {
     subscriptions.value = (subsData || []).map(sub => ({

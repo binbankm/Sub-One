@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useToastStore } from '../stores';
-import { subscriptionParser, getProtocolFromUrl, getProtocolInfo } from '../lib';
+import { useToastStore } from '../stores/toast.js';
+import { subscriptionParser } from '../lib/subscriptionParser.js';
 
 const props = defineProps({
   show: Boolean,
@@ -104,6 +104,29 @@ const fetchProfileNodes = async () => {
   }
 };
 
+// 从URL获取协议类型
+const getProtocolFromUrl = (url) => {
+  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+  const match = url.match(nodeRegex);
+  return match ? match[1] : 'unknown';
+};
+
+// 获取协议图标和样式
+const getProtocolInfo = (protocol) => {
+  const protocolMap = {
+    'ss': { icon: '🔒', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    'ssr': { icon: '🛡️', color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+    'vmess': { icon: '⚡', color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30' },
+    'vless': { icon: '🚀', color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
+    'trojan': { icon: '🛡️', color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30' },
+    'hysteria': { icon: '⚡', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
+    'hysteria2': { icon: '⚡', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' },
+    'tuic': { icon: '🚀', color: 'text-teal-500', bg: 'bg-teal-100 dark:bg-teal-900/30' },
+    'socks5': { icon: '🔌', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' },
+  };
+  
+  return protocolMap[protocol] || { icon: '❓', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' };
+};
 
 // 选择/取消选择节点
 const toggleNodeSelection = (nodeId) => {

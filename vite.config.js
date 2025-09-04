@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
+  // 我们移除了所有 alias 配置
   server: {
     proxy: {
       '/api': {
@@ -12,16 +13,6 @@ export default defineConfig({
       '/sub': {
         target: 'http://127.0.0.1:8787',
         changeOrigin: true,
-      }
-    }
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['vue', 'pinia'],
-          utils: ['clsx', 'js-yaml']
-        }
       }
     }
   }
