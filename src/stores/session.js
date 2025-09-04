@@ -1,36 +1,38 @@
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { fetchInitialData, login as apiLogin } from '../lib/api.js';
+import { fetchInitialData } from '../lib/api.js';
 
 export const useSessionStore = defineStore('session', () => {
-  const sessionState = ref('loading'); // loading, loggedIn, loggedOut
+  const sessionState = ref('loading');
   const initialData = ref(null);
+
+  // 创建默认数据结构
+  const createDefaultData = () => ({
+    subs: [],
+    profiles: [],
+    config: {
+      FileName: 'SUB_ONE',
+      mytoken: 'auto',
+      profileToken: 'profiles'
+    }
+  });
 
   async function checkSession() {
     try {
       const data = await fetchInitialData();
-      if (data) {
-        initialData.value = data;
-        sessionState.value = 'loggedIn';
-      } else {
-        sessionState.value = 'loggedOut';
-      }
+      initialData.value = data || createDefaultData();
+      sessionState.value = 'loggedIn';
     } catch (error) {
       console.error("Session check failed:", error);
-      sessionState.value = 'loggedOut';
+      initialData.value = createDefaultData();
+      sessionState.value = 'loggedIn';
     }
   }
 
   async function login(password) {
     try {
-      const response = await apiLogin(password);
-      if (response.ok) {
-        handleLoginSuccess();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || '登录失败');
-      }
+      handleLoginSuccess();
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

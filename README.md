@@ -1,24 +1,21 @@
 # Sub-One Manager
 
-> 🚀 基于 Vue.js 3 的现代化订阅管理工具，专为 Cloudflare Pages 设计
+> 🚀 基于 Vue.js 3 的现代化订阅管理工具
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.0+-4FC08D?style=flat&logo=vue.js&logoColor=white)](https://vuejs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0+-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare_Pages-Deploy-blue?style=flat&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 📖 项目简介
 
-**Sub-One Manager** 是一款专为网络订阅管理而设计的现代化Web应用。它基于Vue.js 3构建，采用最新的前端技术栈，为用户提供直观、高效的订阅管理体验。
+**Sub-One Manager** 是一款专为网络订阅管理而设计的现代化Web应用。基于Vue.js 3构建，采用最新的前端技术栈。
 
 ### 🎯 项目特色
-- **🚀 现代化架构**: 基于Vue.js 3 Composition API，响应式设计
-- **🎨 精美界面**: 采用Tailwind CSS，支持深色主题
-- **📱 全平台适配**: 完美支持桌面、平板、手机等设备
+- **🚀 现代化架构**: Vue.js 3 Composition API，响应式设计
+- **🎨 精美界面**: Tailwind CSS，支持深色主题
+- **📱 全平台适配**: 支持桌面、平板、手机等设备
 - **⚡ 高性能**: 基于Cloudflare Workers，全球CDN加速
 - **🔒 安全可靠**: 完善的权限控制和数据加密
-- **🏷️ 标签页布局**: 顶部标签页导航，功能模块清晰分离
 
 ## ✨ 核心功能
 

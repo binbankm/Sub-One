@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { getProtocolFromUrl, getProtocolInfo } from '../lib';
 
 const props = defineProps({
   node: {
@@ -10,59 +11,14 @@ const props = defineProps({
 
 const emit = defineEmits(['delete', 'edit']);
 
-const getProtocol = (url) => {
-  try {
-    if (!url) return 'unknown';
-    const lowerUrl = url.toLowerCase();
-    // [更新] 新增 anytls 支援
-    if (lowerUrl.startsWith('anytls://')) return 'anytls';
-    if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://')) return 'hysteria2';
-    if (lowerUrl.startsWith('hysteria://') || lowerUrl.startsWith('hy://')) return 'hysteria';
-    if (lowerUrl.startsWith('ssr://')) return 'ssr';
-    if (lowerUrl.startsWith('tuic://')) return 'tuic';
-    if (lowerUrl.startsWith('ss://')) return 'ss';
-    if (lowerUrl.startsWith('vmess://')) return 'vmess';
-    if (lowerUrl.startsWith('vless://')) return 'vless';
-    if (lowerUrl.startsWith('trojan://')) return 'trojan';
-    if (lowerUrl.startsWith('socks5://')) return 'socks5';
-    if (lowerUrl.startsWith('http')) return 'http';
-  } catch { 
-    return 'unknown';
-  }
-  return 'unknown';
-};
-
-const protocol = computed(() => getProtocol(props.node.url));
+const protocol = computed(() => getProtocolFromUrl(props.node.url));
 
 const protocolStyle = computed(() => {
-  const p = protocol.value;
-  switch (p) {
-    // [更新] 新增 anytls 的樣式
-    case 'anytls':
-      return { text: 'AnyTLS', style: 'bg-gradient-to-r from-slate-500/20 to-gray-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30' };
-    case 'vless':
-      return { text: 'VLESS', style: 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30' };
-    case 'hysteria2':
-      return { text: 'HY2', style: 'bg-gradient-to-r from-purple-500/20 to-violet-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30' };
-    case 'hysteria':
-       return { text: 'Hysteria', style: 'bg-gradient-to-r from-fuchsia-500/20 to-pink-500/20 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30' };
-    case 'tuic':
-        return { text: 'TUIC', style: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-500/30' };
-    case 'trojan':
-      return { text: 'TROJAN', style: 'bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-600 dark:text-red-400 border-red-500/30' };
-    case 'ssr':
-      return { text: 'SSR', style: 'bg-gradient-to-r from-rose-500/20 to-red-500/20 text-rose-600 dark:text-rose-400 border-rose-500/30' };
-    case 'ss':
-      return { text: 'SS', style: 'bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-600 dark:text-orange-400 border-orange-500/30' };
-    case 'vmess':
-      return { text: 'VMESS', style: 'bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-600 dark:text-teal-400 border-teal-500/30' };
-    case 'socks5':
-      return { text: 'SOCKS5', style: 'bg-gradient-to-r from-lime-500/20 to-green-500/20 text-lime-600 dark:text-lime-400 border-lime-500/30' };
-    case 'http':
-      return { text: 'HTTP', style: 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-600 dark:text-green-400 border-green-500/30' };
-    default:
-      return { text: 'LINK', style: 'bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30' };
-  }
+  const protocolInfo = getProtocolInfo(protocol.value);
+  return {
+    text: protocolInfo.text,
+    style: protocolInfo.style
+  };
 });
 </script>
 

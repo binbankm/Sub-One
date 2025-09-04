@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { useToastStore } from '../stores/toast.js';
+import { useToastStore } from '../stores';
 
 const props = defineProps({
   sub: {
