@@ -1,32 +1,30 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import draggable from 'vuedraggable';
-import { saveSubs, batchUpdateNodes } from '../../lib/api.js';
-import { extractNodeName } from '../../lib/utils.js';
-import { useToastStore } from '../../stores/toast.js';
-import { useUIStore } from '../../stores/ui.js';
-import { useSubscriptions } from '../../composables/useSubscriptions.js';
-import { useManualNodes } from '../../composables/useManualNodes.js';
-import { PAGINATION, REGEX_PATTERNS, MESSAGES, DEFAULT_VALUES } from '../../constants/index.js';
-import { cleanCustomId, generateUniqueId, deepClone } from '../../utils/common.js';
+import { saveSubs, batchUpdateNodes } from '../lib/api.js';
+import { extractNodeName } from '../lib/utils.js';
+import { useToastStore } from '../stores/toast.js';
+import { useUIStore } from '../stores/ui.js';
+import { useSubscriptions } from '../composables/useSubscriptions.js';
+import { useManualNodes } from '../composables/useManualNodes.js';
 
 // --- 元件導入 ---
-import Card from '../cards/Card.vue';
-import ManualNodeCard from '../cards/ManualNodeCard.vue';
-import SubscriptionLinkGenerator from '../forms/SubscriptionLinkGenerator.vue';
-import ProfileCard from '../cards/ProfileCard.vue';
+import Card from './Card.vue';
+import ManualNodeCard from './ManualNodeCard.vue';
+import SubscriptionLinkGenerator from './SubscriptionLinkGenerator.vue';
+import ProfileCard from './ProfileCard.vue';
 import ManualNodeList from './ManualNodeList.vue'; 
-import SubscriptionImportModal from '../modals/SubscriptionImportModal.vue';
-import NodeDetailsModal from '../modals/NodeDetailsModal.vue';
-import ProfileNodeDetailsModal from '../modals/ProfileNodeDetailsModal.vue';
+import SubscriptionImportModal from './SubscriptionImportModal.vue';
+import NodeDetailsModal from './NodeDetailsModal.vue';
+import ProfileNodeDetailsModal from './ProfileNodeDetailsModal.vue';
  
 
 
 
-const SettingsModal = defineAsyncComponent(() => import('../modals/SettingsModal.vue'));
-const BulkImportModal = defineAsyncComponent(() => import('../modals/BulkImportModal.vue'));
-import Modal from '../modals/Modal.vue';
-const ProfileModal = defineAsyncComponent(() => import('../modals/ProfileModal.vue'));
+const SettingsModal = defineAsyncComponent(() => import('./SettingsModal.vue'));
+const BulkImportModal = defineAsyncComponent(() => import('./BulkImportModal.vue'));
+import Modal from './Modal.vue';
+const ProfileModal = defineAsyncComponent(() => import('./ProfileModal.vue'));
 
 // --- 基礎 Props 和狀態 ---
 const props = defineProps({ 
@@ -65,7 +63,7 @@ const {
   addNodesFromBulk, autoSortNodes, deduplicateNodes,
 } = useManualNodes(initialNodes, markDirty);
 
-const manualNodesPerPage = PAGINATION.NODES_PER_PAGE;
+const manualNodesPerPage = 24;
 
 // --- 訂閱組 (Profile) 相關狀態 ---
 const profiles = ref([]);
@@ -77,7 +75,7 @@ const showDeleteProfilesModal = ref(false);
 
 // --- 订阅组分页状态 ---
 const profilesCurrentPage = ref(1);
-const profilesPerPage = PAGINATION.PROFILES_PER_PAGE; // 实现2行3列布局
+const profilesPerPage = 6; // 改为6个，实现2行3列布局
 const profilesTotalPages = computed(() => Math.ceil(profiles.value.length / profilesPerPage));
 const paginatedProfiles = computed(() => {
   const start = (profilesCurrentPage.value - 1) * profilesPerPage;
@@ -144,15 +142,15 @@ const initializeState = () => {
   isLoading.value = true;
   if (props.data) {
     const subsData = props.data.subs || [];
-    // 使用常量中的正则表达式
-    const httpRegex = REGEX_PATTERNS.HTTP_URL;
+    // 优化：预编译正则表达式，提升性能
+    const httpRegex = /^https?:\/\//;
     
     initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
     initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
     
     profiles.value = (props.data.profiles || []).map(p => ({
         ...p,
-        id: p.id || generateUniqueId(),
+        id: p.id || crypto.randomUUID(),
         enabled: p.enabled ?? true,
         subscriptions: p.subscriptions || [],
         manualNodes: p.manualNodes || [],
@@ -167,7 +165,7 @@ const initializeState = () => {
 const handleBeforeUnload = (event) => {
   if (dirty.value) {
     event.preventDefault();
-    event.returnValue = MESSAGES.INFO.UNSAVED_CHANGES;
+    event.returnValue = '您有未保存的更改，確定要离开嗎？';
   }
 };
 
@@ -204,7 +202,7 @@ const setViewMode = (mode) => {
 // --- 其他 JS 逻辑 (省略) ---
 const handleDiscard = () => {
   initializeState();
-  showToast(MESSAGES.SUCCESS.CHANGES_DISCARDED);
+  showToast('已放弃所有未保存的更改');
 };
 const handleSave = async () => {
   saveState.value = 'saving';
@@ -423,35 +421,36 @@ const handleProfileToggle = async (updatedProfile) => {
 };
 const handleAddProfile = () => {
     isNewProfile.value = true;
-    editingProfile.value = { ...DEFAULT_VALUES.PROFILE };
+    editingProfile.value = { name: '', enabled: true, subscriptions: [], manualNodes: [], customId: '', subConverter: '', subConfig: '', expiresAt: ''};
     showProfileModal.value = true;
 };
 const handleEditProfile = (profileId) => {
     const profile = profiles.value.find(p => p.id === profileId);
     if (profile) {
         isNewProfile.value = false;
-        editingProfile.value = deepClone(profile);
+        editingProfile.value = JSON.parse(JSON.stringify(profile));
         editingProfile.value.expiresAt = profile.expiresAt || ''; // Ensure expiresAt is copied
         showProfileModal.value = true;
     }
 };
 const handleSaveProfile = async (profileData) => {
     if (!profileData?.name) { 
-        showToast(MESSAGES.ERROR.PROFILE_NAME_REQUIRED, 'error'); 
+        showToast('订阅组名称不能为空', 'error'); 
         return; 
     }
     
     if (profileData.customId) {
-        // 使用常量中的正则表达式
-        profileData.customId = cleanCustomId(profileData.customId);
+        // 预编译正则表达式，提升性能
+        const customIdRegex = /[^a-zA-Z0-9-_]/g;
+        profileData.customId = profileData.customId.replace(customIdRegex, '');
         
         if (profileData.customId && profiles.value.some(p => p.id !== profileData.id && p.customId === profileData.customId)) {
-            showToast(MESSAGES.ERROR.CUSTOM_ID_EXISTS(profileData.customId), 'error');
+            showToast(`自定义 ID "${profileData.customId}" 已存在`, 'error');
             return;
         }
     }
     if (isNewProfile.value) {
-        profiles.value.unshift({ ...profileData, id: generateUniqueId() });
+        profiles.value.unshift({ ...profileData, id: crypto.randomUUID() });
         // 修复分页逻辑：只有在当前页面已满时才跳转到第一页
         const currentPageItems = paginatedProfiles.value.length;
         if (currentPageItems >= profilesPerPage) {

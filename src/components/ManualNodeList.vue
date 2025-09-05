@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { extractHostAndPort } from '../../lib/utils.js';
+import { extractHostAndPort } from '../lib/utils.js';
 
 const props = defineProps({
   node: {

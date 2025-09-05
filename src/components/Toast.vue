@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
-import { useToastStore } from '../../stores/toast.js';
+import { useToastStore } from '../stores/toast.js';
 
 const { toast } = useToastStore();
 const isVisible = ref(false);

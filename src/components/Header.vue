@@ -1,9 +1,9 @@
 <script setup>
-import { useUIStore } from '../../stores/ui.js';
-import { useThemeStore } from '../../stores/theme.js';
+import { useUIStore } from '../stores/ui.js';
+import { useThemeStore } from '../stores/theme.js';
 import { ref, defineAsyncComponent } from 'vue';
 
-const HelpModal = defineAsyncComponent(() => import('../modals/HelpModal.vue'));
+const HelpModal = defineAsyncComponent(() => import('./HelpModal.vue'));
 
 
 const uiStore = useUIStore();

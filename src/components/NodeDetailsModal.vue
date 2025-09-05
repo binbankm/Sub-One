@@ -1,13 +1,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useToastStore } from '../../stores/toast.js';
-import { subscriptionParser } from '../../lib/subscriptionParser.js';
+import { useToastStore } from '../stores/toast.js';
+import { subscriptionParser } from '../lib/subscriptionParser.js';
 
 const props = defineProps({
   show: Boolean,
-  profile: Object,
-  allSubscriptions: Array,
-  allManualNodes: Array,
+  subscription: Object,
 });
 
 const emit = defineEmits(['update:show']);
@@ -18,12 +16,13 @@ const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set());
 
+
 const toastStore = useToastStore();
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
-  if (newVal && props.profile) {
-    await fetchProfileNodes();
+  if (newVal && props.subscription) {
+    await fetchNodes();
   } else {
     nodes.value = [];
     searchTerm.value = '';
@@ -42,73 +41,35 @@ const filteredNodes = computed(() => {
   );
 });
 
-// 获取订阅组的所有节点信息
-const fetchProfileNodes = async () => {
-  if (!props.profile) return;
+// 获取节点信息
+const fetchNodes = async () => {
+  if (!props.subscription?.url) return;
   
   isLoading.value = true;
   errorMessage.value = '';
   
   try {
-    const profileNodes = [];
-    
-    // 添加手动节点
-    const selectedManualNodes = props.allManualNodes.filter(node => 
-      props.profile.manualNodes.includes(node.id)
-    );
-    
-    for (const node of selectedManualNodes) {
-      profileNodes.push({
-        id: node.id,
-        name: node.name || '未命名节点',
-        url: node.url,
-        protocol: getProtocolFromUrl(node.url),
-        enabled: node.enabled,
-        type: 'manual'
-      });
-    }
-    
-    // 添加订阅节点
-    const selectedSubscriptions = props.allSubscriptions.filter(sub => 
-      props.profile.subscriptions.includes(sub.id)
-    );
-    
-    for (const subscription of selectedSubscriptions) {
-      if (subscription.url && subscription.url.startsWith('http')) {
-        try {
-          const response = await fetch('/api/fetch_external_url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: subscription.url })
-          });
+    const response = await fetch('/api/fetch_external_url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: props.subscription.url })
+    });
 
-          if (response.ok) {
-            const content = await response.text();
-            const parsedNodes = subscriptionParser.parse(content, subscription.name);
-            profileNodes.push(...parsedNodes);
-          }
-        } catch (error) {
-          console.error(`获取订阅 ${subscription.name} 节点失败:`, error);
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    nodes.value = profileNodes;
+    const content = await response.text();
+    const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
+    nodes.value = parsedNodes;
     
   } catch (error) {
-    console.error('获取订阅组节点信息失败:', error);
+    console.error('获取节点信息失败:', error);
     errorMessage.value = `获取节点信息失败: ${error.message}`;
     toastStore.showToast('获取节点信息失败', 'error');
   } finally {
     isLoading.value = false;
   }
-};
-
-// 从URL获取协议类型
-const getProtocolFromUrl = (url) => {
-  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
-  const match = url.match(nodeRegex);
-  return match ? match[1] : 'unknown';
 };
 
 // 获取协议图标和样式
@@ -166,36 +127,41 @@ const copySelectedNodes = () => {
 
 // 刷新节点信息
 const refreshNodes = async () => {
-  await fetchProfileNodes();
+  await fetchNodes();
   toastStore.showToast('节点信息已刷新', 'success');
 };
+
+
 </script>
 
 <template>
   <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4" @click="emit('update:show', false)">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl text-left ring-1 ring-black/5 dark:ring-white/10 flex flex-col max-h-[85vh]" @click.stop>
+    <div class="card-modern w-full max-w-4xl text-left flex flex-col max-h-[85vh]" @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">订阅组节点详情</h3>
+        <h3 class="text-xl font-bold gradient-text">节点详情</h3>
       </div>
       
       <!-- 内容 -->
       <div class="px-6 pb-6 flex-grow overflow-y-auto">
         <div class="space-y-4">
-          <!-- 订阅组信息头部 -->
-          <div v-if="profile" class="bg-gray-50/60 dark:bg-gray-800/75 rounded-lg p-4">
+          <!-- 订阅信息头部 -->
+          <div v-if="subscription" class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
             <div class="flex items-center justify-between">
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-                  {{ profile.name }}
+                  {{ subscription.name || '未命名订阅' }}
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  包含 {{ profile.subscriptions.length }} 个订阅，{{ profile.manualNodes.length }} 个手动节点
+                  {{ subscription.url }}
                 </p>
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                   共 {{ nodes.length }} 个节点
+                </p>
+                <p v-if="subscription.nodeCount" class="text-xs text-gray-500 dark:text-gray-400">
+                  上次更新: {{ subscription.nodeCount }} 个
                 </p>
               </div>
             </div>
@@ -218,7 +184,7 @@ const refreshNodes = async () => {
               <button
                 @click="refreshNodes"
                 :disabled="isLoading"
-                class="px-3 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                class="btn-modern px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg v-if="isLoading" class="animate-spin h-4 w-4" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
@@ -226,10 +192,11 @@ const refreshNodes = async () => {
                 </svg>
                 <span v-else>刷新</span>
               </button>
+
               <button
                 @click="copySelectedNodes"
                 :disabled="selectedNodes.size === 0"
-                class="px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
               >
                 复制选中
               </button>
@@ -287,12 +254,6 @@ const refreshNodes = async () => {
                     >
                       {{ getProtocolInfo(node.protocol).icon }} {{ node.protocol.toUpperCase() }}
                     </span>
-                    <span v-if="node.type === 'subscription'" class="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-500">
-                      📡 {{ node.subscriptionName }}
-                    </span>
-                    <span v-else class="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500">
-                      ✋ 手动
-                    </span>
                   </div>
                   <p class="font-medium text-gray-900 dark:text-gray-100 truncate" :title="node.name">
                     {{ node.name }}
@@ -301,6 +262,8 @@ const refreshNodes = async () => {
                     {{ node.url }}
                   </p>
                 </div>
+                
+
               </div>
             </div>
           </div>
