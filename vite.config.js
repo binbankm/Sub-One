@@ -1,10 +1,22 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue()],
-  // 我们移除了所有 alias 配置
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+      '@components': resolve(__dirname, 'src/components'),
+      '@stores': resolve(__dirname, 'src/stores'),
+      '@composables': resolve(__dirname, 'src/composables'),
+      '@lib': resolve(__dirname, 'src/lib'),
+      '@assets': resolve(__dirname, 'src/assets')
+    }
+  },
   server: {
+    port: 3000,
+    open: true,
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8787',
@@ -15,5 +27,22 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'pinia'],
+          utils: ['clsx', 'js-yaml']
+        }
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['vue', 'pinia', 'clsx', 'js-yaml', 'vuedraggable']
   }
 })

@@ -1,6 +1,13 @@
-//
-// src/lib/utils.js
-//
+/**
+ * 工具函数库
+ * 提供节点链接解析、名称提取等通用功能
+ */
+
+/**
+ * 从节点链接中提取节点名称
+ * @param {string} url - 节点链接
+ * @returns {string} 提取的节点名称，如果提取失败返回空字符串
+ */
 export function extractNodeName(url) {
     if (!url) return '';
     
@@ -87,8 +94,8 @@ export function extractNodeName(url) {
 /**
  * 为节点链接添加名称前缀
  * @param {string} link - 原始节点链接
- * @param {string} prefix - 要添加的前缀 (通常是订阅名)
- * @returns {string} - 添加了前缀的新链接
+ * @param {string} prefix - 要添加的前缀（通常是订阅名）
+ * @returns {string} 添加了前缀的新链接
  */
 export function prependNodeName(link, prefix) {
   if (!prefix || !link) return link;
@@ -113,9 +120,9 @@ export function prependNodeName(link, prefix) {
 }
 
 /**
- * [新增] 从节点链接中提取主机和端口
+ * 从节点链接中提取主机和端口信息
  * @param {string} url - 节点链接
- * @returns {{host: string, port: string}}
+ * @returns {{host: string, port: string}} 包含主机和端口的对象
  */
 export function extractHostAndPort(url) {
     if (!url) return { host: '', port: '' };

@@ -1,13 +1,17 @@
-// FILE: src/composables/useSubscriptions.js
+/**
+ * 订阅管理Composable
+ * 提供订阅数据的增删改查、分页、更新等功能
+ */
 import { ref, computed, watch } from 'vue';
 import { fetchNodeCount, batchUpdateNodes } from '../lib/api.js';
 import { useToastStore } from '../stores/toast.js';
+import { PAGINATION } from '../lib/constants.js';
 
 export function useSubscriptions(initialSubsRef, markDirty) {
   const { showToast } = useToastStore();
   const subscriptions = ref([]);
   const subsCurrentPage = ref(1);
-  const subsItemsPerPage = 6;
+  const subsItemsPerPage = PAGINATION.SUBSCRIPTIONS_PER_PAGE;
 
   function initializeSubscriptions(subsData) {
     subscriptions.value = (subsData || []).map(sub => ({

@@ -1,3 +1,12 @@
+/**
+ * API接口函数库
+ * 提供与后端服务的数据交互功能
+ */
+
+/**
+ * 获取初始数据
+ * @returns {Promise<Object|null>} 返回初始数据对象或null
+ */
 export async function fetchInitialData() {
     try {
         const response = await fetch('/api/data');
@@ -13,6 +22,11 @@ export async function fetchInitialData() {
     }
 }
 
+/**
+ * 用户登录
+ * @param {string} password - 用户密码
+ * @returns {Promise<Response>} 登录响应对象
+ */
 export async function login(password) {
     try {
         const response = await fetch('/api/login', {
@@ -27,7 +41,12 @@ export async function login(password) {
     }
 }
 
-// [核心修改] saveSubs 现在接收并发送 profiles
+/**
+ * 保存订阅和订阅组数据
+ * @param {Array} subs - 订阅数据数组
+ * @param {Array} profiles - 订阅组数据数组
+ * @returns {Promise<Object>} 保存结果对象
+ */
 export async function saveSubs(subs, profiles) {
     try {
         // 数据预验证
@@ -64,6 +83,11 @@ export async function saveSubs(subs, profiles) {
     }
 }
 
+/**
+ * 获取订阅的节点数量
+ * @param {string} subUrl - 订阅链接
+ * @returns {Promise<Object>} 包含节点数量和用户信息的对象
+ */
 export async function fetchNodeCount(subUrl) {
     try {
         const res = await fetch('/api/node_count', {
@@ -79,6 +103,10 @@ export async function fetchNodeCount(subUrl) {
     }
 }
 
+/**
+ * 获取应用设置
+ * @returns {Promise<Object>} 设置对象
+ */
 export async function fetchSettings() {
     try {
         const response = await fetch('/api/settings');
@@ -90,6 +118,11 @@ export async function fetchSettings() {
     }
 }
 
+/**
+ * 保存应用设置
+ * @param {Object} settings - 设置对象
+ * @returns {Promise<Object>} 保存结果对象
+ */
 export async function saveSettings(settings) {
     try {
         const response = await fetch('/api/settings', {
@@ -123,7 +156,7 @@ export async function saveSettings(settings) {
 /**
  * 批量更新订阅的节点信息
  * @param {string[]} subscriptionIds - 要更新的订阅ID数组
- * @returns {Promise<Object>} - 更新结果
+ * @returns {Promise<Object>} 更新结果对象
  */
 export async function batchUpdateNodes(subscriptionIds) {
     try {
