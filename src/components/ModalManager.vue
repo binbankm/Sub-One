@@ -117,13 +117,15 @@ const handleOnImportSuccess = () => {
 <template>
   <!-- 批量导入模态框 -->
   <BulkImportModal 
-    v-model:show="showBulkImportModal" 
+    :show="showBulkImportModal" 
+    @update:show="$emit('update:showBulkImportModal', $event)"
     @import="handleBulkImport" 
   />
   
   <!-- 删除确认模态框 -->
   <Modal 
-    v-model:show="showDeleteSubsModal" 
+    :show="showDeleteSubsModal" 
+    @update:show="$emit('update:showDeleteSubsModal', $event)"
     @confirm="handleConfirmDeleteSubs"
   >
     <template #title>
@@ -135,7 +137,8 @@ const handleOnImportSuccess = () => {
   </Modal>
   
   <Modal 
-    v-model:show="showDeleteNodesModal" 
+    :show="showDeleteNodesModal" 
+    @update:show="$emit('update:showDeleteNodesModal', $event)"
     @confirm="handleConfirmDeleteNodes"
   >
     <template #title>
@@ -147,7 +150,8 @@ const handleOnImportSuccess = () => {
   </Modal>
   
   <Modal 
-    v-model:show="showDeleteProfilesModal" 
+    :show="showDeleteProfilesModal" 
+    @update:show="$emit('update:showDeleteProfilesModal', $event)"
     @confirm="handleConfirmDeleteProfiles"
   >
     <template #title>
@@ -161,7 +165,8 @@ const handleOnImportSuccess = () => {
   <!-- 订阅组编辑模态框 -->
   <ProfileModal 
     v-if="showProfileModal" 
-    v-model:show="showProfileModal" 
+    :show="showProfileModal" 
+    @update:show="$emit('update:showProfileModal', $event)"
     :profile="editingProfile" 
     :is-new="isNewProfile" 
     :all-subscriptions="subscriptions" 
@@ -173,7 +178,8 @@ const handleOnImportSuccess = () => {
   <!-- 节点编辑模态框 -->
   <Modal 
     v-if="editingNode" 
-    v-model:show="showNodeModal" 
+    :show="showNodeModal" 
+    @update:show="$emit('update:showNodeModal', $event)"
     @confirm="handleSaveNode"
   >
     <template #title>
@@ -209,7 +215,8 @@ const handleOnImportSuccess = () => {
   <!-- 订阅编辑模态框 -->
   <Modal 
     v-if="editingSubscription" 
-    v-model:show="showSubModal" 
+    :show="showSubModal" 
+    @update:show="$emit('update:showSubModal', $event)"
     @confirm="handleSaveSubscription"
   >
     <template #title>
@@ -255,7 +262,10 @@ const handleOnImportSuccess = () => {
   </Modal>
   
   <!-- 设置模态框 -->
-  <SettingsModal v-model:show="showSettingsModal" />
+  <SettingsModal 
+    :show="showSettingsModal" 
+    @update:show="$emit('update:showSettingsModal', $event)"
+  />
   
   <!-- 订阅导入模态框 -->
   <SubscriptionImportModal 

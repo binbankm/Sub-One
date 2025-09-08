@@ -11,7 +11,8 @@ export default defineConfig({
       '@stores': resolve(__dirname, 'src/stores'),
       '@composables': resolve(__dirname, 'src/composables'),
       '@lib': resolve(__dirname, 'src/lib'),
-      '@assets': resolve(__dirname, 'src/assets')
+      '@assets': resolve(__dirname, 'src/assets'),
+      '@ui': resolve(__dirname, 'src/components/ui')
     }
   },
   server: {
@@ -20,11 +21,11 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8787',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/sub': {
         target: 'http://127.0.0.1:8787',
-        changeOrigin: true,
+        changeOrigin: true
       }
     }
   },
@@ -37,12 +38,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['vue', 'pinia'],
-          utils: ['clsx', 'js-yaml']
+          utils: ['js-yaml', 'vuedraggable']
         }
       }
     }
   },
   optimizeDeps: {
-    include: ['vue', 'pinia', 'clsx', 'js-yaml', 'vuedraggable']
+    include: ['vue', 'pinia', 'js-yaml', 'vuedraggable']
   }
 })

@@ -3,7 +3,7 @@
  * 提供通用的辅助功能
  */
 
-import { REGION_KEYWORDS, REGION_ORDER, REGEX } from './constants.js';
+import { REGION_KEYWORDS, REGION_ORDER, REGEX } from './constants.js'
 
 /**
  * 防抖函数
@@ -12,11 +12,11 @@ import { REGION_KEYWORDS, REGION_ORDER, REGEX } from './constants.js';
  * @returns {Function} 防抖后的函数
  */
 export function debounce(func, delay) {
-  let timeoutId;
+  let timeoutId
   return function (...args) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(this, args), delay);
-  };
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func.apply(this, args), delay)
+  }
 }
 
 /**
@@ -26,14 +26,14 @@ export function debounce(func, delay) {
  * @returns {Function} 节流后的函数
  */
 export function throttle(func, limit) {
-  let inThrottle;
+  let inThrottle
   return function (...args) {
     if (!inThrottle) {
-      func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      func.apply(this, args)
+      inThrottle = true
+      setTimeout(() => (inThrottle = false), limit)
     }
-  };
+  }
 }
 
 /**
@@ -42,17 +42,17 @@ export function throttle(func, limit) {
  * @returns {any} 拷贝后的对象
  */
 export function deepClone(obj) {
-  if (obj === null || typeof obj !== 'object') return obj;
-  if (obj instanceof Date) return new Date(obj.getTime());
-  if (obj instanceof Array) return obj.map(item => deepClone(item));
+  if (obj === null || typeof obj !== 'object') return obj
+  if (obj instanceof Date) return new Date(obj.getTime())
+  if (obj instanceof Array) return obj.map(item => deepClone(item))
   if (typeof obj === 'object') {
-    const clonedObj = {};
+    const clonedObj = {}
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
-        clonedObj[key] = deepClone(obj[key]);
+        clonedObj[key] = deepClone(obj[key])
       }
     }
-    return clonedObj;
+    return clonedObj
   }
 }
 
@@ -62,9 +62,9 @@ export function deepClone(obj) {
  * @returns {string} 唯一ID
  */
 export function generateId(prefix = '') {
-  const timestamp = Date.now().toString(36);
-  const randomStr = Math.random().toString(36).substr(2, 5);
-  return prefix ? `${prefix}_${timestamp}_${randomStr}` : `${timestamp}_${randomStr}`;
+  const timestamp = Date.now().toString(36)
+  const randomStr = Math.random().toString(36).substr(2, 5)
+  return prefix ? `${prefix}_${timestamp}_${randomStr}` : `${timestamp}_${randomStr}`
 }
 
 /**
@@ -73,11 +73,11 @@ export function generateId(prefix = '') {
  * @returns {string} 格式化后的文件大小
  */
 export function formatFileSize(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 /**
@@ -87,15 +87,15 @@ export function formatFileSize(bytes) {
  * @returns {string} 格式化后的时间
  */
 export function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return '';
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
 
   return format
     .replace('YYYY', year)
@@ -103,7 +103,7 @@ export function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
     .replace('DD', day)
     .replace('HH', hours)
     .replace('mm', minutes)
-    .replace('ss', seconds);
+    .replace('ss', seconds)
 }
 
 /**
@@ -113,10 +113,10 @@ export function formatDate(date, format = 'YYYY-MM-DD HH:mm:ss') {
  */
 export function isValidUrl(url) {
   try {
-    new URL(url);
-    return true;
+    new URL(url)
+    return true
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -126,7 +126,7 @@ export function isValidUrl(url) {
  * @returns {boolean} 是否为有效节点链接
  */
 export function isValidNodeUrl(url) {
-  return REGEX.NODE_PROTOCOL.test(url);
+  return REGEX.NODE_PROTOCOL.test(url)
 }
 
 /**
@@ -135,7 +135,7 @@ export function isValidNodeUrl(url) {
  * @returns {boolean} 是否为有效HTTP/HTTPS链接
  */
 export function isValidHttpUrl(url) {
-  return REGEX.HTTP_URL.test(url);
+  return REGEX.HTTP_URL.test(url)
 }
 
 /**
@@ -144,19 +144,19 @@ export function isValidHttpUrl(url) {
  * @returns {string} 地区代码
  */
 export function getRegionCode(name) {
-  if (!name) return 'ZZ';
-  
-  const lowerName = name.toLowerCase();
-  
+  if (!name) return 'ZZ'
+
+  const lowerName = name.toLowerCase()
+
   for (const [code, keywords] of Object.entries(REGION_KEYWORDS)) {
     for (const keyword of keywords) {
       if (keyword.test(lowerName)) {
-        return code;
+        return code
       }
     }
   }
-  
-  return 'ZZ';
+
+  return 'ZZ'
 }
 
 /**
@@ -166,21 +166,21 @@ export function getRegionCode(name) {
  */
 export function sortNodesByRegion(nodes) {
   return nodes.sort((a, b) => {
-    const regionA = getRegionCode(a.name);
-    const regionB = getRegionCode(b.name);
-    
-    const indexA = REGION_ORDER.indexOf(regionA);
-    const indexB = REGION_ORDER.indexOf(regionB);
-    
-    const effectiveIndexA = indexA === -1 ? Infinity : indexA;
-    const effectiveIndexB = indexB === -1 ? Infinity : indexB;
-    
+    const regionA = getRegionCode(a.name)
+    const regionB = getRegionCode(b.name)
+
+    const indexA = REGION_ORDER.indexOf(regionA)
+    const indexB = REGION_ORDER.indexOf(regionB)
+
+    const effectiveIndexA = indexA === -1 ? Infinity : indexA
+    const effectiveIndexB = indexB === -1 ? Infinity : indexB
+
     if (effectiveIndexA !== effectiveIndexB) {
-      return effectiveIndexA - effectiveIndexB;
+      return effectiveIndexA - effectiveIndexB
     }
-    
-    return a.name.localeCompare(b.name, 'zh-CN');
-  });
+
+    return a.name.localeCompare(b.name, 'zh-CN')
+  })
 }
 
 /**
@@ -191,18 +191,18 @@ export function sortNodesByRegion(nodes) {
  */
 export function uniqueArray(array, key) {
   if (!key) {
-    return [...new Set(array)];
+    return [...new Set(array)]
   }
-  
-  const seen = new Set();
+
+  const seen = new Set()
   return array.filter(item => {
-    const value = item[key];
+    const value = item[key]
     if (seen.has(value)) {
-      return false;
+      return false
     }
-    seen.add(value);
-    return true;
-  });
+    seen.add(value)
+    return true
+  })
 }
 
 /**
@@ -213,12 +213,12 @@ export function uniqueArray(array, key) {
  * @returns {Object} 分页信息
  */
 export function paginate(items, currentPage, itemsPerPage) {
-  const totalItems = items.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = items.slice(startIndex, endIndex);
-  
+  const totalItems = items.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedItems = items.slice(startIndex, endIndex)
+
   return {
     items: paginatedItems,
     totalItems,
@@ -227,7 +227,7 @@ export function paginate(items, currentPage, itemsPerPage) {
     itemsPerPage,
     hasNextPage: currentPage < totalPages,
     hasPrevPage: currentPage > 1
-  };
+  }
 }
 
 /**
@@ -241,9 +241,9 @@ export const storage = {
    */
   set(key, value) {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      localStorage.setItem(key, JSON.stringify(value))
     } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+      console.error('Failed to save to localStorage:', error)
     }
   },
 
@@ -255,11 +255,11 @@ export const storage = {
    */
   get(key, defaultValue = null) {
     try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
+      const item = localStorage.getItem(key)
+      return item ? JSON.parse(item) : defaultValue
     } catch (error) {
-      console.error('Failed to read from localStorage:', error);
-      return defaultValue;
+      console.error('Failed to read from localStorage:', error)
+      return defaultValue
     }
   },
 
@@ -269,9 +269,9 @@ export const storage = {
    */
   remove(key) {
     try {
-      localStorage.removeItem(key);
+      localStorage.removeItem(key)
     } catch (error) {
-      console.error('Failed to remove from localStorage:', error);
+      console.error('Failed to remove from localStorage:', error)
     }
   },
 
@@ -280,9 +280,9 @@ export const storage = {
    */
   clear() {
     try {
-      localStorage.clear();
+      localStorage.clear()
     } catch (error) {
-      console.error('Failed to clear localStorage:', error);
+      console.error('Failed to clear localStorage:', error)
     }
   }
-};
+}

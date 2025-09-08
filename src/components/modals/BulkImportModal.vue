@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import Modal from './Modal.vue';
+import Modal from '../Modal.vue';
 
 const props = defineProps({
   show: Boolean,

@@ -20,7 +20,9 @@ module.exports = {
     'no-unused-vars': 'warn',
     'no-undef': 'off',
     'vue/multi-word-component-names': 'off',
-    'vue/no-unused-vars': 'warn'
+    'no-useless-escape': 'off',
+    'no-empty': 'warn',
+    'no-prototype-builtins': 'warn'
   },
   ignorePatterns: [
     'node_modules/',

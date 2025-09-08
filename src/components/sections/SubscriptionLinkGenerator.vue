@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue';
-import { useToastStore } from '../stores/toast.js';
+import { useToastStore } from '../../stores/toast.js';
 
 const props = defineProps({
   subscriptions: {

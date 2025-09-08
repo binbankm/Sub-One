@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useToastStore } from '../stores/toast.js';
-import { subscriptionParser } from '../lib/subscriptionParser.js';
+import { useToastStore } from '../../stores/toast.js';
+import { subscriptionParser } from '../../lib/subscriptionParser.js';
 
 const props = defineProps({
   show: Boolean,

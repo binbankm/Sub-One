@@ -8,7 +8,7 @@ export const PAGINATION = {
   SUBSCRIPTIONS_PER_PAGE: 6,
   PROFILES_PER_PAGE: 6,
   MANUAL_NODES_PER_PAGE: 24
-};
+}
 
 // === 节点协议类型 ===
 export const NODE_PROTOCOLS = {
@@ -21,7 +21,7 @@ export const NODE_PROTOCOLS = {
   HYSTERIA2: 'hysteria2',
   TUIC: 'tuic',
   SOCKS5: 'socks5'
-};
+}
 
 // === 订阅格式类型 ===
 export const SUBSCRIPTION_FORMATS = {
@@ -31,7 +31,7 @@ export const SUBSCRIPTION_FORMATS = {
   SING_BOX: 'sing-box',
   BASE64: 'base64',
   QUANX: 'quanx'
-};
+}
 
 // === 地区代码映射 ===
 export const REGION_CODES = {
@@ -89,12 +89,10 @@ export const REGION_CODES = {
   AT: ['🇦🇹', '奥地利', '奧地利'],
   IE: ['🇮🇪', '爱尔兰', '愛爾蘭'],
   NZ: ['🇳🇿', '新西兰', '紐西蘭']
-};
+}
 
 // === 地区排序顺序 ===
-export const REGION_ORDER = [
-  'HK', 'TW', 'SG', 'JP', 'US', 'KR', 'GB', 'DE', 'FR', 'CA', 'AU'
-];
+export const REGION_ORDER = ['HK', 'TW', 'SG', 'JP', 'US', 'KR', 'GB', 'DE', 'FR', 'CA', 'AU']
 
 // === 地区关键词映射 ===
 export const REGION_KEYWORDS = {
@@ -109,14 +107,14 @@ export const REGION_KEYWORDS = {
   FR: [/法国/, /FR/, /France/i],
   CA: [/加拿大/, /CA/, /Canada/i],
   AU: [/澳大利亚/, /AU/, /Australia/i]
-};
+}
 
 // === 正则表达式 ===
 export const REGEX = {
   HTTP_URL: /^https?:\/\//,
   NODE_PROTOCOL: /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//,
   CUSTOM_ID: /[^a-zA-Z0-9-_]/g
-};
+}
 
 // === 默认配置 ===
 export const DEFAULT_CONFIG = {
@@ -129,7 +127,7 @@ export const DEFAULT_CONFIG = {
   },
   autoUpdate: true,
   updateInterval: 300000 // 5分钟
-};
+}
 
 // === 错误消息 ===
 export const ERROR_MESSAGES = {
@@ -139,7 +137,7 @@ export const ERROR_MESSAGES = {
   LOGIN_FAILED: '登录失败，请检查密码',
   SAVE_FAILED: '保存失败，请稍后重试',
   UPDATE_FAILED: '更新失败，请稍后重试'
-};
+}
 
 // === 成功消息 ===
 export const SUCCESS_MESSAGES = {
@@ -148,4 +146,4 @@ export const SUCCESS_MESSAGES = {
   DELETE_SUCCESS: '删除成功！',
   IMPORT_SUCCESS: '导入成功！',
   EXPORT_SUCCESS: '导出成功！'
-};
+}
