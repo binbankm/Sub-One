@@ -125,97 +125,37 @@
 
 ### 项目结构
 ```
-Sub-One/
-├── 📁 functions/                    # Cloudflare Pages Functions
-│   └── [[path]].js                  # 后端API处理函数
-├── 📁 src/                          # 源代码目录
-│   ├── 📁 assets/                   # 静态资源
-│   │   └── main.css                 # 主样式文件
-│   ├── 📁 components/               # Vue组件
-│   │   ├── 📁 cards/                # 卡片组件
-│   │   │   ├── Card.vue             # 通用卡片组件
-│   │   │   ├── ManualNodeCard.vue   # 手动节点卡片
-│   │   │   ├── ProfileCard.vue      # 订阅组卡片
-│   │   │   └── SkeletonCard.vue     # 骨架屏卡片
-│   │   ├── 📁 forms/                # 表单组件
-│   │   │   └── Login.vue            # 登录表单
-│   │   ├── 📁 layout/               # 布局组件
-│   │   │   ├── Header.vue           # 页面头部
-│   │   │   ├── Footer.vue           # 页面底部
-│   │   │   └── NavigationTabs.vue   # 导航标签
-│   │   ├── 📁 modals/               # 模态框组件
-│   │   │   ├── BulkImportModal.vue  # 批量导入模态框
-│   │   │   ├── HelpModal.vue        # 帮助模态框
-│   │   │   ├── NodeDetailsModal.vue # 节点详情模态框
-│   │   │   ├── ProfileModal.vue     # 订阅组模态框
-│   │   │   ├── SettingsModal.vue    # 设置模态框
-│   │   │   └── SubscriptionImportModal.vue # 订阅导入模态框
-│   │   ├── 📁 sections/             # 页面区域组件
-│   │   │   ├── GeneratorSection.vue # 链接生成器区域
-│   │   │   ├── ManualNodeSection.vue # 手动节点管理区域
-│   │   │   ├── ProfileSection.vue   # 订阅组管理区域
-│   │   │   └── SubscriptionSection.vue # 订阅管理区域
-│   │   ├── Dashboard.vue            # 主仪表板组件
-│   │   ├── DashboardSkeleton.vue    # 仪表板骨架屏
-│   │   ├── ManualNodeList.vue       # 手动节点列表
-│   │   ├── Modal.vue                # 基础模态框
-│   │   ├── ModalManager.vue         # 模态框管理器
-│   │   ├── SubscriptionLinkGenerator.vue # 订阅链接生成器
-│   │   └── Toast.vue                # 消息提示组件
-│   ├── 📁 composables/              # 组合式函数
-│   │   ├── useManualNodes.js        # 手动节点管理逻辑
-│   │   └── useSubscriptions.js      # 订阅管理逻辑
-│   ├── 📁 lib/                      # 工具库
-│   │   ├── api.js                   # API接口函数
-│   │   ├── constants.js             # 常量定义
-│   │   ├── helpers.js               # 辅助函数
-│   │   ├── subscriptionParser.js    # 订阅解析器
-│   │   └── utils.js                 # 通用工具函数
-│   ├── 📁 stores/                   # Pinia状态管理
-│   │   ├── session.js               # 会话状态
-│   │   ├── theme.js                 # 主题状态
-│   │   ├── toast.js                 # 消息提示状态
-│   │   └── ui.js                    # UI状态
-│   ├── App.vue                      # 根组件
-│   └── main.js                      # 应用入口
-├── 📄 配置文件
-│   ├── package.json                 # 项目依赖配置
-│   ├── vite.config.js               # Vite构建配置
-│   ├── tailwind.config.cjs          # Tailwind CSS配置
-│   ├── tsconfig.json                # TypeScript配置
-│   └── wrangler.toml                # Cloudflare Workers配置
-└── README.md                        # 项目说明文档
+src/
+├── components/          # Vue组件
+│   ├── Dashboard.vue   # 主仪表盘
+│   ├── Card.vue        # 订阅卡片
+│   ├── ProfileCard.vue # 订阅组卡片
+│   ├── DashboardSkeleton.vue # 加载骨架屏
+│   └── ...
+├── composables/         # 组合式函数
+│   ├── useSubscriptions.js
+│   └── useManualNodes.js
+├── stores/             # Pinia状态管理
+├── lib/                # 工具函数和API
+└── assets/             # 静态资源
 ```
-
-> 📋 详细的项目结构说明请查看 [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
 
 ### 开发环境配置
 
 ### 核心组件
-- **Dashboard.vue**: 主界面，已重构为模块化架构，职责更加清晰
-- **SubscriptionSection.vue**: 订阅管理区域组件，负责订阅的显示、操作和分页
-- **ProfileSection.vue**: 订阅组管理区域组件，负责订阅组的显示、操作和分页
-- **ManualNodeSection.vue**: 手动节点管理区域组件，负责节点的显示、搜索、排序等
-- **GeneratorSection.vue**: 订阅链接生成区域组件，负责链接生成功能
-- **ModalManager.vue**: 模态框管理组件，统一管理所有模态框的显示和隐藏
+- **Dashboard.vue**: 主界面，包含所有功能模块
 - **NavigationTabs.vue**: 独立的导航标签页组件，提供清晰的模块分类
 - **Header.vue**: 顶部导航栏，包含Logo和操作按钮
+- **SubscriptionLinkGenerator.vue**: 订阅链接生成器
 - **Card.vue**: 订阅卡片组件
 - **ProfileCard.vue**: 订阅组卡片组件
+- **DashboardSkeleton.vue**: 加载时的骨架屏组件
 
 ### 状态管理
-- **useSessionStore**: 会话状态管理，包含登录、登出、数据刷新等功能
-- **useToastStore**: 消息提示管理，支持消息队列和多种类型
-- **useThemeStore**: 主题管理，支持深色模式和系统主题检测
-- **useUIStore**: UI状态管理，包含模态框、布局等状态
-- **useSubscriptions**: 订阅数据管理，提供增删改查、分页、更新等功能
-- **useManualNodes**: 手动节点管理，提供搜索、排序、去重等功能
-
-### 工具函数
-- **constants.js**: 应用常量定义，包含分页配置、地区映射、正则表达式等
-- **helpers.js**: 辅助工具函数，包含防抖、节流、深拷贝、格式化等通用功能
-- **utils.js**: 节点链接解析工具，包含名称提取、主机端口提取等功能
-- **api.js**: API接口函数，提供与后端服务的数据交互功能
+- **useSubscriptions**: 订阅数据管理
+- **useManualNodes**: 手动节点管理
+- **useToastStore**: 消息提示管理
+- **useUIStore**: 界面状态管理
 
 ## 🔒 安全特性
 
@@ -227,26 +167,11 @@ Sub-One/
 
 ## 🚀 性能优化
 
-### 代码架构优化
-- **模块化设计**: 将大型组件拆分为功能单一的小组件，提高可维护性
-- **组件复用**: 通过ModalManager等组件实现代码复用，减少重复代码
-- **状态管理优化**: 使用Pinia进行集中状态管理，提高数据流清晰度
-- **Composables模式**: 将业务逻辑抽离为可复用的组合式函数
-
-### 性能优化
 - **代码分割**: 按需加载，减少初始包大小
 - **懒加载**: 图片和组件懒加载
 - **虚拟滚动**: 大量数据的高效渲染
 - **缓存策略**: 智能缓存，提升访问速度
 - **CDN加速**: 全球CDN网络，就近访问
-- **防抖节流**: 对搜索、输入等操作进行防抖处理，减少不必要的计算
-- **常量提取**: 将硬编码值提取为常量，便于维护和优化
-
-### 代码质量
-- **TypeScript支持**: 提供类型检查和更好的开发体验
-- **统一注释规范**: 使用JSDoc格式的注释，提高代码可读性
-- **错误处理**: 完善的错误边界处理和用户友好的错误提示
-- **代码风格统一**: 遵循Vue.js最佳实践和ESLint规范
 
 
 ## 🚀 快速开始

@@ -1,37 +1,15 @@
 {
   "name": "sub-one-vue",
   "version": "1.0.0",
-  "description": "A Vue.js application for managing subscription links and nodes",
-  "keywords": [
-    "vue",
-    "subscription",
-    "v2ray",
-    "clash",
-    "proxy"
-  ],
-  "author": "Sub-One Team",
-  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.ts,.jsx,.tsx --fix",
-    "lint:check": "eslint . --ext .vue,.js,.ts,.jsx,.tsx",
-    "type-check": "vue-tsc --noEmit",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "clean": "rm -rf dist node_modules/.vite",
-    "clean:all": "rm -rf dist node_modules package-lock.json",
-    "reinstall": "npm run clean:all && npm install",
-    "deploy": "npm run build && wrangler pages deploy dist",
-    "deploy:staging": "npm run build && wrangler pages deploy dist --env staging",
-    "analyze": "npm run build && npx vite-bundle-analyzer dist/assets/*.js",
-    "audit": "npm audit",
-    "audit:fix": "npm audit fix"
+    "preview": "vite preview"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "js-yaml": "^4.1.0",
     "pinia": "^3.0.3",
     "vue": "^3.4.27",
@@ -39,19 +17,12 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "@vue/eslint-config-prettier": "^9.0.0",
-    "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/typescript-plugin": "^3.0.5",
     "autoprefixer": "^10.4.19",
-    "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.22.0",
     "miniflare": "^4.20250604.1",
     "postcss": "^8.4.38",
-    "prettier": "^3.2.5",
     "tailwindcss": "^3.4.3",
-    "terser": "^5.44.0",
     "typescript": "^5.9.2",
-    "vite": "^5.2.11",
-    "vue-tsc": "^2.0.6"
+    "vite": "^5.2.11"
   }
 }

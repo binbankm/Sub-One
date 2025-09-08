@@ -1,9 +1,9 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import Modal from '../Modal.vue';
-import { fetchSettings, saveSettings } from '../../lib/api.js';
-import { useToastStore } from '../../stores/toast.js';
-import { useThemeStore } from '../../stores/theme.js';
+import Modal from './Modal.vue';
+import { fetchSettings, saveSettings } from '../lib/api.js';
+import { useToastStore } from '../stores/toast.js';
+import { useThemeStore } from '../stores/theme.js';
 
 const props = defineProps({
   show: Boolean
@@ -35,7 +35,7 @@ const hasWhitespace = computed(() => {
     }
   }
   return false;
-});
+});    
 
 const loadSettings = async () => {
   isLoading.value = true;
@@ -53,14 +53,14 @@ const handleSave = async () => {
     showToast('输入项中不能包含空格，请检查后再试。', 'error');
     return;
   }
-
+  
   isSaving.value = true;
   try {
     const result = await saveSettings(settings.value);
     if (result.success) {
       // 弹出成功提示
       showToast('设置已保存，页面将自动刷新...', 'success');
-
+      
       // 【核心新增】在短暂延迟后刷新页面，让用户能看到提示
       setTimeout(() => {
         window.location.reload();
@@ -83,11 +83,16 @@ watch(() => props.show, (newValue) => {
 </script>
 
 <template>
-  <Modal :show="show" @update:show="emit('update:show', $event)" @confirm="handleSave" :is-saving="isSaving"
-    :confirm-disabled="hasWhitespace" confirm-button-title="输入内容包含空格，无法保存" size="4xl">
-    <template #title>
-      <h3 class="text-lg font-bold text-gray-800 dark:text-white">设置</h3>
-    </template>
+  <Modal 
+    :show="show" 
+    @update:show="emit('update:show', $event)" 
+    @confirm="handleSave" 
+    :is-saving="isSaving"
+    :confirm-disabled="hasWhitespace" 
+    confirm-button-title="输入内容包含空格，无法保存"
+    size="4xl"
+  >
+    <template #title><h3 class="text-lg font-bold text-gray-800 dark:text-white">设置</h3></template>
     <template #body>
       <div v-if="isLoading" class="text-center p-8">
         <p class="text-gray-500">正在加载设置...</p>
@@ -96,26 +101,32 @@ watch(() => props.show, (newValue) => {
         <!-- 基础设置 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label for="fileName"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">自定义订阅文件名</label>
-            <input type="text" id="fileName" v-model="settings.FileName" class="input-modern-enhanced w-full"
-              placeholder="例如：my_subscription">
+            <label for="fileName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">自定义订阅文件名</label>
+            <input 
+              type="text" id="fileName" v-model="settings.FileName" 
+              class="input-modern-enhanced w-full"
+              placeholder="例如：my_subscription"
+            >
           </div>
           <div>
-            <label for="myToken"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">自定义订阅Token</label>
-            <input type="text" id="myToken" v-model="settings.mytoken" class="input-modern-enhanced w-full"
-              placeholder="用于访问订阅链接的Token">
+            <label for="myToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">自定义订阅Token</label>
+            <input 
+              type="text" id="myToken" v-model="settings.mytoken"
+              class="input-modern-enhanced w-full"
+              placeholder="用于访问订阅链接的Token"
+            >
           </div>
         </div>
 
         <!-- 订阅组设置 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label for="profileToken"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">订阅组分享Token</label>
-            <input type="text" id="profileToken" v-model="settings.profileToken" class="input-modern-enhanced w-full"
-              placeholder="用于生成订阅组链接专用Token">
+            <label for="profileToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">订阅组分享Token</label>
+            <input 
+              type="text" id="profileToken" v-model="settings.profileToken"
+              class="input-modern-enhanced w-full"
+              placeholder="用于生成订阅组链接专用Token"
+            >
             <p class="text-xs text-gray-400 mt-2">此Token专门用于生成订阅组链接，增强安全性。</p>
           </div>
           <div>
@@ -127,9 +138,7 @@ watch(() => props.show, (newValue) => {
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" v-model="settings.prependSubName" class="sr-only peer">
-                <div
-                  class="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r from-indigo-500 to-purple-600">
-                </div>
+                <div class="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-gradient-to-r from-indigo-500 to-purple-600"></div>
               </label>
             </div>
           </div>
@@ -138,32 +147,40 @@ watch(() => props.show, (newValue) => {
         <!-- SubConverter设置 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label for="subConverter"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SubConverter后端地址</label>
-            <input type="text" id="subConverter" v-model="settings.subConverter" class="input-modern-enhanced w-full"
-              placeholder="例如：https://sub.xeton.dev">
+            <label for="subConverter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SubConverter后端地址</label>
+            <input 
+              type="text" id="subConverter" v-model="settings.subConverter" 
+              class="input-modern-enhanced w-full"
+              placeholder="例如：https://sub.xeton.dev"
+            >
           </div>
           <div>
-            <label for="subConfig"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SubConverter配置文件</label>
-            <input type="text" id="subConfig" v-model="settings.subConfig" class="input-modern-enhanced w-full"
-              placeholder="例如：https://raw.githubusercontent.com/.../config.ini">
+            <label for="subConfig" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">SubConverter配置文件</label>
+            <input 
+              type="text" id="subConfig" v-model="settings.subConfig"
+              class="input-modern-enhanced w-full"
+              placeholder="例如：https://raw.githubusercontent.com/.../config.ini"
+            >
           </div>
         </div>
 
         <!-- Telegram设置 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label for="tgBotToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telegram Bot
-              Token</label>
-            <input type="text" id="tgBotToken" v-model="settings.BotToken" class="input-modern-enhanced w-full"
-              placeholder="从 @BotFather 获取的Bot Token">
+            <label for="tgBotToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telegram Bot Token</label>
+            <input 
+              type="text" id="tgBotToken" v-model="settings.BotToken"
+              class="input-modern-enhanced w-full"
+              placeholder="从 @BotFather 获取的Bot Token"
+            >
           </div>
           <div>
-            <label for="tgChatID" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telegram Chat
-              ID</label>
-            <input type="text" id="tgChatID" v-model="settings.ChatID" class="input-modern-enhanced w-full"
-              placeholder="接收通知的聊天ID">
+            <label for="tgChatID" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Telegram Chat ID</label>
+            <input 
+              type="text" id="tgChatID" v-model="settings.ChatID"
+              class="input-modern-enhanced w-full"
+              placeholder="接收通知的聊天ID"
+            >
           </div>
         </div>
       </div>

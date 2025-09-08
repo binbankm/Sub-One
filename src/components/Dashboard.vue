@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import draggable from 'vuedraggable';
 import { saveSubs, batchUpdateNodes } from '../lib/api.js';
 import { extractNodeName } from '../lib/utils.js';
 import { useToastStore } from '../stores/toast.js';
@@ -7,12 +8,23 @@ import { useUIStore } from '../stores/ui.js';
 import { useSubscriptions } from '../composables/useSubscriptions.js';
 import { useManualNodes } from '../composables/useManualNodes.js';
 
-// 导入新的模块化组件
-import SubscriptionSection from './sections/SubscriptionSection.vue';
-import ProfileSection from './sections/ProfileSection.vue';
-import ManualNodeSection from './sections/ManualNodeSection.vue';
-import GeneratorSection from './sections/GeneratorSection.vue';
-import ModalManager from './ModalManager.vue';
+// --- 元件導入 ---
+import Card from './Card.vue';
+import ManualNodeCard from './ManualNodeCard.vue';
+import SubscriptionLinkGenerator from './SubscriptionLinkGenerator.vue';
+import ProfileCard from './ProfileCard.vue';
+import ManualNodeList from './ManualNodeList.vue'; 
+import SubscriptionImportModal from './SubscriptionImportModal.vue';
+import NodeDetailsModal from './NodeDetailsModal.vue';
+import ProfileNodeDetailsModal from './ProfileNodeDetailsModal.vue';
+ 
+
+
+
+const SettingsModal = defineAsyncComponent(() => import('./SettingsModal.vue'));
+const BulkImportModal = defineAsyncComponent(() => import('./BulkImportModal.vue'));
+import Modal from './Modal.vue';
+const ProfileModal = defineAsyncComponent(() => import('./ProfileModal.vue'));
 
 // --- 基礎 Props 和狀態 ---
 const props = defineProps({ 
@@ -615,108 +627,391 @@ const handleNodeDragEnd = async (evt) => {
 
     <!-- 主要内容区域 - 根据标签页显示不同内容 -->
     <div class="space-y-6 lg:space-y-8">
+      
       <!-- 订阅管理标签页 -->
-      <SubscriptionSection
-        v-if="activeTab === 'subscriptions'"
-        :subscriptions="subscriptions"
-        :is-sorting="isSortingSubs"
-        :current-page="subsCurrentPage"
-        :total-pages="subsTotalPages"
-        :is-updating-all="isUpdatingAllSubs"
-        @add-subscription="handleAddSubscription"
-        @edit-subscription="handleEditSubscription"
-        @delete-subscription="handleDeleteSubscriptionWithCleanup"
-        @toggle-subscription="handleSubscriptionToggle"
-        @update-subscription="handleSubscriptionUpdate"
-        @update-all-subscriptions="handleUpdateAllSubscriptions"
-        @toggle-sorting="isSortingSubs = !isSortingSubs"
-        @change-page="changeSubsPage"
-        @drag-end="handleSubscriptionDragEnd"
-        @show-nodes="handleShowNodeDetails"
-      />
+      <div v-if="activeTab === 'subscriptions'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">订阅管理</h2>
+              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">管理您的机场订阅</p>
+            </div>
+            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ subscriptions.length }}</span>
+          </div>
+                      <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <button @click="handleAddSubscription" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+                <button 
+                  @click="handleUpdateAllSubscriptions" 
+                  :disabled="isUpdatingAllSubs"
+                  class="btn-modern-enhanced btn-update text-base font-semibold px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                >
+                  <svg v-if="isUpdatingAllSubs" class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="hidden sm:inline">{{ isUpdatingAllSubs ? '更新中...' : '一键更新' }}</span>
+                  <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <button 
+                  @click="isSortingSubs = !isSortingSubs" 
+                  :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ isSortingSubs ? '排序中' : '手动排序' }}</span>
+                  <span class="sm:hidden">{{ isSortingSubs ? '排序' : '排序' }}</span>
+                </button>
+                <div class="relative" ref="subsMoreMenuRef">
+                  <button @click="showSubsMoreMenu = !showSubsMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a0 0 0 100-4 2 2 0 000 4z" /></svg>
+                  </button>
+                  <Transition name="slide-fade-sm">
+                    <div v-if="showSubsMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
+                      <button @click="showDeleteSubsModal = true; showSubsMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+            </div>
+        </div>
+        
+        <!-- 订阅卡片网格 -->
+        <div v-if="subscriptions.length > 0">
+          <draggable 
+            v-if="isSortingSubs" 
+            tag="div" 
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
+            v-model="subscriptions" 
+            :item-key="item => item.id"
+            animation="300" 
+            :delay="200"
+            :delay-on-touch-only="true"
+            @end="handleSubscriptionDragEnd">
+            <template #item="{ element: subscription }">
+              <div class="cursor-move">
+                  <Card 
+                      :sub="subscription" 
+                      @delete="handleDeleteSubscriptionWithCleanup(subscription.id)" 
+                      @change="handleSubscriptionToggle(subscription)" 
+                      @update="handleSubscriptionUpdate(subscription.id)" 
+                      @edit="handleEditSubscription(subscription.id)"
+                      @showNodes="handleShowNodeDetails(subscription)" />
+              </div>
+            </template>
+          </draggable>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
+                  <Card 
+                      :sub="subscription" 
+                      @delete="handleDeleteSubscriptionWithCleanup(subscription.id)" 
+                      @change="handleSubscriptionToggle(subscription)" 
+                      @update="handleSubscriptionUpdate(subscription.id)" 
+                      @edit="handleEditSubscription(subscription.id)"
+                      @showNodes="handleShowNodeDetails(subscription)" />
+              </div>
+          </div>
+          <div v-if="subsTotalPages > 1 && !isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
+              <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
+              <span class="text-gray-500 dark:text-gray-400">第 {{ subsCurrentPage }} / {{ subsTotalPages }} 页</span>
+              <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+          </div>
+        </div>
+        <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
+          <div class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced mb-3">没有订阅</h3>
+          <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">从添加你的第一个订阅开始。</p>
+        </div>
+      </div>
 
       <!-- 订阅组标签页 -->
-      <ProfileSection
-        v-if="activeTab === 'profiles'"
-        :profiles="profiles"
-        :current-page="profilesCurrentPage"
-        :total-pages="profilesTotalPages"
-        :all-subscriptions="subscriptions"
-        @add-profile="handleAddProfile"
-        @edit-profile="handleEditProfile"
-        @delete-profile="handleDeleteProfile"
-        @toggle-profile="handleProfileToggle"
-        @copy-link="copyProfileLink"
-        @change-page="changeProfilesPage"
-        @show-nodes="handleShowProfileNodeDetails"
-      />
+      <div v-if="activeTab === 'profiles'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">订阅组</h2>
+              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">组合管理节点</p>
+            </div>
+            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ profiles.length }}</span>
+          </div>
+                      <div class="flex items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
+              <button @click="handleAddProfile" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+            <div class="relative" ref="profilesMoreMenuRef">
+              <button @click="showProfilesMoreMenu = !showProfilesMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+              </button>
+              <Transition name="slide-fade-sm">
+                <div v-if="showProfilesMoreMenu" class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
+                  <button @click="showDeleteProfilesModal = true; showProfilesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                </div>
+              </Transition>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <ProfileCard
+            v-for="profile in paginatedProfiles"
+            :key="profile.id"
+            :profile="profile"
+            :all-subscriptions="subscriptions"
+            @edit="handleEditProfile(profile.id)"
+            @delete="handleDeleteProfile(profile.id)"
+            @change="handleProfileToggle($event)"
+            @copy-link="copyProfileLink(profile.id)"
+            @showNodes="handleShowProfileNodeDetails(profile)"
+          />
+        </div>
+        <div v-if="profilesTotalPages > 1" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
+          <button @click="changeProfilesPage(profilesCurrentPage - 1)" :disabled="profilesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
+          <span class="text-gray-500 dark:text-gray-400">第 {{ profilesCurrentPage }} / {{ profilesTotalPages }} 页</span>
+          <button @click="changeProfilesPage(profilesCurrentPage + 1)" :disabled="profilesCurrentPage === profilesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+        </div>
+        <div v-if="profiles.length === 0" class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
+          <div class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h3 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced mb-3">没有订阅组</h3>
+          <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">创建一个订阅组来组合你的节点吧！</p>
+        </div>
+      </div>
 
       <!-- 链接生成标签页 -->
-      <GeneratorSection
-        v-if="activeTab === 'generator'"
-        :config="config"
-        :profiles="profiles"
-      />
+      <div v-if="activeTab === 'generator'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">生成订阅链接</h2>
+            <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">生成和管理订阅链接</p>
+          </div>
+        </div>
+        <SubscriptionLinkGenerator :config="config" :profiles="profiles" />
+      </div>
 
       <!-- 手动节点标签页 -->
-      <ManualNodeSection
-        v-if="activeTab === 'nodes'"
-        :manual-nodes="manualNodes"
-        :filtered-nodes="filteredManualNodes"
-        :current-page="manualNodesCurrentPage"
-        :total-pages="manualNodesTotalPages"
-        :is-sorting="isSortingNodes"
-        :view-mode="manualNodeViewMode"
-        :search-term="searchTerm"
-        @add-node="handleAddNode"
-        @edit-node="handleEditNode"
-        @delete-node="handleDeleteNodeWithCleanup"
-        @toggle-sorting="isSortingNodes = !isSortingNodes"
-        @change-page="changeManualNodesPage"
-        @drag-end="handleNodeDragEnd"
-        @set-view-mode="setViewMode"
-        @update-search="searchTerm = $event"
-        @bulk-import="showBulkImportModal = true"
-        @auto-sort="handleAutoSortNodes"
-        @deduplicate="handleDeduplicateNodes"
-        @import-subscription="showSubscriptionImportModal = true"
-      />
+      <div v-if="activeTab === 'nodes'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">手动节点</h2>
+              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">管理单个节点链接</p>
+            </div>
+            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ manualNodes.length }}</span>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
+            <!-- 搜索框 -->
+            <div class="relative w-full sm:w-56 flex-shrink-0">
+              <input 
+                type="text" 
+                v-model="searchTerm"
+                placeholder="搜索节点..."
+                class="search-input-unified w-full text-base"
+              />
+              <svg class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <!-- 视图切换 -->
+            <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center flex-shrink-0">
+                <button @click="setViewMode('card')" class="p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                </button>
+                <button @click="setViewMode('list')" class="p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+
+            <!-- 主要操作按钮 -->
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+              
+              <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">批量导入</button>
+              
+              <button 
+                @click="isSortingNodes = !isSortingNodes" 
+                :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                </svg>
+                <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
+                <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
+              </button>
+            </div>
+            
+            <!-- 更多菜单 -->
+            <div class="relative" ref="nodesMoreMenuRef">
+              <button @click="showNodesMoreMenu = !showNodesMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+              </button>
+               <Transition name="slide-fade-sm">
+                <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
+                  <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">导入订阅</button>
+                  <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键排序</button>
+                  <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键去重</button>
+                  <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                  <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                </div>
+              </Transition>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 节点内容区域 -->
+        <div v-if="manualNodes.length > 0">
+          <div v-if="manualNodeViewMode === 'card'">
+             <draggable 
+              v-if="isSortingNodes"
+              tag="div" 
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8" 
+              v-model="manualNodes" 
+              :item-key="item => item.id" 
+              animation="300" 
+              :delay="200"
+              :delay-on-touch-only="true"
+              @end="handleNodeDragEnd"
+            >
+              <template #item="{ element: node }">
+                 <div class="cursor-move">
+                    <ManualNodeCard 
+                        :node="node" 
+                        @edit="handleEditNode(node.id)" 
+                        @delete="handleDeleteNodeWithCleanup(node.id)" />
+                </div>
+              </template>
+            </draggable>
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+              <div v-for="node in paginatedManualNodes" :key="node.id">
+                <ManualNodeCard 
+                  :node="node" 
+                  @edit="handleEditNode(node.id)" 
+                  @delete="handleDeleteNodeWithCleanup(node.id)" />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="manualNodeViewMode === 'list'" class="space-y-3">
+              <ManualNodeList
+                  v-for="(node, index) in paginatedManualNodes"
+                  :key="node.id"
+                  :node="node"
+                  :index="(manualNodesCurrentPage - 1) * manualNodesPerPage + index + 1"
+                  @edit="handleEditNode(node.id)"
+                  @delete="handleDeleteNodeWithCleanup(node.id)"
+              />
+          </div>
+          
+          <div v-if="manualNodesTotalPages > 1 && !isSortingNodes" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
+            <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
+            <span class="text-gray-500 dark:text-gray-400">第 {{ manualNodesCurrentPage }} / {{ manualNodesTotalPages }} 页</span>
+            <button @click="changeManualNodesPage(manualNodesCurrentPage + 1)" :disabled="manualNodesCurrentPage === manualNodesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+          </div>
+        </div>
+        <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
+          <div class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h3 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced mb-3">没有手动节点</h3>
+          <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">添加分享链接或单个节点。</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- 模态框管理组件 -->
-  <ModalManager
-    v-model:show-bulk-import-modal="showBulkImportModal"
-    v-model:show-delete-subs-modal="showDeleteSubsModal"
-    v-model:show-delete-nodes-modal="showDeleteNodesModal"
-    v-model:show-delete-profiles-modal="showDeleteProfilesModal"
-    v-model:show-profile-modal="showProfileModal"
-    v-model:show-node-modal="showNodeModal"
-    v-model:show-sub-modal="showSubModal"
-    v-model:show-subscription-import-modal="showSubscriptionImportModal"
-    v-model:show-node-details-modal="showNodeDetailsModal"
-    v-model:show-profile-node-details-modal="showProfileNodeDetailsModal"
-    v-model:show-settings-modal="uiStore.isSettingsModalVisible"
-    :editing-node="editingNode"
-    :editing-subscription="editingSubscription"
-    :editing-profile="editingProfile"
-    :selected-subscription="selectedSubscription"
-    :selected-profile="selectedProfile"
-    :is-new-node="isNewNode"
-    :is-new-subscription="isNewSubscription"
-    :is-new-profile="isNewProfile"
-    :subscriptions="subscriptions"
-    :manual-nodes="manualNodes"
-    @bulk-import="handleBulkImport"
-    @confirm-delete-subs="handleDeleteAllSubscriptionsWithCleanup"
-    @confirm-delete-nodes="handleDeleteAllNodesWithCleanup"
-    @confirm-delete-profiles="handleDeleteAllProfiles"
-    @save-profile="handleSaveProfile"
-    @save-node="handleSaveNode"
-    @save-subscription="handleSaveSubscription"
-    @import-subscription="handleImportSubscription"
-    @add-nodes-from-bulk="addNodesFromBulk"
-    @on-import-success="() => handleDirectSave('导入订阅')"
+  <!-- 模态框组件 -->
+  <BulkImportModal v-model:show="showBulkImportModal" @import="handleBulkImport" />
+  <Modal v-model:show="showDeleteSubsModal" @confirm="handleDeleteAllSubscriptionsWithCleanup">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认清空订阅</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除所有**订阅**吗？此操作将标记为待保存，不会影响手动节点。</p></template>
+  </Modal>
+  <Modal v-model:show="showDeleteNodesModal" @confirm="handleDeleteAllNodesWithCleanup">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认清空节点</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除所有**手动节点**吗？此操作将标记为待保存，不会影响订阅。</p></template>
+  </Modal>
+  <Modal v-model:show="showDeleteProfilesModal" @confirm="handleDeleteAllProfiles">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认清空订阅组</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除所有**订阅组**吗？此操作不可逆。</p></template>
+  </Modal>
+  
+  <ProfileModal v-if="showProfileModal" v-model:show="showProfileModal" :profile="editingProfile" :is-new="isNewProfile" :all-subscriptions="subscriptions" :all-manual-nodes="manualNodes" @save="handleSaveProfile" size="2xl" />
+  
+  <Modal v-if="editingNode" v-model:show="showNodeModal" @confirm="handleSaveNode">
+    <template #title><h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ isNewNode ? '新增手动节点' : '编辑手动节点' }}</h3></template>
+    <template #body>
+      <div class="space-y-4">
+        <div><label for="node-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点名称</label><input type="text" id="node-name" v-model="editingNode.name" placeholder="（可选）不填将自动获取" class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white"></div>
+        <div><label for="node-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点链接</label><textarea id="node-url" v-model="editingNode.url" @input="handleNodeUrlInput" rows="4" class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"></textarea></div>
+      </div>
+    </template>
+  </Modal>
+
+  <Modal v-if="editingSubscription" v-model:show="showSubModal" @confirm="handleSaveSubscription">
+    <template #title><h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ isNewSubscription ? '新增订阅' : '编辑订阅' }}</h3></template>
+    <template #body>
+      <div class="space-y-4">
+        <div><label for="sub-edit-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅名称</label><input type="text" id="sub-edit-name" v-model="editingSubscription.name" placeholder="（可选）不填将自动获取" class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white"></div>
+        <div><label for="sub-edit-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅链接</label><input type="text" id="sub-edit-url" v-model="editingSubscription.url" placeholder="https://..." class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"></input></div>
+        <div>
+          <label for="sub-edit-exclude" class="block text-base font-medium text-gray-700 dark:text-gray-300">包含/排除节点</label>
+          <textarea 
+            id="sub-edit-exclude" 
+            v-model="editingSubscription.exclude"
+            placeholder="[排除模式 (默认)]&#10;proto:vless,trojan&#10;(过期|官网)&#10;---&#10;[包含模式 (只保留匹配项)]&#10;keep:(香港|HK)&#10;keep:proto:ss"
+            rows="5" 
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white">
+          </textarea>
+          <p class="text-sm text-gray-400 mt-1">每行一条规则。使用 `keep:` 切换为白名单模式。</p>
+        </div>
+      </div>
+    </template>
+  </Modal>
+  
+  <SettingsModal v-model:show="uiStore.isSettingsModalVisible" />
+  <SubscriptionImportModal 
+    :show="showSubscriptionImportModal" 
+    @update:show="showSubscriptionImportModal = $event" 
+    :add-nodes-from-bulk="addNodesFromBulk"
+    :on-import-success="() => handleDirectSave('导入订阅')"
+  />
+  <NodeDetailsModal :show="showNodeDetailsModal" :subscription="selectedSubscription" @update:show="showNodeDetailsModal = $event" />
+  <ProfileNodeDetailsModal 
+    :show="showProfileNodeDetailsModal" 
+    :profile="selectedProfile" 
+    :all-subscriptions="subscriptions"
+    :all-manual-nodes="manualNodes"
+    @update:show="showProfileNodeDetailsModal = $event" 
   />
   
 

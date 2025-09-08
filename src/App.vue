@@ -6,11 +6,11 @@ import { useThemeStore } from './stores/theme.js';
 import { storeToRefs } from 'pinia';
 
 import Dashboard from './components/Dashboard.vue';
-import Login from './components/forms/Login.vue';
-import Header from './components/layout/Header.vue';
-import NavigationTabs from './components/layout/NavigationTabs.vue';
+import Login from './components/Login.vue';
+import Header from './components/Header.vue';
+import NavigationTabs from './components/NavigationTabs.vue';
 import Toast from './components/Toast.vue';
-import Footer from './components/layout/Footer.vue';
+import Footer from './components/Footer.vue';
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
