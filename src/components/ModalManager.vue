@@ -29,19 +29,19 @@ const props = defineProps({
   showNodeDetailsModal: { type: Boolean, default: false },
   showProfileNodeDetailsModal: { type: Boolean, default: false },
   showSettingsModal: { type: Boolean, default: false },
-  
+
   // 编辑数据
   editingNode: { type: Object, default: null },
   editingSubscription: { type: Object, default: null },
   editingProfile: { type: Object, default: null },
   selectedSubscription: { type: Object, default: null },
   selectedProfile: { type: Object, default: null },
-  
+
   // 状态标识
   isNewNode: { type: Boolean, default: false },
   isNewSubscription: { type: Boolean, default: false },
   isNewProfile: { type: Boolean, default: false },
-  
+
   // 数据
   subscriptions: { type: Array, default: () => [] },
   manualNodes: { type: Array, default: () => [] }
@@ -116,18 +116,12 @@ const handleOnImportSuccess = () => {
 
 <template>
   <!-- 批量导入模态框 -->
-  <BulkImportModal 
-    :show="showBulkImportModal" 
-    @update:show="$emit('update:showBulkImportModal', $event)"
-    @import="handleBulkImport" 
-  />
-  
+  <BulkImportModal :show="showBulkImportModal" @update:show="$emit('update:showBulkImportModal', $event)"
+    @import="handleBulkImport" />
+
   <!-- 删除确认模态框 -->
-  <Modal 
-    :show="showDeleteSubsModal" 
-    @update:show="$emit('update:showDeleteSubsModal', $event)"
-    @confirm="handleConfirmDeleteSubs"
-  >
+  <Modal :show="showDeleteSubsModal" @update:show="$emit('update:showDeleteSubsModal', $event)"
+    @confirm="handleConfirmDeleteSubs">
     <template #title>
       <h3 class="text-xl font-bold text-red-500">确认清空订阅</h3>
     </template>
@@ -135,12 +129,9 @@ const handleOnImportSuccess = () => {
       <p class="text-base text-gray-400">您确定要删除所有**订阅**吗？此操作将标记为待保存，不会影响手动节点。</p>
     </template>
   </Modal>
-  
-  <Modal 
-    :show="showDeleteNodesModal" 
-    @update:show="$emit('update:showDeleteNodesModal', $event)"
-    @confirm="handleConfirmDeleteNodes"
-  >
+
+  <Modal :show="showDeleteNodesModal" @update:show="$emit('update:showDeleteNodesModal', $event)"
+    @confirm="handleConfirmDeleteNodes">
     <template #title>
       <h3 class="text-xl font-bold text-red-500">确认清空节点</h3>
     </template>
@@ -148,12 +139,9 @@ const handleOnImportSuccess = () => {
       <p class="text-base text-gray-400">您确定要删除所有**手动节点**吗？此操作将标记为待保存，不会影响订阅。</p>
     </template>
   </Modal>
-  
-  <Modal 
-    :show="showDeleteProfilesModal" 
-    @update:show="$emit('update:showDeleteProfilesModal', $event)"
-    @confirm="handleConfirmDeleteProfiles"
-  >
+
+  <Modal :show="showDeleteProfilesModal" @update:show="$emit('update:showDeleteProfilesModal', $event)"
+    @confirm="handleConfirmDeleteProfiles">
     <template #title>
       <h3 class="text-xl font-bold text-red-500">确认清空订阅组</h3>
     </template>
@@ -161,27 +149,15 @@ const handleOnImportSuccess = () => {
       <p class="text-base text-gray-400">您确定要删除所有**订阅组**吗？此操作不可逆。</p>
     </template>
   </Modal>
-  
+
   <!-- 订阅组编辑模态框 -->
-  <ProfileModal 
-    v-if="showProfileModal" 
-    :show="showProfileModal" 
-    @update:show="$emit('update:showProfileModal', $event)"
-    :profile="editingProfile" 
-    :is-new="isNewProfile" 
-    :all-subscriptions="subscriptions" 
-    :all-manual-nodes="manualNodes" 
-    @save="handleSaveProfile" 
-    size="2xl" 
-  />
-  
+  <ProfileModal v-if="showProfileModal" :show="showProfileModal" @update:show="$emit('update:showProfileModal', $event)"
+    :profile="editingProfile" :is-new="isNewProfile" :all-subscriptions="subscriptions" :all-manual-nodes="manualNodes"
+    @save="handleSaveProfile" size="2xl" />
+
   <!-- 节点编辑模态框 -->
-  <Modal 
-    v-if="editingNode" 
-    :show="showNodeModal" 
-    @update:show="$emit('update:showNodeModal', $event)"
-    @confirm="handleSaveNode"
-  >
+  <Modal v-if="editingNode" :show="showNodeModal" @update:show="$emit('update:showNodeModal', $event)"
+    @confirm="handleSaveNode">
     <template #title>
       <h3 class="text-xl font-bold text-gray-800 dark:text-white">
         {{ isNewNode ? '新增手动节点' : '编辑手动节点' }}
@@ -191,34 +167,21 @@ const handleOnImportSuccess = () => {
       <div class="space-y-4">
         <div>
           <label for="node-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点名称</label>
-          <input 
-            type="text" 
-            id="node-name" 
-            v-model="editingNode.name" 
-            placeholder="（可选）不填将自动获取" 
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white"
-          >
+          <input type="text" id="node-name" v-model="editingNode.name" placeholder="（可选）不填将自动获取"
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white">
         </div>
         <div>
           <label for="node-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点链接</label>
-          <textarea 
-            id="node-url" 
-            v-model="editingNode.url" 
-            rows="4" 
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"
-          ></textarea>
+          <textarea id="node-url" v-model="editingNode.url" rows="4"
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"></textarea>
         </div>
       </div>
     </template>
   </Modal>
 
   <!-- 订阅编辑模态框 -->
-  <Modal 
-    v-if="editingSubscription" 
-    :show="showSubModal" 
-    @update:show="$emit('update:showSubModal', $event)"
-    @confirm="handleSaveSubscription"
-  >
+  <Modal v-if="editingSubscription" :show="showSubModal" @update:show="$emit('update:showSubModal', $event)"
+    @confirm="handleSaveSubscription">
     <template #title>
       <h3 class="text-xl font-bold text-gray-800 dark:text-white">
         {{ isNewSubscription ? '新增订阅' : '编辑订阅' }}
@@ -228,66 +191,41 @@ const handleOnImportSuccess = () => {
       <div class="space-y-4">
         <div>
           <label for="sub-edit-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅名称</label>
-          <input 
-            type="text" 
-            id="sub-edit-name" 
-            v-model="editingSubscription.name" 
-            placeholder="（可选）不填将自动获取" 
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white"
-          >
+          <input type="text" id="sub-edit-name" v-model="editingSubscription.name" placeholder="（可选）不填将自动获取"
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base dark:text-white">
         </div>
         <div>
           <label for="sub-edit-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅链接</label>
-          <input 
-            type="text" 
-            id="sub-edit-url" 
-            v-model="editingSubscription.url" 
-            placeholder="https://..." 
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"
-          >
+          <input type="text" id="sub-edit-url" v-model="editingSubscription.url" placeholder="https://..."
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white">
         </div>
         <div>
-          <label for="sub-edit-exclude" class="block text-base font-medium text-gray-700 dark:text-gray-300">包含/排除节点</label>
-          <textarea 
-            id="sub-edit-exclude" 
-            v-model="editingSubscription.exclude"
+          <label for="sub-edit-exclude"
+            class="block text-base font-medium text-gray-700 dark:text-gray-300">包含/排除节点</label>
+          <textarea id="sub-edit-exclude" v-model="editingSubscription.exclude"
             placeholder="[排除模式 (默认)]&#10;proto:vless,trojan&#10;(过期|官网)&#10;---&#10;[包含模式 (只保留匹配项)]&#10;keep:(香港|HK)&#10;keep:proto:ss"
-            rows="5" 
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"
-          ></textarea>
+            rows="5"
+            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base font-mono dark:text-white"></textarea>
           <p class="text-sm text-gray-400 mt-1">每行一条规则。使用 `keep:` 切换为白名单模式。</p>
         </div>
       </div>
     </template>
   </Modal>
-  
+
   <!-- 设置模态框 -->
-  <SettingsModal 
-    :show="showSettingsModal" 
-    @update:show="$emit('update:showSettingsModal', $event)"
-  />
-  
+  <SettingsModal :show="showSettingsModal" @update:show="$emit('update:showSettingsModal', $event)" />
+
   <!-- 订阅导入模态框 -->
-  <SubscriptionImportModal 
-    :show="showSubscriptionImportModal" 
-    @update:show="$emit('update:showSubscriptionImportModal', $event)" 
-    :add-nodes-from-bulk="handleAddNodesFromBulk"
-    :on-import-success="handleOnImportSuccess"
-  />
-  
+  <SubscriptionImportModal :show="showSubscriptionImportModal"
+    @update:show="$emit('update:showSubscriptionImportModal', $event)" :add-nodes-from-bulk="handleAddNodesFromBulk"
+    :on-import-success="handleOnImportSuccess" />
+
   <!-- 节点详情模态框 -->
-  <NodeDetailsModal 
-    :show="showNodeDetailsModal" 
-    :subscription="selectedSubscription" 
-    @update:show="$emit('update:showNodeDetailsModal', $event)" 
-  />
-  
+  <NodeDetailsModal :show="showNodeDetailsModal" :subscription="selectedSubscription"
+    @update:show="$emit('update:showNodeDetailsModal', $event)" />
+
   <!-- 订阅组节点详情模态框 -->
-  <ProfileNodeDetailsModal 
-    :show="showProfileNodeDetailsModal" 
-    :profile="selectedProfile" 
-    :all-subscriptions="subscriptions"
-    :all-manual-nodes="manualNodes"
-    @update:show="$emit('update:showProfileNodeDetailsModal', $event)" 
-  />
+  <ProfileNodeDetailsModal :show="showProfileNodeDetailsModal" :profile="selectedProfile"
+    :all-subscriptions="subscriptions" :all-manual-nodes="manualNodes"
+    @update:show="$emit('update:showProfileNodeDetailsModal', $event)" />
 </template>
