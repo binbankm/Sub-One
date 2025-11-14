@@ -625,28 +625,31 @@ const handleUpdateAllSubscriptions = async () => {
     }
 };
 
-const handleSubscriptionDragEnd = async (evt) => {
-    // vuedraggable 已经自动更新了 subscriptions 数组
+// 添加排序变更标记
+const hasUnsavedSortChanges = ref(false);
+
+// 手动保存排序功能
+const handleSaveSortChanges = async () => {
     try {
         await handleSave();
-        showToast('订阅排序已保存', 'success');
+        hasUnsavedSortChanges.value = false;
+        showToast('排序已保存', 'success');
     } catch (error) {
-        console.error('保存订阅排序失败:', error);
+        console.error('保存排序失败:', error);
         showToast('保存排序失败', 'error');
     }
+};
+
+const handleSubscriptionDragEnd = async (evt) => {
+    // vuedraggable 已经自动更新了 subscriptions 数组
+    hasUnsavedSortChanges.value = true;
     
     // 拖拽排序完成
 };
 
 const handleNodeDragEnd = async (evt) => {
     // vuedraggable 已经自动更新了 manualNodes 数组
-    try {
-        await handleSave();
-        showToast('节点排序已保存', 'success');
-    } catch (error) {
-        console.error('保存节点排序失败:', error);
-        showToast('保存排序失败', 'error');
-    }
+    hasUnsavedSortChanges.value = true;
     
     // 拖拽排序完成
 };
@@ -710,7 +713,23 @@ const handleNodeDragEnd = async (evt) => {
               </div>
               <div class="flex items-center gap-3 flex-shrink-0">
                 <button 
-                  @click="isSortingSubs = !isSortingSubs" 
+                  v-if="isSortingSubs && hasUnsavedSortChanges"
+                  @click="handleSaveSortChanges"
+                  class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  保存排序
+                </button>
+                <button 
+                  @click="() => {
+                    if (isSortingSubs && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
+                      return;
+                    }
+                    isSortingSubs = !isSortingSubs;
+                    if (!isSortingSubs) hasUnsavedSortChanges.value = false;
+                  }"
                   :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -907,9 +926,25 @@ const handleNodeDragEnd = async (evt) => {
               <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">批量导入</button>
               
               <button 
-                @click="isSortingNodes = !isSortingNodes" 
-                :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                v-if="isSortingNodes && hasUnsavedSortChanges"
+                @click="handleSaveSortChanges"
+                class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                保存排序
+              </button>
+              <button 
+                  @click="() => {
+                    if (isSortingNodes && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
+                      return;
+                    }
+                    isSortingNodes = !isSortingNodes;
+                    if (!isSortingNodes) hasUnsavedSortChanges.value = false;
+                  }"
+                  :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
