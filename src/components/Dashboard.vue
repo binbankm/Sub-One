@@ -570,7 +570,7 @@ const handleSubscriptionToggle = async (subscription) => {
 };
 
 const handleSubscriptionUpdate = async (subscriptionId) => {
-    await handleUpdateNodeCount(subscriptionId);
+    await handleUpdateNodeCount(subscriptionId, true); // 传递true避免显示重复通知
     await handleDirectSave('订阅更新');
 };
 
