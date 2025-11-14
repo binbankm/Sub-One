@@ -233,6 +233,13 @@ const handleSave = async () => {
       // 保存成功后自动退出排序模式
       isSortingSubs.value = false;
       isSortingNodes.value = false;
+      
+      // 强制更新计数数据，确保视图正确显示最新数量
+      // 重新赋值以触发Vue的响应式系统更新
+      subscriptions.value = [...subscriptions.value];
+      manualNodes.value = [...manualNodes.value];
+      profiles.value = [...profiles.value];
+      
       setTimeout(() => { 
         dirty.value = false; 
         saveState.value = 'idle'; 
