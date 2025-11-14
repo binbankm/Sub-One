@@ -571,7 +571,6 @@ const handleSubscriptionToggle = async (subscription) => {
 
 const handleSubscriptionUpdate = async (subscriptionId) => {
     await handleUpdateNodeCount(subscriptionId);
-    await handleDirectSave('订阅更新');
 };
 
 const handleUpdateAllSubscriptions = async () => {
