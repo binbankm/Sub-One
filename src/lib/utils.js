@@ -1,127 +1,88 @@
-/**
- * @file 工具函数集合
- * @description 提供节点链接解析、名称处理和主机端口提取等功能
- */
-
-/**
- * 从节点URL中提取节点名称
- * @param {string} url - 节点链接URL
- * @returns {string} - 提取的节点名称，如果无法提取则返回空字符串
- */
+//
+// src/lib/utils.js
+//
 export function extractNodeName(url) {
-  // 输入验证
-  if (!url || typeof url !== 'string') return '';
-  
-  const trimmedUrl = url.trim();
-  if (!trimmedUrl) return '';
-  
-  try {
-    // 优先检查URL片段（#后面的内容）
-    const hashIndex = trimmedUrl.indexOf('#');
-    if (hashIndex !== -1 && hashIndex < trimmedUrl.length - 1) {
-      return decodeURIComponent(trimmedUrl.substring(hashIndex + 1)).trim();
-    }
+    if (!url) return '';
     
-    // 检查协议
-    const protocolIndex = trimmedUrl.indexOf('://');
-    if (protocolIndex === -1) return '';
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return '';
     
-    const protocol = trimmedUrl.substring(0, protocolIndex);
-    const mainPart = trimmedUrl.substring(protocolIndex + 3).split('#')[0];
-    
-    switch (protocol) {
-      case 'vmess':
-        return extractVmessNodeName(mainPart);
+    try {
+        // 优先检查URL片段（#后面的内容）
+        const hashIndex = trimmedUrl.indexOf('#');
+        if (hashIndex !== -1 && hashIndex < trimmedUrl.length - 1) {
+            return decodeURIComponent(trimmedUrl.substring(hashIndex + 1)).trim();
+        }
         
-      case 'trojan':
-      case 'vless':
-        return extractStandardNodeName(mainPart);
+        // 检查协议
+        const protocolIndex = trimmedUrl.indexOf('://');
+        if (protocolIndex === -1) return '';
         
-      case 'ss':
-        return extractSSNodeName(mainPart);
+        const protocol = trimmedUrl.substring(0, protocolIndex);
+        const mainPart = trimmedUrl.substring(protocolIndex + 3).split('#')[0];
         
-      default:
-        return extractHttpNodeName(trimmedUrl);
+        switch (protocol) {
+            case 'vmess': {
+                try {
+                    // 优化Base64解码：使用更高效的方法
+                    const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
+                    const binaryString = atob(padded);
+                    
+                    // 优化：使用更高效的字节转换方法
+                    const bytes = new Uint8Array(binaryString.length);
+                    // 使用 Uint8Array.from 和 Array.from 的组合，提升性能
+                    const charCodes = Array.from(binaryString, char => char.charCodeAt(0));
+                    bytes.set(charCodes);
+                    
+                    const jsonString = new TextDecoder('utf-8').decode(bytes);
+                    const node = JSON.parse(jsonString);
+                    return node.ps || '';
+                } catch (e) {
+                    console.error("Failed to decode vmess link:", e);
+                    return '';
+                }
+            }
+            
+            case 'trojan':
+            case 'vless': {
+                const atIndex = mainPart.indexOf('@');
+                if (atIndex === -1) return '';
+                return mainPart.substring(atIndex + 1).split(':')[0] || '';
+            }
+            
+            case 'ss': {
+                const atIndex = mainPart.indexOf('@');
+                if (atIndex !== -1) {
+                    return mainPart.substring(atIndex + 1).split(':')[0] || '';
+                }
+                
+                try {
+                    const decodedSS = atob(mainPart);
+                    const ssDecodedAtIndex = decodedSS.indexOf('@');
+                    if (ssDecodedAtIndex !== -1) {
+                        return decodedSS.substring(ssDecodedAtIndex + 1).split(':')[0] || '';
+                    }
+                } catch (e) {
+                    // Base64解码失败，静默处理
+                }
+                return '';
+            }
+            
+            default:
+                if (trimmedUrl.startsWith('http')) {
+                    try {
+                        return new URL(trimmedUrl).hostname;
+                    } catch (e) {
+                        return '';
+                    }
+                }
+                return '';
+        }
+    } catch (e) { 
+        return trimmedUrl.substring(0, 50); 
     }
-  } catch (e) {
-    console.warn('节点名称提取失败:', e);
-    return trimmedUrl.substring(0, 50);
-  }
 }
 
-/**
- * 提取VMess节点名称
- * @param {string} mainPart - VMess链接的主要部分
- * @returns {string} - 提取的节点名称
- * @private
- */
-function extractVmessNodeName(mainPart) {
-  try {
-    // Base64解码优化
-    const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
-    const jsonString = decodeBase64ToUtf8(padded);
-    const node = JSON.parse(jsonString);
-    return node.ps || '';
-  } catch (e) {
-    console.error('VMess链接解码失败:', e);
-    return '';
-  }
-}
-
-/**
- * 提取Trojan和VLESS节点名称
- * @param {string} mainPart - 节点链接的主要部分
- * @returns {string} - 提取的节点名称
- * @private
- */
-function extractStandardNodeName(mainPart) {
-  const atIndex = mainPart.indexOf('@');
-  if (atIndex === -1) return '';
-  return mainPart.substring(atIndex + 1).split(':')[0] || '';
-}
-
-/**
- * 提取SS节点名称
- * @param {string} mainPart - SS链接的主要部分
- * @returns {string} - 提取的节点名称
- * @private
- */
-function extractSSNodeName(mainPart) {
-  // 直接查找@符号
-  const atIndex = mainPart.indexOf('@');
-  if (atIndex !== -1) {
-    return mainPart.substring(atIndex + 1).split(':')[0] || '';
-  }
-  
-  // 尝试Base64解码
-  try {
-    const decodedSS = atob(mainPart);
-    const ssDecodedAtIndex = decodedSS.indexOf('@');
-    if (ssDecodedAtIndex !== -1) {
-      return decodedSS.substring(ssDecodedAtIndex + 1).split(':')[0] || '';
-    }
-  } catch (e) {
-    // Base64解码失败，静默处理
-  }
-  return '';
-}
-
-/**
- * 提取HTTP节点名称（使用主机名）
- * @param {string} url - HTTP节点链接
- * @returns {string} - 提取的节点名称
- * @private
- */
-function extractHttpNodeName(url) {
-  if (!url.startsWith('http')) return '';
-  
-  try {
-    return new URL(url).hostname;
-  } catch (e) {
-    console.warn('HTTP URL解析失败:', e);
-    return '';
-  }
-}
 
 /**
  * 为节点链接添加名称前缀
@@ -130,199 +91,110 @@ function extractHttpNodeName(url) {
  * @returns {string} - 添加了前缀的新链接
  */
 export function prependNodeName(link, prefix) {
-  // 输入验证
-  if (!prefix || !link || typeof prefix !== 'string' || typeof link !== 'string') return link;
-  
+  if (!prefix || !link) return link;
+
   const hashIndex = link.lastIndexOf('#');
   
   // 如果链接没有 #fragment，直接添加前缀
   if (hashIndex === -1) {
     return `${link}#${encodeURIComponent(prefix)}`;
   }
-  
-  // 提取基础链接和原始名称
+
   const baseLink = link.substring(0, hashIndex);
   const originalName = decodeURIComponent(link.substring(hashIndex + 1));
   
-  // 避免重复添加前缀
+  // 如果原始名称已经包含了前缀，则不再重复添加
   if (originalName.startsWith(prefix)) {
-    return link;
+      return link;
   }
-  
-  // 组合新名称
+
   const newName = `${prefix} - ${originalName}`;
   return `${baseLink}#${encodeURIComponent(newName)}`;
 }
 
 /**
- * 从节点链接中提取主机和端口
+ * [新增] 从节点链接中提取主机和端口
  * @param {string} url - 节点链接
- * @returns {{host: string, port: string}} - 包含主机和端口的对象
+ * @returns {{host: string, port: string}}
  */
 export function extractHostAndPort(url) {
-  // 输入验证
-  if (!url || typeof url !== 'string') return { host: '', port: '' };
-  
-  try {
-    const protocolEndIndex = url.indexOf('://');
-    if (protocolEndIndex === -1) throw new Error('无效的 URL：缺少协议头');
-    
-    const protocol = url.substring(0, protocolEndIndex);
-    
-    // 移除协议和fragment部分
-    const fragmentStartIndex = url.indexOf('#');
-    const mainPartEndIndex = fragmentStartIndex === -1 ? url.length : fragmentStartIndex;
-    let mainPart = url.substring(protocolEndIndex + 3, mainPartEndIndex);
-    
-    // 根据协议类型选择不同的提取方法
-    switch (protocol) {
-      case 'vmess':
-        return extractVmessHostAndPort(mainPart);
-      case 'ssr':
-        return extractSSRHostAndPort(mainPart);
-      case 'ss':
-        return extractSSHostAndPort(mainPart);
-      case 'trojan':
-      case 'vless':
-      case 'http':
-      case 'https':
-        return extractStandardHostAndPort(mainPart);
-      default:
-        throw new Error(`不支持的协议类型: ${protocol}`);
-    }
-  } catch (e) {
-    console.error('提取主机和端口失败:', e.message, url);
-    return { host: '解析失败', port: 'N/A' };
-  }
-}
+    if (!url) return { host: '', port: '' };
 
-/**
- * 提取VMess节点的主机和端口
- * @param {string} mainPart - VMess链接的主要部分
- * @returns {{host: string, port: string}} - 主机和端口对象
- * @private
- */
-function extractVmessHostAndPort(mainPart) {
-  const jsonString = decodeBase64ToUtf8(mainPart);
-  const nodeConfig = JSON.parse(jsonString);
-  return {
-    host: nodeConfig.add || '',
-    port: String(nodeConfig.port || '')
-  };
-}
-
-/**
- * 提取SSR节点的主机和端口
- * @param {string} mainPart - SSR链接的主要部分
- * @returns {{host: string, port: string}} - 主机和端口对象
- * @private
- */
-function extractSSRHostAndPort(mainPart) {
-  try {
-    // SSR链接通常需要Base64解码
-    const decodedPart = atob(mainPart);
-    const parts = decodedPart.split(':');
-    if (parts.length >= 2) {
-      return { host: parts[0], port: parts[1] };
-    }
-  } catch (e) {
-    console.warn('SSR解码失败，尝试直接解析:', e);
-  }
-  return extractStandardHostAndPort(mainPart);
-}
-
-/**
- * 提取SS节点的主机和端口
- * @param {string} mainPart - SS链接的主要部分
- * @returns {{host: string, port: string}} - 主机和端口对象
- * @private
- */
-function extractSSHostAndPort(mainPart) {
-  // 尝试解码SS链接
-  if (mainPart.indexOf('@') === -1) {
     try {
-      const decodedPart = atob(mainPart);
-      return extractStandardHostAndPort(decodedPart);
+        const protocolEndIndex = url.indexOf('://');
+        if (protocolEndIndex === -1) throw new Error('无效的 URL：缺少协议头');
+
+        const protocol = url.substring(0, protocolEndIndex);
+        
+        const fragmentStartIndex = url.indexOf('#');
+        const mainPartEndIndex = fragmentStartIndex === -1 ? url.length : fragmentStartIndex;
+        let mainPart = url.substring(protocolEndIndex + 3, mainPartEndIndex);
+
+        // --- VMess 专用处理 ---
+        if (protocol === 'vmess') {
+            const decodedString = atob(mainPart);
+            const nodeConfig = JSON.parse(decodedString);
+            return { host: nodeConfig.add || '', port: String(nodeConfig.port || '') };
+        }
+        
+        let decoded = false;
+        // --- SS/SSR Base64 解码处理 ---
+        if ((protocol === 'ss' || protocol === 'ssr') && mainPart.indexOf('@') === -1) {
+            try {
+                mainPart = atob(mainPart);
+                decoded = true;
+            } catch (e) { /* 解码失败则按原文处理 */ }
+        }
+
+        // --- SSR 解码后专门处理 ---
+        if (protocol === 'ssr' && decoded) {
+            const parts = mainPart.split(':');
+            if (parts.length >= 2) {
+                return { host: parts[0], port: parts[1] };
+            }
+        }
+        
+        // --- 通用解析逻辑 (适用于 VLESS, Trojan, SS原文, 解码后的SS等) ---
+        const atIndex = mainPart.lastIndexOf('@');
+        let serverPart = atIndex !== -1 ? mainPart.substring(atIndex + 1) : mainPart;
+
+        const queryIndex = serverPart.indexOf('?');
+        if (queryIndex !== -1) {
+            serverPart = serverPart.substring(0, queryIndex);
+        }
+        const pathIndex = serverPart.indexOf('/');
+        if (pathIndex !== -1) {
+            serverPart = serverPart.substring(0, pathIndex);
+        }
+
+        const lastColonIndex = serverPart.lastIndexOf(':');
+        
+        if (serverPart.startsWith('[') && serverPart.includes(']')) {
+            const bracketEndIndex = serverPart.lastIndexOf(']');
+            const host = serverPart.substring(1, bracketEndIndex);
+            if (lastColonIndex > bracketEndIndex) {
+                 return { host, port: serverPart.substring(lastColonIndex + 1) };
+            }
+            return { host, port: '' };
+        }
+
+        if (lastColonIndex !== -1) {
+            const potentialHost = serverPart.substring(0, lastColonIndex);
+            const potentialPort = serverPart.substring(lastColonIndex + 1);
+            if (potentialHost.includes(':')) { // 处理无端口的 IPv6
+                return { host: serverPart, port: '' };
+            }
+            return { host: potentialHost, port: potentialPort };
+        }
+        
+        if (serverPart) {
+            return { host: serverPart, port: '' };
+        }
+
+        throw new Error('自定义解析失败');
+
     } catch (e) {
-      // 解码失败，使用原始部分
+        console.error("提取主机和端口失败:", url, e);
+        return { host: '解析失败', port: 'N/A' };
     }
-  }
-  return extractStandardHostAndPort(mainPart);
-}
-
-/**
- * 提取标准协议节点的主机和端口
- * @param {string} mainPart - 节点链接的主要部分
- * @returns {{host: string, port: string}} - 主机和端口对象
- * @private
- */
-function extractStandardHostAndPort(mainPart) {
-  // 处理查询参数和路径
-  const queryIndex = mainPart.indexOf('?');
-  const pathIndex = mainPart.indexOf('/');
-  
-  let serverPart = mainPart;
-  if (pathIndex !== -1) {
-    serverPart = mainPart.substring(0, pathIndex);
-  }
-  if (queryIndex !== -1) {
-    serverPart = serverPart.substring(0, queryIndex);
-  }
-  
-  // 处理@符号（SS/Trojan/VLESS格式）
-  const atIndex = serverPart.lastIndexOf('@');
-  if (atIndex !== -1) {
-    serverPart = serverPart.substring(atIndex + 1);
-  }
-  
-  // 处理IPv6格式
-  if (serverPart.startsWith('[') && serverPart.includes(']')) {
-    const bracketEndIndex = serverPart.lastIndexOf(']');
-    const host = serverPart.substring(1, bracketEndIndex);
-    const lastColonIndex = serverPart.lastIndexOf(':');
-    
-    if (lastColonIndex > bracketEndIndex) {
-      const port = serverPart.substring(lastColonIndex + 1);
-      return { host, port };
-    }
-    return { host, port: '' };
-  }
-  
-  // 处理IPv4格式
-  const lastColonIndex = serverPart.lastIndexOf(':');
-  if (lastColonIndex !== -1) {
-    const potentialHost = serverPart.substring(0, lastColonIndex);
-    const potentialPort = serverPart.substring(lastColonIndex + 1);
-    
-    // 检查是否为纯IPv4或域名
-    if (!potentialHost.includes(':')) {
-      return { host: potentialHost, port: potentialPort };
-    }
-  }
-  
-  // 默认返回
-  return { host: serverPart || 'unknown', port: '' };
-}
-
-/**
- * Base64解码并转换为UTF-8字符串
- * @param {string} base64String - Base64编码的字符串
- * @returns {string} - UTF-8解码后的字符串
- * @private
- */
-function decodeBase64ToUtf8(base64String) {
-  try {
-    const binaryString = atob(base64String);
-    const bytes = new Uint8Array(binaryString.length);
-    
-    // 优化字符转换性能
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    return new TextDecoder('utf-8').decode(bytes);
-  } catch (e) {
-    console.error('Base64解码失败:', e);
-    throw new Error('Base64解码错误');
-  }
 }
