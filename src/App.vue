@@ -18,7 +18,7 @@ const themeStore = useThemeStore();
 const toastStore = useToastStore();
 
 const { sessionState, initialData } = storeToRefs(sessionStore);
-const { checkSession, logout } = sessionStore;
+const { checkSession, logout, login } = sessionStore;
 const { toast: toastState } = storeToRefs(toastStore);
 
 // 标签页状态管理
