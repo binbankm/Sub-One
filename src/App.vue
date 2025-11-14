@@ -97,7 +97,7 @@ onMounted(() => {
             :subscriptions-count="initialData?.subs?.filter(item => item.url && /^https?:\/\//.test(item.url))?.length || 0"
             :profiles-count="initialData?.profiles?.length || 0"
             :manual-nodes-count="initialData?.subs?.filter(item => !item.url || !/^https?:\/\//.test(item.url))?.length || 0"
-            :generator-count="1"
+            :generator-count="initialData?.profiles?.length || 0"
           />
           
           <!-- 根据标签页显示不同内容 -->
