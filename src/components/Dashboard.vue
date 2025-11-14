@@ -232,7 +232,7 @@ const handleSave = async () => {
 
     if (result.success) {
       saveState.value = 'success';
-      showToast('保存成功！', 'success');
+      // 移除这里的toast通知，避免重复显示
       // 保存成功后自动退出排序模式
       isSortingSubs.value = false;
       isSortingNodes.value = false;
