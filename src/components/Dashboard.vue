@@ -554,10 +554,12 @@ const handleShowProfileNodeDetails = (profile) => {
 
 
 // 通用直接保存函数
-const handleDirectSave = async (operationName = '操作') => {
+const handleDirectSave = async (operationName = '操作', showNotification = true) => {
     try {
         await handleSave();
-        showToast(`${operationName}已保存`, 'success');
+        if (showNotification) {
+            showToast(`${operationName}已保存`, 'success');
+        }
     } catch (error) {
         console.error('保存失败:', error);
         showToast('保存失败', 'error');
@@ -571,7 +573,7 @@ const handleSubscriptionToggle = async (subscription) => {
 
 const handleSubscriptionUpdate = async (subscriptionId) => {
     await handleUpdateNodeCount(subscriptionId, true); // 传递true避免显示重复通知
-    await handleDirectSave('订阅更新');
+    await handleDirectSave('订阅更新', false); // 不显示重复通知
 };
 
 const handleUpdateAllSubscriptions = async () => {
@@ -611,7 +613,7 @@ const handleUpdateAllSubscriptions = async () => {
             
             const successCount = result.results ? result.results.filter(r => r.success).length : enabledSubs.length;
             showToast(`成功更新了 ${successCount} 个订阅`, 'success');
-            await handleDirectSave('订阅更新');
+            await handleDirectSave('订阅更新', false); // 不显示重复通知
         } else {
             showToast(`更新失败: ${result.message}`, 'error');
         }
