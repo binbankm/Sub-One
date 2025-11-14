@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, defineEmits } from 'vue';
 import draggable from 'vuedraggable';
 import { saveSubs, batchUpdateNodes } from '../lib/api.js';
 import { extractNodeName } from '../lib/utils.js';
@@ -34,6 +34,9 @@ const props = defineProps({
     default: 'subscriptions'
   }
 });
+
+// 定义组件的emit事件
+const emit = defineEmits(['update-data']);
 const { showToast } = useToastStore();
 const uiStore = useUIStore();
 const isLoading = ref(true);
@@ -274,6 +277,10 @@ const handleDeleteSubscriptionWithCleanup = async (subId) => {
     }
   });
   await handleDirectSave('订阅删除');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
 };
 const handleDeleteNodeWithCleanup = async (nodeId) => {
   deleteNode(nodeId);
@@ -285,6 +292,10 @@ const handleDeleteNodeWithCleanup = async (nodeId) => {
     }
   });
   await handleDirectSave('节点删除');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
 };
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
   deleteAllSubscriptions();
@@ -293,6 +304,10 @@ const handleDeleteAllSubscriptionsWithCleanup = async () => {
     p.subscriptions.length = 0;
   });
   await handleDirectSave('订阅清空');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
   showDeleteSubsModal.value = false;
 };
 const handleDeleteAllNodesWithCleanup = async () => {
@@ -302,6 +317,10 @@ const handleDeleteAllNodesWithCleanup = async () => {
     p.manualNodes.length = 0;
   });
   await handleDirectSave('节点清空');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
   showDeleteNodesModal.value = false;
 };
 const handleAutoSortNodes = async () => {
@@ -340,6 +359,10 @@ const handleBulkImport = async (importText) => {
   if (newNodes.length > 0) addNodesFromBulk(newNodes);
   
   await handleDirectSave('批量导入');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
 };
 const handleAddSubscription = () => {
@@ -375,6 +398,10 @@ const handleSaveSubscription = async () => {
   }
   
   await handleDirectSave('订阅');
+  // 触发数据更新事件
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
   showSubModal.value = false;
 };
 const handleAddNode = () => {
@@ -410,6 +437,10 @@ const handleSaveNode = async () => {
     }
     
     await handleDirectSave('节点');
+    // 触发数据更新事件
+    emit('update-data', {
+      subs: [...subscriptions.value, ...manualNodes.value]
+    });
     showNodeModal.value = false;
 };
 const handleProfileToggle = async (updatedProfile) => {
@@ -417,6 +448,10 @@ const handleProfileToggle = async (updatedProfile) => {
     if (index !== -1) {
         profiles.value[index].enabled = updatedProfile.enabled;
         await handleDirectSave(`${updatedProfile.name || '订阅组'} 状态`);
+        // 触发数据更新事件
+        emit('update-data', {
+          profiles: [...profiles.value]
+        });
     }
 };
 const handleAddProfile = () => {
@@ -461,6 +496,10 @@ const handleSaveProfile = async (profileData) => {
         if (index !== -1) profiles.value[index] = profileData;
     }
     await handleDirectSave('订阅组');
+    // 触发数据更新事件
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
     showProfileModal.value = false;
 };
 const handleDeleteProfile = async (profileId) => {
@@ -470,11 +509,19 @@ const handleDeleteProfile = async (profileId) => {
         profilesCurrentPage.value--;
     }
     await handleDirectSave('订阅组删除');
+    // 触发数据更新事件
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
 };
 const handleDeleteAllProfiles = async () => {
     profiles.value = [];
     profilesCurrentPage.value = 1;
     await handleDirectSave('订阅组清空');
+    // 触发数据更新事件
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
     showDeleteProfilesModal.value = false;
 };
 const copyProfileLink = (profileId) => {

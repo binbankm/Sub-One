@@ -16,6 +16,13 @@ const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
 const { checkSession, login, logout } = sessionStore;
 
+// 更新initialData的方法，供Dashboard组件调用
+const updateInitialData = (newData) => {
+  // 这里我们通过更新session store中的数据来更新initialData
+  // 具体实现可能需要根据session store的实际结构调整
+  Object.assign(initialData.value, newData);
+};
+
 const toastStore = useToastStore();
 const { toast: toastState } = storeToRefs(toastStore);
 
@@ -97,22 +104,22 @@ onMounted(() => {
           <div class="space-y-8 lg:space-y-12">
             <!-- 订阅管理标签页 -->
             <div v-if="activeTab === 'subscriptions'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 订阅组标签页 -->
             <div v-else-if="activeTab === 'profiles'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 链接生成标签页 -->
             <div v-else-if="activeTab === 'generator'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 手动节点标签页 -->
             <div v-else-if="activeTab === 'nodes'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
           </div>
         </div>
