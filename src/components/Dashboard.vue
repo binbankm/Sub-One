@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, defineEmits } from 'vue';
 import draggable from 'vuedraggable';
 import { saveSubs, batchUpdateNodes } from '../lib/api.js';
 import { extractNodeName } from '../lib/utils.js';
@@ -34,6 +34,9 @@ const props = defineProps({
     default: 'subscriptions'
   }
 });
+
+// 定义组件的emit事件
+const emit = defineEmits(['update-data']);
 const { showToast } = useToastStore();
 const uiStore = useUIStore();
 const isLoading = ref(true);
@@ -137,16 +140,18 @@ const handleDeduplicateNodes = async () => {
     await handleDirectSave('节点去重');
     showNodesMoreMenu.value = false; // 操作后关闭菜单
 };
+// --- 常量定义：预编译正则表达式，提升性能 ---
+const HTTP_REGEX = /^https?:\/\//;
+const NODE_PROTOCOL_REGEX = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+
 // --- 初始化與生命週期 ---
 const initializeState = () => {
   isLoading.value = true;
   if (props.data) {
     const subsData = props.data.subs || [];
-    // 优化：预编译正则表达式，提升性能
-    const httpRegex = /^https?:\/\//;
     
-    initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
-    initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
+    initialSubs.value = subsData.filter(item => item.url && HTTP_REGEX.test(item.url));
+    initialNodes.value = subsData.filter(item => !item.url || !HTTP_REGEX.test(item.url));
     
     profiles.value = (props.data.profiles || []).map(p => ({
         ...p,
@@ -229,7 +234,7 @@ const handleSave = async () => {
 
     if (result.success) {
       saveState.value = 'success';
-      showToast('保存成功！', 'success');
+      // 移除这里的toast通知，避免重复显示
       // 保存成功后自动退出排序模式
       isSortingSubs.value = false;
       isSortingNodes.value = false;
@@ -264,44 +269,57 @@ const handleSave = async () => {
     saveState.value = 'idle';
   }
 };
+// --- 公共函数：从订阅组中移除ID ---
+const removeIdFromProfiles = (id, field) => {
+  profiles.value.forEach(p => {
+    const index = p[field].indexOf(id);
+    if (index !== -1) {
+      p[field].splice(index, 1);
+    }
+  });
+};
+
+// --- 公共函数：清空订阅组中的字段 ---
+const clearProfilesField = (field) => {
+  profiles.value.forEach(p => {
+    p[field].length = 0;
+  });
+};
+
+// --- 公共函数：触发数据更新事件 ---
+const triggerDataUpdate = () => {
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
+};
+
 const handleDeleteSubscriptionWithCleanup = async (subId) => {
   deleteSubscription(subId);
-  // 优化：使用更高效的数组操作
-  profiles.value.forEach(p => {
-    const index = p.subscriptions.indexOf(subId);
-    if (index !== -1) {
-      p.subscriptions.splice(index, 1);
-    }
-  });
+  removeIdFromProfiles(subId, 'subscriptions');
   await handleDirectSave('订阅删除');
+  triggerDataUpdate();
 };
+
 const handleDeleteNodeWithCleanup = async (nodeId) => {
   deleteNode(nodeId);
-  // 优化：使用更高效的数组操作
-  profiles.value.forEach(p => {
-    const index = p.manualNodes.indexOf(nodeId);
-    if (index !== -1) {
-      p.manualNodes.splice(index, 1);
-    }
-  });
+  removeIdFromProfiles(nodeId, 'manualNodes');
   await handleDirectSave('节点删除');
+  triggerDataUpdate();
 };
+
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
   deleteAllSubscriptions();
-  // 优化：直接清空数组，避免forEach
-  profiles.value.forEach(p => {
-    p.subscriptions.length = 0;
-  });
+  clearProfilesField('subscriptions');
   await handleDirectSave('订阅清空');
+  triggerDataUpdate();
   showDeleteSubsModal.value = false;
 };
+
 const handleDeleteAllNodesWithCleanup = async () => {
   deleteAllNodes();
-  // 优化：直接清空数组，避免forEach
-  profiles.value.forEach(p => {
-    p.manualNodes.length = 0;
-  });
+  clearProfilesField('manualNodes');
   await handleDirectSave('节点清空');
+  triggerDataUpdate();
   showDeleteNodesModal.value = false;
 };
 const handleAutoSortNodes = async () => {
@@ -316,10 +334,6 @@ const handleBulkImport = async (importText) => {
   const newSubs = [];
   const newNodes = [];
   
-  // 预编译正则表达式，提升性能
-  const httpRegex = /^https?:\/\//;
-  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
-  
   for (const line of lines) {
       const newItem = { 
           id: crypto.randomUUID(), 
@@ -329,9 +343,9 @@ const handleBulkImport = async (importText) => {
           status: 'unchecked' 
       };
       
-      if (httpRegex.test(line)) {
+      if (HTTP_REGEX.test(line)) {
           newSubs.push(newItem);
-      } else if (nodeRegex.test(line)) {
+      } else if (NODE_PROTOCOL_REGEX.test(line)) {
           newNodes.push(newItem);
       }
   }
@@ -340,6 +354,7 @@ const handleBulkImport = async (importText) => {
   if (newNodes.length > 0) addNodesFromBulk(newNodes);
   
   await handleDirectSave('批量导入');
+  triggerDataUpdate();
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
 };
 const handleAddSubscription = () => {
@@ -361,9 +376,7 @@ const handleSaveSubscription = async () => {
     return; 
   }
   
-  // 预编译正则表达式，提升性能
-  const httpRegex = /^https?:\/\//;
-  if (!httpRegex.test(editingSubscription.value.url)) { 
+  if (!HTTP_REGEX.test(editingSubscription.value.url)) { 
     showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error'); 
     return; 
   }
@@ -375,6 +388,7 @@ const handleSaveSubscription = async () => {
   }
   
   await handleDirectSave('订阅');
+  triggerDataUpdate();
   showSubModal.value = false;
 };
 const handleAddNode = () => {
@@ -410,6 +424,7 @@ const handleSaveNode = async () => {
     }
     
     await handleDirectSave('节点');
+    triggerDataUpdate();
     showNodeModal.value = false;
 };
 const handleProfileToggle = async (updatedProfile) => {
@@ -417,6 +432,9 @@ const handleProfileToggle = async (updatedProfile) => {
     if (index !== -1) {
         profiles.value[index].enabled = updatedProfile.enabled;
         await handleDirectSave(`${updatedProfile.name || '订阅组'} 状态`);
+        emit('update-data', {
+          profiles: [...profiles.value]
+        });
     }
 };
 const handleAddProfile = () => {
@@ -440,9 +458,9 @@ const handleSaveProfile = async (profileData) => {
     }
     
     if (profileData.customId) {
-        // 预编译正则表达式，提升性能
-        const customIdRegex = /[^a-zA-Z0-9-_]/g;
-        profileData.customId = profileData.customId.replace(customIdRegex, '');
+        // 优化：预编译正则表达式，提升性能
+        const CUSTOM_ID_REGEX = /[^a-zA-Z0-9-_]/g;
+        profileData.customId = profileData.customId.replace(CUSTOM_ID_REGEX, '');
         
         if (profileData.customId && profiles.value.some(p => p.id !== profileData.id && p.customId === profileData.customId)) {
             showToast(`自定义 ID "${profileData.customId}" 已存在`, 'error');
@@ -461,6 +479,9 @@ const handleSaveProfile = async (profileData) => {
         if (index !== -1) profiles.value[index] = profileData;
     }
     await handleDirectSave('订阅组');
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
     showProfileModal.value = false;
 };
 const handleDeleteProfile = async (profileId) => {
@@ -470,11 +491,17 @@ const handleDeleteProfile = async (profileId) => {
         profilesCurrentPage.value--;
     }
     await handleDirectSave('订阅组删除');
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
 };
 const handleDeleteAllProfiles = async () => {
     profiles.value = [];
     profilesCurrentPage.value = 1;
     await handleDirectSave('订阅组清空');
+    emit('update-data', {
+      profiles: [...profiles.value]
+    });
     showDeleteProfilesModal.value = false;
 };
 const copyProfileLink = (profileId) => {
@@ -507,10 +534,12 @@ const handleShowProfileNodeDetails = (profile) => {
 
 
 // 通用直接保存函数
-const handleDirectSave = async (operationName = '操作') => {
+const handleDirectSave = async (operationName = '操作', showNotification = true) => {
     try {
         await handleSave();
-        showToast(`${operationName}已保存`, 'success');
+        if (showNotification) {
+            showToast(`${operationName}已保存`, 'success');
+        }
     } catch (error) {
         console.error('保存失败:', error);
         showToast('保存失败', 'error');
@@ -523,14 +552,21 @@ const handleSubscriptionToggle = async (subscription) => {
 };
 
 const handleSubscriptionUpdate = async (subscriptionId) => {
-    await handleUpdateNodeCount(subscriptionId);
-    await handleDirectSave('订阅更新');
+    const subscription = subscriptions.value.find(s => s.id === subscriptionId);
+    if (!subscription) return;
+    
+    // 显示更新中的提示
+    showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
+    
+    // 更新订阅（不传递true，让handleUpdateNodeCount显示更新成功的提示）
+    await handleUpdateNodeCount(subscriptionId, false);
+    await handleDirectSave('订阅更新', false); // 不显示重复通知，因为handleUpdateNodeCount已经显示了
 };
 
 const handleUpdateAllSubscriptions = async () => {
     if (isUpdatingAllSubs.value) return;
     
-    const enabledSubs = subscriptions.value.filter(sub => sub.enabled && sub.url.startsWith('http'));
+    const enabledSubs = subscriptions.value.filter(sub => sub.enabled && HTTP_REGEX.test(sub.url));
     if (enabledSubs.length === 0) {
         showToast('没有可更新的订阅', 'warning');
         return;
@@ -564,7 +600,7 @@ const handleUpdateAllSubscriptions = async () => {
             
             const successCount = result.results ? result.results.filter(r => r.success).length : enabledSubs.length;
             showToast(`成功更新了 ${successCount} 个订阅`, 'success');
-            await handleDirectSave('订阅更新');
+            await handleDirectSave('订阅更新', false); // 不显示重复通知
         } else {
             showToast(`更新失败: ${result.message}`, 'error');
         }
@@ -576,28 +612,31 @@ const handleUpdateAllSubscriptions = async () => {
     }
 };
 
-const handleSubscriptionDragEnd = async (evt) => {
-    // vuedraggable 已经自动更新了 subscriptions 数组
+// 添加排序变更标记
+const hasUnsavedSortChanges = ref(false);
+
+// 手动保存排序功能
+const handleSaveSortChanges = async () => {
     try {
         await handleSave();
-        showToast('订阅排序已保存', 'success');
+        hasUnsavedSortChanges.value = false;
+        showToast('排序已保存', 'success');
     } catch (error) {
-        console.error('保存订阅排序失败:', error);
+        console.error('保存排序失败:', error);
         showToast('保存排序失败', 'error');
     }
+};
+
+const handleSubscriptionDragEnd = async (evt) => {
+    // vuedraggable 已经自动更新了 subscriptions 数组
+    hasUnsavedSortChanges.value = true;
     
     // 拖拽排序完成
 };
 
 const handleNodeDragEnd = async (evt) => {
     // vuedraggable 已经自动更新了 manualNodes 数组
-    try {
-        await handleSave();
-        showToast('节点排序已保存', 'success');
-    } catch (error) {
-        console.error('保存节点排序失败:', error);
-        showToast('保存排序失败', 'error');
-    }
+    hasUnsavedSortChanges.value = true;
     
     // 拖拽排序完成
 };
@@ -661,7 +700,23 @@ const handleNodeDragEnd = async (evt) => {
               </div>
               <div class="flex items-center gap-3 flex-shrink-0">
                 <button 
-                  @click="isSortingSubs = !isSortingSubs" 
+                  v-if="isSortingSubs && hasUnsavedSortChanges"
+                  @click="handleSaveSortChanges"
+                  class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  保存排序
+                </button>
+                <button 
+                  @click="() => {
+                    if (isSortingSubs && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
+                      return;
+                    }
+                    isSortingSubs = !isSortingSubs;
+                    if (!isSortingSubs) hasUnsavedSortChanges.value = false;
+                  }"
                   :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -672,11 +727,11 @@ const handleNodeDragEnd = async (evt) => {
                 </button>
                 <div class="relative" ref="subsMoreMenuRef">
                   <button @click="showSubsMoreMenu = !showSubsMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a0 0 0 100-4 2 2 0 000 4z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                   </button>
                   <Transition name="slide-fade-sm">
-                    <div v-if="showSubsMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
-                      <button @click="showDeleteSubsModal = true; showSubsMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                    <div v-if="showSubsMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                      <button @click="showDeleteSubsModal = true; showSubsMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
                     </div>
                   </Transition>
                 </div>
@@ -758,8 +813,8 @@ const handleNodeDragEnd = async (evt) => {
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
               </button>
               <Transition name="slide-fade-sm">
-                <div v-if="showProfilesMoreMenu" class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
-                  <button @click="showDeleteProfilesModal = true; showProfilesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                <div v-if="showProfilesMoreMenu" class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                  <button @click="showDeleteProfilesModal = true; showProfilesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
                 </div>
               </Transition>
             </div>
@@ -858,9 +913,25 @@ const handleNodeDragEnd = async (evt) => {
               <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">批量导入</button>
               
               <button 
-                @click="isSortingNodes = !isSortingNodes" 
-                :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                v-if="isSortingNodes && hasUnsavedSortChanges"
+                @click="handleSaveSortChanges"
+                class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                保存排序
+              </button>
+              <button 
+                  @click="() => {
+                    if (isSortingNodes && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
+                      return;
+                    }
+                    isSortingNodes = !isSortingNodes;
+                    if (!isSortingNodes) hasUnsavedSortChanges.value = false;
+                  }"
+                  :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
                 </svg>
@@ -875,12 +946,12 @@ const handleNodeDragEnd = async (evt) => {
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
               </button>
                <Transition name="slide-fade-sm">
-                <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-xl z-10 ring-1 ring-black ring-opacity-5">
-                  <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">导入订阅</button>
-                  <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键排序</button>
-                  <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">一键去重</button>
+                <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                  <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入订阅</button>
+                  <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
+                  <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键去重</button>
                   <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                  <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:bg-red-500/10">清空所有</button>
+                  <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
                 </div>
               </Transition>
             </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useSessionStore } from './stores/session.js';
 import { useToastStore } from './stores/toast.js';
 import { useThemeStore } from './stores/theme.js';
@@ -16,6 +16,20 @@ const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
 const { checkSession, login, logout } = sessionStore;
 
+// 更新initialData的方法，供Dashboard组件调用
+const updateInitialData = (newData) => {
+  // 优化：使用Object.assign合并数据，避免直接替换整个对象
+  if (newData.subs) {
+    initialData.value.subs = newData.subs;
+  }
+  if (newData.profiles) {
+    initialData.value.profiles = newData.profiles;
+  }
+  if (newData.config) {
+    initialData.value.config = { ...initialData.value.config, ...newData.config };
+  }
+};
+
 const toastStore = useToastStore();
 const { toast: toastState } = storeToRefs(toastStore);
 
@@ -23,6 +37,26 @@ const themeStore = useThemeStore();
 
 // 标签页状态管理
 const activeTab = ref('subscriptions');
+
+// 优化：预编译正则表达式，提升性能
+const HTTP_REGEX = /^https?:\/\//;
+
+// 优化：使用计算属性缓存计数结果，避免重复计算
+const subscriptionsCount = computed(() => {
+  return initialData.value?.subs?.filter(item => item.url && HTTP_REGEX.test(item.url))?.length || 0;
+});
+
+const profilesCount = computed(() => {
+  return initialData.value?.profiles?.length || 0;
+});
+
+const manualNodesCount = computed(() => {
+  return initialData.value?.subs?.filter(item => !item.url || !HTTP_REGEX.test(item.url))?.length || 0;
+});
+
+const generatorCount = computed(() => {
+  return initialData.value?.profiles?.length || 0;
+});
 
 onMounted(() => {
   // 初始化主题
@@ -87,32 +121,32 @@ onMounted(() => {
           <!-- 导航标签页区域 - 移除sticky定位，与内容区域整合 -->
           <NavigationTabs 
             v-model="activeTab"
-            :subscriptions-count="initialData?.subs?.filter(item => item.url && /^https?:\/\//.test(item.url))?.length || 0"
-            :profiles-count="initialData?.profiles?.length || 0"
-            :manual-nodes-count="initialData?.subs?.filter(item => !item.url || !/^https?:\/\//.test(item.url))?.length || 0"
-            :generator-count="1"
+            :subscriptions-count="subscriptionsCount"
+            :profiles-count="profilesCount"
+            :manual-nodes-count="manualNodesCount"
+            :generator-count="generatorCount"
           />
           
           <!-- 根据标签页显示不同内容 -->
           <div class="space-y-8 lg:space-y-12">
             <!-- 订阅管理标签页 -->
             <div v-if="activeTab === 'subscriptions'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 订阅组标签页 -->
             <div v-else-if="activeTab === 'profiles'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 链接生成标签页 -->
             <div v-else-if="activeTab === 'generator'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
             
             <!-- 手动节点标签页 -->
             <div v-else-if="activeTab === 'nodes'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" />
+              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
             </div>
           </div>
         </div>
