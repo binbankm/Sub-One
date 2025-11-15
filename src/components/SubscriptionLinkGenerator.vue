@@ -53,8 +53,9 @@ const subLink = computed(() => {
     return url;
   }
   
+  // 优化：使用正确的参数名target，确保后端能正确识别格式
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
-  return `${url}?${formatParam}`;
+  return `${url}?target=${formatParam}`;
 });
 
 const copyToClipboard = async () => {
@@ -165,7 +166,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 提示信息 -->
-        <div v-if="config?.mytoken === 'auto'" class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 animate-pulse-breathing">
+        <div v-if="config?.mytoken === 'auto'" class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 animate-pulse-breathing mb-4">
           <div class="flex items-start gap-3">
             <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -173,6 +174,26 @@ onUnmounted(() => {
             <div>
               <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1 animate-pulse">自动Token提示</p>
               <p class="text-xs text-yellow-600 dark:text-yellow-400">当前为自动Token，链接可能会变化。为确保链接稳定，推荐在"设置"中配置一个固定Token。</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 格式使用提示 -->
+        <div v-if="selectedFormat !== '自适应'" class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">格式提示</p>
+              <p class="text-xs text-blue-600 dark:text-blue-400">
+                <span v-if="selectedFormat === 'Clash' || selectedFormat === 'Sing-Box' || selectedFormat === 'Surge' || selectedFormat === 'Loon'">
+                  当前选择的是 <strong>{{ selectedFormat }}</strong> 格式（YAML），生成的链接已优化，可直接导入对应的客户端使用。
+                </span>
+                <span v-else>
+                  当前选择的是 <strong>{{ selectedFormat }}</strong> 格式，生成的链接可直接导入对应的客户端使用。
+                </span>
+              </p>
             </div>
           </div>
         </div>
