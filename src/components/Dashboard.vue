@@ -7,6 +7,7 @@ import { useToastStore } from '../stores/toast.js';
 import { useUIStore } from '../stores/ui.js';
 import { useSubscriptions } from '../composables/useSubscriptions.js';
 import { useManualNodes } from '../composables/useManualNodes.js';
+import { subscriptionParser } from '../lib/subscriptionParser.js';
 
 // --- 元件導入 ---
 import Card from './Card.vue';
@@ -123,6 +124,7 @@ const isUpdatingAllSubs = ref(false);
 const nodesMoreMenuRef = ref(null);
 const subsMoreMenuRef = ref(null);
 const profilesMoreMenuRef = ref(null);
+const yamlFileInputRef = ref(null);
 const handleClickOutside = (event) => {
   if (showNodesMoreMenu.value && nodesMoreMenuRef.value && !nodesMoreMenuRef.value.contains(event.target)) {
     showNodesMoreMenu.value = false;
@@ -364,6 +366,82 @@ const handleBulkImport = async (importText) => {
     subs: [...subscriptions.value, ...manualNodes.value]
   });
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
+};
+
+// 处理 YAML 文件导入
+const handleYamlFileImport = () => {
+  if (yamlFileInputRef.value) {
+    yamlFileInputRef.value.click();
+  }
+};
+
+const handleYamlFileSelected = async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  
+  // 检查文件类型
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.yaml') && !fileName.endsWith('.yml')) {
+    showToast('请选择 YAML 格式的文件（.yaml 或 .yml）', 'error');
+    return;
+  }
+  
+  try {
+    const fileContent = await file.text();
+    
+    // 使用订阅解析器解析 YAML 文件
+    const parsedNodes = subscriptionParser.parse(fileContent, file.name);
+    
+    if (parsedNodes.length === 0) {
+      showToast('未能从 YAML 文件中解析出任何节点', 'error');
+      return;
+    }
+    
+    // 将解析出的节点转换为订阅格式
+    const newSubs = [];
+    const newNodes = [];
+    const httpRegex = /^https?:\/\//;
+    const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+    
+    for (const node of parsedNodes) {
+      const nodeUrl = node.url || '';
+      if (!nodeUrl) continue;
+      
+      const newItem = {
+        id: crypto.randomUUID(),
+        name: node.name || extractNodeName(nodeUrl) || '未命名',
+        url: nodeUrl,
+        enabled: true,
+        status: 'unchecked'
+      };
+      
+      if (httpRegex.test(nodeUrl)) {
+        newSubs.push(newItem);
+      } else if (nodeRegex.test(nodeUrl)) {
+        newNodes.push(newItem);
+      }
+    }
+    
+    if (newSubs.length > 0) addSubscriptionsFromBulk(newSubs);
+    if (newNodes.length > 0) addNodesFromBulk(newNodes);
+    
+    await handleDirectSave('YAML 文件导入');
+    // 触发数据更新事件
+    emit('update-data', {
+      subs: [...subscriptions.value, ...manualNodes.value]
+    });
+    showToast(`成功从 YAML 文件导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
+    
+    // 清空文件输入，以便可以重复选择同一文件
+    if (event.target) {
+      event.target.value = '';
+    }
+  } catch (error) {
+    console.error('导入 YAML 文件失败:', error);
+    showToast(`导入 YAML 文件失败: ${error.message}`, 'error');
+  } finally {
+    showSubsMoreMenu.value = false;
+  }
 };
 const handleAddSubscription = () => {
   isNewSubscription.value = true;
@@ -744,9 +822,18 @@ const handleNodeDragEnd = async (evt) => {
                   </button>
                   <Transition name="slide-fade-sm">
                     <div v-if="showSubsMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                      <button @click="handleYamlFileImport(); showSubsMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入 YAML</button>
+                      <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                       <button @click="showDeleteSubsModal = true; showSubsMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
                     </div>
                   </Transition>
+                  <input 
+                    ref="yamlFileInputRef"
+                    type="file"
+                    accept=".yaml,.yml"
+                    @change="handleYamlFileSelected"
+                    class="hidden"
+                  />
                 </div>
               </div>
             </div>
