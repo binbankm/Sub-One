@@ -27,6 +27,15 @@ let copyTimeout = null;
 
 const formats = ['自适应', 'Base64', 'Clash', 'Sing-Box', 'Surge', 'Loon'];
 
+// 优化：预定义格式映射，避免每次计算时创建对象
+const FORMAT_MAPPING = {
+  'Base64': 'base64',
+  'Clash': 'clash',
+  'Sing-Box': 'singbox',
+  'Surge': 'surge',
+  'Loon': 'loon'
+};
+
 const subLink = computed(() => {
   if (!props.config?.mytoken) return '';
   
@@ -35,27 +44,16 @@ const subLink = computed(() => {
   const format = selectedFormat.value;
   
   // 构建基础URL
-  let url;
-  if (selectedId.value === 'default') {
-    url = `${baseUrl}/${token}`;
-  } else {
-    url = `${baseUrl}/${token}/${selectedId.value}`;
-  }
+  const url = selectedId.value === 'default' 
+    ? `${baseUrl}/${token}`
+    : `${baseUrl}/${token}/${selectedId.value}`;
   
   // 根据格式添加参数
   if (format === '自适应') {
     return url;
   }
   
-  const formatMapping = {
-    'Base64': 'base64',
-    'Clash': 'clash',
-    'Sing-Box': 'singbox',
-    'Surge': 'surge',
-    'Loon': 'loon'
-  };
-  
-  const formatParam = formatMapping[format] || format.toLowerCase();
+  const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
   return `${url}?${formatParam}`;
 });
 
@@ -64,11 +62,17 @@ const copyToClipboard = async () => {
     showToast('链接无效，无法复制', 'error');
     return;
   }
-  navigator.clipboard.writeText(subLink.value);
-  showToast('链接已复制到剪贴板', 'success');
-  copied.value = true;
-  clearTimeout(copyTimeout);
-  copyTimeout = setTimeout(() => { copied.value = false; }, 2000);
+  
+  try {
+    await navigator.clipboard.writeText(subLink.value);
+    showToast('链接已复制到剪贴板', 'success');
+    copied.value = true;
+    clearTimeout(copyTimeout);
+    copyTimeout = setTimeout(() => { copied.value = false; }, 2000);
+  } catch (error) {
+    console.error('复制失败:', error);
+    showToast('复制失败，请手动复制', 'error');
+  }
 };
 
 onUnmounted(() => {

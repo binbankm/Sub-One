@@ -11,6 +11,13 @@ export class SubscriptionParser {
       'hysteria', 'hysteria2', 'hy', 'hy2', 
       'tuic', 'anytls', 'socks5'
     ];
+    
+    // 预编译正则表达式，提升性能
+    this._base64Regex = /^[A-Za-z0-9+\/=]+$/;
+    this._whitespaceRegex = /\s/g;
+    this._newlineRegex = /\r?\n/;
+    this._nodeRegex = null; // 延迟初始化
+    this._protocolRegex = /^(.*?):\/\//;
   }
 
   /**
@@ -24,14 +31,12 @@ export class SubscriptionParser {
       return [];
     }
 
-    // 优化：预编译正则表达式，提升性能
-    const base64Regex = /^[A-Za-z0-9+\/=]+$/;
-    
     // 根据内容特征选择最合适的解析方法，避免不必要的尝试
     let methods = [];
     
     // 检查是否为Base64编码
-    if (base64Regex.test(content.replace(/\s/g, '')) && content.length > 20) {
+    const cleanedContent = content.replace(this._whitespaceRegex, '');
+    if (this._base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
       methods.push(() => this.parseBase64(content, subscriptionName));
     }
     
@@ -64,21 +69,17 @@ export class SubscriptionParser {
    * 解析Base64编码的内容
    */
   parseBase64(content, subscriptionName) {
-    // 优化：预编译正则表达式，提升性能
-    const base64Regex = /^[A-Za-z0-9+\/=]+$/;
-    const whitespaceRegex = /\s/g;
-    
-    const cleanedContent = content.replace(whitespaceRegex, '');
+    const cleanedContent = content.replace(this._whitespaceRegex, '');
     
     // 检查是否为Base64编码
-    if (!base64Regex.test(cleanedContent) || cleanedContent.length < 20) {
+    if (!this._base64Regex.test(cleanedContent) || cleanedContent.length < 20) {
       throw new Error('不是有效的Base64编码');
     }
 
     try {
       const decodedContent = atob(cleanedContent);
       // 优化：使用更高效的换行符分割
-      const decodedLines = decodedContent.split(/\r?\n/).filter(line => line.trim() !== '');
+      const decodedLines = decodedContent.split(this._newlineRegex).filter(line => line.trim() !== '');
       
       // 检查解码后的内容是否包含节点链接
       if (!decodedLines.some(line => this.isNodeUrl(line))) {
@@ -137,10 +138,7 @@ export class SubscriptionParser {
    * 解析纯文本格式
    */
   parsePlainText(content, subscriptionName) {
-    // 优化：预编译正则表达式，提升性能
-    const newlineRegex = /\r?\n/;
-    
-    const lines = content.split(newlineRegex).filter(line => line.trim() !== '');
+    const lines = content.split(this._newlineRegex).filter(line => line.trim() !== '');
     const nodeLines = lines.filter(line => this.isNodeUrl(line));
     
     if (nodeLines.length === 0) {
@@ -475,7 +473,7 @@ export class SubscriptionParser {
    * 解析单行节点信息
    */
   parseNodeLine(line, subscriptionName) {
-    // 优化：缓存正则表达式，避免重复创建
+    // 优化：延迟初始化并缓存正则表达式，避免重复创建
     if (!this._nodeRegex) {
       this._nodeRegex = new RegExp(`^(${this.supportedProtocols.join('|')}):\/\/`);
     }
@@ -515,9 +513,7 @@ export class SubscriptionParser {
    */
   extractNodeNameFromUrl(url) {
     try {
-      // 优化：预编译正则表达式，提升性能
-      const protocolRegex = /^(.*?):\/\//;
-      const protocol = url.match(protocolRegex)?.[1] || '';
+      const protocol = url.match(this._protocolRegex)?.[1] || '';
       
       // 优化：使用Map提升性能，避免switch语句
       const protocolHandlers = new Map([
@@ -571,7 +567,7 @@ export class SubscriptionParser {
    * 检查是否为节点URL
    */
   isNodeUrl(line) {
-    // 优化：缓存正则表达式，避免重复创建
+    // 优化：延迟初始化并缓存正则表达式，避免重复创建
     if (!this._nodeRegex) {
       this._nodeRegex = new RegExp(`^(${this.supportedProtocols.join('|')}):\/\/`);
     }
@@ -594,14 +590,9 @@ export class SubscriptionParser {
     }
 
     try {
-      // 优化：预编译正则表达式，提升性能
-      const base64Regex = /^[A-Za-z0-9+\/=]+$/;
-      const whitespaceRegex = /\s/g;
-      const newlineRegex = /\r?\n/;
-      
       // 检查是否为Base64
-      const cleanedContent = content.replace(whitespaceRegex, '');
-      if (base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
+      const cleanedContent = content.replace(this._whitespaceRegex, '');
+      if (this._base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
         return { valid: true, format: 'base64' };
       }
 
@@ -615,7 +606,7 @@ export class SubscriptionParser {
       }
 
       // 检查是否为纯文本节点列表
-      const lines = content.split(newlineRegex).filter(line => line.trim() !== '');
+      const lines = content.split(this._newlineRegex).filter(line => line.trim() !== '');
       const nodeLines = lines.filter(line => this.isNodeUrl(line));
       if (nodeLines.length > 0) {
         return { valid: true, format: 'plain_text' };

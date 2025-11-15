@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useSessionStore } from './stores/session.js';
 import { useToastStore } from './stores/toast.js';
 import { useThemeStore } from './stores/theme.js';
@@ -18,9 +18,16 @@ const { checkSession, login, logout } = sessionStore;
 
 // 更新initialData的方法，供Dashboard组件调用
 const updateInitialData = (newData) => {
-  // 这里我们通过更新session store中的数据来更新initialData
-  // 具体实现可能需要根据session store的实际结构调整
-  Object.assign(initialData.value, newData);
+  // 优化：使用Object.assign合并数据，避免直接替换整个对象
+  if (newData.subs) {
+    initialData.value.subs = newData.subs;
+  }
+  if (newData.profiles) {
+    initialData.value.profiles = newData.profiles;
+  }
+  if (newData.config) {
+    initialData.value.config = { ...initialData.value.config, ...newData.config };
+  }
 };
 
 const toastStore = useToastStore();
@@ -30,6 +37,26 @@ const themeStore = useThemeStore();
 
 // 标签页状态管理
 const activeTab = ref('subscriptions');
+
+// 优化：预编译正则表达式，提升性能
+const HTTP_REGEX = /^https?:\/\//;
+
+// 优化：使用计算属性缓存计数结果，避免重复计算
+const subscriptionsCount = computed(() => {
+  return initialData.value?.subs?.filter(item => item.url && HTTP_REGEX.test(item.url))?.length || 0;
+});
+
+const profilesCount = computed(() => {
+  return initialData.value?.profiles?.length || 0;
+});
+
+const manualNodesCount = computed(() => {
+  return initialData.value?.subs?.filter(item => !item.url || !HTTP_REGEX.test(item.url))?.length || 0;
+});
+
+const generatorCount = computed(() => {
+  return initialData.value?.profiles?.length || 0;
+});
 
 onMounted(() => {
   // 初始化主题
@@ -94,10 +121,10 @@ onMounted(() => {
           <!-- 导航标签页区域 - 移除sticky定位，与内容区域整合 -->
           <NavigationTabs 
             v-model="activeTab"
-            :subscriptions-count="initialData?.subs?.filter(item => item.url && /^https?:\/\//.test(item.url))?.length || 0"
-            :profiles-count="initialData?.profiles?.length || 0"
-            :manual-nodes-count="initialData?.subs?.filter(item => !item.url || !/^https?:\/\//.test(item.url))?.length || 0"
-            :generator-count="initialData?.profiles?.length || 0"
+            :subscriptions-count="subscriptionsCount"
+            :profiles-count="profilesCount"
+            :manual-nodes-count="manualNodesCount"
+            :generator-count="generatorCount"
           />
           
           <!-- 根据标签页显示不同内容 -->

@@ -140,16 +140,18 @@ const handleDeduplicateNodes = async () => {
     await handleDirectSave('节点去重');
     showNodesMoreMenu.value = false; // 操作后关闭菜单
 };
+// --- 常量定义：预编译正则表达式，提升性能 ---
+const HTTP_REGEX = /^https?:\/\//;
+const NODE_PROTOCOL_REGEX = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+
 // --- 初始化與生命週期 ---
 const initializeState = () => {
   isLoading.value = true;
   if (props.data) {
     const subsData = props.data.subs || [];
-    // 优化：预编译正则表达式，提升性能
-    const httpRegex = /^https?:\/\//;
     
-    initialSubs.value = subsData.filter(item => item.url && httpRegex.test(item.url));
-    initialNodes.value = subsData.filter(item => !item.url || !httpRegex.test(item.url));
+    initialSubs.value = subsData.filter(item => item.url && HTTP_REGEX.test(item.url));
+    initialNodes.value = subsData.filter(item => !item.url || !HTTP_REGEX.test(item.url));
     
     profiles.value = (props.data.profiles || []).map(p => ({
         ...p,
@@ -267,60 +269,57 @@ const handleSave = async () => {
     saveState.value = 'idle';
   }
 };
+// --- 公共函数：从订阅组中移除ID ---
+const removeIdFromProfiles = (id, field) => {
+  profiles.value.forEach(p => {
+    const index = p[field].indexOf(id);
+    if (index !== -1) {
+      p[field].splice(index, 1);
+    }
+  });
+};
+
+// --- 公共函数：清空订阅组中的字段 ---
+const clearProfilesField = (field) => {
+  profiles.value.forEach(p => {
+    p[field].length = 0;
+  });
+};
+
+// --- 公共函数：触发数据更新事件 ---
+const triggerDataUpdate = () => {
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
+};
+
 const handleDeleteSubscriptionWithCleanup = async (subId) => {
   deleteSubscription(subId);
-  // 优化：使用更高效的数组操作
-  profiles.value.forEach(p => {
-    const index = p.subscriptions.indexOf(subId);
-    if (index !== -1) {
-      p.subscriptions.splice(index, 1);
-    }
-  });
+  removeIdFromProfiles(subId, 'subscriptions');
   await handleDirectSave('订阅删除');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
 };
+
 const handleDeleteNodeWithCleanup = async (nodeId) => {
   deleteNode(nodeId);
-  // 优化：使用更高效的数组操作
-  profiles.value.forEach(p => {
-    const index = p.manualNodes.indexOf(nodeId);
-    if (index !== -1) {
-      p.manualNodes.splice(index, 1);
-    }
-  });
+  removeIdFromProfiles(nodeId, 'manualNodes');
   await handleDirectSave('节点删除');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
 };
+
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
   deleteAllSubscriptions();
-  // 优化：直接清空数组，避免forEach
-  profiles.value.forEach(p => {
-    p.subscriptions.length = 0;
-  });
+  clearProfilesField('subscriptions');
   await handleDirectSave('订阅清空');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
   showDeleteSubsModal.value = false;
 };
+
 const handleDeleteAllNodesWithCleanup = async () => {
   deleteAllNodes();
-  // 优化：直接清空数组，避免forEach
-  profiles.value.forEach(p => {
-    p.manualNodes.length = 0;
-  });
+  clearProfilesField('manualNodes');
   await handleDirectSave('节点清空');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
   showDeleteNodesModal.value = false;
 };
 const handleAutoSortNodes = async () => {
@@ -335,10 +334,6 @@ const handleBulkImport = async (importText) => {
   const newSubs = [];
   const newNodes = [];
   
-  // 预编译正则表达式，提升性能
-  const httpRegex = /^https?:\/\//;
-  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
-  
   for (const line of lines) {
       const newItem = { 
           id: crypto.randomUUID(), 
@@ -348,9 +343,9 @@ const handleBulkImport = async (importText) => {
           status: 'unchecked' 
       };
       
-      if (httpRegex.test(line)) {
+      if (HTTP_REGEX.test(line)) {
           newSubs.push(newItem);
-      } else if (nodeRegex.test(line)) {
+      } else if (NODE_PROTOCOL_REGEX.test(line)) {
           newNodes.push(newItem);
       }
   }
@@ -359,10 +354,7 @@ const handleBulkImport = async (importText) => {
   if (newNodes.length > 0) addNodesFromBulk(newNodes);
   
   await handleDirectSave('批量导入');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
 };
 const handleAddSubscription = () => {
@@ -384,9 +376,7 @@ const handleSaveSubscription = async () => {
     return; 
   }
   
-  // 预编译正则表达式，提升性能
-  const httpRegex = /^https?:\/\//;
-  if (!httpRegex.test(editingSubscription.value.url)) { 
+  if (!HTTP_REGEX.test(editingSubscription.value.url)) { 
     showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error'); 
     return; 
   }
@@ -398,10 +388,7 @@ const handleSaveSubscription = async () => {
   }
   
   await handleDirectSave('订阅');
-  // 触发数据更新事件
-  emit('update-data', {
-    subs: [...subscriptions.value, ...manualNodes.value]
-  });
+  triggerDataUpdate();
   showSubModal.value = false;
 };
 const handleAddNode = () => {
@@ -437,10 +424,7 @@ const handleSaveNode = async () => {
     }
     
     await handleDirectSave('节点');
-    // 触发数据更新事件
-    emit('update-data', {
-      subs: [...subscriptions.value, ...manualNodes.value]
-    });
+    triggerDataUpdate();
     showNodeModal.value = false;
 };
 const handleProfileToggle = async (updatedProfile) => {
@@ -448,7 +432,6 @@ const handleProfileToggle = async (updatedProfile) => {
     if (index !== -1) {
         profiles.value[index].enabled = updatedProfile.enabled;
         await handleDirectSave(`${updatedProfile.name || '订阅组'} 状态`);
-        // 触发数据更新事件
         emit('update-data', {
           profiles: [...profiles.value]
         });
@@ -475,9 +458,9 @@ const handleSaveProfile = async (profileData) => {
     }
     
     if (profileData.customId) {
-        // 预编译正则表达式，提升性能
-        const customIdRegex = /[^a-zA-Z0-9-_]/g;
-        profileData.customId = profileData.customId.replace(customIdRegex, '');
+        // 优化：预编译正则表达式，提升性能
+        const CUSTOM_ID_REGEX = /[^a-zA-Z0-9-_]/g;
+        profileData.customId = profileData.customId.replace(CUSTOM_ID_REGEX, '');
         
         if (profileData.customId && profiles.value.some(p => p.id !== profileData.id && p.customId === profileData.customId)) {
             showToast(`自定义 ID "${profileData.customId}" 已存在`, 'error');
@@ -496,7 +479,6 @@ const handleSaveProfile = async (profileData) => {
         if (index !== -1) profiles.value[index] = profileData;
     }
     await handleDirectSave('订阅组');
-    // 触发数据更新事件
     emit('update-data', {
       profiles: [...profiles.value]
     });
@@ -509,7 +491,6 @@ const handleDeleteProfile = async (profileId) => {
         profilesCurrentPage.value--;
     }
     await handleDirectSave('订阅组删除');
-    // 触发数据更新事件
     emit('update-data', {
       profiles: [...profiles.value]
     });
@@ -518,7 +499,6 @@ const handleDeleteAllProfiles = async () => {
     profiles.value = [];
     profilesCurrentPage.value = 1;
     await handleDirectSave('订阅组清空');
-    // 触发数据更新事件
     emit('update-data', {
       profiles: [...profiles.value]
     });
@@ -579,7 +559,7 @@ const handleSubscriptionUpdate = async (subscriptionId) => {
 const handleUpdateAllSubscriptions = async () => {
     if (isUpdatingAllSubs.value) return;
     
-    const enabledSubs = subscriptions.value.filter(sub => sub.enabled && sub.url.startsWith('http'));
+    const enabledSubs = subscriptions.value.filter(sub => sub.enabled && HTTP_REGEX.test(sub.url));
     if (enabledSubs.length === 0) {
         showToast('没有可更新的订阅', 'warning');
         return;
