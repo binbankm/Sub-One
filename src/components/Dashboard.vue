@@ -552,8 +552,15 @@ const handleSubscriptionToggle = async (subscription) => {
 };
 
 const handleSubscriptionUpdate = async (subscriptionId) => {
-    await handleUpdateNodeCount(subscriptionId, true); // 传递true避免显示重复通知
-    await handleDirectSave('订阅更新', false); // 不显示重复通知
+    const subscription = subscriptions.value.find(s => s.id === subscriptionId);
+    if (!subscription) return;
+    
+    // 显示更新中的提示
+    showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
+    
+    // 更新订阅（不传递true，让handleUpdateNodeCount显示更新成功的提示）
+    await handleUpdateNodeCount(subscriptionId, false);
+    await handleDirectSave('订阅更新', false); // 不显示重复通知，因为handleUpdateNodeCount已经显示了
 };
 
 const handleUpdateAllSubscriptions = async () => {

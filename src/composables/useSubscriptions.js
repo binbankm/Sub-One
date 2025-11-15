@@ -56,7 +56,7 @@ export function useSubscriptions(initialSubsRef, markDirty) {
       subToUpdate.userInfo = data.userInfo || null;
       
       if (!isInitialLoad) {
-        showToast(`${subToUpdate.name || '订阅'} 更新成功！`, 'success');
+        showToast(`${subToUpdate.name || '订阅'} 已更新`, 'success');
       }
     } catch (error) {
       if (!isInitialLoad) showToast(`${subToUpdate.name || '订阅'} 更新失败`, 'error');
