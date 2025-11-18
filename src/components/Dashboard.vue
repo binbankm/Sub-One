@@ -138,6 +138,7 @@ const handleClickOutside = (event) => {
 const handleDeduplicateNodes = async () => {
     deduplicateNodes();
     await handleDirectSave('节点去重');
+    triggerDataUpdate();
     showNodesMoreMenu.value = false; // 操作后关闭菜单
 };
 // --- 常量定义：预编译正则表达式，提升性能 ---
@@ -325,6 +326,7 @@ const handleDeleteAllNodesWithCleanup = async () => {
 const handleAutoSortNodes = async () => {
     autoSortNodes();
     await handleDirectSave('节点排序');
+    triggerDataUpdate();
 };
 const handleBulkImport = async (importText) => {
   if (!importText) return;
@@ -354,7 +356,10 @@ const handleBulkImport = async (importText) => {
   if (newNodes.length > 0) addNodesFromBulk(newNodes);
   
   await handleDirectSave('批量导入');
-  triggerDataUpdate();
+  // 更新父组件数据，使标签页计数实时刷新
+  emit('update-data', {
+    subs: [...subscriptions.value, ...manualNodes.value]
+  });
   showToast(`成功导入 ${newSubs.length} 条订阅和 ${newNodes.length} 个手动节点`, 'success');
 };
 const handleAddSubscription = () => {
@@ -1074,7 +1079,7 @@ const handleNodeDragEnd = async (evt) => {
     :show="showSubscriptionImportModal" 
     @update:show="showSubscriptionImportModal = $event" 
     :add-nodes-from-bulk="addNodesFromBulk"
-    :on-import-success="() => handleDirectSave('导入订阅')"
+    :on-import-success="async () => { await handleDirectSave('导入订阅'); triggerDataUpdate(); }"
   />
   <NodeDetailsModal :show="showNodeDetailsModal" :subscription="selectedSubscription" @update:show="showNodeDetailsModal = $event" />
   <ProfileNodeDetailsModal 

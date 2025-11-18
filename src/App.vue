@@ -18,11 +18,17 @@ const { checkSession, login, logout } = sessionStore;
 
 // 更新initialData的方法，供Dashboard组件调用
 const updateInitialData = (newData) => {
-  // 优化：使用Object.assign合并数据，避免直接替换整个对象
+  // 修复：确保initialData存在，并使用响应式的方式更新数据
+  if (!initialData.value) {
+    initialData.value = {};
+  }
+  
   if (newData.subs) {
+    // 使用新数组替换，确保触发响应式更新
     initialData.value.subs = newData.subs;
   }
   if (newData.profiles) {
+    // 使用新数组替换，确保触发响应式更新
     initialData.value.profiles = newData.profiles;
   }
   if (newData.config) {
