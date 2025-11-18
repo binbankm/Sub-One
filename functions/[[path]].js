@@ -1217,8 +1217,18 @@ async function handleSubRequest(context) {
         const responseText = await subconverterResponse.text();
         const responseHeaders = new Headers(subconverterResponse.headers);
         responseHeaders.set("Content-Disposition", `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
-        responseHeaders.set('Content-Type', 'text/plain; charset=utf-8');
+        
+        // 优化：根据目标格式设置正确的Content-Type，确保客户端能正确识别和导入
+        let contentType = 'text/plain; charset=utf-8';
+        if (targetFormat === 'clash' || targetFormat === 'singbox' || targetFormat === 'surge' || targetFormat === 'loon') {
+            // YAML格式使用application/x-yaml，确保客户端能正确识别
+            contentType = 'application/x-yaml; charset=utf-8';
+        } else if (targetFormat === 'base64') {
+            contentType = 'text/plain; charset=utf-8';
+        }
+        responseHeaders.set('Content-Type', contentType);
         responseHeaders.set('Cache-Control', 'no-store, no-cache');
+        
         return new Response(responseText, { status: subconverterResponse.status, statusText: subconverterResponse.statusText, headers: responseHeaders });
     } catch (error) {
         console.error(`[Sub-One Final Error] ${error.message}`);
