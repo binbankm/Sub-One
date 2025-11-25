@@ -557,7 +557,10 @@ const handleSubscriptionUpdate = async (subscriptionId) => {
     const subscription = subscriptions.value.find(s => s.id === subscriptionId);
     if (!subscription) return;
     
-    // handleUpdateNodeCount 内部会显示更新成功/失败的通知，这里不需要额外通知
+    // 显示更新中的提示
+    showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
+    
+    // 更新订阅（不传递true，让handleUpdateNodeCount显示更新成功的提示）
     await handleUpdateNodeCount(subscriptionId, false);
     await handleDirectSave('订阅更新', false); // 不显示重复通知，因为handleUpdateNodeCount已经显示了
 };

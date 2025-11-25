@@ -42,9 +42,6 @@ export function useSubscriptions(initialSubsRef, markDirty) {
     subsCurrentPage.value = page;
   }
 
-  // 用于跟踪最近的更新通知，防止重复
-  const lastUpdateNotification = new Map();
-
   async function handleUpdateNodeCount(subId, isInitialLoad = false) {
     const subToUpdate = subscriptions.value.find(s => s.id === subId);
     if (!subToUpdate || !HTTP_REGEX.test(subToUpdate.url)) return;
@@ -59,15 +56,7 @@ export function useSubscriptions(initialSubsRef, markDirty) {
       subToUpdate.userInfo = data.userInfo || null;
 
       if (!isInitialLoad) {
-        // 防抖：检查是否在短时间内已经显示过通知
-        const now = Date.now();
-        const lastNotificationTime = lastUpdateNotification.get(subId);
-
-        // 如果距离上次通知不到1秒，则跳过本次通知
-        if (!lastNotificationTime || now - lastNotificationTime > 1000) {
-          showToast(`${subToUpdate.name || '订阅'} 已更新`, 'success');
-          lastUpdateNotification.set(subId, now);
-        }
+        showToast(`${subToUpdate.name || '订阅'} 已更新`, 'success');
       }
     } catch (error) {
       if (!isInitialLoad) showToast(`${subToUpdate.name || '订阅'} 更新失败`, 'error');
