@@ -4,12 +4,15 @@ import { useToastStore } from '../stores/toast.js';
 
 const { toast } = useToastStore();
 const isVisible = ref(false);
+let timer = null;
 
 watch(() => toast.id, () => {
   if (toast.message) {
+    if (timer) clearTimeout(timer);
     isVisible.value = true;
-    setTimeout(() => {
+    timer = setTimeout(() => {
       isVisible.value = false;
+      timer = null;
     }, 3000);
   }
 });
