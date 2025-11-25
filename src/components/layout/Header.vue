@@ -50,7 +50,7 @@ const showHelpModal = ref(false);
           <!-- 主题切换按钮 - 美化升级版 -->
           <button 
             @click="themeStore.toggleTheme()" 
-            class="btn-header-modern group relative overflow-hidden" 
+            class="btn-header-modern group relative overflow-hidden p-3 lg:p-4 rounded-2xl transition-all duration-500" 
             :title="themeStore.getNextThemeName()"
           >
             <!-- 背景光效 -->
@@ -73,7 +73,7 @@ const showHelpModal = ref(false);
           <!-- 设置按钮 - 美化升级版 -->
           <button 
             @click="uiStore.show()" 
-            class="btn-header-modern group relative overflow-hidden" 
+            class="btn-header-modern group relative overflow-hidden p-3 lg:p-4 rounded-2xl transition-all duration-500" 
             title="设置"
           >
             <!-- 背景光效 -->
@@ -88,7 +88,7 @@ const showHelpModal = ref(false);
           <!-- 帮助文档按钮 - 美化升级版 -->
           <button 
             @click="showHelpModal = true"
-            class="btn-header-modern group relative overflow-hidden" 
+            class="btn-header-modern group relative overflow-hidden p-3 lg:p-4 rounded-2xl transition-all duration-500" 
             title="帮助文档"
           >
             <!-- 背景光效 -->
@@ -102,7 +102,7 @@ const showHelpModal = ref(false);
           <!-- 登出按钮 - 美化升级版 -->
           <button 
             @click="emit('logout')" 
-            class="btn-header-modern btn-logout group relative overflow-hidden" 
+            class="btn-header-modern btn-logout group relative overflow-hidden p-3 lg:p-4 rounded-2xl transition-all duration-500" 
             title="登出"
           >
             <!-- 背景光效 -->
@@ -129,7 +129,7 @@ const showHelpModal = ref(false);
 <style scoped>
 /* 现代化头部按钮样式 - 美化升级版 */
 .btn-header-modern {
-  @apply p-3 lg:p-4 rounded-2xl transition-all duration-500 transform hover:scale-110;
+
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #1e40af;
