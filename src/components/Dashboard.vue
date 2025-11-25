@@ -558,7 +558,7 @@ const handleSubscriptionUpdate = async (subscriptionId) => {
     if (!subscription) return;
     
     // 显示更新中的提示
-    showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
+    // showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
     
     // 更新订阅
     const success = await handleUpdateNodeCount(subscriptionId, false);
