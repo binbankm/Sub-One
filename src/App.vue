@@ -37,7 +37,6 @@ const updateInitialData = (newData) => {
 };
 
 const toastStore = useToastStore();
-const { toast: toastState } = storeToRefs(toastStore);
 
 const themeStore = useThemeStore();
 
@@ -165,7 +164,7 @@ onMounted(() => {
     </main>
     
     <!-- 优化的Toast组件 -->
-    <Toast :show="toastState.id" :message="toastState.message" :type="toastState.type" />
+    <Toast />
     
     <!-- 优化的Footer -->
     <Footer />
