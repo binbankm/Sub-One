@@ -553,22 +553,33 @@ const handleSubscriptionToggle = async (subscription) => {
     await handleDirectSave(`${subscription.name || '订阅'} 状态`);
 };
 
+/**
+ * 处理单个订阅的手动更新
+ * 用户点击刷新按钮时调用
+ */
 const handleSubscriptionUpdate = async (subscriptionId) => {
     const subscription = subscriptions.value.find(s => s.id === subscriptionId);
     if (!subscription) return;
     
-    // 显示更新中的提示
-    showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
+    // 调用更新函数，显示完整的更新流程通知
+    await handleUpdateNodeCount(subscriptionId, { 
+      silent: false,      // 显示成功/失败通知
+      showProgress: true  // 显示"正在更新..."进度提示
+    });
     
-    // 更新订阅（不传递true，让handleUpdateNodeCount显示更新成功的提示）
-    await handleUpdateNodeCount(subscriptionId, false);
-    await handleDirectSave('订阅更新', false); // 不显示重复通知，因为handleUpdateNodeCount已经显示了
+    // 保存更新后的数据（静默保存，不显示通知）
+    await handleDirectSave('订阅更新', false);
 };
 
+/**
+ * 一键更新所有启用的订阅
+ * 使用批量API提升性能，失败后降级到逐个更新
+ */
 const handleUpdateAllSubscriptions = async () => {
     if (isUpdatingAllSubs.value) return;
     
     const enabledSubs = subscriptions.value.filter(sub => sub.enabled && HTTP_REGEX.test(sub.url));
+    
     if (enabledSubs.length === 0) {
         showToast('没有可更新的订阅', 'warning');
         return;
@@ -576,39 +587,65 @@ const handleUpdateAllSubscriptions = async () => {
     
     isUpdatingAllSubs.value = true;
     
+    // 显示开始更新的提示
+    showToast(`正在批量更新 ${enabledSubs.length} 个订阅...`, 'info');
+    
     try {
         const subscriptionIds = enabledSubs.map(sub => sub.id);
         const result = await batchUpdateNodes(subscriptionIds);
         
-        if (result.success) {
-            // 优化：使用Map提升查找性能
-            if (result.results && Array.isArray(result.results)) {
-                const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
-                
-                result.results.forEach(updateResult => {
-                    if (updateResult.success) {
-                        const sub = subsMap.get(updateResult.id);
-                        if (sub) {
-                            if (typeof updateResult.nodeCount === 'number') {
-                                sub.nodeCount = updateResult.nodeCount;
-                            }
-                            if (updateResult.userInfo) {
-                                sub.userInfo = updateResult.userInfo;
-                            }
+        if (result.success && result.results && Array.isArray(result.results)) {
+            // 批量API成功
+            const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
+            
+            result.results.forEach(updateResult => {
+                if (updateResult.success) {
+                    const sub = subsMap.get(updateResult.id);
+                    if (sub) {
+                        if (typeof updateResult.nodeCount === 'number') {
+                            sub.nodeCount = updateResult.nodeCount;
+                        }
+                        if (updateResult.userInfo) {
+                            sub.userInfo = updateResult.userInfo;
                         }
                     }
-                });
+                }
+            });
+            
+            const successCount = result.results.filter(r => r.success).length;
+            const failedCount = enabledSubs.length - successCount;
+            
+            if (failedCount === 0) {
+                showToast(`批量更新完成！全部 ${successCount} 个订阅更新成功`, 'success');
+            } else {
+                showToast(`批量更新完成！${successCount} 个成功，${failedCount} 个失败`, 'warning');
             }
             
-            const successCount = result.results ? result.results.filter(r => r.success).length : enabledSubs.length;
-            showToast(`成功更新了 ${successCount} 个订阅`, 'success');
-            await handleDirectSave('订阅更新', false); // 不显示重复通知
+            // 静默保存
+            await handleDirectSave('订阅更新', false);
         } else {
-            showToast(`更新失败: ${result.message}`, 'error');
+            // 批量API失败，降级到逐个更新
+            showToast(`批量更新API失败，正在降级到逐个更新...`, 'warning');
+            
+            let successCount = 0;
+            for (const sub of enabledSubs) {
+                const result = await handleUpdateNodeCount(sub.id, { silent: true });
+                if (result.success) successCount++;
+            }
+            
+            const failedCount = enabledSubs.length - successCount;
+            if (failedCount === 0) {
+                showToast(`逐个更新完成！全部 ${successCount} 个订阅更新成功`, 'success');
+            } else {
+                showToast(`逐个更新完成！${successCount} 个成功，${failedCount} 个失败`, 'warning');
+            }
+            
+            // 静默保存
+            await handleDirectSave('订阅更新', false);
         }
     } catch (error) {
         console.error('批量更新订阅失败:', error);
-        showToast('批量更新失败', 'error');
+        showToast('批量更新失败，请稍后重试', 'error');
     } finally {
         isUpdatingAllSubs.value = false;
     }

@@ -94,35 +94,107 @@ const formatBytes = (bytes, decimals = 2) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
+/**
+ * 计算并格式化流量信息
+ * @returns {Object|null} 流量信息对象或null（当数据不可用时）
+ */
 const trafficInfo = computed(() => {
   const info = props.sub.userInfo;
-  if (!info || info.total === undefined || info.download === undefined || info.upload === undefined) return null;
-  const total = info.total;
-  const used = info.download + info.upload;
+  
+  // 严格验证所有必需字段
+  if (!info || 
+      typeof info.total !== 'number' || 
+      typeof info.download !== 'number' || 
+      typeof info.upload !== 'number') {
+    return null;
+  }
+  
+  // 确保数值为非负数
+  const total = Math.max(0, info.total);
+  const download = Math.max(0, info.download);
+  const upload = Math.max(0, info.upload);
+  const used = download + upload;
+  
+  // 计算百分比，避免除零错误
   const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  
   return {
     used: formatBytes(used),
     total: formatBytes(total),
-    percentage: percentage,
+    percentage: Number(percentage.toFixed(2)), // 保留2位小数
+    download: formatBytes(download),
+    upload: formatBytes(upload),
   };
 });
 
+/**
+ * 计算并格式化订阅到期信息
+ * @returns {Object|null} 到期信息对象或null（当数据不可用时）
+ */
 const expiryInfo = computed(() => {
     const expireTimestamp = props.sub.userInfo?.expire;
-    if (!expireTimestamp) return null;
-    const expiryDate = new Date(expireTimestamp * 1000);
-    const now = new Date();
-    expiryDate.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
-    let style = 'text-gray-500 dark:text-gray-400';
-    if (diffDays < 0) style = 'text-red-500 font-bold';
-    else if (diffDays <= 7) style = 'text-yellow-500 font-semibold';
-    return {
-        date: expiryDate.toLocaleDateString(),
-        daysRemaining: diffDays < 0 ? '已過期' : (diffDays === 0 ? '今天到期' : `${diffDays} 天后`),
-        style: style
-    };
+    
+    // 验证时间戳有效性
+    if (!expireTimestamp || typeof expireTimestamp !== 'number' || expireTimestamp <= 0) {
+        return null;
+    }
+    
+    try {
+        const expiryDate = new Date(expireTimestamp * 1000);
+        
+        // 验证日期有效性
+        if (isNaN(expiryDate.getTime())) {
+            console.warn('Invalid expiry date for subscription:', props.sub.name);
+            return null;
+        }
+        
+        const now = new Date();
+        
+        // 重置时间到当天的00:00:00以进行日期比较
+        expiryDate.setHours(0, 0, 0, 0);
+        now.setHours(0, 0, 0, 0);
+        
+        // 计算剩余天数
+        const diffDays = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+        
+        // 根据剩余天数确定显示样式
+        let style = 'text-gray-500 dark:text-gray-400';
+        let displayText = '';
+        
+        if (diffDays < 0) {
+            style = 'text-red-500 font-bold';
+            displayText = `已过期 ${Math.abs(diffDays)} 天`;
+        } else if (diffDays === 0) {
+            style = 'text-red-500 font-bold';
+            displayText = '今天到期';
+        } else if (diffDays <= 3) {
+            style = 'text-red-500 font-semibold';
+            displayText = `${diffDays} 天后到期`;
+        } else if (diffDays <= 7) {
+            style = 'text-yellow-500 font-semibold';
+            displayText = `${diffDays} 天后到期`;
+        } else if (diffDays <= 30) {
+            style = 'text-blue-500 dark:text-blue-400';
+            displayText = `${diffDays} 天后到期`;
+        } else {
+            style = 'text-gray-500 dark:text-gray-400';
+            displayText = `${diffDays} 天后到期`;
+        }
+        
+        return {
+            date: expiryDate.toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            }),
+            daysRemaining: displayText,
+            diffDays: diffDays,
+            style: style
+        };
+    } catch (error) {
+        console.error('Error calculating expiry info:', error);
+        return null;
+    }
 });
 </script>
 
