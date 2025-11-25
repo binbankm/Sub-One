@@ -7,10 +7,10 @@ import { storeToRefs } from 'pinia';
 
 import Dashboard from './components/Dashboard.vue';
 import Login from './components/Login.vue';
-import Header from './components/Header.vue';
+import Header from './components/layout/Header.vue';
 import NavigationTabs from './components/NavigationTabs.vue';
 import Toast from './components/Toast.vue';
-import Footer from './components/Footer.vue';
+import Footer from './components/layout/Footer.vue';
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);

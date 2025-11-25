@@ -8,23 +8,20 @@ import { useUIStore } from '../stores/ui.js';
 import { useSubscriptions } from '../composables/useSubscriptions.js';
 import { useManualNodes } from '../composables/useManualNodes.js';
 
-// --- 元件導入 ---
-import Card from './Card.vue';
-import ManualNodeCard from './ManualNodeCard.vue';
+// --- 组件导入 ---
+import Card from './cards/Card.vue';
+import ManualNodeCard from './cards/ManualNodeCard.vue';
 import SubscriptionLinkGenerator from './SubscriptionLinkGenerator.vue';
-import ProfileCard from './ProfileCard.vue';
-import ManualNodeList from './ManualNodeList.vue'; 
-import SubscriptionImportModal from './SubscriptionImportModal.vue';
-import NodeDetailsModal from './NodeDetailsModal.vue';
-import ProfileNodeDetailsModal from './ProfileNodeDetailsModal.vue';
- 
+import ProfileCard from './cards/ProfileCard.vue';
+import ManualNodeList from './ManualNodeList.vue';
+import Modal from './modals/Modal.vue';
+import SubscriptionImportModal from './modals/SubscriptionImportModal.vue';
+import NodeDetailsModal from './modals/NodeDetailsModal.vue';
+import ProfileNodeDetailsModal from './modals/ProfileNodeDetailsModal.vue';
 
-
-
-const SettingsModal = defineAsyncComponent(() => import('./SettingsModal.vue'));
-const BulkImportModal = defineAsyncComponent(() => import('./BulkImportModal.vue'));
-import Modal from './Modal.vue';
-const ProfileModal = defineAsyncComponent(() => import('./ProfileModal.vue'));
+const SettingsModal = defineAsyncComponent(() => import('./modals/SettingsModal.vue'));
+const BulkImportModal = defineAsyncComponent(() => import('./modals/BulkImportModal.vue'));
+const ProfileModal = defineAsyncComponent(() => import('./modals/ProfileModal.vue'));
 
 // --- 基礎 Props 和狀態 ---
 const props = defineProps({ 
