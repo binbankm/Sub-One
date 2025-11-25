@@ -44,7 +44,7 @@ export function useSubscriptions(initialSubsRef, markDirty) {
 
   async function handleUpdateNodeCount(subId, isInitialLoad = false) {
     const subToUpdate = subscriptions.value.find(s => s.id === subId);
-    if (!subToUpdate || !HTTP_REGEX.test(subToUpdate.url)) return;
+    if (!subToUpdate || !HTTP_REGEX.test(subToUpdate.url)) return false;
 
     if (!isInitialLoad) {
       subToUpdate.isUpdating = true;
@@ -54,13 +54,10 @@ export function useSubscriptions(initialSubsRef, markDirty) {
       const data = await fetchNodeCount(subToUpdate.url);
       subToUpdate.nodeCount = data.count || 0;
       subToUpdate.userInfo = data.userInfo || null;
-
-      if (!isInitialLoad) {
-        showToast(`${subToUpdate.name || '订阅'} 已更新`, 'success');
-      }
+      return true;
     } catch (error) {
-      if (!isInitialLoad) showToast(`${subToUpdate.name || '订阅'} 更新失败`, 'error');
       console.error(`Failed to fetch node count for ${subToUpdate.name}:`, error);
+      return false;
     } finally {
       subToUpdate.isUpdating = false;
     }

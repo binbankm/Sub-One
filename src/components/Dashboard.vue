@@ -560,9 +560,15 @@ const handleSubscriptionUpdate = async (subscriptionId) => {
     // 显示更新中的提示
     showToast(`正在更新 ${subscription.name || '订阅'}...`, 'info');
     
-    // 更新订阅（不传递true，让handleUpdateNodeCount显示更新成功的提示）
-    await handleUpdateNodeCount(subscriptionId, false);
-    await handleDirectSave('订阅更新', false); // 不显示重复通知，因为handleUpdateNodeCount已经显示了
+    // 更新订阅
+    const success = await handleUpdateNodeCount(subscriptionId, false);
+    
+    if (success) {
+        showToast(`${subscription.name || '订阅'} 已更新`, 'success');
+        await handleDirectSave('订阅更新', false); 
+    } else {
+        showToast(`${subscription.name || '订阅'} 更新失败`, 'error');
+    }
 };
 
 const handleUpdateAllSubscriptions = async () => {
