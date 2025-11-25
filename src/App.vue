@@ -7,8 +7,7 @@ import { storeToRefs } from 'pinia';
 
 import Dashboard from './components/Dashboard.vue';
 import Login from './components/Login.vue';
-import Header from './components/layout/Header.vue';
-import NavigationTabs from './components/NavigationTabs.vue';
+import Sidebar from './components/layout/Sidebar.vue';
 import Toast from './components/Toast.vue';
 import Footer from './components/layout/Footer.vue';
 
@@ -18,17 +17,14 @@ const { checkSession, login, logout } = sessionStore;
 
 // 更新initialData的方法，供Dashboard组件调用
 const updateInitialData = (newData) => {
-  // 修复：确保initialData存在，并使用响应式的方式更新数据
   if (!initialData.value) {
     initialData.value = {};
   }
   
   if (newData.subs) {
-    // 使用新数组替换，确保触发响应式更新
     initialData.value.subs = newData.subs;
   }
   if (newData.profiles) {
-    // 使用新数组替换，确保触发响应式更新
     initialData.value.profiles = newData.profiles;
   }
   if (newData.config) {
@@ -37,7 +33,6 @@ const updateInitialData = (newData) => {
 };
 
 const toastStore = useToastStore();
-
 const themeStore = useThemeStore();
 
 // 标签页状态管理
@@ -73,104 +68,93 @@ onMounted(() => {
 </script>
 
 <template>
-  <div 
-    class="min-h-screen flex flex-col text-gray-800 transition-all duration-500"
-  >
-    <!-- 背景装饰元素 - 美化升级版 -->
-    <div class="background-decoration">
-      <div class="floating-shape floating-shape-1"></div>
-      <div class="floating-shape floating-shape-2"></div>
-      <div class="floating-shape floating-shape-3"></div>
-      <div class="floating-shape floating-shape-4"></div>
-      <div class="floating-shape floating-shape-5"></div>
-      <div class="floating-shape floating-shape-6"></div>
-    </div>
-    
-
-    
-    <!-- 光效装饰 -->
-    <div class="light-effects">
-      <div class="light-orb light-orb-1"></div>
-      <div class="light-orb light-orb-2"></div>
-      <div class="light-orb light-orb-3"></div>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- 背景装饰元素 -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/20 blur-[120px] dark:bg-purple-900/20"></div>
+      <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-900/20"></div>
     </div>
 
-
-    <Header 
-      :is-logged-in="sessionState === 'loggedIn'" 
+    <!-- 侧边栏 (仅在登录后显示) -->
+    <Sidebar 
+      v-if="sessionState === 'loggedIn'"
+      v-model="activeTab"
+      :subscriptions-count="subscriptionsCount"
+      :profiles-count="profilesCount"
+      :manual-nodes-count="manualNodesCount"
+      :generator-count="generatorCount"
+      :is-logged-in="sessionState === 'loggedIn'"
       @logout="logout"
     />
 
-    <!-- 主内容区域 - 整合标签页和内容为一体 -->
+    <!-- 主内容区域 -->
     <main 
-      class="flex-grow relative z-10"
-      :class="{ 
-        'flex items-center justify-center min-h-[calc(100vh-5rem)]': sessionState !== 'loggedIn',
-        'overflow-y-auto': sessionState === 'loggedIn' 
-      }"
+      class="relative z-10 min-h-screen transition-all duration-300 flex flex-col"
+      :class="{ 'lg:pl-64': sessionState === 'loggedIn' }"
     >
-      <!-- 加载状态优化 -->
-      <div v-if="sessionState === 'loading'" class="flex flex-col items-center justify-center min-h-[60vh]">
-        <div class="relative">
-          <div class="loading-spinner-enhanced mx-auto mb-6 w-16 h-16"></div>
-          <div class="absolute inset-0 rounded-full border-4 border-indigo-200 animate-ping"></div>
-        </div>
-        <p class="text-white font-medium text-lg animate-fade-in-up-enhanced drop-shadow-lg">正在加载...</p>
-        <p class="text-sm text-white/80 mt-2 animate-fade-in-up-enhanced drop-shadow-lg" style="animation-delay: 0.2s;">请稍候，正在初始化应用</p>
-      </div>
-      
-      <!-- 主要内容区域优化 - 标签页和内容整合为一个整体 -->
-      <div v-else-if="sessionState === 'loggedIn' && initialData" class="w-full max-w-screen-2xl mx-auto animate-fade-in-up-enhanced">
-        <!-- 整合的标签页和内容区域 -->
-        <div class="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 space-y-6 lg:space-y-8">
-          <!-- 导航标签页区域 - 移除sticky定位，与内容区域整合 -->
-          <NavigationTabs 
-            v-model="activeTab"
-            :subscriptions-count="subscriptionsCount"
-            :profiles-count="profilesCount"
-            :manual-nodes-count="manualNodesCount"
-            :generator-count="generatorCount"
-          />
-          
-          <!-- 根据标签页显示不同内容 -->
-          <div class="space-y-8 lg:space-y-12">
-            <!-- 订阅管理标签页 -->
-            <div v-if="activeTab === 'subscriptions'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
-            </div>
-            
-            <!-- 订阅组标签页 -->
-            <div v-else-if="activeTab === 'profiles'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
-            </div>
-            
-            <!-- 链接生成标签页 -->
-            <div v-else-if="activeTab === 'generator'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
-            </div>
-            
-            <!-- 手动节点标签页 -->
-            <div v-else-if="activeTab === 'nodes'" class="space-y-8">
-              <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
-            </div>
+      <!-- 登录前的内容居中显示 -->
+      <div v-if="sessionState !== 'loggedIn'" class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- 加载状态 -->
+        <div v-if="sessionState === 'loading'" class="flex flex-col items-center">
+          <div class="relative w-16 h-16 mb-6">
+            <div class="absolute inset-0 border-4 border-indigo-200/30 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
           </div>
+          <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">正在加载...</p>
+        </div>
+
+        <!-- 登录表单 -->
+        <div v-else class="w-full max-w-md animate-fade-in-up">
+          <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl shadow-indigo-500/30 mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Sub-One Manager</h1>
+            <p class="text-gray-500 dark:text-gray-400">请登录以管理您的订阅</p>
+          </div>
+          <Login :login="login" />
         </div>
       </div>
-      
-      <!-- 登录页面优化 -->
-      <div v-else class="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in-up-enhanced">
-        <Login :login="login" />
+
+      <!-- 登录后的内容区域 -->
+      <div v-else class="flex-grow p-6 lg:p-10">
+        <div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+          <!-- 顶部标题栏 (可选，用于显示当前页面标题) -->
+          <header class="flex items-center justify-between mb-8">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                {{ 
+                  activeTab === 'subscriptions' ? '订阅管理' :
+                  activeTab === 'profiles' ? '订阅组' :
+                  activeTab === 'generator' ? '链接生成' : '手动节点'
+                }}
+              </h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {{ 
+                  activeTab === 'subscriptions' ? '管理您的所有机场订阅链接' :
+                  activeTab === 'profiles' ? '创建和管理订阅组合' :
+                  activeTab === 'generator' ? '生成适用于不同客户端的订阅链接' : '添加和管理单个节点链接'
+                }}
+              </p>
+            </div>
+          </header>
+
+          <!-- 内容组件 -->
+          <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
+        </div>
       </div>
+
+      <!-- Footer -->
+      <Footer v-if="sessionState === 'loggedIn'" class="mt-auto border-t border-gray-200 dark:border-gray-800/50" />
     </main>
-    
-    <!-- 优化的Toast组件 -->
+
+    <!-- 全局 Toast -->
     <Toast />
-    
-    <!-- 优化的Footer -->
-    <Footer />
   </div>
 </template>
-
 <style>
 /* 动画效果 */
 @keyframes float {

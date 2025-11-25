@@ -678,18 +678,8 @@ const handleNodeDragEnd = async (evt) => {
       <!-- 订阅管理标签页 -->
       <div v-if="activeTab === 'subscriptions'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">订阅管理</h2>
-              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">管理您的机场订阅</p>
-            </div>
-            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ subscriptions.length }}</span>
-          </div>
+          <!-- 标题区域已移除，由外层布局统一管理 -->
+          <div class="flex-1"></div>
                       <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
               <div class="flex items-center gap-3 flex-shrink-0">
                 <button @click="handleAddSubscription" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
@@ -802,18 +792,8 @@ const handleNodeDragEnd = async (evt) => {
       <!-- 订阅组标签页 -->
       <div v-if="activeTab === 'profiles'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">订阅组</h2>
-              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">组合管理节点</p>
-            </div>
-            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ profiles.length }}</span>
-          </div>
+          <!-- 标题区域已移除 -->
+          <div class="flex-1"></div>
                       <div class="flex items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
               <button @click="handleAddProfile" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
             <div class="relative" ref="profilesMoreMenuRef">
