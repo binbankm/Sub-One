@@ -7,7 +7,8 @@ const currentYear = computed(() => new Date().getFullYear());
 <template>
   <footer class="w-full text-center py-6 mt-8 relative">
     <!-- 装饰性背景 -->
-    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent dark:from-transparent dark:via-gray-800/5 dark:to-transparent"></div>
+    <!-- 装饰性背景已移除，以保持整体背景一致性 -->
+    <!-- <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent dark:from-transparent dark:via-gray-800/5 dark:to-transparent"></div> -->
     
     <div class="relative z-10">
       <div class="flex items-center justify-center space-x-4 mb-4">
