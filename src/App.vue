@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue';
 import { useSessionStore } from './stores/session.js';
 import { useToastStore } from './stores/toast.js';
 import { useThemeStore } from './stores/theme.js';
+import { useLayoutStore } from './stores/layout.js';
 import { storeToRefs } from 'pinia';
 
 import Dashboard from './components/Dashboard.vue';
@@ -10,6 +11,7 @@ import Login from './components/Login.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import Toast from './components/Toast.vue';
 import Footer from './components/layout/Footer.vue';
+import Breadcrumb from './components/layout/Breadcrumb.vue';
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
@@ -34,6 +36,7 @@ const updateInitialData = (newData) => {
 
 const toastStore = useToastStore();
 const themeStore = useThemeStore();
+const layoutStore = useLayoutStore();
 
 // 标签页状态管理
 const activeTab = ref('subscriptions');
@@ -61,6 +64,9 @@ const generatorCount = computed(() => {
 onMounted(() => {
   // 初始化主题
   themeStore.initTheme();
+  
+  // 初始化布局
+  layoutStore.init();
   
   // 检查会话
   checkSession();
@@ -90,7 +96,7 @@ onMounted(() => {
     <!-- 主内容区域 -->
     <main 
       class="relative z-10 min-h-screen transition-all duration-300 flex flex-col"
-      :class="{ 'lg:pl-72': sessionState === 'loggedIn' }"
+      :class="{ [layoutStore.mainPaddingLeft]: sessionState === 'loggedIn' }"
     >
       <!-- 登录前的内容居中显示 -->
       <div v-if="sessionState !== 'loggedIn'" class="flex-grow flex items-center justify-center p-4">
@@ -142,6 +148,9 @@ onMounted(() => {
             </div>
           </header>
 
+          <!-- 面包屑导航 -->
+          <Breadcrumb :current-page="activeTab" />
+
           <!-- 内容组件 -->
           <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
         </div>
@@ -155,6 +164,7 @@ onMounted(() => {
     <Toast />
   </div>
 </template>
+
 <style>
 /* 动画效果 */
 @keyframes float {

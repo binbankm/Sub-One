@@ -2,6 +2,7 @@
 import { computed, ref, defineAsyncComponent } from 'vue';
 import { useThemeStore } from '../../stores/theme.js';
 import { useUIStore } from '../../stores/ui.js';
+import { useLayoutStore } from '../../stores/layout.js';
 
 const HelpModal = defineAsyncComponent(() => import('../modals/HelpModal.vue'));
 
@@ -35,6 +36,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'logout']);
 const themeStore = useThemeStore();
 const uiStore = useUIStore();
+const layoutStore = useLayoutStore();
 const showHelpModal = ref(false);
 
 const menuItems = [
@@ -74,21 +76,51 @@ const switchTab = (id) => {
 </script>
 
 <template>
-  <aside class="fixed inset-y-0 left-0 z-50 w-72 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col shadow-2xl transition-transform duration-300 transform lg:translate-x-0"
-         :class="{ '-translate-x-full': !isLoggedIn }">
+  <aside class="fixed inset-y-0 left-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col shadow-2xl transition-all duration-300 transform lg:translate-x-0"
+         :class="[
+           layoutStore.sidebarCollapsed ? 'w-20' : 'w-72',
+           layoutStore.sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+         ]">
+    
+    <!-- 折叠按钮 (仅桌面端显示) -->
+    <button 
+      @click="layoutStore.toggleSidebar"
+      class="hidden lg:flex absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-slate-800 rounded-full shadow-lg items-center justify-center hover:scale-110 transition-transform duration-200 z-10 border border-slate-200 dark:border-slate-700"
+      :title="layoutStore.sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
+    >
+      <svg 
+        class="h-3 w-3 text-slate-600 dark:text-slate-300 transition-transform duration-300" 
+        :class="{ 'rotate-180': layoutStore.sidebarCollapsed }"
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke="currentColor"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <!-- 移动端关闭按钮 -->
+    <button 
+      @click="layoutStore.closeMobileSidebar"
+      class="lg:hidden absolute right-4 top-4 p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors"
+    >
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
     
     <!-- 顶部 Logo 区域 -->
-    <div class="h-24 flex items-center px-6 relative overflow-hidden shrink-0">
+    <div class="h-24 flex items-center px-6 relative overflow-hidden shrink-0" :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed}">
       <!-- 背景光效 -->
       <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
       
-      <div class="flex items-center gap-4 relative z-10 w-full">
+      <div class="flex items-center gap-4 relative z-10 w-full" :class="{ 'justify-center': layoutStore.sidebarCollapsed }">
         <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/20 shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
-        <div class="flex flex-col">
+        <div v-show="!layoutStore.sidebarCollapsed" class="flex flex-col">
           <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide leading-tight">Sub-One</h1>
           <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase leading-tight">Manager</p>
         </div>
@@ -104,8 +136,10 @@ const switchTab = (id) => {
           :class="[
             modelValue === item.id 
               ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 text-white shadow-md shadow-indigo-900/30 ring-1 ring-indigo-500/40' 
-              : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
+              : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400',
+            layoutStore.sidebarCollapsed && 'justify-center'
           ]"
+          :title="layoutStore.sidebarCollapsed ? item.name : ''"
         >
           <!-- 选中状态的光效 -->
           <div v-if="modelValue === item.id" class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none"></div>
@@ -117,10 +151,10 @@ const switchTab = (id) => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
               </svg>
             </div>
-            <span class="font-medium tracking-wide text-sm">{{ item.name }}</span>
+            <span v-show="!layoutStore.sidebarCollapsed" class="font-medium tracking-wide text-sm">{{ item.name }}</span>
           </div>
           
-          <span v-if="item.count > 0" 
+          <span v-if="item.count > 0 && !layoutStore.sidebarCollapsed" 
             class="px-2 py-0.5 text-[10px] rounded-md font-bold transition-all duration-300 relative z-10 min-w-[1.25rem] text-center"
             :class="[
               modelValue === item.id 
@@ -129,6 +163,12 @@ const switchTab = (id) => {
             ]"
           >
             {{ item.count }}
+          </span>
+          <!-- 折叠状态下的计数显示 -->
+          <span v-if="item.count > 0 && layoutStore.sidebarCollapsed"
+            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold"
+          >
+            {{ item.count > 9 ? '9+' : item.count }}
           </span>
         </button>
       </div>
@@ -145,6 +185,8 @@ const switchTab = (id) => {
         <button 
           @click="uiStore.show()"
           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
+          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
+          :title="layoutStore.sidebarCollapsed ? '系统设置' : ''"
         >
           <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,26 +194,30 @@ const switchTab = (id) => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <span class="text-sm font-medium">系统设置</span>
+          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">系统设置</span>
         </button>
 
         <!-- 帮助 -->
         <button 
           @click="showHelpModal = true"
           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
+          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
+          :title="layoutStore.sidebarCollapsed ? '使用帮助' : ''"
         >
           <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <span class="text-sm font-medium">使用帮助</span>
+          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">使用帮助</span>
         </button>
 
         <!-- 主题切换 -->
         <button 
           @click="themeStore.toggleTheme"
           class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
+          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
+          :title="layoutStore.sidebarCollapsed ? (themeStore.getThemeIcon() === 'sun' ? '浅色模式' : '深色模式') : ''"
         >
           <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg v-if="themeStore.getThemeIcon() === 'sun'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,7 +227,7 @@ const switchTab = (id) => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           </div>
-          <span class="text-sm font-medium">{{ themeStore.getThemeIcon() === 'sun' ? '浅色模式' : '深色模式' }}</span>
+          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">{{ themeStore.getThemeIcon() === 'sun' ? '浅色模式' : '深色模式' }}</span>
         </button>
       </div>
 
@@ -192,13 +238,15 @@ const switchTab = (id) => {
       <button 
         @click="emit('logout')"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
+        :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
+        :title="layoutStore.sidebarCollapsed ? '退出登录' : ''"
       >
         <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-red-500 group-hover:bg-red-500/10 transition-colors shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </div>
-        <span class="text-sm font-medium">退出登录</span>
+        <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">退出登录</span>
       </button>
     </div>
     
