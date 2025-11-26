@@ -176,9 +176,9 @@ html.dark body::after {
   
   /* Modal Content */
   .modal-content {
-    @apply bg-white/95 dark:bg-gray-900/95;
-    @apply backdrop-blur-xl rounded-3xl;
-    @apply shadow-2xl border border-white/20 dark:border-white/10;
+    @apply bg-white dark:bg-gray-900;
+    @apply rounded-3xl;
+    @apply shadow-2xl border border-gray-200 dark:border-gray-700;
     @apply max-w-2xl w-full mx-4;
     @apply animate-scale-in;
   }

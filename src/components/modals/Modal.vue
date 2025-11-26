@@ -51,7 +51,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
         <Transition name="modal-inner">
           <div
             v-if="show"
-            class="card-modern w-full text-left flex flex-col max-h-[85vh]"
+            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full text-left flex flex-col max-h-[85vh]"
             :class="{
               'max-w-sm': size === 'sm',
               'max-w-2xl': size === '2xl',
