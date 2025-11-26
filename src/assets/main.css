@@ -88,9 +88,21 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
-  /* 背景由 App.vue 控制，移除全局 CSS 背景以避免冲突 */
-  background-color: transparent;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* 主背景渐变 - 柔和日落渐变 */
+  /* background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 50%, #e6e6fa 100%); */
+  /* 备选方案1: 更暗的日落渐变 */
+  /* background: linear-gradient(135deg, #c19a95 0%, #b08a5a 50%, #c19a95 100%); */
+  /* 备选方案2: 更暗的天空蓝渐变 */
+  background: linear-gradient(135deg, #8fb3c4 0%, #6a92af 50%, #8fb3c4 100%);
+  /* 备选方案3: 更暗的绿灰渐变 */
+  /*  background: linear-gradient(135deg, #458777 0%, #115347 50%, #458777 100%); */
+  /* 备选方案4: 更暗的清新渐变 */
+  /* background: linear-gradient(135deg, #8bc5c2 0%, #d4b4c1 50%, #8bc5c2 100%); */
+  /* 备选方案5: 更暗的蓝紫渐变 */
+  /* background: linear-gradient(135deg, #8b9afc 0%, #7c3aed 25%, #a855f7 50%, #d946ef 75%, #8b9afc 100%); */
+  background-attachment: fixed;
+  background-size: 300% 300%;
+  animation: gradientMove 25s ease infinite;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   transition: all var(--duration-normal) cubic-bezier(0.4, 0, 0.2, 1);
   overflow-x: hidden;

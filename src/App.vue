@@ -68,7 +68,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+  <div class="min-h-screen transition-colors duration-300">
     <!-- 背景装饰元素 -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
       <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/20 blur-[120px] dark:bg-purple-900/20"></div>
@@ -90,7 +90,7 @@ onMounted(() => {
     <!-- 主内容区域 -->
     <main 
       class="relative z-10 min-h-screen transition-all duration-300 flex flex-col"
-      :class="{ 'lg:pl-64': sessionState === 'loggedIn' }"
+      :class="{ 'lg:pl-72': sessionState === 'loggedIn' }"
     >
       <!-- 登录前的内容居中显示 -->
       <div v-if="sessionState !== 'loggedIn'" class="flex-grow flex items-center justify-center p-4">

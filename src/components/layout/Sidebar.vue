@@ -74,7 +74,7 @@ const switchTab = (id) => {
 </script>
 
 <template>
-  <aside class="fixed inset-y-0 left-0 z-50 w-72 bg-[#0f172a] text-slate-300 border-r border-slate-800/50 flex flex-col shadow-2xl transition-transform duration-300 transform lg:translate-x-0"
+  <aside class="fixed inset-y-0 left-0 z-50 w-72 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col shadow-2xl transition-transform duration-300 transform lg:translate-x-0"
          :class="{ '-translate-x-full': !isLoggedIn }">
     
     <!-- 顶部 Logo 区域 -->
@@ -89,8 +89,8 @@ const switchTab = (id) => {
           </svg>
         </div>
         <div class="flex flex-col">
-          <h1 class="text-lg font-bold text-white tracking-wide leading-tight">Sub-One</h1>
-          <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase leading-tight">Manager</p>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide leading-tight">Sub-One</h1>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase leading-tight">Manager</p>
         </div>
       </div>
     </div>
@@ -104,7 +104,7 @@ const switchTab = (id) => {
           :class="[
             modelValue === item.id 
               ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 text-white shadow-md shadow-indigo-900/30 ring-1 ring-indigo-500/40' 
-              : 'hover:bg-slate-800/60 hover:text-white text-slate-400'
+              : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400'
           ]"
         >
           <!-- 选中状态的光效 -->
@@ -112,7 +112,7 @@ const switchTab = (id) => {
 
           <div class="flex items-center gap-3 relative z-10">
             <div class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-300 shrink-0" 
-                 :class="[modelValue === item.id ? 'bg-white/20 text-white' : 'bg-slate-800/80 text-slate-500 group-hover:text-indigo-400 group-hover:bg-slate-700']">
+                 :class="[modelValue === item.id ? 'bg-white/20 text-white' : 'bg-slate-200/50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700']">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
               </svg>
@@ -125,7 +125,7 @@ const switchTab = (id) => {
             :class="[
               modelValue === item.id 
                 ? 'bg-white/20 text-white shadow-sm' 
-                : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300'
+                : 'bg-slate-200/50 dark:bg-slate-800 text-slate-500 dark:text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-700 dark:group-hover:text-slate-300'
             ]"
           >
             {{ item.count }}
@@ -135,16 +135,16 @@ const switchTab = (id) => {
     </nav>
 
     <!-- 底部工具栏 -->
-    <div class="p-3 mx-3 mb-4 rounded-2xl bg-slate-800/20 border border-slate-700/30 backdrop-blur-sm flex flex-col gap-1 shrink-0">
+    <div class="p-3 mx-3 mb-4 rounded-2xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/30 backdrop-blur-sm flex flex-col gap-1 shrink-0">
       
       <!-- 工具按钮组 -->
       <div class="grid grid-cols-1 gap-1">
         <!-- 设置 -->
         <button 
           @click="uiStore.show()"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200 group"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
         >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800/50 text-slate-500 group-hover:text-blue-400 group-hover:bg-slate-700 transition-colors shrink-0">
+          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-.1.756-2.924-1.756-3.35 0a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -156,9 +156,9 @@ const switchTab = (id) => {
         <!-- 帮助 -->
         <button 
           @click="showHelpModal = true"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200 group"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
         >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800/50 text-slate-500 group-hover:text-emerald-400 group-hover:bg-slate-700 transition-colors shrink-0">
+          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -169,9 +169,9 @@ const switchTab = (id) => {
         <!-- 主题切换 -->
         <button 
           @click="themeStore.toggleTheme"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-200 group"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
         >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800/50 text-slate-500 group-hover:text-yellow-400 group-hover:bg-slate-700 transition-colors shrink-0">
+          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
             <svg v-if="themeStore.getThemeIcon() === 'sun'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
@@ -184,14 +184,14 @@ const switchTab = (id) => {
       </div>
 
       <!-- 分割线 -->
-      <div class="h-px bg-slate-700/50 my-1 mx-2"></div>
+      <div class="h-px bg-slate-200/50 dark:bg-slate-700/50 my-1 mx-2"></div>
 
       <!-- 退出登录 -->
       <button 
         @click="emit('logout')"
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
       >
-        <div class="w-7 h-7 flex items-center justify-center rounded-md bg-slate-800/50 text-slate-500 group-hover:text-red-500 group-hover:bg-red-500/10 transition-colors shrink-0">
+        <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-red-500 group-hover:bg-red-500/10 transition-colors shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
