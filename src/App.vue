@@ -13,6 +13,7 @@ import Toast from './components/Toast.vue';
 import Footer from './components/layout/Footer.vue';
 
 const SettingsModal = defineAsyncComponent(() => import('./components/modals/SettingsModal.vue'));
+const HelpModal = defineAsyncComponent(() => import('./components/modals/HelpModal.vue'));
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
@@ -44,13 +45,14 @@ const activeTab = ref('subscriptions');
 
 // 模态框状态
 const showSettingsModal = ref(false);
+const showHelpModal = ref(false);
 
 const openSettings = () => {
   showSettingsModal.value = true;
 };
 
 const openHelp = () => {
-  window.open('https://github.com/qwer-search/Sub-One', '_blank');
+  showHelpModal.value = true;
 };
 
 // 优化：预编译正则表达式，提升性能
@@ -213,6 +215,9 @@ onMounted(() => {
     
     <!-- Settings Modal -->
     <SettingsModal v-if="showSettingsModal" v-model:show="showSettingsModal" />
+    
+    <!-- Help Modal -->
+    <HelpModal v-if="showHelpModal" v-model:show="showHelpModal" />
   </div>
 </template>
 
@@ -417,75 +422,6 @@ html.dark .quick-action-btn:hover {
   
   .main-content-full {
     margin-left: 0;
-  }
-  
-  .content-wrapper {
-    padding: 1.5rem;
-  }
-  
-  .page-title {
-    font-size: 1.75rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .content-wrapper {
-    padding: 1rem;
-  }
-  
-  .page-title {
-    font-size: 1.5rem;
-  }
-  
-  .page-description {
-    font-size: 0.8125rem;
-  }
-  
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .header-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-}
-
-/* ==================== Animations ==================== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
   }
 }
 </style>
