@@ -12,9 +12,7 @@ const currentYear = computed(() => new Date().getFullYear());
     
     <div class="relative z-10">
       <div class="flex items-center justify-center space-x-4 mb-4">
-        <div class="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
-        <div class="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"></div>
-        <div class="w-8 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-600 to-transparent"></div>
+        <!-- 装饰性分割线已移除 -->
       </div>
       
       <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">
