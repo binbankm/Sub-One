@@ -148,7 +148,7 @@ onMounted(() => {
       </div>
 
       <!-- Footer -->
-      <Footer v-if="sessionState === 'loggedIn'" class="mt-auto border-t border-gray-200 dark:border-gray-800/50" />
+      <Footer v-if="sessionState === 'loggedIn'" class="mt-auto" />
     </main>
 
     <!-- 全局 Toast -->
