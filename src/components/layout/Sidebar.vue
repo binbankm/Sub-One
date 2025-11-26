@@ -395,19 +395,19 @@ const toggleCollapse = () => {
   width: 280px;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 40;
   overflow: hidden;
 }
 
 html.dark .sidebar {
-  background: rgba(15, 23, 42, 0.85);
-  border-right-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.97);
+  border-right-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
 }
 

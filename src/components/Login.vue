@@ -220,7 +220,7 @@ const handleKeyPress = (e) => {
   width: 100%;
   max-width: 450px;
   padding: 3rem;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border-radius: 2rem;
@@ -234,7 +234,7 @@ const handleKeyPress = (e) => {
 }
 
 html.dark .login-card {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.97);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 
     0 25px 50px -12px rgba(0, 0, 0, 0.5),
