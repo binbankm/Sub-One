@@ -37,12 +37,26 @@ const hasWhitespace = computed(() => {
   return false;
 });    
 
+const defaultSettings = {
+  FileName: 'Sub-One',
+  mytoken: 'auto',
+  profileToken: '',
+  subConverter: 'url.v1.mk',
+  subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full.ini',
+  BotToken: '',
+  ChatID: '',
+  prependSubName: true
+};
+
 const loadSettings = async () => {
   isLoading.value = true;
   try {
-    settings.value = await fetchSettings();
+    const fetchedSettings = await fetchSettings();
+    // 合并默认值和获取到的设置，确保所有字段都有值
+    settings.value = { ...defaultSettings, ...fetchedSettings };
   } catch (error) {
-    showToast('加载设置失败', 'error');
+    showToast('加载设置失败，使用默认设置', 'warning');
+    settings.value = { ...defaultSettings };
   } finally {
     isLoading.value = false;
   }
