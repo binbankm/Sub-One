@@ -42,11 +42,11 @@
   --gradient-ocean: linear-gradient(135deg, hsl(189, 94%, 43%) 0%, hsl(243, 75%, 59%) 50%, hsl(280, 72%, 54%) 100%);
   --gradient-aurora: linear-gradient(135deg, hsl(280, 84%, 65%) 0%, hsl(243, 75%, 59%) 33%, hsl(189, 94%, 43%) 66%, hsl(142, 71%, 45%) 100%);
   
-  /* Surface Colors - Glassmorphism */
-  --surface-glass: rgba(255, 255, 255, 0.98);
-  --surface-glass-hover: rgba(255, 255, 255, 1);
-  --surface-glass-dark: rgba(15, 23, 42, 0.98);
-  --surface-glass-dark-hover: rgba(15, 23, 42, 1);
+  /* Surface Colors - No Transparency */
+  --surface-glass: rgb(255, 255, 255);
+  --surface-glass-hover: rgb(255, 255, 255);
+  --surface-glass-dark: rgb(15, 23, 42);
+  --surface-glass-dark-hover: rgb(15, 23, 42);
   
   /* Shadows - Layered & Sophisticated */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

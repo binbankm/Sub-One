@@ -118,8 +118,8 @@ html.dark body::after {
   /* Content Card */
   .content-card {
     @apply rounded-2xl p-6 transition-all duration-300;
-    @apply bg-white/98 dark:bg-gray-800/98;
-    @apply backdrop-blur-xl border border-white/40 dark:border-white/25;
+    @apply bg-white dark:bg-gray-800;
+    @apply backdrop-blur-xl border border-gray-300 dark:border-gray-700;
     @apply shadow-xl hover:shadow-2xl;
     @apply hover:-translate-y-1;
   }
