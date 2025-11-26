@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, defineAsyncComponent } from 'vue';
 import { useSessionStore } from './stores/session.js';
 import { useToastStore } from './stores/toast.js';
 import { useThemeStore } from './stores/theme.js';
@@ -11,6 +11,8 @@ import Login from './components/Login.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import Toast from './components/Toast.vue';
 import Footer from './components/layout/Footer.vue';
+
+const SettingsModal = defineAsyncComponent(() => import('./components/modals/SettingsModal.vue'));
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
@@ -39,6 +41,17 @@ const layoutStore = useLayoutStore();
 
 // 标签页状态管理
 const activeTab = ref('subscriptions');
+
+// 模态框状态
+const showSettingsModal = ref(false);
+
+const openSettings = () => {
+  showSettingsModal.value = true;
+};
+
+const openHelp = () => {
+  window.open('https://github.com/qwer-search/Sub-One', '_blank');
+};
 
 // 优化：预编译正则表达式，提升性能
 const HTTP_REGEX = /^https?:\/\//;
@@ -128,6 +141,8 @@ onMounted(() => {
         :generator-count="generatorCount"
         :is-logged-in="sessionState === 'loggedIn'"
         @logout="logout"
+        @settings="openSettings"
+        @help="openHelp"
       />
 
       <!-- Main Content -->
@@ -195,6 +210,9 @@ onMounted(() => {
 
     <!-- Global Toast -->
     <Toast />
+    
+    <!-- Settings Modal -->
+    <SettingsModal v-if="showSettingsModal" v-model:show="showSettingsModal" />
   </div>
 </template>
 

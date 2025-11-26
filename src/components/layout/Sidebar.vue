@@ -12,7 +12,7 @@ const props = defineProps({
   isLoggedIn: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['update:modelValue', 'logout']);
+const emit = defineEmits(['update:modelValue', 'logout', 'help', 'settings']);
 
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
@@ -73,6 +73,14 @@ const utilityItems = computed(() => [
 ]);
 
 const selectTab = (tabId) => {
+  if (tabId === 'help') {
+    emit('help');
+    return;
+  }
+  if (tabId === 'settings') {
+    emit('settings');
+    return;
+  }
   emit('update:modelValue', tabId);
 };
 
