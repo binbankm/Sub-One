@@ -136,7 +136,7 @@ const trafficColorClass = computed(() => {
 
 <template>
   <div 
-    class="card-modern-enhanced group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[280px] sm:min-h-[240px] shadow-modern-enhanced hover:shadow-modern-enhanced-dark"
+    class="card-modern-enhanced group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[280px] sm:min-h-[240px] shadow-modern-enhanced hover:shadow-modern-enhanced-dark border border-gray-300 dark:border-gray-700"
     :class="{ 'opacity-50': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
     @mousedown="handleMouseDown"
   >
