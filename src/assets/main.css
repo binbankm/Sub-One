@@ -992,65 +992,7 @@ button:active {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* 现代化导航样式 */
-.nav-modern {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all var(--duration-normal);
-}
 
-.nav-modern:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.dark .nav-modern {
-  background: rgba(30, 41, 59, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .nav-modern:hover {
-  background: rgba(30, 41, 59, 0.9);
-}
-
-/* 状态指示器 */
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: var(--spacing-sm);
-}
-
-.status-online {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-}
-
-.status-offline {
-  background: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-}
-
-.status-warning {
-  background: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-}
-
-/* 加载动画 */
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(102, 126, 234, 0.3);
-  border-top: 2px solid var(--primary-500);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 /* 工具提示 */
 .tooltip {
@@ -1251,59 +1193,7 @@ button:active {
 }
 
 /* Dashboard 组件专用样式 */
-.btn-modern-enhanced {
-  @apply px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 transform hover:scale-105;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
 
-.btn-modern-enhanced::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left var(--duration-slow);
-}
-
-.btn-modern-enhanced:hover::before {
-  left: 100%;
-}
-
-.btn-modern-enhanced:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: var(--shadow-xl);
-}
-
-.btn-modern-enhanced:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* 按钮变体 */
-.btn-add {
-  background: var(--gradient-success);
-  color: white;
-}
-
-.btn-update {
-  background: var(--gradient-primary);
-  color: white;
-}
-
-.btn-sort {
-  background: var(--gradient-warning);
-  color: white;
-}
-
-.btn-sort.sorting {
-  background: var(--gradient-secondary);
-  animation: pulse 2s infinite;
-}
 
 /* 状态指示器增强 */
 .status-badge {
@@ -1389,34 +1279,7 @@ button:active {
 }
 
 /* 阴影系统增强 */
-.shadow-modern-enhanced {
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-}
 
-.dark .shadow-modern-enhanced {
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -1px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-/* 渐变背景增强 */
-.bg-gradient-enhanced {
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.1) 0%, 
-    rgba(118, 75, 162, 0.1) 50%, 
-    rgba(240, 147, 251, 0.1) 100%);
-}
-
-.dark .bg-gradient-enhanced {
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.2) 0%, 
-    rgba(118, 75, 162, 0.2) 50%, 
-    rgba(240, 147, 251, 0.2) 100%);
-}
 
 /* 响应式间距系统 */
 .space-responsive {
@@ -1447,26 +1310,7 @@ button:active {
 }
 
 /* 文本渐变增强 */
-.gradient-text-enhanced {
-  background: linear-gradient(135deg, 
-    #667eea 0%, 
-    #764ba2 50%, 
-    #f093fb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
 
-@keyframes gradientShift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
 
 /* 背景装饰效果 - 美化升级版 */
 .background-decoration {
