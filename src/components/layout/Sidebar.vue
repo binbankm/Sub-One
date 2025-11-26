@@ -135,7 +135,9 @@ const switchTab = (id) => {
     </nav>
 
     <!-- 底部工具栏 -->
-    <div class="p-3 mx-3 mb-4 rounded-2xl bg-slate-100/50 dark:bg-slate-800/20 border border-slate-200/50 dark:border-slate-700/30 backdrop-blur-sm flex flex-col gap-1 shrink-0">
+    <div class="px-3 mb-4 flex flex-col gap-1 shrink-0">
+      <!-- 分割线 -->
+      <div class="h-px bg-gradient-to-r from-transparent via-slate-200/50 dark:via-slate-700/50 to-transparent my-2"></div>
       
       <!-- 工具按钮组 -->
       <div class="grid grid-cols-1 gap-1">
