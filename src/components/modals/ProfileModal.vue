@@ -287,7 +287,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                   type="text"
                   v-model="subscriptionSearchTerm"
                   placeholder="搜索订阅..."
-                  class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-gray-700 rounded-full text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  class="search-input-unified"
                 />
                 <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
@@ -334,7 +334,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                   type="text"
                   v-model="nodeSearchTerm"
                   placeholder="搜索节点..."
-                  class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-indigo-200 dark:border-gray-700 rounded-full text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  class="search-input-unified"
                 />
                 <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
