@@ -32,7 +32,7 @@ const totalNodeCount = computed(() => {
 
 <template>
   <div
-    class="bg-white/95 dark:bg-gray-800/95 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col shadow-sm hover:shadow-lg min-h-[140px]"
+    class="bg-white/98 dark:bg-gray-800/98 rounded-2xl border border-gray-200/70 dark:border-gray-700/70 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col shadow-sm hover:shadow-lg min-h-[140px]"
     :class="{ 'opacity-50': !profile.enabled }"
   >
     <!-- 装饰性背景 -->

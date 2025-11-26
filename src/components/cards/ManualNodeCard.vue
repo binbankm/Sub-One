@@ -68,7 +68,7 @@ const protocolStyle = computed(() => {
 
 <template>
   <div 
-    class="bg-white/95 dark:bg-gray-800/95 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-between gap-3 shadow-sm hover:shadow-lg"
+    class="bg-white/98 dark:bg-gray-800/98 rounded-2xl border border-gray-200/70 dark:border-gray-700/70 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-between gap-3 shadow-sm hover:shadow-lg"
     :class="{ 'opacity-50': !node.enabled }"
   >
     <!-- 装饰性背景 -->

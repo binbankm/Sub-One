@@ -395,7 +395,7 @@ const toggleCollapse = () => {
   width: 280px;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border-right: 1px solid rgba(0, 0, 0, 0.12);
@@ -406,7 +406,7 @@ const toggleCollapse = () => {
 }
 
 html.dark .sidebar {
-  background: rgba(15, 23, 42, 0.97);
+  background: rgba(15, 23, 42, 0.98);
   border-right-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
 }
