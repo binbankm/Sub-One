@@ -1578,3 +1578,270 @@ button:active {
   }
 }
 
+/* ===== 完善的动画系统 ===== */
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+/* 缩放动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--ease-out);
+}
+
+/* 旋转动画 */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-rotate {
+  animation: rotate var(--duration-slowest) linear infinite;
+}
+
+/* 闪烁动画 */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ===== 优化的工具类 ===== */
+
+/* 文本溢出 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-clip-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clip-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 禁用选择 */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 快速过渡 */
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.transition-normal {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.transition-slow {
+  transition: all var(--duration-slow) var(--ease-out);
+}
+
+/* ===== 增强的卡片变体 ===== */
+
+/* 卡片内容区域 */
+.card-content {
+  @apply p-6;
+}
+
+.card-header {
+  @apply pb-4 border-b border-gray-200 dark:border-gray-700;
+}
+
+.card-footer {
+  @apply pt-4 border-t border-gray-200 dark:border-gray-700;
+}
+
+/* ===== 增强的按钮变体 ===== */
+
+/* 按钮组 */
+.btn-group {
+  @apply flex gap-2;
+}
+
+.btn-group > * {
+  @apply flex-1;
+}
+
+/* 图标按钮 */
+.btn-icon {
+  @apply p-2 rounded-lg transition-all duration-200;
+}
+
+.btn-icon:hover {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+/* ===== 优化的表单元素 ===== */
+
+/* 复选框和单选框 */
+.checkbox-modern,
+.radio-modern {
+  @apply w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600;
+  @apply checked:bg-indigo-500 checked:border-indigo-500;
+  @apply focus:ring-2 focus:ring-indigo-500/30 focus:ring-offset-0;
+  @apply transition-all duration-200;
+}
+
+.radio-modern {
+  @apply rounded-full;
+}
+
+/* 选择框 */
+.select-modern {
+  @apply px-4 py-3 rounded-xl border transition-all;
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 2px 6px -2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.select-modern:focus {
+  outline: none;
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 
+    0 4px 12px -4px rgba(102, 126, 234, 0.15),
+    0 0 0 3px rgba(102, 126, 234, 0.08);
+}
+
+.dark .select-modern {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+/* ===== 状态类 ===== */
+
+/* 加载状态 */
+.is-loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+/* 禁用状态 */
+.is-disabled {
+  @apply opacity-40 pointer-events-none cursor-not-allowed;
+}
+
+/* 激活状态 */
+.is-active {
+  @apply ring-2 ring-indigo-500/50;
+}
+
+/* ===== 响应式优化 ===== */
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  .card-modern-enhanced {
+    @apply p-4 rounded-2xl;
+  }
+  
+  .btn-modern-enhanced {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  .container-optimized {
+    @apply px-4;
+  }
+}
+
+/* 平板优化 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .card-modern-enhanced {
+    @apply p-6 rounded-2xl;
+  }
+}
+
+/* ===== 辅助功能优化 ===== */
+
+/* 焦点可见性 */
+.focus-visible:focus-visible {
+  @apply outline-none ring-2 ring-indigo-500/50;
+}
+
+/* 跳过导航链接 */
+.skip-to-content {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4;
+  @apply px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg;
+  @apply z-50;
+}
+
+/* ===== 打印优化 ===== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  .card-modern,
+  .card-modern-enhanced {
+    border: 1px solid #000;
+    page-break-inside: avoid;
+  }
+}
+
+/* ===== 性能优化 ===== */
+
+/* GPU 加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 减少重绘 */
+.contain-paint {
+  contain: paint;
+}
+
+/* ===== 主题过渡 ===== */
+
+.theme-transition * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
+}
