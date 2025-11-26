@@ -1,50 +1,64 @@
 
 /* 现代化类似OpenResty Manager的样式 - 界面美化升级版 */
 
-/* CSS 变量定义 - 提升主题一致性和维护性 */
+/* CSS 变量定义 - 现代化设计系统 */
 :root {
-  /* 主色调 - 更丰富的色彩系统 */
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-  --primary-800: #1e40af;
-  --primary-900: #1e3a8a;
+  /* 主色调 - 精心调配的色彩系统 */
+  --primary-50: #f0f9ff;
+  --primary-100: #e0f2fe;
+  --primary-200: #bae6fd;
+  --primary-300: #7dd3fc;
+  --primary-400: #38bdf8;
+  --primary-500: #0ea5e9;
+  --primary-600: #0284c7;
+  --primary-700: #0369a1;
+  --primary-800: #075985;
+  --primary-900: #0c4a6e;
   
-  /* 渐变色 - 更现代的渐变组合 */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #fa709a 100%);
-  --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
-  --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 50%, #ff9a9e 100%);
-  --gradient-dark: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
-  --gradient-light: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+  /* 渐变色 - 更柔和优雅的渐变组合 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --gradient-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-purple: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  --gradient-ocean: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --gradient-sunset: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fdfbfb 100%);
+  --gradient-forest: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
   
-  /* 阴影 - 更精致的阴影系统 */
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
-  --shadow-glow-purple: 0 0 20px rgba(147, 51, 234, 0.3);
+  /* 阴影 - 更细腻柔和的阴影系统 */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 30px -8px rgba(0, 0, 0, 0.12), 0 8px 12px -4px rgba(0, 0, 0, 0.06);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  --shadow-glow: 0 0 25px rgba(102, 126, 234, 0.25);
+  --shadow-glow-purple: 0 0 25px rgba(168, 85, 247, 0.25);
+  --shadow-glow-pink: 0 0 25px rgba(236, 72, 153, 0.25);
   
-  /* 圆角 - 更现代的圆角系统 */
+  /* 圆角 - 更优雅的圆角系统 */
+  --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+  --radius-full: 9999px;
   
-  /* 动画时长 - 更流畅的动画 */
+  /* 动画时长 - 更自然的动画曲线 */
+  --duration-instant: 100ms;
   --duration-fast: 200ms;
-  --duration-normal: 350ms;
-  --duration-slow: 600ms;
-  --duration-bounce: 800ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 700ms;
+  --duration-slowest: 1000ms;
+  
+  /* 缓动函数 */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   /* 间距 - 更协调的间距系统 */
   --spacing-xs: 0.25rem;
@@ -54,14 +68,16 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
+  --spacing-4xl: 6rem;
   
-  /* 新增：边框和透明度 */
-  --border-light: 1px solid rgba(255, 255, 255, 0.1);
-  --border-medium: 1px solid rgba(255, 255, 255, 0.2);
-  --border-strong: 1px solid rgba(255, 255, 255, 0.3);
-  --bg-transparent: rgba(255, 255, 255, 0.05);
-  --bg-semi: rgba(255, 255, 255, 0.1);
-  --bg-opaque: rgba(255, 255, 255, 0.15);
+  /* 边框和透明度 */
+  --border-light: 1px solid rgba(0, 0, 0, 0.08);
+  --border-medium: 1px solid rgba(0, 0, 0, 0.12);
+  --border-strong: 1px solid rgba(0, 0, 0, 0.16);
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --bg-glass-dark: rgba(0, 0, 0, 0.3);
+  --backdrop-blur: blur(20px);
+  --backdrop-blur-heavy: blur(40px);
 }
 
 /* 暗黑模式变量 */
@@ -88,18 +104,18 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
-  /* 主背景渐变 - 柔和日落渐变 */
-  /* background: linear-gradient(135deg, #e6e6fa 0%, #d8bfd8 50%, #e6e6fa 100%); */
-  /* 备选方案1: 更暗的日落渐变 */
-  /* background: linear-gradient(135deg, #c19a95 0%, #b08a5a 50%, #c19a95 100%); */
-  /* 备选方案2: 更暗的天空蓝渐变 */
-  background: linear-gradient(135deg, #8fb3c4 0%, #6a92af 50%, #8fb3c4 100%);
-  /* 备选方案3: 更暗的绿灰渐变 */
-  /*  background: linear-gradient(135deg, #458777 0%, #115347 50%, #458777 100%); */
-  /* 备选方案4: 更暗的清新渐变 */
-  /* background: linear-gradient(135deg, #8bc5c2 0%, #d4b4c1 50%, #8bc5c2 100%); */
-  /* 备选方案5: 更暗的蓝紫渐变 */
-  /* background: linear-gradient(135deg, #8b9afc 0%, #7c3aed 25%, #a855f7 50%, #d946ef 75%, #8b9afc 100%); */
+  /* 主背景渐变 - 现代优雅的渐变 */
+  background: linear-gradient(135deg, 
+    #e0f2fe 0%,    /* 淡蓝 */
+    #ddd6fe 25%,   /* 淡紫 */
+    #fce7f3 50%,   /* 淡粉 */
+    #ddd6fe 75%,   /* 淡紫 */
+    #e0f2fe 100%   /* 淡蓝 */
+  );
+  /* 备选方案：柔和薰衣草渐变 */
+  /* background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 25%, #e9d5ff 50%, #f3e8ff 75%, #faf5ff 100%); */
+  /* 备选方案：天空渐变 */
+  /* background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%); */
   background-attachment: fixed;
   background-size: 300% 300%;
   animation: gradientMove 25s ease infinite;
@@ -213,17 +229,23 @@ body {
   background: var(--gradient-secondary);
 }
 
-/* 基础按钮样式 */
+/* 基础按钮样式 - 现代微动效设计 */
 .btn-modern {
-  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95;
+  @apply px-6 py-3 rounded-xl font-medium transition-all;
   background: rgba(255, 255, 255, 0.9);
   color: var(--primary-700);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 12px -4px rgba(0, 0, 0, 0.1),
+    0 2px 6px -2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
 }
 
 .btn-modern::before {
@@ -233,8 +255,8 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left var(--duration-slow);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left var(--duration-slow) var(--ease-out);
 }
 
 .btn-modern:hover::before {
@@ -242,36 +264,56 @@ body {
 }
 
 .btn-modern:hover {
-  box-shadow: var(--shadow-2xl);
-  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 12px 24px -8px rgba(0, 0, 0, 0.15),
+    0 4px 12px -4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 .btn-modern:active {
   transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 2px 8px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .dark .btn-modern {
-  background: rgba(30, 41, 59, 0.9);
+  background: rgba(30, 41, 59, 0.8);
   color: var(--primary-300);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 12px -4px rgba(0, 0, 0, 0.3),
+    0 2px 6px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .dark .btn-modern:hover {
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(30, 41, 59, 0.9);
   color: var(--primary-100);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 
+    0 12px 24px -8px rgba(0, 0, 0, 0.5),
+    0 4px 12px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* 基础卡片样式 */
+/* 基础卡片样式 - 现代玻璃态设计 */
 .card-modern {
-  @apply rounded-2xl p-6 transition-all duration-300;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
+  @apply rounded-2xl p-6 transition-all;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 24px -8px rgba(0, 0, 0, 0.08),
+    0 2px 6px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   position: relative;
   overflow: hidden;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
 }
 
 .card-modern::before {
@@ -280,10 +322,10 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 2px;
   background: var(--gradient-primary);
   opacity: 0;
-  transition: opacity var(--duration-normal);
+  transition: opacity var(--duration-normal) var(--ease-out);
 }
 
 .card-modern:hover::before {
@@ -291,23 +333,33 @@ body {
 }
 
 .dark .card-modern {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 24px -8px rgba(0, 0, 0, 0.3),
+    0 2px 6px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .card-modern:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-2xl);
-  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px) scale(1.01);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 
+    0 20px 40px -12px rgba(0, 0, 0, 0.12),
+    0 8px 16px -4px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.8);
 }
 
 .dark .card-modern:hover {
-  background: rgba(30, 41, 59, 0.9);
-  box-shadow: var(--shadow-2xl);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 
+    0 20px 40px -12px rgba(0, 0, 0, 0.5),
+    0 8px 16px -4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* 玻璃态效果 */
@@ -376,16 +428,21 @@ body {
   color: #f1f5f9;
 }
 
-/* 输入框样式 */
+/* 输入框样式 - 现代细腻设计 */
 .input-modern {
-  @apply px-4 py-3 rounded-xl border transition-all duration-300;
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.95);
+  @apply px-4 py-3 rounded-xl border transition-all;
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--primary-900);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(20px);
+  box-shadow: 
+    0 2px 6px -2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
 }
 
 .input-modern::before {
@@ -396,13 +453,16 @@ body {
   width: 0;
   height: 2px;
   background: var(--gradient-primary);
-  transition: width var(--duration-normal) cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width var(--duration-normal) var(--ease-out);
 }
 
 .input-modern:focus {
   outline: none;
-  border-color: transparent;
-  box-shadow: var(--shadow-md);
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 
+    0 4px 12px -4px rgba(102, 126, 234, 0.15),
+    0 0 0 3px rgba(102, 126, 234, 0.08),
+    inset 0 1px 2px rgba(0, 0, 0, 0.02);
   background: rgba(255, 255, 255, 1);
 }
 
@@ -411,23 +471,29 @@ body {
 }
 
 .dark .input-modern {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.8);
   color: var(--primary-100);
+  box-shadow: 
+    0 2px 6px -2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .dark .input-modern:focus {
-  background: rgba(30, 41, 59, 1);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(102, 126, 234, 0.4);
+  box-shadow: 
+    0 4px 12px -4px rgba(102, 126, 234, 0.25),
+    0 0 0 3px rgba(102, 126, 234, 0.15),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.dark .input-modern {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
+/* 聚焦状态增强 */
 .input-modern:focus {
-  @apply outline-none ring-2 ring-indigo-500 border-indigo-500;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  @apply outline-none ring-2 ring-indigo-500/30 border-indigo-500/50;
+  box-shadow: 
+    0 4px 16px -4px rgba(99, 102, 241, 0.2),
+    0 0 0 3px rgba(99, 102, 241, 0.08);
 }
 
 /* 渐变文字效果 */
@@ -639,16 +705,19 @@ button:active {
     0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
-/* 增强的按钮样式 */
+/* 增强的按钮样式 - 现代渐变效果 */
 .btn-modern-enhanced {
-  @apply px-4 py-2 rounded-xl font-semibold transition-all duration-300 ease-out;
+  @apply px-4 py-2 rounded-xl font-semibold transition-all;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow:
-    0 4px 15px rgba(102, 126, 234, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
+    0 6px 16px -4px rgba(102, 126, 234, 0.4),
+    0 2px 6px -1px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-out);
 }
 
 .btn-modern-enhanced::before {
@@ -658,8 +727,8 @@ button:active {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left var(--duration-slow) var(--ease-out);
 }
 
 .btn-modern-enhanced:hover::before {
@@ -667,81 +736,92 @@ button:active {
 }
 
 .btn-modern-enhanced:hover {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px);
   box-shadow: 
-    0 8px 25px rgba(102, 126, 234, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.3);
+    0 10px 24px -6px rgba(102, 126, 234, 0.6),
+    0 4px 12px -2px rgba(102, 126, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* 特殊按钮样式 */
+/* 特殊按钮样式 - 现代配色 */
 .btn-add {
   background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
   box-shadow: 
-    0 6px 20px rgba(6, 182, 212, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+    0 6px 16px -4px rgba(6, 182, 212, 0.5),
+    0 2px 6px -1px rgba(6, 182, 212, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-add:hover {
   background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%) !important;
   box-shadow: 
-    0 8px 25px rgba(6, 182, 212, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+    0 10px 24px -6px rgba(6, 182, 212, 0.7),
+    0 4px 12px -2px rgba(6, 182, 212, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .btn-update {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
   box-shadow: 
-    0 6px 20px rgba(245, 158, 11, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+    0 6px 16px -4px rgba(245, 158, 11, 0.5),
+    0 2px 6px -1px rgba(245, 158, 11, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-update:hover {
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
   box-shadow: 
-    0 8px 25px rgba(245, 158, 11, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+    0 10px 24px -6px rgba(245, 158, 11, 0.7),
+    0 4px 12px -2px rgba(245, 158, 11, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .btn-import {
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
   box-shadow: 
-    0 6px 20px rgba(139, 92, 246, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+    0 6px 16px -4px rgba(139, 92, 246, 0.5),
+    0 2px 6px -1px rgba(139, 92, 246, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-import:hover {
   background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%) !important;
   box-shadow: 
-    0 8px 25px rgba(139, 92, 246, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+    0 10px 24px -6px rgba(139, 92, 246, 0.7),
+    0 4px 12px -2px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .btn-sort {
   background: linear-gradient(135deg, #ec4899 0%, #be185d 100%) !important;
   box-shadow: 
-    0 6px 20px rgba(236, 72, 153, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+    0 6px 16px -4px rgba(236, 72, 153, 0.5),
+    0 2px 6px -1px rgba(236, 72, 153, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 .btn-sort:hover {
   background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%) !important;
   box-shadow: 
-    0 8px 25px rgba(236, 72, 153, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.5) !important;
+    0 10px 24px -6px rgba(236, 72, 153, 0.7),
+    0 4px 12px -2px rgba(236, 72, 153, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
 }
 
 .btn-sort.sorting {
   background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
   box-shadow: 
-    0 8px 25px rgba(107, 114, 128, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    0 6px 16px -4px rgba(107, 114, 128, 0.4),
+    0 2px 6px -1px rgba(107, 114, 128, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 }
 
 .btn-sort.sorting:hover {
   background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
   box-shadow: 
-    0 12px 35px rgba(107, 114, 128, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+    0 10px 24px -6px rgba(107, 114, 128, 0.6),
+    0 4px 12px -2px rgba(107, 114, 128, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
 /* 增强的输入框样式 */
