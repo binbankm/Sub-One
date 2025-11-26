@@ -11,7 +11,6 @@ import Login from './components/Login.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import Toast from './components/Toast.vue';
 import Footer from './components/layout/Footer.vue';
-import Breadcrumb from './components/layout/Breadcrumb.vue';
 
 const sessionStore = useSessionStore();
 const { sessionState, initialData } = storeToRefs(sessionStore);
@@ -61,6 +60,32 @@ const generatorCount = computed(() => {
   return initialData.value?.profiles?.length || 0;
 });
 
+const tabInfo = computed(() => {
+  const tabs = {
+    subscriptions: {
+      title: '订阅管理',
+      description: '管理您的所有机场订阅链接',
+      icon: 'subscription'
+    },
+    profiles: {
+      title: '订阅组',
+      description: '创建和管理订阅组合',
+      icon: 'profile'
+    },
+    generator: {
+      title: '链接生成',
+      description: '生成适用于不同客户端的订阅链接',
+      icon: 'link'
+    },
+    manual: {
+      title: '手动节点',
+      description: '添加和管理单个节点链接',
+      icon: 'node'
+    }
+  };
+  return tabs[activeTab.value] || tabs.subscriptions;
+});
+
 onMounted(() => {
   // 初始化主题
   themeStore.initTheme();
@@ -74,109 +99,375 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen transition-colors duration-300">
-    <!-- 背景装饰元素 -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-400/20 blur-[120px] dark:bg-purple-900/20"></div>
-      <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-900/20"></div>
-    </div>
-
-    <!-- 侧边栏 (仅在登录后显示) -->
-    <Sidebar 
-      v-if="sessionState === 'loggedIn'"
-      v-model="activeTab"
-      :subscriptions-count="subscriptionsCount"
-      :profiles-count="profilesCount"
-      :manual-nodes-count="manualNodesCount"
-      :generator-count="generatorCount"
-      :is-logged-in="sessionState === 'loggedIn'"
-      @logout="logout"
-    />
-
-    <!-- 主内容区域 -->
-    <main 
-      class="relative z-10 min-h-screen transition-all duration-300 flex flex-col"
-      :class="{ [layoutStore.mainPaddingLeft]: sessionState === 'loggedIn' }"
-    >
-      <!-- 登录前的内容居中显示 -->
-      <div v-if="sessionState !== 'loggedIn'" class="flex-grow flex items-center justify-center p-4">
-        
-        <!-- 加载状态 -->
-        <div v-if="sessionState === 'loading'" class="flex flex-col items-center">
-          <div class="relative w-16 h-16 mb-6">
-            <div class="absolute inset-0 border-4 border-indigo-200/30 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
-          </div>
-          <p class="text-gray-500 dark:text-gray-400 font-medium animate-pulse">正在加载...</p>
+  <div class="app-container">
+    <!-- Login Page -->
+    <div v-if="sessionState !== 'loggedIn'" class="login-page">
+      <!-- Loading State -->
+      <div v-if="sessionState === 'loading'" class="loading-container">
+        <div class="loading-spinner-wrapper">
+          <div class="loading-spinner-outer"></div>
+          <div class="loading-spinner-inner"></div>
         </div>
-
-        <!-- 登录表单 -->
-        <div v-else class="w-full max-w-md animate-fade-in-up">
-          <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl shadow-indigo-500/30 mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Sub-One Manager</h1>
-            <p class="text-gray-500 dark:text-gray-400">请登录以管理您的订阅</p>
-          </div>
-          <Login :login="login" />
-        </div>
+        <p class="loading-text">正在加载...</p>
       </div>
 
-      <!-- 登录后的内容区域 -->
-      <div v-else class="flex-grow p-6 lg:p-10">
-        <div class="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
-          <!-- 顶部标题栏 (可选，用于显示当前页面标题) -->
-          <header class="flex items-center justify-between mb-8">
-            <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ 
-                  activeTab === 'subscriptions' ? '订阅管理' :
-                  activeTab === 'profiles' ? '订阅组' :
-                  activeTab === 'generator' ? '链接生成' : '手动节点'
-                }}
-              </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {{ 
-                  activeTab === 'subscriptions' ? '管理您的所有机场订阅链接' :
-                  activeTab === 'profiles' ? '创建和管理订阅组合' :
-                  activeTab === 'generator' ? '生成适用于不同客户端的订阅链接' : '添加和管理单个节点链接'
-                }}
-              </p>
+      <!-- Login Form -->
+      <div v-else class="login-form-container">
+        <Login :login="login" />
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div v-else class="dashboard-container">
+      <!-- Sidebar -->
+      <Sidebar 
+        v-model="activeTab"
+        :subscriptions-count="subscriptionsCount"
+        :profiles-count="profilesCount"
+        :manual-nodes-count="manualNodesCount"
+        :generator-count="generatorCount"
+        :is-logged-in="sessionState === 'loggedIn'"
+        @logout="logout"
+      />
+
+      <!-- Main Content -->
+      <main 
+        class="main-content"
+        :class="{ 'main-content-full': !layoutStore.sidebarVisible }"
+      >
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+          <!-- Page Header -->
+          <header class="page-header">
+            <div class="header-content">
+              <div class="header-text">
+                <h1 class="page-title">
+                  {{ tabInfo.title }}
+                </h1>
+                <p class="page-description">
+                  {{ tabInfo.description }}
+                </p>
+              </div>
+
+              <!-- Quick Actions (Optional) -->
+              <div class="header-actions">
+                <button class="quick-action-btn" title="刷新">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    class="w-5 h-5" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round" 
+                      stroke-width="2" 
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress Indicator (Optional) -->
+            <div class="header-progress">
+              <div class="progress-bar">
+                <div class="progress-bar-fill" style="width: 100%"></div>
+              </div>
             </div>
           </header>
 
-          <!-- 面包屑导航 -->
-          <Breadcrumb :current-page="activeTab" />
+          <!-- Dashboard Content -->
+          <div class="dashboard-content">
+            <Dashboard 
+              :data="initialData" 
+              :active-tab="activeTab" 
+              @update-data="updateInitialData" 
+            />
+          </div>
 
-          <!-- 内容组件 -->
-          <Dashboard :data="initialData" :active-tab="activeTab" @update-data="updateInitialData" />
+          <!-- Footer -->
+          <Footer class="dashboard-footer" />
         </div>
-      </div>
+      </main>
+    </div>
 
-      <!-- Footer -->
-      <Footer v-if="sessionState === 'loggedIn'" class="mt-auto" />
-    </main>
-
-    <!-- 全局 Toast -->
+    <!-- Global Toast -->
     <Toast />
   </div>
 </template>
 
-<style>
-/* 动画效果 */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
+<style scoped>
+.app-container {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ==================== Login Page ==================== */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-spinner-wrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.loading-spinner-outer,
+.loading-spinner-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner-outer {
+  border-top-color: hsl(243, 75%, 59%);
+  border-right-color: hsl(280, 72%, 54%);
+}
+
+.loading-spinner-inner {
+  border-bottom-color: hsl(189, 94%, 43%);
+  border-left-color: hsl(142, 71%, 45%);
+  animation-duration: 0.75s;
+  animation-direction: reverse;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(243, 47%, 40%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+html.dark .loading-text {
+  color: hsl(243, 87%, 70%);
+}
+
+.login-form-container {
+  width: 100%;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== Dashboard ==================== */
+.dashboard-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content-full {
+  margin-left: 80px;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ==================== Page Header ==================== */
+.page-header {
+  margin-bottom: 2rem;
+  animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.page-description {
+  font-size: 0.875rem;
+  color: hsl(243, 20%, 50%);
+  font-weight: 500;
+}
+
+html.dark .page-description {
+  color: hsl(243, 30%, 70%);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  color: hsl(243, 47%, 40%);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.quick-action-btn:hover {
+  background: white;
+  border-color: rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+html.dark .quick-action-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: hsl(243, 87%, 70%);
+}
+
+html.dark .quick-action-btn:hover {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.header-progress {
+  width: 100%;
+}
+
+/* ==================== Dashboard Content ==================== */
+.dashboard-content {
+  flex: 1;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards;
+}
+
+.dashboard-footer {
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
   }
-  50% {
-    transform: translateY(-10px);
+  
+  .main-content-full {
+    margin-left: 0;
+  }
+  
+  .content-wrapper {
+    padding: 1.5rem;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
   }
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+@media (max-width: 640px) {
+  .content-wrapper {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .page-description {
+    font-size: 0.8125rem;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ==================== Animations ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

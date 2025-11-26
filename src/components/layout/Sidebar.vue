@@ -1,275 +1,656 @@
 <script setup>
-import { computed, ref, defineAsyncComponent } from 'vue';
+import { ref, computed } from 'vue';
 import { useThemeStore } from '../../stores/theme.js';
-import { useUIStore } from '../../stores/ui.js';
 import { useLayoutStore } from '../../stores/layout.js';
 
-const HelpModal = defineAsyncComponent(() => import('../modals/HelpModal.vue'));
-
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: 'subscriptions'
-  },
-  subscriptionsCount: {
-    type: Number,
-    default: 0
-  },
-  profilesCount: {
-    type: Number,
-    default: 0
-  },
-  manualNodesCount: {
-    type: Number,
-    default: 0
-  },
-  generatorCount: {
-    type: Number,
-    default: 0
-  },
-  isLoggedIn: {
-    type: Boolean,
-    default: false
-  }
+  modelValue: { type: String, required: true },
+  subscriptionsCount: { type: Number, default: 0 },
+  profilesCount: { type: Number, default: 0 },
+  manualNodesCount: { type: Number, default: 0 },
+  generatorCount: { type: Number, default: 0 },
+  isLoggedIn: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['update:modelValue', 'logout']);
-const themeStore = useThemeStore();
-const uiStore = useUIStore();
-const layoutStore = useLayoutStore();
-const showHelpModal = ref(false);
 
-const menuItems = [
+const themeStore = useThemeStore();
+const layoutStore = useLayoutStore();
+
+const isCollapsed = ref(false);
+
+const navigationItems = computed(() => [
   {
     id: 'subscriptions',
-    name: '订阅管理',
-    icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
-    count: computed(() => props.subscriptionsCount),
-    color: 'text-blue-500'
+    label: '订阅管理',
+    icon: 'subscription',
+    count: props.subscriptionsCount,
+    gradient: 'from-indigo-500 to-purple-600',
+    description: '管理订阅源'
   },
   {
     id: 'profiles',
-    name: '订阅组',
-    icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
-    count: computed(() => props.profilesCount),
-    color: 'text-purple-500'
+    label: '订阅组',
+    icon: 'profile',
+    count: props.profilesCount,
+    gradient: 'from-purple-500 to-pink-600',
+    description: '组织订阅'
   },
   {
     id: 'generator',
-    name: '链接生成',
-    icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
-    count: computed(() => props.generatorCount),
-    color: 'text-orange-500'
+    label: '链接生成',
+    icon: 'link',
+    count: props.generatorCount,
+    gradient: 'from-cyan-500 to-blue-600',
+    description: '生成订阅链接'
   },
   {
-    id: 'nodes',
-    name: '手动节点',
-    icon: 'M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4',
-    count: computed(() => props.manualNodesCount),
-    color: 'text-green-500'
+    id: 'manual',
+    label: '手动节点',
+    icon: 'node',
+    count: props.manualNodesCount,
+    gradient: 'from-green-500 to-emerald-600',
+    description: '管理节点'
   }
-];
+]);
 
-const switchTab = (id) => {
-  emit('update:modelValue', id);
+const selectTab = (tabId) => {
+  emit('update:modelValue', tabId);
+};
+
+const handleLogout = () => {
+  emit('logout');
+};
+
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value;
+  layoutStore.toggleSidebar();
 };
 </script>
 
 <template>
-  <aside class="fixed inset-y-0 left-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl text-slate-700 dark:text-slate-300 border-r border-slate-200/50 dark:border-slate-800/50 flex flex-col shadow-2xl transition-all duration-300 transform lg:translate-x-0"
-         :class="[
-           layoutStore.sidebarCollapsed ? 'w-20' : 'w-72',
-           layoutStore.sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-         ]">
-    
-    <!-- 折叠按钮 (仅桌面端显示) -->
-    <button 
-      @click="layoutStore.toggleSidebar"
-      class="hidden lg:flex absolute -right-3 top-6 w-6 h-6 bg-white dark:bg-slate-800 rounded-full shadow-lg items-center justify-center hover:scale-110 transition-transform duration-200 z-10 border border-slate-200 dark:border-slate-700"
-      :title="layoutStore.sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
-    >
-      <svg 
-        class="h-3 w-3 text-slate-600 dark:text-slate-300 transition-transform duration-300" 
-        :class="{ 'rotate-180': layoutStore.sidebarCollapsed }"
-        fill="none" 
-        viewBox="0 0 24 24" 
-        stroke="currentColor"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
-      </svg>
-    </button>
-
-    <!-- 移动端关闭按钮 -->
-    <button 
-      @click="layoutStore.closeMobileSidebar"
-      class="lg:hidden absolute right-4 top-4 p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors"
-    >
-      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-    
-    <!-- 顶部 Logo 区域 -->
-    <div class="h-24 flex items-center px-6 relative overflow-hidden shrink-0" :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed}">
-      <!-- 背景光效 -->
-      <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
-      
-      <div class="flex items-center gap-4 relative z-10 w-full" :class="{ 'justify-center': layoutStore.sidebarCollapsed }">
-        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/20 shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+  <aside 
+    class="sidebar"
+    :class="{ 'sidebar-collapsed': isCollapsed }"
+  >
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon-wrapper">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="logo-icon" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2.5" 
+              d="M13 10V3L4 14h7v7l9-11h-7z" 
+            />
           </svg>
         </div>
-        <div v-show="!layoutStore.sidebarCollapsed" class="flex flex-col">
-          <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-wide leading-tight">Sub-One</h1>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase leading-tight">Manager</p>
-        </div>
+        
+        <transition name="fade">
+          <div v-if="!isCollapsed" class="logo-text">
+            <h1 class="logo-title gradient-text-animated">Sub-One</h1>
+            <p class="logo-subtitle">Manager</p>
+          </div>
+        </transition>
+      </div>
+
+      <!-- Theme Toggle -->
+      <div class="header-actions">
+        <button
+          class="icon-btn"
+          :title="themeStore.theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'"
+          @click="themeStore.toggleTheme"
+        >
+          <svg 
+            v-if="themeStore.theme === 'dark'" 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="w-5 h-5" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" 
+            />
+          </svg>
+          
+          <svg 
+            v-else 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="w-5 h-5" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" 
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
-    <!-- 导航菜单 -->
-    <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-      <div v-for="item in menuItems" :key="item.id">
-        <button
-          @click="switchTab(item.id)"
-          class="w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden"
-          :class="[
-            modelValue === item.id 
-              ? 'bg-gradient-to-r from-indigo-600/90 to-indigo-700/90 text-white shadow-md shadow-indigo-900/30 ring-1 ring-indigo-500/40' 
-              : 'hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400',
-            layoutStore.sidebarCollapsed && 'justify-center'
-          ]"
-          :title="layoutStore.sidebarCollapsed ? item.name : ''"
-        >
-          <!-- 选中状态的光效 -->
-          <div v-if="modelValue === item.id" class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none"></div>
-
-          <div class="flex items-center gap-3 relative z-10">
-            <div class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-300 shrink-0" 
-                 :class="[modelValue === item.id ? 'bg-white/20 text-white' : 'bg-slate-200/50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700']">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <p v-if="!isCollapsed" class="nav-section-title">主要功能</p>
+        
+        <div class="nav-items">
+          <button
+            v-for="item in navigationItems"
+            :key="item.id"
+            class="nav-item"
+            :class="{ 'nav-item-active': modelValue === item.id }"
+            :title="isCollapsed ? item.label : ''"
+            @click="selectTab(item.id)"
+          >
+            <!-- Icon -->
+            <div class="nav-item-icon" :class="`bg-gradient-to-br ${item.gradient}`">
+              <!-- Subscription Icon -->
+              <svg 
+                v-if="item.icon === 'subscription'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                class="w-5 h-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                />
+              </svg>
+              
+              <!-- Profile Icon -->
+              <svg 
+                v-else-if="item.icon === 'profile'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                class="w-5 h-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                />
+              </svg>
+              
+              <!-- Link Icon -->
+              <svg 
+                v-else-if="item.icon === 'link'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                class="w-5 h-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
+                />
+              </svg>
+              
+              <!-- Node Icon -->
+              <svg 
+                v-else-if="item.icon === 'node'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                class="w-5 h-5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round" 
+                  stroke-width="2" 
+                  d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" 
+                />
               </svg>
             </div>
-            <span v-show="!layoutStore.sidebarCollapsed" class="font-medium tracking-wide text-sm">{{ item.name }}</span>
-          </div>
-          
-          <span v-if="item.count > 0 && !layoutStore.sidebarCollapsed" 
-            class="px-2 py-0.5 text-[10px] rounded-md font-bold transition-all duration-300 relative z-10 min-w-[1.25rem] text-center"
-            :class="[
-              modelValue === item.id 
-                ? 'bg-white/20 text-white shadow-sm' 
-                : 'bg-slate-200/50 dark:bg-slate-800 text-slate-500 dark:text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-            ]"
-          >
-            {{ item.count }}
-          </span>
-          <!-- 折叠状态下的计数显示 -->
-          <span v-if="item.count > 0 && layoutStore.sidebarCollapsed"
-            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold"
-          >
-            {{ item.count > 9 ? '9+' : item.count }}
-          </span>
-        </button>
+
+            <!-- Label & Count -->
+            <transition name="fade">
+              <div v-if="!isCollapsed" class="nav-item-content">
+                <div class="nav-item-text">
+                  <span class="nav-item-label">{{ item.label }}</span>
+                  <span class="nav-item-description">{{ item.description }}</span>
+                </div>
+                
+                <div v-if="item.count > 0" class="nav-item-badge">
+                  {{ item.count }}
+                </div>
+              </div>
+            </transition>
+          </button>
+        </div>
       </div>
     </nav>
 
-    <!-- 底部工具栏 -->
-    <div class="px-3 mb-4 flex flex-col gap-1 shrink-0">
-      <!-- 分割线 -->
-      <div class="h-px bg-gradient-to-r from-transparent via-slate-200/50 dark:via-slate-700/50 to-transparent my-2"></div>
-      
-      <!-- 工具按钮组 -->
-      <div class="grid grid-cols-1 gap-1">
-        <!-- 设置 -->
-        <button 
-          @click="uiStore.show()"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
-          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
-          :title="layoutStore.sidebarCollapsed ? '系统设置' : ''"
-        >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-.1.756-2.924-1.756-3.35 0a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">系统设置</span>
-        </button>
-
-        <!-- 帮助 -->
-        <button 
-          @click="showHelpModal = true"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
-          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
-          :title="layoutStore.sidebarCollapsed ? '使用帮助' : ''"
-        >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">使用帮助</span>
-        </button>
-
-        <!-- 主题切换 -->
-        <button 
-          @click="themeStore.toggleTheme"
-          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all duration-200 group"
-          :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
-          :title="layoutStore.sidebarCollapsed ? (themeStore.getThemeIcon() === 'sun' ? '浅色模式' : '深色模式') : ''"
-        >
-          <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-yellow-500 dark:group-hover:text-yellow-400 group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors shrink-0">
-            <svg v-if="themeStore.getThemeIcon() === 'sun'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          </div>
-          <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">{{ themeStore.getThemeIcon() === 'sun' ? '浅色模式' : '深色模式' }}</span>
-        </button>
-      </div>
-
-      <!-- 分割线 -->
-      <div class="h-px bg-slate-200/50 dark:bg-slate-700/50 my-1 mx-2"></div>
-
-      <!-- 退出登录 -->
-      <button 
-        @click="emit('logout')"
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 group"
-        :class="{ 'justify-center px-2': layoutStore.sidebarCollapsed }"
-        :title="layoutStore.sidebarCollapsed ? '退出登录' : ''"
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <!-- Collapse Button -->
+      <button
+        class="collapse-btn"
+        :title="isCollapsed ? '展开侧边栏' : '收起侧边栏'"
+        @click="toggleCollapse"
       >
-        <div class="w-7 h-7 flex items-center justify-center rounded-md bg-white/50 dark:bg-slate-800/50 text-slate-500 group-hover:text-red-500 group-hover:bg-red-500/10 transition-colors shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </div>
-        <span v-show="!layoutStore.sidebarCollapsed" class="text-sm font-medium">退出登录</span>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="w-5 h-5 transition-transform duration-300"
+          :class="{ 'rotate-180': isCollapsed }"
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M11 19l-7-7 7-7m8 14l-7-7 7-7" 
+          />
+        </svg>
+        <span v-if="!isCollapsed">收起</span>
+      </button>
+
+      <!-- Logout Button -->
+      <button
+        class="logout-btn"
+        :title="isCollapsed ? '退出登录' : ''"
+        @click="handleLogout"
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="w-5 h-5" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+          />
+        </svg>
+        <span v-if="!isCollapsed">退出登录</span>
       </button>
     </div>
-    
-    <!-- 帮助模态框 -->
-    <HelpModal 
-      :show="showHelpModal" 
-      @update:show="showHelpModal = $event"
-    />
   </aside>
 </template>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 40;
+  overflow: hidden;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
+
+html.dark .sidebar {
+  background: rgba(15, 23, 42, 0.85);
+  border-right-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-collapsed {
+  width: 80px;
+}
+
+/* Header */
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+html.dark .sidebar-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.logo-icon-wrapper {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.logo-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.logo-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.logo-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: hsl(243, 20%, 50%);
+  margin-top: 0.125rem;
+}
+
+html.dark .logo-subtitle {
+  color: hsl(243, 30%, 70%);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-section {
+  margin-bottom: 2rem;
+}
+
+.nav-section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(243, 20%, 50%);
+  margin-bottom: 0.75rem;
+  padding: 0 0.75rem;
+}
+
+html.dark .nav-section-title {
+  color: hsl(243, 30%, 60%);
+}
+
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
   background: transparent;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  text-align: left;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 1rem;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nav-item:hover::before {
+  opacity: 1;
+}
+
+.nav-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-collapsed .nav-item:hover {
+  transform: translateX(0) scale(1.05);
+}
+
+.nav-item-active {
+  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+}
+
+.nav-item-active::before {
+  display: none;
+}
+
+.nav-item-active:hover {
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5);
+}
+
+.nav-item-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.nav-item-active .nav-item-icon {
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.nav-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(243, 47%, 24%);
+  transition: color 0.3s ease;
+}
+
+html.dark .nav-item-label {
+  color: hsl(243, 100%, 97%);
+}
+
+.nav-item-active .nav-item-label {
+  color: white;
+}
+
+.nav-item-description {
+  display: block;
+  font-size: 0.6875rem;
+  color: hsl(243, 20%, 50%);
+  margin-top: 0.125rem;
+}
+
+html.dark .nav-item-description {
+  color: hsl(243, 30%, 60%);
+}
+
+.nav-item-active .nav-item-description {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-item-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: hsl(243, 75%, 95%);
+  color: hsl(243, 75%, 50%);
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+html.dark .nav-item-badge {
+  background: hsl(243, 75%, 20%);
+  color: hsl(243, 75%, 70%);
+}
+
+.nav-item-active .nav-item-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 0.5rem;
+}
+
+html.dark .sidebar-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-collapsed .sidebar-footer {
+  flex-direction: column;
+}
+
+.collapse-btn,
+.logout-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapse-btn {
+  background: rgba(99, 102, 241, 0.1);
+  color: hsl(243, 75%, 50%);
+}
+
+.collapse-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+}
+
+html.dark .collapse-btn {
+  background: rgba(99, 102, 241, 0.15);
+  color: hsl(243, 87%, 70%);
+}
+
+.logout-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: hsl(0, 84%, 50%);
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: translateY(-2px);
+}
+
+html.dark .logout-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: hsl(0, 84%, 70%);
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* Mobile */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
 }
 </style>
