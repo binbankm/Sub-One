@@ -133,6 +133,62 @@ html.dark body::after {
     @apply active:translate-y-0 active:scale-95;
     @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100;
   }
+
+  /* Modern Button Base */
+  .btn-modern {
+    @apply px-4 py-2 rounded-xl font-semibold transition-all duration-300;
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 text-white;
+    @apply hover:shadow-lg hover:-translate-y-0.5 hover:from-indigo-600 hover:to-purple-700;
+    @apply active:translate-y-0 active:scale-95;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100;
+  }
+
+  /* Enhanced Button Base */
+  .btn-modern-enhanced {
+    @apply rounded-xl font-semibold transition-all duration-300 shadow-md;
+    @apply flex items-center justify-center;
+    @apply active:scale-95;
+  }
+
+  /* Add Button (Blue/Indigo) */
+  .btn-add {
+    @apply bg-gradient-to-r from-blue-500 to-indigo-600 text-white;
+    @apply hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Update Button (Green/Emerald) */
+  .btn-update {
+    @apply bg-gradient-to-r from-emerald-500 to-teal-600 text-white;
+    @apply hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Sort Button (Purple/Pink) */
+  .btn-sort {
+    @apply bg-gradient-to-r from-purple-500 to-pink-600 text-white;
+    @apply hover:from-purple-600 hover:to-pink-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
+  
+  .btn-sort.sorting {
+    @apply from-gray-500 to-gray-600;
+  }
+
+  /* Primary Button (General) */
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-500 to-purple-600 text-white;
+    @apply hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Secondary/Cancel Button */
+  .btn-secondary {
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200;
+    @apply hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md;
+  }
+
+  /* Danger Button */
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-pink-600 text-white;
+    @apply hover:from-red-600 hover:to-pink-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
   
   /* Form Input */
   .form-input {
