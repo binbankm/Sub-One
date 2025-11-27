@@ -795,9 +795,9 @@ const handleNodeDragEnd = async (evt) => {
               </div>
           </div>
           <div v-if="subsTotalPages > 1 && !isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
-              <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
-              <span class="text-gray-500 dark:text-gray-400">第 {{ subsCurrentPage }} / {{ subsTotalPages }} 页</span>
-              <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+              <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
+        <span class="mx-4 text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ subsCurrentPage }}/{{ subsTotalPages }}页</span>
+        <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
           </div>
         </div>
         <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
@@ -845,9 +845,9 @@ const handleNodeDragEnd = async (evt) => {
           />
         </div>
         <div v-if="profilesTotalPages > 1" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
-          <button @click="changeProfilesPage(profilesCurrentPage - 1)" :disabled="profilesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
-          <span class="text-gray-500 dark:text-gray-400">第 {{ profilesCurrentPage }} / {{ profilesTotalPages }} 页</span>
-          <button @click="changeProfilesPage(profilesCurrentPage + 1)" :disabled="profilesCurrentPage === profilesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+          <button @click="changeProfilesPage(profilesCurrentPage - 1)" :disabled="profilesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
+        <span class="mx-4 text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ profilesCurrentPage }}/{{ profilesTotalPages }}页</span>
+        <button @click="changeProfilesPage(profilesCurrentPage + 1)" :disabled="profilesCurrentPage === profilesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
         </div>
         <div v-if="profiles.length === 0" class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
           <div class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
@@ -1013,9 +1013,9 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <div v-if="manualNodesTotalPages > 1 && !isSortingNodes" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
-            <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">&laquo; 上一页</button>
-            <span class="text-gray-500 dark:text-gray-400">第 {{ manualNodesCurrentPage }} / {{ manualNodesTotalPages }} 页</span>
-            <button @click="changeManualNodesPage(manualNodesCurrentPage + 1)" :disabled="manualNodesCurrentPage === manualNodesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift">下一页 &raquo;</button>
+            <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
+        <span class="mx-4 text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ manualNodesCurrentPage }}/{{ manualNodesTotalPages }}页</span>
+        <button @click="changeManualNodesPage(manualNodesCurrentPage + 1)" :disabled="manualNodesCurrentPage === manualNodesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
           </div>
         </div>
         <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
