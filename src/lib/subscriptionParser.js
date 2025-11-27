@@ -37,38 +37,29 @@ export class SubscriptionParser {
     // 检查是否为Base64编码
     const cleanedContent = content.replace(this._whitespaceRegex, '');
     if (this._base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
-      methods.push({ name: 'parseBase64', fn: () => this.parseBase64(content, subscriptionName) });
+      methods.push(() => this.parseBase64(content, subscriptionName));
     }
 
     // 检查是否为YAML格式
     if (content.includes('proxies:') || content.includes('nodes:')) {
-      methods.push({ name: 'parseYAML', fn: () => this.parseYAML(content, subscriptionName) });
-      methods.push({ name: 'parseClashConfig', fn: () => this.parseClashConfig(content, subscriptionName) });
-      // 尝试容错解析（处理重复键等问题）
-      methods.push({ name: 'parseClashConfigRegex', fn: () => this.parseClashConfigRegex(content, subscriptionName) });
+      methods.push(() => this.parseYAML(content, subscriptionName));
+      methods.push(() => this.parseClashConfig(content, subscriptionName));
     }
 
     // 最后尝试纯文本解析
-    methods.push({ name: 'parsePlainText', fn: () => this.parsePlainText(content, subscriptionName) });
+    methods.push(() => this.parsePlainText(content, subscriptionName));
 
-    const errors = [];
-    for (const { name, fn } of methods) {
+    for (const method of methods) {
       try {
-        const result = fn();
+        const result = method();
         if (result && result.length > 0) {
-          console.log(`解析成功，使用 ${name} 方法，找到 ${result.length} 个节点`);
+          console.log(`解析成功，使用 ${method.name} 方法，找到 ${result.length} 个节点`);
           return result;
         }
       } catch (error) {
-        // 收集错误但不立即打印，除非所有方法都失败
-        errors.push(`${name}: ${error.message}`);
+        console.warn(`解析方法 ${method.name} 失败:`, error);
         continue;
       }
-    }
-
-    // 如果所有方法都失败了，才打印错误日志
-    if (errors.length > 0) {
-      console.warn('所有解析方法均失败:', errors);
     }
 
     return [];
@@ -140,71 +131,6 @@ export class SubscriptionParser {
       return this.parseClashProxies(parsed.proxies, subscriptionName);
     } catch (error) {
       throw new Error(`Clash配置解析失败: ${error.message}`);
-    }
-  }
-
-  /**
-   * 正则辅助解析Clash配置（容错模式）
-   */
-  parseClashConfigRegex(content, subscriptionName) {
-    const lines = content.split(this._newlineRegex);
-    const proxies = [];
-    let inProxies = false;
-
-    for (let line of lines) {
-      line = line.trim();
-
-      if (line.startsWith('proxies:')) {
-        inProxies = true;
-        continue;
-      }
-
-      if (inProxies) {
-        // 检查是否结束
-        if (line.startsWith('proxy-groups:') || line.startsWith('rules:') || line.startsWith('script:')) {
-          inProxies = false;
-          break;
-        }
-
-        // 匹配代理行
-        if (line.startsWith('-') && line.includes('{') && line.includes('}')) {
-          try {
-            // 尝试直接解析
-            const yamlLine = line.substring(1).trim();
-            const proxy = yaml.load(yamlLine);
-            if (proxy) proxies.push(proxy);
-          } catch (error) {
-            // 如果解析失败（如重复键），尝试修复
-            const fixedProxy = this.fixAndParseProxyLine(line);
-            if (fixedProxy) proxies.push(fixedProxy);
-          }
-        }
-      }
-    }
-
-    if (proxies.length === 0) {
-      throw new Error('正则解析未找到节点');
-    }
-
-    return this.parseClashProxies(proxies, subscriptionName);
-  }
-
-  /**
-   * 修复并解析有问题的代理行
-   */
-  fixAndParseProxyLine(line) {
-    try {
-      let cleanLine = line.substring(1).trim();
-
-      // 移除常见的导致重复键问题的字段
-      // 例如 hysteria2 的 ports 字段重复
-      cleanLine = cleanLine.replace(/ports:\s*[^,}]+,?/g, '');
-
-      // 再次尝试解析
-      return yaml.load(cleanLine);
-    } catch (e) {
-      console.warn('修复代理行失败:', e.message);
-      return null;
     }
   }
 
@@ -360,30 +286,9 @@ export class SubscriptionParser {
    */
   buildTrojanUrl(proxy) {
     let url = `trojan://${proxy.password}@${proxy.server}:${proxy.port}`;
-    const params = [];
 
     if (proxy.sni) {
-      params.push(`sni=${proxy.sni}`);
-    }
-
-    if (proxy['skip-cert-verify'] === true) {
-      params.push('allowInsecure=1');
-    }
-
-    if (proxy.network === 'ws') {
-      params.push('type=ws');
-      if (proxy['ws-opts']) {
-        if (proxy['ws-opts'].path) {
-          params.push(`path=${encodeURIComponent(proxy['ws-opts'].path)}`);
-        }
-        if (proxy['ws-opts'].headers && proxy['ws-opts'].headers.Host) {
-          params.push(`host=${encodeURIComponent(proxy['ws-opts'].headers.Host)}`);
-        }
-      }
-    }
-
-    if (params.length > 0) {
-      url += `?${params.join('&')}`;
+      url += `?sni=${proxy.sni}`;
     }
 
     if (proxy.name) {
