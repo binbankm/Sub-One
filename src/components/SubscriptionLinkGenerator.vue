@@ -102,12 +102,23 @@ onUnmounted(() => {
         <!-- 选择订阅内容 -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
-          <select v-model="selectedId" class="w-full px-4 py-3 text-sm bg-white/60 dark:bg-gray-800/75 border border-gray-300/50 dark:border-gray-700/50 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
-            <option value="default">默认订阅 (全部启用节点)</option>
-            <option v-for="profile in profiles" :key="profile.id" :value="profile.customId || profile.id">
-              {{ profile.name }}
-            </option>
-          </select>
+          <div class="relative">
+            <select v-model="selectedId" class="w-full px-4 py-3 text-sm bg-white/60 dark:bg-gray-800/75 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 appearance-none cursor-pointer">
+              <option value="default" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">默认订阅 (全部启用节点)</option>
+              <option v-for="profile in profiles" :key="profile.id" :value="profile.customId || profile.id" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">
+                {{ profile.name }}
+                <span v-if="profile.nodeCount !== undefined" class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                  ({{ profile.nodeCount }} 节点)
+                </span>
+              </option>
+            </select>
+            <!-- 自定义下拉箭头 -->
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+              <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
         </div>
 
         <!-- 选择格式 -->
