@@ -220,6 +220,7 @@ async function handleCronTrigger(env) {
     const settings = await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings;
 
     const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//gm;
+    let changesMade = false;
 
     for (const sub of allSubs) {
         if (sub.url.startsWith('http') && sub.enabled) {
@@ -258,16 +259,42 @@ async function handleCronTrigger(env) {
 
                 if (nodeCountResult.status === 'fulfilled' && nodeCountResult.value.ok) {
                     const text = await nodeCountResult.value.text();
-                    let decoded = '';
+                    let nodeCount = 0;
+
+                    // 方法1: 嘗試 Base64 解碼
                     try {
-                        // 嘗試 Base64 解碼
-                        decoded = atob(text.replace(/\s/g, ''));
-                    } catch {
-                        decoded = text;
+                        const decoded = atob(text.replace(/\s/g, ''));
+                        const matches = decoded.match(nodeRegex);
+                        if (matches) {
+                            nodeCount = matches.length;
+                        }
+                    } catch (e) {
+                        // Base64 解码失败，继续尝试其他方法
                     }
-                    const matches = decoded.match(nodeRegex);
-                    if (matches) {
-                        sub.nodeCount = matches.length; // 更新節點數量
+
+                    // 方法2: 嘗試 YAML 解析 (Clash 配置)
+                    if (nodeCount === 0) {
+                        try {
+                            const yamlContent = yaml.load(text);
+                            if (yamlContent && yamlContent.proxies && Array.isArray(yamlContent.proxies)) {
+                                nodeCount = yamlContent.proxies.length;
+                                console.log(`Cron: Parsed Clash config for ${sub.name}, found ${nodeCount} proxies`);
+                            }
+                        } catch (e) {
+                            // YAML 解析失败，继续尝试其他方法
+                        }
+                    }
+
+                    // 方法3: 直接匹配原始文本
+                    if (nodeCount === 0) {
+                        const matches = text.match(nodeRegex);
+                        if (matches) {
+                            nodeCount = matches.length;
+                        }
+                    }
+
+                    if (nodeCount > 0) {
+                        sub.nodeCount = nodeCount;
                         changesMade = true;
                     }
                 } else if (nodeCountResult.status === 'rejected') {
