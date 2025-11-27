@@ -682,11 +682,11 @@ const handleNodeDragEnd = async (evt) => {
           <div class="flex-1"></div>
                       <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
               <div class="flex items-center gap-3 flex-shrink-0">
-                <button @click="handleAddSubscription" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+                <button @click="handleAddSubscription" class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
                 <button 
                   @click="handleUpdateAllSubscriptions" 
                   :disabled="isUpdatingAllSubs"
-                  class="btn-modern-enhanced btn-update text-base font-semibold px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                  class="btn-modern-enhanced btn-update text-sm font-semibold px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
                 >
                   <svg v-if="isUpdatingAllSubs" class="animate-spin h-5 w-5" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
@@ -700,7 +700,7 @@ const handleNodeDragEnd = async (evt) => {
                 <button 
                   v-if="isSortingSubs && hasUnsavedSortChanges"
                   @click="handleSaveSortChanges"
-                  class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                  class="btn-modern-enhanced btn-primary text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -715,7 +715,7 @@ const handleNodeDragEnd = async (evt) => {
                     isSortingSubs = !isSortingSubs;
                     if (!isSortingSubs) hasUnsavedSortChanges.value = false;
                   }"
-                  :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                  :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
@@ -795,7 +795,7 @@ const handleNodeDragEnd = async (evt) => {
           <!-- 标题区域已移除 -->
           <div class="flex-1"></div>
                       <div class="flex items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
-              <button @click="handleAddProfile" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+              <button @click="handleAddProfile" class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
             <div class="relative" ref="profilesMoreMenuRef">
               <button @click="showProfilesMoreMenu = !showProfilesMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
@@ -896,14 +896,14 @@ const handleNodeDragEnd = async (evt) => {
 
             <!-- 主要操作按钮 -->
             <div class="flex items-center gap-3 flex-shrink-0">
-              <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">新增</button>
+              <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
               
-              <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-base font-semibold px-8 py-3 transform hover:scale-105 transition-all duration-300">批量导入</button>
+              <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
               
               <button 
                 v-if="isSortingNodes && hasUnsavedSortChanges"
                 @click="handleSaveSortChanges"
-                class="btn-modern-enhanced btn-primary text-base font-semibold px-6 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
+                class="btn-modern-enhanced btn-primary text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -918,7 +918,7 @@ const handleNodeDragEnd = async (evt) => {
                     isSortingNodes = !isSortingNodes;
                     if (!isSortingNodes) hasUnsavedSortChanges.value = false;
                   }"
-                  :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-base font-semibold px-8 py-3 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+                  :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
                 >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
