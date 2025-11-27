@@ -15,7 +15,6 @@ const { showToast } = useToastStore();
 const themeStore = useThemeStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
-const settings = ref({});
 
 // 默认设置值
 const defaultSettings = {
@@ -28,6 +27,9 @@ const defaultSettings = {
   BotToken: '',
   ChatID: ''
 };
+
+// 初始化时直接使用默认值，确保界面不会显示空白
+const settings = ref({ ...defaultSettings });
 
 const hasWhitespace = computed(() => {
   const fieldsToCkeck = [
@@ -54,16 +56,19 @@ const loadSettings = async () => {
   try {
     const loaded = await fetchSettings();
     
-    // 合并默认值：如果加载的值为空，则使用默认值
-    settings.value = { ...defaultSettings };
-    
-    for (const key in loaded) {
-      if (loaded[key] !== undefined && loaded[key] !== null && loaded[key] !== '') {
-        settings.value[key] = loaded[key];
+    // 确保 loaded 是有效对象
+    if (loaded && typeof loaded === 'object') {
+      for (const key in loaded) {
+        // 只有当后端返回的值不为空时才覆盖默认值
+        // 这样可以防止后端返回的空字符串覆盖掉前端的默认推荐值
+        if (loaded[key] !== undefined && loaded[key] !== null && loaded[key] !== '') {
+          settings.value[key] = loaded[key];
+        }
       }
     }
   } catch (error) {
-    showToast('加载设置失败', 'error');
+    console.error('加载设置出错:', error);
+    showToast('加载设置失败，将使用默认值', 'error');
   } finally {
     isLoading.value = false;
   }
@@ -95,12 +100,13 @@ const handleSave = async () => {
   }
 };
 
-// 监听 show 属性，当模态框从隐藏变为显示时，加载设置
+// 监听 show 属性，当模态框显示时加载设置
+// 添加 immediate: true 确保组件挂载时如果 show 为 true 也能触发
 watch(() => props.show, (newValue) => {
   if (newValue) {
     loadSettings();
   }
-});
+}, { immediate: true });
 </script>
 
 <template>
