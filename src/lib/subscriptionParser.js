@@ -37,31 +37,38 @@ export class SubscriptionParser {
     // 检查是否为Base64编码
     const cleanedContent = content.replace(this._whitespaceRegex, '');
     if (this._base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
-      methods.push(() => this.parseBase64(content, subscriptionName));
+      methods.push({ name: 'parseBase64', fn: () => this.parseBase64(content, subscriptionName) });
     }
 
     // 检查是否为YAML格式
     if (content.includes('proxies:') || content.includes('nodes:')) {
-      methods.push(() => this.parseYAML(content, subscriptionName));
-      methods.push(() => this.parseClashConfig(content, subscriptionName));
+      methods.push({ name: 'parseYAML', fn: () => this.parseYAML(content, subscriptionName) });
+      methods.push({ name: 'parseClashConfig', fn: () => this.parseClashConfig(content, subscriptionName) });
       // 尝试容错解析（处理重复键等问题）
-      methods.push(() => this.parseClashConfigRegex(content, subscriptionName));
+      methods.push({ name: 'parseClashConfigRegex', fn: () => this.parseClashConfigRegex(content, subscriptionName) });
     }
 
     // 最后尝试纯文本解析
-    methods.push(() => this.parsePlainText(content, subscriptionName));
+    methods.push({ name: 'parsePlainText', fn: () => this.parsePlainText(content, subscriptionName) });
 
-    for (const method of methods) {
+    const errors = [];
+    for (const { name, fn } of methods) {
       try {
-        const result = method();
+        const result = fn();
         if (result && result.length > 0) {
-          console.log(`解析成功，使用 ${method.name} 方法，找到 ${result.length} 个节点`);
+          console.log(`解析成功，使用 ${name} 方法，找到 ${result.length} 个节点`);
           return result;
         }
       } catch (error) {
-        console.warn(`解析方法 ${method.name} 失败:`, error);
+        // 收集错误但不立即打印，除非所有方法都失败
+        errors.push(`${name}: ${error.message}`);
         continue;
       }
+    }
+
+    // 如果所有方法都失败了，才打印错误日志
+    if (errors.length > 0) {
+      console.warn('所有解析方法均失败:', errors);
     }
 
     return [];
