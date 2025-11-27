@@ -172,6 +172,12 @@ html.dark body::after {
     @apply from-gray-500 to-gray-600;
   }
 
+  /* Import Button (Orange/Amber) */
+  .btn-import {
+    @apply bg-gradient-to-r from-orange-500 to-amber-600 text-white;
+    @apply hover:from-orange-600 hover:to-amber-700 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
   /* Primary Button (General) */
   .btn-primary {
     @apply bg-gradient-to-r from-indigo-500 to-purple-600 text-white;
