@@ -869,15 +869,6 @@ const handleNodeDragEnd = async (evt) => {
       <div v-if="activeTab === 'nodes'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" />
-              </svg>
-            </div>
-            <div>
-              <h2 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced">手动节点</h2>
-              <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">管理单个节点链接</p>
-            </div>
             <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ manualNodes.length }}</span>
           </div>
           
