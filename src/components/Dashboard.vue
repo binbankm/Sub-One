@@ -869,7 +869,6 @@ const handleNodeDragEnd = async (evt) => {
       <div v-if="activeTab === 'nodes'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <div class="flex items-center gap-4">
-            <span class="px-4 py-2 text-base font-semibold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700/50 rounded-2xl shadow-sm">{{ manualNodes.length }}</span>
           </div>
           
           <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">

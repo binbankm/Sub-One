@@ -92,7 +92,7 @@ const tabInfo = computed(() => {
       description: '生成适用于不同客户端的订阅链接',
       icon: 'link'
     },
-    manual: {
+    nodes: {
       title: '手动节点',
       description: '添加和管理单个节点链接',
       icon: 'node'
