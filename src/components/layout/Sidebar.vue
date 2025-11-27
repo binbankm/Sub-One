@@ -26,6 +26,7 @@ const navigationItems = computed(() => [
     icon: 'subscription',
     count: props.subscriptionsCount,
     gradient: 'from-indigo-500 to-purple-600',
+    shadow: 'shadow-indigo-500/30',
     description: '管理订阅源'
   },
   {
@@ -34,6 +35,7 @@ const navigationItems = computed(() => [
     icon: 'profile',
     count: props.profilesCount,
     gradient: 'from-purple-500 to-pink-600',
+    shadow: 'shadow-purple-500/30',
     description: '组织订阅'
   },
   {
@@ -42,6 +44,7 @@ const navigationItems = computed(() => [
     icon: 'link',
     count: props.generatorCount,
     gradient: 'from-cyan-500 to-blue-600',
+    shadow: 'shadow-cyan-500/30',
     description: '生成订阅链接'
   },
   {
@@ -50,6 +53,7 @@ const navigationItems = computed(() => [
     icon: 'node',
     count: props.manualNodesCount,
     gradient: 'from-green-500 to-emerald-600',
+    shadow: 'shadow-green-500/30',
     description: '管理节点'
   }
 ]);
@@ -61,6 +65,7 @@ const utilityItems = computed(() => [
     label: '帮助文档',
     icon: 'help',
     gradient: 'from-amber-500 to-orange-600',
+    shadow: 'shadow-amber-500/30',
     description: '查看文档'
   },
   {
@@ -68,6 +73,7 @@ const utilityItems = computed(() => [
     label: '设置',
     icon: 'settings',
     gradient: 'from-slate-500 to-gray-600',
+    shadow: 'shadow-slate-500/30',
     description: '系统设置'
   }
 ]);
@@ -180,7 +186,10 @@ const toggleCollapse = () => {
             v-for="item in navigationItems"
             :key="item.id"
             class="nav-item"
-            :class="{ 'nav-item-active': modelValue === item.id }"
+            :class="[
+              { 'nav-item-active': modelValue === item.id },
+              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : ''
+            ]"
             :title="isCollapsed ? item.label : ''"
             @click="selectTab(item.id)"
           >
@@ -281,7 +290,10 @@ const toggleCollapse = () => {
             v-for="item in utilityItems"
             :key="item.id"
             class="nav-item"
-            :class="{ 'nav-item-active': modelValue === item.id }"
+            :class="[
+              { 'nav-item-active': modelValue === item.id },
+              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : ''
+            ]"
             :title="isCollapsed ? item.label : ''"
             @click="selectTab(item.id)"
           >
@@ -563,8 +575,7 @@ html.dark .nav-section-title {
 }
 
 .nav-item-active {
-  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
-  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+  /* background and shadow are now handled dynamically via inline classes */
 }
 
 .nav-item-active::before {
@@ -573,7 +584,7 @@ html.dark .nav-section-title {
 
 .nav-item-active:hover {
   transform: translateX(4px) scale(1.02);
-  box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5);
+  /* shadow is handled by inline class */
 }
 
 .nav-item-icon {
