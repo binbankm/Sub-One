@@ -107,6 +107,9 @@ const showNodeModal = ref(false);
 const showBulkImportModal = ref(false);
 const showDeleteSubsModal = ref(false);
 const showDeleteNodesModal = ref(false);
+const showDeleteSingleSubModal = ref(false);
+const showDeleteSingleNodeModal = ref(false);
+const showDeleteSingleProfileModal = ref(false);
 const showSubsMoreMenu = ref(false);
 const showNodesMoreMenu = ref(false);
 const showProfilesMoreMenu = ref(false);
@@ -116,6 +119,7 @@ const selectedSubscription = ref(null);
 const showProfileNodeDetailsModal = ref(false);
 const selectedProfile = ref(null);
 const isUpdatingAllSubs = ref(false);
+const deletingItemId = ref(null);
 
 const nodesMoreMenuRef = ref(null);
 const subsMoreMenuRef = ref(null);
@@ -292,17 +296,29 @@ const triggerDataUpdate = () => {
 };
 
 const handleDeleteSubscriptionWithCleanup = async (subId) => {
-  deleteSubscription(subId);
-  removeIdFromProfiles(subId, 'subscriptions');
+  deletingItemId.value = subId;
+  showDeleteSingleSubModal.value = true;
+};
+
+const handleConfirmDeleteSingleSub = async () => {
+  deleteSubscription(deletingItemId.value);
+  removeIdFromProfiles(deletingItemId.value, 'subscriptions');
   await handleDirectSave('订阅删除');
   triggerDataUpdate();
+  showDeleteSingleSubModal.value = false;
 };
 
 const handleDeleteNodeWithCleanup = async (nodeId) => {
-  deleteNode(nodeId);
-  removeIdFromProfiles(nodeId, 'manualNodes');
+  deletingItemId.value = nodeId;
+  showDeleteSingleNodeModal.value = true;
+};
+
+const handleConfirmDeleteSingleNode = async () => {
+  deleteNode(deletingItemId.value);
+  removeIdFromProfiles(deletingItemId.value, 'manualNodes');
   await handleDirectSave('节点删除');
   triggerDataUpdate();
+  showDeleteSingleNodeModal.value = false;
 };
 
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
@@ -487,7 +503,12 @@ const handleSaveProfile = async (profileData) => {
     showProfileModal.value = false;
 };
 const handleDeleteProfile = async (profileId) => {
-    profiles.value = profiles.value.filter(p => p.id !== profileId);
+    deletingItemId.value = profileId;
+    showDeleteSingleProfileModal.value = true;
+};
+
+const handleConfirmDeleteSingleProfile = async () => {
+    profiles.value = profiles.value.filter(p => p.id !== deletingItemId.value);
     // 如果当前页面没有内容且不是第一页，则跳转到上一页
     if (paginatedProfiles.value.length === 0 && profilesCurrentPage.value > 1) {
         profilesCurrentPage.value--;
@@ -496,6 +517,7 @@ const handleDeleteProfile = async (profileId) => {
     emit('update-data', {
       profiles: [...profiles.value]
     });
+    showDeleteSingleProfileModal.value = false;
 };
 const handleDeleteAllProfiles = async () => {
     profiles.value = [];
@@ -1022,6 +1044,24 @@ const handleNodeDragEnd = async (evt) => {
   <Modal v-model:show="showDeleteProfilesModal" @confirm="handleDeleteAllProfiles">
     <template #title><h3 class="text-xl font-bold text-red-500">确认清空订阅组</h3></template>
     <template #body><p class="text-base text-gray-400">您确定要删除所有**订阅组**吗？此操作不可逆。</p></template>
+  </Modal>
+  
+  <!-- 单个订阅删除确认模态框 -->
+  <Modal v-model:show="showDeleteSingleSubModal" @confirm="handleConfirmDeleteSingleSub">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认删除订阅</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。</p></template>
+  </Modal>
+  
+  <!-- 单个节点删除确认模态框 -->
+  <Modal v-model:show="showDeleteSingleNodeModal" @confirm="handleConfirmDeleteSingleNode">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认删除节点</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除此手动节点吗？此操作将标记为待保存，不会影响订阅。</p></template>
+  </Modal>
+  
+  <!-- 单个订阅组删除确认模态框 -->
+  <Modal v-model:show="showDeleteSingleProfileModal" @confirm="handleConfirmDeleteSingleProfile">
+    <template #title><h3 class="text-xl font-bold text-red-500">确认删除订阅组</h3></template>
+    <template #body><p class="text-base text-gray-400">您确定要删除此订阅组吗？此操作不可逆。</p></template>
   </Modal>
   
   <ProfileModal v-if="showProfileModal" v-model:show="showProfileModal" :profile="editingProfile" :is-new="isNewProfile" :all-subscriptions="subscriptions" :all-manual-nodes="manualNodes" @save="handleSaveProfile" size="2xl" />
