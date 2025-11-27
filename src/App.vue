@@ -77,6 +77,11 @@ const generatorCount = computed(() => {
 
 const tabInfo = computed(() => {
   const tabs = {
+    dashboard: {
+      title: '仪表盘',
+      description: '概览您的订阅和节点状态',
+      icon: 'dashboard'
+    },
     subscriptions: {
       title: '订阅管理',
       description: '管理您的所有机场订阅链接',
@@ -98,7 +103,7 @@ const tabInfo = computed(() => {
       icon: 'node'
     }
   };
-  return tabs[activeTab.value] || tabs.subscriptions;
+  return tabs[activeTab.value] || tabs.dashboard;
 });
 
 onMounted(() => {
