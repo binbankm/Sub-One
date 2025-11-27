@@ -44,6 +44,8 @@ export class SubscriptionParser {
     if (content.includes('proxies:') || content.includes('nodes:')) {
       methods.push(() => this.parseYAML(content, subscriptionName));
       methods.push(() => this.parseClashConfig(content, subscriptionName));
+      // 尝试容错解析（处理重复键等问题）
+      methods.push(() => this.parseClashConfigRegex(content, subscriptionName));
     }
 
     // 最后尝试纯文本解析
@@ -131,6 +133,71 @@ export class SubscriptionParser {
       return this.parseClashProxies(parsed.proxies, subscriptionName);
     } catch (error) {
       throw new Error(`Clash配置解析失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 正则辅助解析Clash配置（容错模式）
+   */
+  parseClashConfigRegex(content, subscriptionName) {
+    const lines = content.split(this._newlineRegex);
+    const proxies = [];
+    let inProxies = false;
+
+    for (let line of lines) {
+      line = line.trim();
+
+      if (line.startsWith('proxies:')) {
+        inProxies = true;
+        continue;
+      }
+
+      if (inProxies) {
+        // 检查是否结束
+        if (line.startsWith('proxy-groups:') || line.startsWith('rules:') || line.startsWith('script:')) {
+          inProxies = false;
+          break;
+        }
+
+        // 匹配代理行
+        if (line.startsWith('-') && line.includes('{') && line.includes('}')) {
+          try {
+            // 尝试直接解析
+            const yamlLine = line.substring(1).trim();
+            const proxy = yaml.load(yamlLine);
+            if (proxy) proxies.push(proxy);
+          } catch (error) {
+            // 如果解析失败（如重复键），尝试修复
+            const fixedProxy = this.fixAndParseProxyLine(line);
+            if (fixedProxy) proxies.push(fixedProxy);
+          }
+        }
+      }
+    }
+
+    if (proxies.length === 0) {
+      throw new Error('正则解析未找到节点');
+    }
+
+    return this.parseClashProxies(proxies, subscriptionName);
+  }
+
+  /**
+   * 修复并解析有问题的代理行
+   */
+  fixAndParseProxyLine(line) {
+    try {
+      let cleanLine = line.substring(1).trim();
+
+      // 移除常见的导致重复键问题的字段
+      // 例如 hysteria2 的 ports 字段重复
+      cleanLine = cleanLine.replace(/ports:\s*[^,}]+,?/g, '');
+
+      // 再次尝试解析
+      return yaml.load(cleanLine);
+    } catch (e) {
+      console.warn('修复代理行失败:', e.message);
+      return null;
     }
   }
 
@@ -286,9 +353,30 @@ export class SubscriptionParser {
    */
   buildTrojanUrl(proxy) {
     let url = `trojan://${proxy.password}@${proxy.server}:${proxy.port}`;
+    const params = [];
 
     if (proxy.sni) {
-      url += `?sni=${proxy.sni}`;
+      params.push(`sni=${proxy.sni}`);
+    }
+
+    if (proxy['skip-cert-verify'] === true) {
+      params.push('allowInsecure=1');
+    }
+
+    if (proxy.network === 'ws') {
+      params.push('type=ws');
+      if (proxy['ws-opts']) {
+        if (proxy['ws-opts'].path) {
+          params.push(`path=${encodeURIComponent(proxy['ws-opts'].path)}`);
+        }
+        if (proxy['ws-opts'].headers && proxy['ws-opts'].headers.Host) {
+          params.push(`host=${encodeURIComponent(proxy['ws-opts'].headers.Host)}`);
+        }
+      }
+    }
+
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
     }
 
     if (proxy.name) {
