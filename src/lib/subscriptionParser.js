@@ -57,11 +57,7 @@ export class SubscriptionParser {
           return result;
         }
       } catch (error) {
-        // 静默处理解析失败，继续尝试下一个方法
-        // 只在开发环境输出详细错误
-        if (import.meta.env.DEV) {
-          console.warn(`解析方法 ${method.name} 失败:`, error.message);
-        }
+        console.warn(`解析方法 ${method.name} 失败:`, error);
         continue;
       }
     }
@@ -101,14 +97,7 @@ export class SubscriptionParser {
    */
   parseYAML(content, subscriptionName) {
     try {
-      // 使用宽松选项解析YAML，允许重复键
-      const parsed = yaml.load(content, {
-        json: true,  // 使用JSON兼容模式
-        onWarning: (warning) => {
-          // 静默处理警告，不打印到控制台
-        }
-      });
-
+      const parsed = yaml.load(content);
       if (!parsed || typeof parsed !== 'object') {
         throw new Error('无效的YAML格式');
       }
@@ -125,8 +114,6 @@ export class SubscriptionParser {
 
       throw new Error('不支持的YAML格式');
     } catch (error) {
-      // 使用console.warn而不是抛出错误，让解析可以继续尝试其他方法
-      console.warn(`YAML解析警告: ${error.message}`);
       throw new Error(`YAML解析失败: ${error.message}`);
     }
   }
@@ -136,21 +123,13 @@ export class SubscriptionParser {
    */
   parseClashConfig(content, subscriptionName) {
     try {
-      // 使用宽松选项解析YAML，允许重复键
-      const parsed = yaml.load(content, {
-        json: true,
-        onWarning: (warning) => {
-          // 静默处理警告
-        }
-      });
-
+      const parsed = yaml.load(content);
       if (!parsed || !parsed.proxies || !Array.isArray(parsed.proxies)) {
         throw new Error('不是有效的Clash配置');
       }
 
       return this.parseClashProxies(parsed.proxies, subscriptionName);
     } catch (error) {
-      console.warn(`Clash配置解析警告: ${error.message}`);
       throw new Error(`Clash配置解析失败: ${error.message}`);
     }
   }
