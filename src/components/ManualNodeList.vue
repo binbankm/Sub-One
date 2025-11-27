@@ -61,7 +61,7 @@ const protocolStyle = computed(() => {
 
 <template>
   <div
-    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex items-center gap-4"
+    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex items-center gap-4 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
     :class="{ 'opacity-50': !node.enabled }"
   >
     <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full">
