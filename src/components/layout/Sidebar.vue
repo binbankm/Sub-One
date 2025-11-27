@@ -269,7 +269,6 @@ const toggleCollapse = () => {
               <div v-if="!isCollapsed" class="nav-item-content">
                 <div class="nav-item-text">
                   <span class="nav-item-label">{{ item.label }}</span>
-                  <span class="nav-item-description">{{ item.description }}</span>
                 </div>
                 
                 <div v-if="item.count > 0" class="nav-item-badge">
@@ -345,7 +344,6 @@ const toggleCollapse = () => {
               <div v-if="!isCollapsed" class="nav-item-content">
                 <div class="nav-item-text">
                   <span class="nav-item-label">{{ item.label }}</span>
-                  <span class="nav-item-description">{{ item.description }}</span>
                 </div>
               </div>
             </transition>
@@ -573,11 +571,6 @@ html.dark .nav-section-title {
 .sidebar-collapsed .nav-item:hover {
   transform: translateX(0) scale(1.05);
 }
-
-.nav-item-active {
-  /* background and shadow are now handled dynamically via inline classes */
-}
-
 .nav-item-active::before {
   display: none;
 }
