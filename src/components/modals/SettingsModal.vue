@@ -52,8 +52,28 @@ const loadSettings = async () => {
   isLoading.value = true;
   try {
     const fetchedSettings = await fetchSettings();
-    // 合并默认值和获取到的设置，确保所有字段都有值
-    settings.value = { ...defaultSettings, ...fetchedSettings };
+    
+    // 智能合并：只有当服务器返回的值非空时才覆盖默认值
+    const mergedSettings = { ...defaultSettings };
+    
+    for (const key in fetchedSettings) {
+      const fetchedValue = fetchedSettings[key];
+      const defaultValue = defaultSettings[key];
+      
+      // 对于字符串类型的字段，只有当获取的值不是空字符串时才覆盖
+      if (typeof fetchedValue === 'string') {
+        if (fetchedValue.trim() !== '') {
+          mergedSettings[key] = fetchedValue;
+        }
+        // 如果获取的值为空字符串，保留默认值（不覆盖）
+      } 
+      // 对于布尔值、数字等其他类型，直接使用获取的值
+      else if (fetchedValue !== undefined && fetchedValue !== null) {
+        mergedSettings[key] = fetchedValue;
+      }
+    }
+    
+    settings.value = mergedSettings;
   } catch (error) {
     showToast('加载设置失败，使用默认设置', 'warning');
     settings.value = { ...defaultSettings };
