@@ -7,11 +7,11 @@ import yaml from 'js-yaml';
 export class SubscriptionParser {
   constructor() {
     this.supportedProtocols = [
-      'ss', 'ssr', 'vmess', 'vless', 'trojan', 
-      'hysteria', 'hysteria2', 'hy', 'hy2', 
+      'ss', 'ssr', 'vmess', 'vless', 'trojan',
+      'hysteria', 'hysteria2', 'hy', 'hy2',
       'tuic', 'anytls', 'socks5'
     ];
-    
+
     // 预编译正则表达式，提升性能
     this._base64Regex = /^[A-Za-z0-9+\/=]+$/;
     this._whitespaceRegex = /\s/g;
@@ -33,19 +33,19 @@ export class SubscriptionParser {
 
     // 根据内容特征选择最合适的解析方法，避免不必要的尝试
     let methods = [];
-    
+
     // 检查是否为Base64编码
     const cleanedContent = content.replace(this._whitespaceRegex, '');
     if (this._base64Regex.test(cleanedContent) && cleanedContent.length > 20) {
       methods.push(() => this.parseBase64(content, subscriptionName));
     }
-    
+
     // 检查是否为YAML格式
     if (content.includes('proxies:') || content.includes('nodes:')) {
       methods.push(() => this.parseYAML(content, subscriptionName));
       methods.push(() => this.parseClashConfig(content, subscriptionName));
     }
-    
+
     // 最后尝试纯文本解析
     methods.push(() => this.parsePlainText(content, subscriptionName));
 
@@ -57,7 +57,11 @@ export class SubscriptionParser {
           return result;
         }
       } catch (error) {
-        console.warn(`解析方法 ${method.name} 失败:`, error);
+        // 静默处理解析失败，继续尝试下一个方法
+        // 只在开发环境输出详细错误
+        if (import.meta.env.DEV) {
+          console.warn(`解析方法 ${method.name} 失败:`, error.message);
+        }
         continue;
       }
     }
@@ -70,7 +74,7 @@ export class SubscriptionParser {
    */
   parseBase64(content, subscriptionName) {
     const cleanedContent = content.replace(this._whitespaceRegex, '');
-    
+
     // 检查是否为Base64编码
     if (!this._base64Regex.test(cleanedContent) || cleanedContent.length < 20) {
       throw new Error('不是有效的Base64编码');
@@ -80,7 +84,7 @@ export class SubscriptionParser {
       const decodedContent = atob(cleanedContent);
       // 优化：使用更高效的换行符分割
       const decodedLines = decodedContent.split(this._newlineRegex).filter(line => line.trim() !== '');
-      
+
       // 检查解码后的内容是否包含节点链接
       if (!decodedLines.some(line => this.isNodeUrl(line))) {
         throw new Error('Base64解码后未找到有效的节点链接');
@@ -97,7 +101,14 @@ export class SubscriptionParser {
    */
   parseYAML(content, subscriptionName) {
     try {
-      const parsed = yaml.load(content);
+      // 使用宽松选项解析YAML，允许重复键
+      const parsed = yaml.load(content, {
+        json: true,  // 使用JSON兼容模式
+        onWarning: (warning) => {
+          // 静默处理警告，不打印到控制台
+        }
+      });
+
       if (!parsed || typeof parsed !== 'object') {
         throw new Error('无效的YAML格式');
       }
@@ -114,6 +125,8 @@ export class SubscriptionParser {
 
       throw new Error('不支持的YAML格式');
     } catch (error) {
+      // 使用console.warn而不是抛出错误，让解析可以继续尝试其他方法
+      console.warn(`YAML解析警告: ${error.message}`);
       throw new Error(`YAML解析失败: ${error.message}`);
     }
   }
@@ -123,13 +136,21 @@ export class SubscriptionParser {
    */
   parseClashConfig(content, subscriptionName) {
     try {
-      const parsed = yaml.load(content);
+      // 使用宽松选项解析YAML，允许重复键
+      const parsed = yaml.load(content, {
+        json: true,
+        onWarning: (warning) => {
+          // 静默处理警告
+        }
+      });
+
       if (!parsed || !parsed.proxies || !Array.isArray(parsed.proxies)) {
         throw new Error('不是有效的Clash配置');
       }
 
       return this.parseClashProxies(parsed.proxies, subscriptionName);
     } catch (error) {
+      console.warn(`Clash配置解析警告: ${error.message}`);
       throw new Error(`Clash配置解析失败: ${error.message}`);
     }
   }
@@ -140,7 +161,7 @@ export class SubscriptionParser {
   parsePlainText(content, subscriptionName) {
     const lines = content.split(this._newlineRegex).filter(line => line.trim() !== '');
     const nodeLines = lines.filter(line => this.isNodeUrl(line));
-    
+
     if (nodeLines.length === 0) {
       throw new Error('未找到有效的节点链接');
     }
@@ -242,14 +263,14 @@ export class SubscriptionParser {
    */
   buildVlessUrl(proxy) {
     let url = `vless://${proxy.uuid}@${proxy.server}:${proxy.port}`;
-    
+
     // 优化：使用数组构建查询参数，提升性能
     const queryParams = [];
-    
+
     // 添加传输参数
     if (proxy.network && proxy.network !== 'tcp') {
       queryParams.push(`type=${proxy.network}`);
-      
+
       if (proxy.network === 'ws') {
         if (proxy['ws-opts']?.path) {
           queryParams.push(`path=${encodeURIComponent(proxy['ws-opts'].path)}`);
@@ -286,11 +307,11 @@ export class SubscriptionParser {
    */
   buildTrojanUrl(proxy) {
     let url = `trojan://${proxy.password}@${proxy.server}:${proxy.port}`;
-    
+
     if (proxy.sni) {
       url += `?sni=${proxy.sni}`;
     }
-    
+
     if (proxy.name) {
       url += `#${encodeURIComponent(proxy.name)}`;
     }
@@ -335,14 +356,14 @@ export class SubscriptionParser {
 
     // 优化：使用URLSearchParams构建查询参数
     const query = new URLSearchParams();
-    
+
     // 批量设置参数，减少条件判断
     const params = [
       ['protoparam', proxy['protocol-param']],
       ['obfsparam', proxy['obfs-param']],
       ['remarks', proxy.name]
     ];
-    
+
     params.forEach(([key, value]) => {
       if (value) {
         query.set(key, btoa(value));
@@ -364,10 +385,10 @@ export class SubscriptionParser {
    */
   buildHysteriaUrl(proxy) {
     let url = `hysteria://${proxy.server}:${proxy.port}`;
-    
+
     // 优化：使用数组构建参数，提升性能
     const params = new URLSearchParams();
-    
+
     // 批量设置参数，减少条件判断
     const paramPairs = [
       ['protocol', proxy.protocol],
@@ -375,7 +396,7 @@ export class SubscriptionParser {
       ['auth', proxy.auth],
       ['alpn', proxy.alpn]
     ];
-    
+
     paramPairs.forEach(([key, value]) => {
       if (value) {
         params.set(key, value);
@@ -398,16 +419,16 @@ export class SubscriptionParser {
    */
   buildTUICUrl(proxy) {
     let url = `tuic://${proxy.uuid}:${proxy.password}@${proxy.server}:${proxy.port}`;
-    
+
     // 优化：使用数组构建参数，提升性能
     const params = new URLSearchParams();
-    
+
     // 批量设置参数，减少条件判断
     const paramPairs = [
       ['sni', proxy.sni],
       ['alpn', proxy.alpn]
     ];
-    
+
     paramPairs.forEach(([key, value]) => {
       if (value) {
         params.set(key, value);
@@ -430,11 +451,11 @@ export class SubscriptionParser {
    */
   buildSocks5Url(proxy) {
     let url = `socks5://`;
-    
+
     if (proxy.username && proxy.password) {
       url += `${proxy.username}:${proxy.password}@`;
     }
-    
+
     url += `${proxy.server}:${proxy.port}`;
 
     if (proxy.name) {
@@ -477,18 +498,18 @@ export class SubscriptionParser {
     if (!this._nodeRegex) {
       this._nodeRegex = new RegExp(`^(${this.supportedProtocols.join('|')}):\/\/`);
     }
-    
+
     if (!this._nodeRegex.test(line)) return null;
 
     // 提取节点名称
     let name = '';
-    
+
     // 优化：使用更高效的字符串分割
     const hashIndex = line.indexOf('#');
     if (hashIndex !== -1) {
       name = decodeURIComponent(line.substring(hashIndex + 1) || '');
     }
-    
+
     // 如果没有名称，尝试从URL中提取
     if (!name) {
       name = this.extractNodeNameFromUrl(line);
@@ -496,7 +517,7 @@ export class SubscriptionParser {
 
     // 获取协议类型
     const protocol = line.match(this._nodeRegex)?.[1] || 'unknown';
-    
+
     return {
       id: crypto.randomUUID(),
       name: name || '未命名节点',
@@ -514,7 +535,7 @@ export class SubscriptionParser {
   extractNodeNameFromUrl(url) {
     try {
       const protocol = url.match(this._protocolRegex)?.[1] || '';
-      
+
       // 优化：使用Map提升性能，避免switch语句
       const protocolHandlers = new Map([
         ['vmess', () => {
@@ -549,12 +570,12 @@ export class SubscriptionParser {
           return 'SS节点';
         }]
       ]);
-      
+
       const handler = protocolHandlers.get(protocol);
       if (handler) {
         return handler();
       }
-      
+
       // 默认处理
       const urlObj = new URL(url);
       return urlObj.hostname || '未命名节点';
