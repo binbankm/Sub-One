@@ -41,7 +41,7 @@ const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
 
 // 标签页状态管理
-const activeTab = ref('subscriptions');
+const activeTab = ref('dashboard');
 
 // 模态框状态
 const showSettingsModal = ref(false);
