@@ -92,6 +92,13 @@ const protocolStyle = computed(() => {
           >
             {{ node.name || '未命名节点' }}
           </p>
+          <!-- IP 和 端口信息 -->
+          <p 
+            v-if="hostAndPort" 
+            class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors duration-300"
+          >
+            {{ hostAndPort }}
+          </p>
         </div>
       </div>
 
