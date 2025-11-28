@@ -14,8 +14,8 @@ import ProfilesTab from './tabs/ProfilesTab.vue';
 import SubscriptionsTab from './tabs/SubscriptionsTab.vue';
 import NodesTab from './tabs/NodesTab.vue';
 import GeneratorTab from './tabs/GeneratorTab.vue';
-import Card from './cards/Card.vue';
-import ManualNodeCard from './cards/ManualNodeCard.vue';
+import SubscriptionCard from './cards/SubscriptionCard.vue';
+import NodeCard from './cards/NodeCard.vue';
 import ProfileCard from './cards/ProfileCard.vue';
 
 import Modal from './modals/Modal.vue';

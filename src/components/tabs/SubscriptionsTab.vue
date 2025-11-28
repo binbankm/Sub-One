@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import draggable from 'vuedraggable';
-import Card from '../cards/Card.vue';
+import SubscriptionCard from '../cards/SubscriptionCard.vue';
 
 const props = defineProps({
   subscriptions: {
@@ -132,7 +132,7 @@ const handleToggleSorting = () => {
       >
         <template #item="{ element: subscription }">
           <div class="cursor-move">
-            <Card 
+            <SubscriptionCard 
               :sub="subscription" 
               @delete="emit('delete-subscription', $event)" 
               @change="emit('toggle-subscription', $event)" 
@@ -145,7 +145,7 @@ const handleToggleSorting = () => {
       </draggable>
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
-          <Card 
+          <SubscriptionCard 
             :sub="subscription" 
             @delete="emit('delete-subscription', $event)" 
             @change="emit('toggle-subscription', $event)" 
