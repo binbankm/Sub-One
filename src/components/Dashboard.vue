@@ -883,40 +883,6 @@ const handleNodeDragEnd = async (evt) => {
             </div>
           </div>
         </div>
-        
-        <!-- 最近的订阅 -->
-        <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">最近的订阅</h3>
-            <button @click="emit('update:modelValue', 'subscriptions')" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
-              查看全部
-            </button>
-          </div>
-          <div v-if="subscriptions.length > 0" class="space-y-4">
-            <div v-for="sub in subscriptions.slice(0, 5)" :key="sub.id" class="flex items-center justify-between p-4 bg-white/60 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-gray-600/30 hover:bg-white/80 dark:hover:bg-gray-700/50 transition-colors">
-              <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ sub.name || '未命名订阅' }}</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{{ sub.url }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {{ sub.nodeCount || 0 }} 节点
-                </div>
-                <div class="w-2 h-2 rounded-full" :class="sub.enabled ? 'bg-green-500' : 'bg-gray-400'"></div>
-              </div>
-            </div>
-          </div>
-          <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
-            暂无订阅数据
-          </div>
-        </div>
       </div>
       
       <!-- 订阅管理标签页 -->
