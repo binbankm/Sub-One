@@ -162,28 +162,6 @@ onMounted(() => {
           <!-- Page Header -->
           <header class="page-header">
             <div class="header-content">
-              <!-- 移动端菜单切换按钮 -->
-              <button 
-                class="md:hidden mr-4 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                @click="layoutStore.toggleMobileSidebar()"
-                aria-label="切换菜单"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  class="w-6 h-6" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round" 
-                    stroke-width="2" 
-                    d="M4 6h16M4 12h16M4 18h16" 
-                  />
-                </svg>
-              </button>
-              
               <div class="header-text">
                 <h1 class="page-title">
                   {{ tabInfo.title }}
@@ -309,22 +287,15 @@ html.dark .loading-text {
 
 .main-content {
   flex: 1;
-  margin-left: 0;
+  margin-left: 280px;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* 响应式侧边栏和主内容布局 */
-@media (min-width: 768px) {
-  .main-content {
-    margin-left: 280px;
-  }
-  
-  .main-content-full {
-    margin-left: 80px;
-  }
+.main-content-full {
+  margin-left: 80px;
 }
 
 .content-wrapper {
