@@ -64,17 +64,17 @@ const protocolStyle = computed(() => {
     class="group w-full max-w-full px-2 py-3 sm:px-4 sm:py-4 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
     :class="{ 'opacity-50': !node.enabled }"
   >
-    <div class="flex items-center justify-between gap-2 sm:gap-3">
-      <div class="flex items-center gap-1.5 sm:gap-3 flex-1 min-w-0">
+    <div class="flex items-start justify-between gap-2 sm:gap-3">
+      <div class="flex items-start gap-1.5 sm:gap-3 flex-1 min-w-0">
         <!-- 序号 -->
-        <div class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full flex-shrink-0">
+        <div class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full flex-shrink-0 mt-0.5">
           <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">
             {{ index }}
           </span>
         </div>
 
         <!-- 协议标签 -->
-        <div class="flex-shrink-0 text-center">
+        <div class="flex-shrink-0 text-center mt-0.5">
           <div
             class="text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border inline-block whitespace-nowrap"
             :class="protocolStyle.style"
@@ -83,16 +83,20 @@ const protocolStyle = computed(() => {
           </div>
         </div>
 
-        <!-- 节点名称 -->
+        <!-- 节点名称 - 支持换行 -->
         <div class="flex-1 min-w-0 overflow-hidden">
-          <p class="font-semibold text-xs sm:text-sm text-gray-800 dark:text-gray-100 truncate" :title="node.name">
+          <p 
+            class="font-semibold text-xs sm:text-sm text-gray-800 dark:text-gray-100 break-words line-clamp-2 sm:line-clamp-3" 
+            :title="node.name"
+            style="word-break: break-word; overflow-wrap: break-word;"
+          >
             {{ node.name || '未命名节点' }}
           </p>
         </div>
       </div>
 
       <!-- 操作按钮 -->
-      <div class="flex-shrink-0 flex items-center gap-1 sm:gap-2">
+      <div class="flex-shrink-0 flex items-center gap-1 sm:gap-2 pt-0.5">
         <button @click.stop="emit('edit')" class="p-1.5 sm:p-2 rounded-lg hover:bg-indigo-500/20 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" title="编辑节点">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
