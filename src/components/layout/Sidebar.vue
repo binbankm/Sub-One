@@ -16,8 +16,19 @@ const emit = defineEmits(['update:modelValue', 'logout', 'help', 'settings']);
 
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
+const { sidebarMobileOpen } = layoutStore;
 
-const isCollapsed = ref(false);
+const isCollapsed = computed(() => {
+  // 在移动设备上，侧边栏要么完全打开，要么完全关闭
+  return layoutStore.sidebarCollapsed && !sidebarMobileOpen;
+});
+
+// 关闭移动设备上的侧边栏
+const closeSidebar = () => {
+  if (sidebarMobileOpen) {
+    layoutStore.closeMobileSidebar();
+  }
+};
 
 const navigationItems = computed(() => [
   {
@@ -89,13 +100,16 @@ const utilityItems = computed(() => [
 const selectTab = (tabId) => {
   if (tabId === 'help') {
     emit('help');
-    return;
-  }
-  if (tabId === 'settings') {
+  } else if (tabId === 'settings') {
     emit('settings');
-    return;
+  } else {
+    emit('update:modelValue', tabId);
   }
-  emit('update:modelValue', tabId);
+  
+  // 在移动端，选择菜单项后关闭侧边栏
+  if (window.innerWidth < 768) {
+    layoutStore.closeMobileSidebar();
+  }
 };
 
 const handleLogout = () => {
@@ -103,15 +117,31 @@ const handleLogout = () => {
 };
 
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value;
-  layoutStore.toggleSidebar();
+  // 在移动端，点击切换按钮应该完全打开/关闭侧边栏
+  if (window.innerWidth < 768) {
+    layoutStore.toggleMobileSidebar();
+  } else {
+    // 在桌面端，保持原有的折叠/展开功能
+    layoutStore.toggleSidebar();
+  }
 };
 </script>
 
 <template>
+  <!-- 移动端侧边栏背景遮罩 -->
+  <div 
+    v-if="sidebarMobileOpen" 
+    class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+    @click="layoutStore.closeMobileSidebar()"
+  ></div>
+  
   <aside 
-    class="sidebar"
-    :class="{ 'sidebar-collapsed': isCollapsed }"
+    class="sidebar fixed md:static z-40 transform transition-transform duration-300 ease-in-out"
+    :class="[
+      { 'sidebar-collapsed': isCollapsed },
+      { 'translate-x-0': sidebarMobileOpen || window.innerWidth >= 768 },
+      { '-translate-x-full': !sidebarMobileOpen && window.innerWidth < 768 }
+    ]"
   >
     <!-- Sidebar Header -->
     <div class="sidebar-header">
