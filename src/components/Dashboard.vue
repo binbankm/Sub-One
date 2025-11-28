@@ -697,13 +697,13 @@ const handleNodeDragEnd = async (evt) => {
     
     <!-- 未保存更改提示 -->
     <Transition name="slide-fade">
-      <div v-if="dirty" class="p-3 md:p-4 mb-4 md:mb-6 lg:mb-8 rounded-xl md:rounded-2xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 ring-1 ring-inset ring-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-modern-enhanced">
-        <p class="text-xs md:text-sm font-medium text-indigo-800 dark:text-indigo-200">您有未保存的更改</p>
-        <div class="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
-          <button @click="handleDiscard" class="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors hover-lift px-3 py-2 active:scale-95 flex-1 sm:flex-initial">放弃更改</button>
-          <button @click="handleSave" :disabled="saveState !== 'idle'" class="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm text-white font-semibold rounded-lg md:rounded-xl shadow-sm flex items-center justify-center transition-all duration-300 w-24 md:w-32 hover-lift active:scale-95 flex-1 sm:flex-initial" :class="{'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700': saveState === 'idle', 'bg-gray-500 cursor-not-allowed': saveState === 'saving', 'bg-gradient-to-r from-green-500 to-emerald-600 cursor-not-allowed': saveState === 'success' }">
-            <div v-if="saveState === 'saving'" class="flex items-center"><svg class="animate-spin h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>保存中...</span></div>
-            <div v-else-if="saveState === 'success'" class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span>已保存</span></div>
+      <div v-if="dirty" class="p-4 mb-6 lg:mb-8 rounded-2xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 ring-1 ring-inset ring-indigo-500/30 flex items-center justify-between shadow-modern-enhanced">
+        <p class="text-sm font-medium text-indigo-800 dark:text-indigo-200">您有未保存的更改</p>
+        <div class="flex items-center gap-3">
+          <button @click="handleDiscard" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors hover-lift">放弃更改</button>
+          <button @click="handleSave" :disabled="saveState !== 'idle'" class="px-6 py-2.5 text-sm text-white font-semibold rounded-xl shadow-sm flex items-center justify-center transition-all duration-300 w-32 hover-lift" :class="{'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700': saveState === 'idle', 'bg-gray-500 cursor-not-allowed': saveState === 'saving', 'bg-gradient-to-r from-green-500 to-emerald-600 cursor-not-allowed': saveState === 'success' }">
+            <div v-if="saveState === 'saving'" class="flex items-center"><svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>保存中...</span></div>
+            <div v-else-if="saveState === 'success'" class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg><span>已保存</span></div>
             <span v-else>保存更改</span>
           </button>
         </div>
@@ -714,206 +714,206 @@ const handleNodeDragEnd = async (evt) => {
     <div class="space-y-6 lg:space-y-8">
       
       <!-- 仪表盘标签页 -->
-      <div v-if="activeTab === 'dashboard'" class="space-y-4 md:space-y-6 lg:space-y-8">
+      <div v-if="activeTab === 'dashboard'" class="space-y-6 lg:space-y-8">
         <!-- 统计卡片 -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- 总订阅数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-2 md:mb-3 lg:mb-4">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">总订阅数</p>
-                <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ subscriptions.length }}</h3>
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总订阅数</p>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ subscriptions.length }}</h3>
               </div>
-              <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0 ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
             </div>
             <div class="text-xs text-green-500 dark:text-green-400 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 md:w-4 md:h-4 mr-0.5 md:mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
               </svg>
-              <span class="truncate">{{ activeSubscriptions }} 个活跃</span>
+              {{ activeSubscriptions }} 个活跃
             </div>
           </div>
           
           <!-- 总节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-2 md:mb-3 lg:mb-4">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">总节点数</p>
-                <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ totalNodeCount }}</h3>
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总节点数</p>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ totalNodeCount }}</h3>
               </div>
-              <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0 ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                 </svg>
               </div>
             </div>
             <div class="text-xs text-green-500 dark:text-green-400 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 md:w-4 md:h-4 mr-0.5 md:mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
               </svg>
-              <span class="truncate">{{ activeNodeCount }} 个可用</span>
+              {{ activeNodeCount }} 个可用
             </div>
           </div>
           
           <!-- 订阅组数量 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-2 md:mb-3 lg:mb-4">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">订阅组数量</p>
-                <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ profiles.length }}</h3>
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">订阅组数量</p>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ profiles.length }}</h3>
               </div>
-              <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0 ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
             </div>
             <div class="text-xs text-green-500 dark:text-green-400 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 md:w-4 md:h-4 mr-0.5 md:mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
               </svg>
-              <span class="truncate">{{ activeProfiles }} 个启用</span>
+              {{ activeProfiles }} 个启用
             </div>
           </div>
           
           <!-- 手动节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-2 md:mb-3 lg:mb-4">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">手动节点数</p>
-                <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">{{ manualNodes.length }}</h3>
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">手动节点数</p>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ manualNodes.length }}</h3>
               </div>
-              <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400 flex-shrink-0 ml-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-600 dark:text-green-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
             </div>
             <div class="text-xs text-green-500 dark:text-green-400 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 md:w-4 md:h-4 mr-0.5 md:mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
               </svg>
-              <span class="truncate">{{ activeManualNodes }} 个启用</span>
+              {{ activeManualNodes }} 个启用
             </div>
           </div>
         </div>
         
         <!-- 订阅状态图表 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- 订阅状态分布 -->
-          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-5 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
-              <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">订阅状态分布</h3>
+          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">订阅状态分布</h3>
             </div>
-            <div class="space-y-3 md:space-y-4">
+            <div class="space-y-4">
               <!-- 启用订阅 -->
               <div>
-                <div class="flex items-center justify-between mb-1.5 md:mb-1">
-                  <span class="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-300">启用的订阅</span>
-                  <span class="text-xs md:text-sm font-semibold text-gray-900 dark:text-white">{{ activeSubscriptions }} / {{ subscriptions.length }}</span>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-300">启用的订阅</span>
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeSubscriptions }} / {{ subscriptions.length }}</span>
                 </div>
-                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2 md:h-2.5">
-                  <div class="bg-gradient-to-r from-green-500 to-emerald-600 h-2 md:h-2.5 rounded-full transition-all duration-300" :style="{ width: subscriptions.length > 0 ? `${(activeSubscriptions / subscriptions.length) * 100}%` : '0%' }"></div>
+                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2.5">
+                  <div class="bg-gradient-to-r from-green-500 to-emerald-600 h-2.5 rounded-full" :style="{ width: subscriptions.length > 0 ? `${(activeSubscriptions / subscriptions.length) * 100}%` : '0%' }"></div>
                 </div>
               </div>
               
               <!-- 节点可用性 -->
               <div>
-                <div class="flex items-center justify-between mb-1.5 md:mb-1">
-                  <span class="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-300">节点可用性</span>
-                  <span class="text-xs md:text-sm font-semibold text-gray-900 dark:text-white">{{ activeNodeCount }} / {{ totalNodeCount }}</span>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-300">节点可用性</span>
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeNodeCount }} / {{ totalNodeCount }}</span>
                 </div>
-                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2 md:h-2.5">
-                  <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 md:h-2.5 rounded-full transition-all duration-300" :style="{ width: totalNodeCount > 0 ? `${(activeNodeCount / totalNodeCount) * 100}%` : '0%' }"></div>
+                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2.5">
+                  <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full" :style="{ width: totalNodeCount > 0 ? `${(activeNodeCount / totalNodeCount) * 100}%` : '0%' }"></div>
                 </div>
               </div>
               
               <!-- 订阅组状态 -->
               <div>
-                <div class="flex items-center justify-between mb-1.5 md:mb-1">
-                  <span class="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-300">启用的订阅组</span>
-                  <span class="text-xs md:text-sm font-semibold text-gray-900 dark:text-white">{{ activeProfiles }} / {{ profiles.length }}</span>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-600 dark:text-gray-300">启用的订阅组</span>
+                  <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ activeProfiles }} / {{ profiles.length }}</span>
                 </div>
-                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2 md:h-2.5">
-                  <div class="bg-gradient-to-r from-purple-500 to-pink-600 h-2 md:h-2.5 rounded-full transition-all duration-300" :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
+                <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2.5">
+                  <div class="bg-gradient-to-r from-purple-500 to-pink-600 h-2.5 rounded-full" :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
                 </div>
               </div>
             </div>
           </div>
           
           <!-- 快速操作 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-5 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-4 md:mb-5 lg:mb-6">快速操作</h3>
-            <div class="space-y-2.5 md:space-y-3 lg:space-y-4">
-              <button @click="handleAddSubscription" class="w-full flex items-center justify-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm md:text-base font-medium rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">快速操作</h3>
+            <div class="space-y-4">
+              <button @click="handleAddSubscription" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                <span class="truncate">添加订阅</span>
+                添加订阅
               </button>
               
-              <button @click="handleUpdateAllSubscriptions" :disabled="isUpdatingAllSubs" class="w-full flex items-center justify-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-sm md:text-base font-medium rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95">
-                <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button @click="handleUpdateAllSubscriptions" :disabled="isUpdatingAllSubs" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed">
+                <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <svg v-else class="animate-spin -ml-1 mr-2 h-4 w-4 md:h-5 md:w-5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg v-else class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span class="truncate">更新所有订阅</span>
+                更新所有订阅
               </button>
               
-              <button @click="handleAddNode" class="w-full flex items-center justify-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm md:text-base font-medium rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button @click="handleAddNode" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                <span class="truncate">添加手动节点</span>
+                添加手动节点
               </button>
               
-              <button @click="handleAddProfile" class="w-full flex items-center justify-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-sm md:text-base font-medium rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button @click="handleAddProfile" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                <span class="truncate">创建订阅组</span>
+                创建订阅组
               </button>
             </div>
           </div>
         </div>
         
         <!-- 最近的订阅 -->
-        <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-5 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-          <div class="flex items-center justify-between mb-4 md:mb-5 lg:mb-6">
-            <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">最近的订阅</h3>
-            <button @click="emit('update:modelValue', 'subscriptions')" class="text-xs md:text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors px-2 py-1 active:scale-95">
+        <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">最近的订阅</h3>
+            <button @click="emit('update:modelValue', 'subscriptions')" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
               查看全部
             </button>
           </div>
-          <div v-if="subscriptions.length > 0" class="space-y-2.5 md:space-y-3 lg:space-y-4">
-            <div v-for="sub in subscriptions.slice(0, 5)" :key="sub.id" class="flex items-center justify-between p-3 md:p-4 bg-white/60 dark:bg-gray-700/30 rounded-lg md:rounded-xl border border-gray-200/50 dark:border-gray-600/30 hover:bg-white/80 dark:hover:bg-gray-700/50 transition-colors active:scale-98">
-              <div class="flex items-center gap-2 md:gap-3 lg:gap-4 flex-1 min-w-0">
-                <div class="w-8 h-8 md:w-10 md:h-10 rounded-md md:rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div v-if="subscriptions.length > 0" class="space-y-4">
+            <div v-for="sub in subscriptions.slice(0, 5)" :key="sub.id" class="flex items-center justify-between p-4 bg-white/60 dark:bg-gray-700/30 rounded-xl border border-gray-200/50 dark:border-gray-600/30 hover:bg-white/80 dark:hover:bg-gray-700/50 transition-colors">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
-                <div class="flex-1 min-w-0">
-                  <h4 class="text-xs md:text-sm font-semibold text-gray-900 dark:text-white truncate">{{ sub.name || '未命名订阅' }}</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ sub.url }}</p>
+                <div>
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ sub.name || '未命名订阅' }}</h4>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{{ sub.url }}</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 md:gap-3 flex-shrink-0 ml-2">
-                <div class="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              <div class="flex items-center gap-3">
+                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {{ sub.nodeCount || 0 }} 节点
                 </div>
-                <div class="w-2 h-2 rounded-full flex-shrink-0" :class="sub.enabled ? 'bg-green-500' : 'bg-gray-400'"></div>
+                <div class="w-2 h-2 rounded-full" :class="sub.enabled ? 'bg-green-500' : 'bg-gray-400'"></div>
               </div>
             </div>
           </div>
-          <div v-else class="text-center py-6 md:py-8 text-sm md:text-base text-gray-500 dark:text-gray-400">
+          <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
             暂无订阅数据
           </div>
         </div>
