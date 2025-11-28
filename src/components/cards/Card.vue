@@ -251,7 +251,7 @@ const trafficColorClass = computed(() => {
       <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50" @click.stop>
         <div class="flex items-center gap-3">
           <label class="relative inline-flex items-center cursor-pointer group/toggle">
-            <input type="checkbox" :checked="sub.enabled" @change="emit('change')" class="sr-only peer">
+            <input type="checkbox" v-model="sub.enabled" @change="emit('change')" class="sr-only peer">
             <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500 group-hover/toggle:shadow-md transition-all duration-300"></div>
           </label>
           <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">{{ sub.enabled ? '已启用' : '已禁用' }}</span>
