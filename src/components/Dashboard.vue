@@ -1100,9 +1100,9 @@ const handleNodeDragEnd = async (evt) => {
           <div class="flex items-center gap-4">
           </div>
           
-          <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
+          <div class="flex flex-wrap items-center gap-2 w-full justify-between">
             <!-- 搜索框 -->
-            <div class="relative w-full sm:w-56 flex-shrink-0">
+            <div class="relative w-full sm:w-56 mb-2 sm:mb-0">
               <input 
                 type="text" 
                 v-model="searchTerm"
@@ -1114,64 +1114,66 @@ const handleNodeDragEnd = async (evt) => {
               </svg>
             </div>
             
-            <!-- 视图切换 -->
-            <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center flex-shrink-0">
-                <button @click="setViewMode('card')" class="p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                </button>
-                <button @click="setViewMode('list')" class="p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
-                </button>
-            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- 视图切换 -->
+              <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center">
+                  <button @click="setViewMode('card')" class="p-2 sm:p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                  </button>
+                  <button @click="setViewMode('list')" class="p-2 sm:p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                  </button>
+              </div>
 
-            <!-- 主要操作按钮 -->
-            <div class="flex items-center gap-3 flex-shrink-0">
-              <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
-              
-              <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
-              
-              <button 
-                v-if="isSortingNodes && hasUnsavedSortChanges"
-                @click="handleSaveSortChanges"
-                class="btn-modern-enhanced btn-primary text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                保存排序
-              </button>
-              <button 
-                  @click="() => {
-                    if (isSortingNodes && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
-                      return;
-                    }
-                    isSortingNodes = !isSortingNodes;
-                    if (!isSortingNodes) hasUnsavedSortChanges.value = false;
-                  }"
-                  :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'"
+              <!-- 主要操作按钮 -->
+              <div class="flex flex-wrap items-center gap-2">
+                <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
+                
+                <button @click="showBulkImportModal = true" class="btn-modern-enhanced btn-import text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
+                
+                <button 
+                  v-if="isSortingNodes && hasUnsavedSortChanges"
+                  @click="handleSaveSortChanges"
+                  class="btn-modern-enhanced btn-primary text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-                </svg>
-                <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
-                <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
-              </button>
-            </div>
-            
-            <!-- 更多菜单 -->
-            <div class="relative" ref="nodesMoreMenuRef">
-              <button @click="showNodesMoreMenu = !showNodesMoreMenu" class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
-              </button>
-               <Transition name="slide-fade-sm">
-                <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                  <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入订阅</button>
-                  <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
-                  <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键去重</button>
-                  <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                  <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
-                </div>
-              </Transition>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span class="hidden sm:inline">保存排序</span>
+                </button>
+                <button 
+                    @click="() => {
+                      if (isSortingNodes && hasUnsavedSortChanges && !confirm('有未保存的排序更改，确定要退出吗？')) {
+                        return;
+                      }
+                      isSortingNodes = !isSortingNodes;
+                      if (!isSortingNodes) hasUnsavedSortChanges.value = false;
+                    }"
+                    :class="isSortingNodes ? 'btn-modern-enhanced btn-sort sorting text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300'"
+                  >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ isSortingNodes ? '排序中' : '手动排序' }}</span>
+                  <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
+                </button>
+              </div>
+              
+              <!-- 更多菜单 -->
+              <div class="relative">
+                <button @click="showNodesMoreMenu = !showNodesMoreMenu" class="p-2 sm:p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+                </button>
+                 <Transition name="slide-fade-sm">
+                  <div v-if="showNodesMoreMenu" class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                    <button @click="showSubscriptionImportModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入订阅</button>
+                    <button @click="handleAutoSortNodes(); showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
+                    <button @click="handleDeduplicateNodes" class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键去重</button>
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                    <button @click="showDeleteNodesModal = true; showNodesMoreMenu=false" class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
+                  </div>
+                </Transition>
+              </div>
             </div>
           </div>
         </div>
