@@ -68,23 +68,23 @@ const protocolStyle = computed(() => {
 
 <template>
   <div 
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex items-center justify-between gap-3 shadow-sm hover:shadow-lg"
+    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm hover:shadow-lg max-w-full"
     :class="{ 'opacity-50': !node.enabled }"
   >
     <!-- 装饰性背景 -->
     <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-green-400/10 to-emerald-400/10 rounded-full -translate-y-8 translate-x-8"></div>
     
-    <div class="relative z-10 flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-      <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+    <div class="relative z-10 flex items-start sm:items-center gap-3 overflow-hidden flex-1 min-w-0">
+      <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" />
         </svg>
       </div>
       
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 mb-1">
+        <div class="flex flex-wrap items-center gap-2 mb-1">
           <div 
-            class="text-xs font-bold px-2 py-0.5 rounded-lg border flex-shrink-0"
+            class="text-xs font-bold px-2 py-0.5 rounded-lg border flex-shrink-0 whitespace-nowrap"
             :class="protocolStyle.style"
           >
             {{ protocolStyle.text }}
@@ -99,7 +99,7 @@ const protocolStyle = computed(() => {
       </div>
     </div>
 
-    <div class="relative z-10 flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+    <div class="relative z-10 flex-shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all duration-300 sm:ml-auto">
         <button @click.stop="emit('edit')" class="p-1.5 rounded-lg hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200" title="编辑节点">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
