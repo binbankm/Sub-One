@@ -1184,14 +1184,13 @@ const handleNodeDragEnd = async (evt) => {
              <draggable 
               v-if="isSortingNodes"
               tag="div" 
-              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8" 
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
               v-model="manualNodes" 
               :item-key="item => item.id" 
               animation="300" 
               :delay="200"
               :delay-on-touch-only="true"
-              @end="handleNodeDragEnd"
-            >
+              @end="handleNodeDragEnd">
               <template #item="{ element: node }">
                  <div class="cursor-move">
                     <ManualNodeCard 
@@ -1201,7 +1200,7 @@ const handleNodeDragEnd = async (evt) => {
                 </div>
               </template>
             </draggable>
-            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               <div v-for="node in paginatedManualNodes" :key="node.id">
                 <ManualNodeCard 
                   :node="node" 
