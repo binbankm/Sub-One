@@ -136,11 +136,11 @@ const trafficColorClass = computed(() => {
 
 <template>
   <div 
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[280px] sm:min-h-[240px] shadow-sm hover:shadow-lg"
-    :class="{ 'opacity-50': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
+    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[260px] sm:min-h-[240px] shadow-sm hover:shadow-lg"
+    :class="{'opacity-50': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
     @mousedown="handleMouseDown"
   >
-    <div class="relative z-10 flex-1 flex flex-col p-5">
+    <div class="relative z-10 flex-1 flex flex-col p-4 sm:p-5">
       <!-- 头部区域 -->
       <div class="flex items-start justify-between gap-3 mb-4 sm:mb-6">
         <div class="w-full truncate">
@@ -162,12 +162,12 @@ const trafficColorClass = computed(() => {
         </div>
         
         <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <button @click.stop="emit('edit')" class="p-2.5 rounded-xl hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 hover-lift" title="编辑">
+          <button @click.stop="emit('edit')" class="p-3 rounded-xl hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 hover-lift" title="编辑">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
             </svg>
           </button>
-          <button @click.stop="emit('delete')" class="p-2.5 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all duration-200 hover-lift" title="删除">
+          <button @click.stop="emit('delete')" class="p-3 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all duration-200 hover-lift" title="删除">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -189,7 +189,7 @@ const trafficColorClass = computed(() => {
           <div class="flex items-center gap-2 mt-2 sm:mt-3">
             <button 
               @click.stop="toggleUrlVisibility"
-              class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-orange-500/20 text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
+              class="px-3 py-2 rounded-xl hover:bg-orange-500/20 text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
               :title="showUrl ? '隐藏链接' : '显示链接'"
             >
               <svg v-if="showUrl" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,7 +204,7 @@ const trafficColorClass = computed(() => {
             <button 
               v-if="showUrl"
               @click.stop="copyUrl"
-              class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
+              class="px-3 py-2 rounded-xl hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
               title="复制链接"
             >
               <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,7 +217,7 @@ const trafficColorClass = computed(() => {
         
         <!-- 流量信息 -->
         <!-- 流量信息 -->
-        <div v-if="trafficInfo" class="mt-2 p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm">
+        <div v-if="trafficInfo" class="mt-2 p-2 sm:p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm">
           <div class="flex justify-between items-end mb-2">
             <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -258,7 +258,7 @@ const trafficColorClass = computed(() => {
         </div>
         
         <div class="flex items-center gap-2">
-          <button @click.stop="emit('showNodes')" class="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
+          <button @click.stop="emit('showNodes')" class="px-3 py-1.5 sm:py-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
             <span class="w-1.5 h-1.5 rounded-full" :class="sub.nodeCount > 0 ? 'bg-green-500' : 'bg-gray-300'"></span>
             {{ sub.nodeCount }} 节点
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-0 group-hover/btn:opacity-100 -ml-1 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -269,7 +269,7 @@ const trafficColorClass = computed(() => {
           <button 
             @click.stop="emit('update')" 
             :disabled="sub.isUpdating" 
-            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+            class="p-2 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
             :title="sub.isUpdating ? '更新中...' : '更新订阅'"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'animate-spin text-indigo-500': sub.isUpdating}" viewBox="0 0 20 20" fill="currentColor">
