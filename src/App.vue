@@ -434,8 +434,6 @@ html.dark .quick-action-btn:hover {
 @media (max-width: 640px) {
   .content-wrapper {
     padding: 0.75rem;
-    max-width: 100vw;
-    overflow-x: hidden;
   }
 
   .page-header {
@@ -452,12 +450,6 @@ html.dark .quick-action-btn:hover {
 
   .dashboard-footer {
     padding-top: 1.5rem;
-  }
-  
-  /* 确保主内容区域不会溢出 */
-  .dashboard-content {
-    max-width: 100%;
-    overflow-x: hidden;
   }
 }
 </style>

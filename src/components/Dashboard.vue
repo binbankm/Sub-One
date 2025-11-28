@@ -714,11 +714,11 @@ const handleNodeDragEnd = async (evt) => {
     <div class="space-y-6 lg:space-y-8">
       
       <!-- 仪表盘标签页 -->
-      <div v-if="activeTab === 'dashboard'" class="space-y-4 lg:space-y-8">
+      <div v-if="activeTab === 'dashboard'" class="space-y-6 lg:space-y-8">
         <!-- 统计卡片 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- 总订阅数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总订阅数</p>
@@ -739,7 +739,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 总节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总节点数</p>
@@ -760,7 +760,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 订阅组数量 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">订阅组数量</p>
@@ -781,7 +781,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 手动节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">手动节点数</p>
@@ -803,9 +803,9 @@ const handleNodeDragEnd = async (evt) => {
         </div>
         
         <!-- 订阅状态图表 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- 订阅状态分布 -->
-          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">订阅状态分布</h3>
             </div>
@@ -846,7 +846,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 快速操作 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 lg:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">快速操作</h3>
             <div class="space-y-4">
               <button @click="handleAddSubscription" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
@@ -1298,16 +1298,6 @@ const handleNodeDragEnd = async (evt) => {
 </template>
 
 <style scoped>
-/* 全局盒模型和overflow控制 */
-* {
-  box-sizing: border-box;
-}
-
-.container-optimized {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease-out; }
 .slide-fade-enter-from,
 .slide-fade-leave-to {
@@ -1333,29 +1323,18 @@ const handleNodeDragEnd = async (evt) => {
   /* 强制移动端汉堡菜单显示时，主界面不受影响 */
   .container-optimized {
     width: 100% !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
   }
 }
 
 /* 小屏手机优化 (≤640px) */
 @media (max-width: 640px) {
-  /* 整体布局优化 */
-  .container-optimized {
-    width: 100% !important;
-    max-width: 100vw !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    overflow-x: hidden !important;
-  }
-
   /* 按钮文字在小屏幕上可见 */
   .btn-modern-enhanced {
     font-size: 0.8125rem !important;
     padding: 0.5rem 0.75rem !important;
   }
 
-  /* 统计卡片网格调整为双列，减小间距 */
+  /* 统计卡片网格调整为双列 */
   .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
     grid-template-columns: repeat(2, 1fr) !important;
   }
@@ -1363,44 +1342,6 @@ const handleNodeDragEnd = async (evt) => {
   /* 搜索框和操作按钮响应式布局 */
   .flex.flex-wrap.items-center.gap-3 {
     gap: 0.5rem !important;
-  }
-
-  /* 卡片内边距优化 */
-  .rounded-2xl {
-    border-radius: 1rem !important;
-  }
-
-  /* 标题和文字大小优化 */
-  h3.text-lg {
-    font-size: 1rem !important;
-  }
-
-  /* 图标和按钮优化 */
-  .w-10.h-10 {
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-  }
-
-  /* 进度条容器优化 */
-  .space-y-4 {
-    gap: 0.75rem !important;
-  }
-
-  /* 快速操作按钮优化 */
-  button.w-full {
-    font-size: 0.875rem !important;
-    padding: 0.625rem 1rem !important;
-  }
-
-  /* 文字截断防止溢出 */
-  p, span, div {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  }
-
-  /* 最近订阅列表优化 */
-  .max-w-\[200px\] {
-    max-width: 120px !important;
   }
 }
 </style>
