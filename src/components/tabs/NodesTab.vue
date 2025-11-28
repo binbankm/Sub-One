@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import draggable from 'vuedraggable';
-import NodeCard from '../cards/NodeCard.vue';
+import ManualNodeCard from '../cards/ManualNodeCard.vue';
 
 const props = defineProps({
   manualNodes: {
@@ -146,7 +146,7 @@ const handleToggleSorting = () => {
       >
         <template #item="{ element: node }">
           <div class="cursor-move">
-            <NodeCard 
+            <ManualNodeCard 
               :node="node" 
               @edit="emit('edit-node', $event)" 
               @delete="emit('delete-node', $event)" 
@@ -157,7 +157,7 @@ const handleToggleSorting = () => {
       
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <div v-for="node in paginatedManualNodes" :key="node.id">
-          <NodeCard 
+          <ManualNodeCard 
             :node="node" 
             @edit="emit('edit-node', $event)" 
             @delete="emit('delete-node', $event)" 
