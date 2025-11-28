@@ -718,7 +718,7 @@ const handleNodeDragEnd = async (evt) => {
         <!-- 统计卡片 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- 总订阅数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总订阅数</p>
@@ -739,7 +739,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 总节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">总节点数</p>
@@ -760,7 +760,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 订阅组数量 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">订阅组数量</p>
@@ -781,7 +781,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 手动节点数 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
               <div>
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">手动节点数</p>
@@ -805,7 +805,7 @@ const handleNodeDragEnd = async (evt) => {
         <!-- 订阅状态图表 -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- 订阅状态分布 -->
-          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">订阅状态分布</h3>
             </div>
@@ -846,7 +846,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
           
           <!-- 快速操作 -->
-          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">快速操作</h3>
             <div class="space-y-4">
               <button @click="handleAddSubscription" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
@@ -885,7 +885,7 @@ const handleNodeDragEnd = async (evt) => {
         </div>
         
         <!-- 最近的订阅 -->
-        <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">最近的订阅</h3>
             <button @click="emit('update:modelValue', 'subscriptions')" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
@@ -920,7 +920,7 @@ const handleNodeDragEnd = async (evt) => {
       </div>
       
       <!-- 订阅管理标签页 -->
-      <div v-if="activeTab === 'subscriptions'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div v-if="activeTab === 'subscriptions'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <!-- 标题区域已移除，由外层布局统一管理 -->
           <div class="flex-1"></div>
@@ -1034,7 +1034,7 @@ const handleNodeDragEnd = async (evt) => {
       </div>
 
       <!-- 订阅组标签页 -->
-      <div v-if="activeTab === 'profiles'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div v-if="activeTab === 'profiles'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <!-- 标题区域已移除 -->
           <div class="flex-1"></div>
@@ -1083,12 +1083,12 @@ const handleNodeDragEnd = async (evt) => {
       </div>
 
       <!-- 链接生成标签页 -->
-      <div v-if="activeTab === 'generator'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div v-if="activeTab === 'generator'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <SubscriptionLinkGenerator :config="config" :profiles="profiles" />
       </div>
 
       <!-- 手动节点标签页 -->
-      <div v-if="activeTab === 'nodes'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div v-if="activeTab === 'nodes'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <div class="flex items-center gap-4">
           </div>
@@ -1334,9 +1334,12 @@ const handleNodeDragEnd = async (evt) => {
     padding: 0.5rem 0.75rem !important;
   }
 
-  /* 统计卡片网格调整为双列 */
-  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+  /* 统计卡片网格调整为双列，但仅在屏幕宽度足够时 (>=350px) */
+  @media (min-width: 350px) {
+    .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.75rem !important;
+    }
   }
 
   /* 搜索框和操作按钮响应式布局 */
