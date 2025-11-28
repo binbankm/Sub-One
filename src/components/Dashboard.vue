@@ -1210,7 +1210,10 @@ const handleNodeDragEnd = async (evt) => {
             </div>
           </div>
 
-          <div v-if="manualNodeViewMode === 'list'" class="space-y-3">
+          <!-- 列表视图 - 使用固定高度布局防止溢出 -->
+          <div v-if="manualNodeViewMode === 'list'" class="flex flex-col" style="min-height: 600px;">
+            <!-- 节点列表区域 - 固定高度并可滚动 -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-2" style="max-height: calc(600px - 80px);">
               <ManualNodeList
                   v-for="(node, index) in paginatedManualNodes"
                   :key="node.id"
@@ -1219,12 +1222,14 @@ const handleNodeDragEnd = async (evt) => {
                   @edit="handleEditNode(node.id)"
                   @delete="handleDeleteNodeWithCleanup(node.id)"
               />
-          </div>
-          
-          <div v-if="manualNodesTotalPages > 1 && !isSortingNodes" class="flex justify-center items-center gap-2 sm:gap-4 mt-10 text-base font-medium">
-            <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center">&laquo; <span class="hidden xs:inline ml-1">上一页</span></button>
-        <span class="min-w-[80px] sm:min-w-[100px] text-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">第{{ manualNodesCurrentPage }}/{{ manualNodesTotalPages }}页</span>
-        <button @click="changeManualNodesPage(manualNodesCurrentPage + 1)" :disabled="manualNodesCurrentPage === manualNodesTotalPages" class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center"><span class="hidden xs:inline mr-1">下一页</span> &raquo;</button>
+            </div>
+            
+            <!-- 分页区域 - 固定在底部 -->
+            <div v-if="manualNodesTotalPages > 1 && !isSortingNodes" class="flex justify-center items-center gap-2 sm:gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-base font-medium flex-shrink-0">
+              <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center">&laquo; <span class="hidden xs:inline ml-1">上一页</span></button>
+              <span class="min-w-[80px] sm:min-w-[100px] text-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">第{{ manualNodesCurrentPage }}/{{ manualNodesTotalPages }}页</span>
+              <button @click="changeManualNodesPage(manualNodesCurrentPage + 1)" :disabled="manualNodesCurrentPage === manualNodesTotalPages" class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center"><span class="hidden xs:inline mr-1">下一页</span> &raquo;</button>
+            </div>
           </div>
         </div>
         <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
