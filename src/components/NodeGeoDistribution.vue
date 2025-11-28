@@ -12,46 +12,46 @@ const props = defineProps({
   }
 });
 
-// 国家/地区关键词映射
-const countryKeywords = {
-  '🇭🇰 香港': ['香港', 'HK', 'Hong Kong', '港'],
-  '🇯🇵 日本': ['日本', 'JP', 'Japan', '东京', 'Tokyo', '大阪', 'Osaka'],
-  '🇸🇬 新加坡': ['新加坡', 'SG', 'Singapore', '狮城'],
-  '🇺🇸 美国': ['美国', 'US', 'USA', 'America', '洛杉矶', 'LA', '西雅图', 'Seattle'],
-  '🇹🇼 台湾': ['台湾', 'TW', 'Taiwan', '台北', 'Taipei'],
-  '🇰🇷 韩国': ['韩国', 'KR', 'Korea', '首尔', 'Seoul'],
-  '🇬🇧 英国': ['英国', 'UK', 'Britain', '伦敦', 'London'],
-  '🇩🇪 德国': ['德国', 'DE', 'Germany', '法兰克福', 'Frankfurt'],
-  '🇨🇦 加拿大': ['加拿大', 'CA', 'Canada'],
-  '🇦🇺 澳大利亚': ['澳大利亚', 'AU', 'Australia', '悉尼', 'Sydney'],
-  '🇷🇺 俄罗斯': ['俄罗斯', 'RU', 'Russia', '莫斯科', 'Moscow'],
-  '🇮🇳 印度': ['印度', 'IN', 'India'],
-  '🇹🇭 泰国': ['泰国', 'TH', 'Thailand', '曼谷', 'Bangkok'],
-  '🇻🇳 越南': ['越南', 'VN', 'Vietnam'],
-  '🇵🇭 菲律宾': ['菲律宾', 'PH', 'Philippines'],
-  '🇲🇾 马来西亚': ['马来西亚', 'MY', 'Malaysia'],
-  '🇫🇷 法国': ['法国', 'FR', 'France', '巴黎', 'Paris'],
-  '🇳🇱 荷兰': ['荷兰', 'NL', 'Netherlands', '阿姆斯特丹'],
-  '🇦🇪 阿联酋': ['阿联酋', 'AE', 'UAE', '迪拜', 'Dubai'],
-  '🇧🇷 巴西': ['巴西', 'BR', 'Brazil'],
-  '🇦🇷 阿根廷': ['阿根廷', 'AR', 'Argentina'],
-  '🇿🇦 南非': ['南非', 'ZA', 'South Africa'],
-  '🌍 其他': []
+// 国家/地区配置（不使用emoji，使用国家代码和颜色）
+const countryConfig = {
+  '香港': { code: 'HK', name: '香港', color: 'from-red-500 to-orange-500', keywords: ['香港', 'HK', 'Hong Kong', '港'] },
+  '日本': { code: 'JP', name: '日本', color: 'from-pink-500 to-rose-500', keywords: ['日本', 'JP', 'Japan', '东京', 'Tokyo', '大阪', 'Osaka'] },
+  '新加坡': { code: 'SG', name: '新加坡', color: 'from-red-500 to-pink-500', keywords: ['新加坡', 'SG', 'Singapore', '狮城'] },
+  '美国': { code: 'US', name: '美国', color: 'from-blue-500 to-cyan-500', keywords: ['美国', 'US', 'USA', 'America', '洛杉矶', 'LA', '西雅图', 'Seattle'] },
+  '台湾': { code: 'TW', name: '台湾', color: 'from-blue-500 to-indigo-500', keywords: ['台湾', 'TW', 'Taiwan', '台北', 'Taipei'] },
+  '韩国': { code: 'KR', name: '韩国', color: 'from-blue-400 to-cyan-400', keywords: ['韩国', 'KR', 'Korea', '首尔', 'Seoul'] },
+  '英国': { code: 'GB', name: '英国', color: 'from-blue-600 to-indigo-600', keywords: ['英国', 'UK', 'Britain', '伦敦', 'London'] },
+  '德国': { code: 'DE', name: '德国', color: 'from-gray-700 to-red-600', keywords: ['德国', 'DE', 'Germany', '法兰克福', 'Frankfurt'] },
+  '加拿大': { code: 'CA', name: '加拿大', color: 'from-red-600 to-red-500', keywords: ['加拿大', 'CA', 'Canada'] },
+  '澳大利亚': { code: 'AU', name: '澳大利亚', color: 'from-blue-500 to-green-500', keywords: ['澳大利亚', 'AU', 'Australia', '悉尼', 'Sydney'] },
+  '俄罗斯': { code: 'RU', name: '俄罗斯', color: 'from-blue-600 to-red-600', keywords: ['俄罗斯', 'RU', 'Russia', '莫斯科', 'Moscow'] },
+  '印度': { code: 'IN', name: '印度', color: 'from-orange-500 to-green-500', keywords: ['印度', 'IN', 'India'] },
+  '泰国': { code: 'TH', name: '泰国', color: 'from-red-500 to-blue-500', keywords: ['泰国', 'TH', 'Thailand', '曼谷', 'Bangkok'] },
+  '越南': { code: 'VN', name: '越南', color: 'from-red-600 to-yellow-500', keywords: ['越南', 'VN', 'Vietnam'] },
+  '菲律宾': { code: 'PH', name: '菲律宾', color: 'from-blue-500 to-red-500', keywords: ['菲律宾', 'PH', 'Philippines'] },
+  '马来西亚': { code: 'MY', name: '马来西亚', color: 'from-blue-600 to-yellow-500', keywords: ['马来西亚', 'MY', 'Malaysia'] },
+  '法国': { code: 'FR', name: '法国', color: 'from-blue-600 to-red-600', keywords: ['法国', 'FR', 'France', '巴黎', 'Paris'] },
+  '荷兰': { code: 'NL', name: '荷兰', color: 'from-red-500 to-orange-500', keywords: ['荷兰', 'NL', 'Netherlands', '阿姆斯特丹'] },
+  '阿联酋': { code: 'AE', name: '阿联酋', color: 'from-green-600 to-red-600', keywords: ['阿联酋', 'AE', 'UAE', '迪拜', 'Dubai'] },
+  '巴西': { code: 'BR', name: '巴西', color: 'from-green-500 to-yellow-400', keywords: ['巴西', 'BR', 'Brazil'] },
+  '阿根廷': { code: 'AR', name: '阿根廷', color: 'from-blue-400 to-yellow-300', keywords: ['阿根廷', 'AR', 'Argentina'] },
+  '南非': { code: 'ZA', name: '南非', color: 'from-green-600 to-yellow-500', keywords: ['南非', 'ZA', 'South Africa'] },
+  '其他': { code: '??', name: '其他', color: 'from-gray-500 to-gray-600', keywords: [] }
 };
 
 // 识别节点所属国家/地区
 const identifyCountry = (name) => {
-  if (!name) return '🌍 其他';
+  if (!name) return countryConfig['其他'];
   
-  for (const [country, keywords] of Object.entries(countryKeywords)) {
-    if (country === '🌍 其他') continue;
-    for (const keyword of keywords) {
+  for (const [, config] of Object.entries(countryConfig)) {
+    if (config.name === '其他') continue;
+    for (const keyword of config.keywords) {
       if (name.toLowerCase().includes(keyword.toLowerCase())) {
-        return country;
+        return config;
       }
     }
   }
-  return '🌍 其他';
+  return countryConfig['其他'];
 };
 
 // 计算地理分布数据
@@ -64,19 +64,26 @@ const geoDistribution = computed(() => {
     
     sub.nodes.forEach(node => {
       const country = identifyCountry(node.name || node.remarks || '');
-      distribution[country] = (distribution[country] || 0) + 1;
+      const key = country.name;
+      if (!distribution[key]) {
+        distribution[key] = { ...country, count: 0 };
+      }
+      distribution[key].count++;
     });
   });
   
   // 统计手动节点
   props.manualNodes.forEach(node => {
     const country = identifyCountry(node.name || node.remarks || '');
-    distribution[country] = (distribution[country] || 0) + 1;
+    const key = country.name;
+    if (!distribution[key]) {
+      distribution[key] = { ...country, count: 0 };
+    }
+    distribution[key].count++;
   });
   
   // 转换为数组并排序
-  return Object.entries(distribution)
-    .map(([country, count]) => ({ country, count }))
+  return Object.values(distribution)
     .sort((a, b) => b.count - a.count)
     .slice(0, 12); // 只显示前12个
 });
@@ -90,25 +97,6 @@ const totalNodes = computed(() => {
 const getPercentage = (count) => {
   if (totalNodes.value === 0) return 0;
   return ((count / totalNodes.value) * 100).toFixed(1);
-};
-
-// 根据节点数量返回渐变色类
-const getGradientClass = (index) => {
-  const gradients = [
-    'from-blue-500 to-cyan-500',
-    'from-purple-500 to-pink-500',
-    'from-green-500 to-emerald-500',
-    'from-orange-500 to-red-500',
-    'from-indigo-500 to-purple-500',
-    'from-cyan-500 to-blue-500',
-    'from-pink-500 to-rose-500',
-    'from-emerald-500 to-teal-500',
-    'from-yellow-500 to-orange-500',
-    'from-violet-500 to-purple-500',
-    'from-teal-500 to-cyan-500',
-    'from-rose-500 to-pink-500'
-  ];
-  return gradients[index % gradients.length];
 };
 </script>
 
@@ -131,26 +119,28 @@ const getGradientClass = (index) => {
     <div v-if="geoDistribution.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       <div 
         v-for="(item, index) in geoDistribution" 
-        :key="item.country"
+        :key="item.name"
         class="group relative overflow-hidden rounded-xl p-4 bg-white/60 dark:bg-gray-700/30 border border-gray-200/50 dark:border-gray-600/30 hover:scale-105 transition-all duration-300 cursor-pointer"
       >
         <!-- 背景渐变 -->
-        <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity" :class="`bg-gradient-to-br ${getGradientClass(index)}`"></div>
+        <div class="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity" :class="`bg-gradient-to-br ${item.color}`"></div>
         
         <div class="relative z-10">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-2xl">{{ item.country.split(' ')[0] }}</span>
+            <span class="px-2 py-1 rounded-lg bg-gradient-to-r text-white font-bold text-xs shadow-md" :class="item.color">
+              {{ item.code }}
+            </span>
             <span class="text-xl font-bold text-gray-900 dark:text-white">{{ item.count }}</span>
           </div>
-          <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
-            {{ item.country.split(' ')[1] || item.country }}
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+            {{ item.name }}
           </div>
           
           <!-- 进度条 -->
           <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
             <div 
               class="h-1.5 rounded-full transition-all duration-500" 
-              :class="`bg-gradient-to-r ${getGradientClass(index)}`"
+              :class="`bg-gradient-to-r ${item.color}`"
               :style="{ width: getPercentage(item.count) + '%' }"
             ></div>
           </div>
