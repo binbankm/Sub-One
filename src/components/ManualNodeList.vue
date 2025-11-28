@@ -61,7 +61,7 @@ const protocolStyle = computed(() => {
 
 <template>
   <div
-    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex items-center gap-4 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
+    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex flex-wrap items-center gap-4 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
     :class="{ 'opacity-50': !node.enabled }"
   >
     <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full">
@@ -70,34 +70,34 @@ const protocolStyle = computed(() => {
       </span>
     </div>
 
-    <div class="flex-shrink-0 w-20 text-center">
+    <div class="flex-shrink-0 w-16 text-center">
       <div
-        class="text-xs font-bold px-3 py-1 rounded-full border inline-block"
+        class="text-xs font-bold px-2 py-1 rounded-full border inline-block whitespace-nowrap"
         :class="protocolStyle.style"
       >
         {{ protocolStyle.text }}
       </div>
     </div>
 
-    <div class="flex-1 min-w-0">
+    <div class="flex-1 min-w-0 w-full sm:w-auto">
       <p class="font-semibold text-sm text-gray-800 dark:text-gray-100 truncate" :title="node.name">
         {{ node.name || '未命名节点' }}
       </p>
     </div>
 
-    <div class="flex-1 min-w-0 hidden md:block">
+    <div class="flex-1 min-w-0 hidden sm:block">
       <p class="font-mono text-xs text-gray-500 dark:text-gray-400 truncate" :title="hostAndPort.host">
         {{ hostAndPort.host || 'N/A' }}
       </p>
     </div>
 
-    <div class="flex-shrink-0 w-16 text-center hidden md:block">
+    <div class="flex-shrink-0 w-12 text-center hidden sm:block">
        <p class="font-mono text-xs text-gray-500 dark:text-gray-400">
         {{ hostAndPort.port || 'N/A' }}
       </p>
     </div>
 
-    <div class="flex-shrink-0 flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+    <div class="flex-shrink-0 flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
       <button @click.stop="emit('edit')" class="p-1.5 rounded-full hover:bg-gray-500/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" title="编辑节点">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>
       </button>
