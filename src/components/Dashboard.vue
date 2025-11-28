@@ -63,7 +63,7 @@ const {
   addNodesFromBulk, autoSortNodes, deduplicateNodes,
 } = useManualNodes(initialNodes, markDirty);
 
-const manualNodesPerPage = 7;
+const manualNodesPerPage = 24;
 
 // --- 訂閱組 (Profile) 相關狀態 ---
 const profiles = ref([]);
@@ -1210,7 +1210,7 @@ const handleNodeDragEnd = async (evt) => {
             </div>
           </div>
 
-          <div v-if="manualNodeViewMode === 'list'" class="space-y-3 min-h-[580px]">
+          <div v-if="manualNodeViewMode === 'list'" class="space-y-3">
               <ManualNodeList
                   v-for="(node, index) in paginatedManualNodes"
                   :key="node.id"
