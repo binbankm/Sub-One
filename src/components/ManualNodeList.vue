@@ -61,43 +61,60 @@ const protocolStyle = computed(() => {
 
 <template>
   <div
-    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex items-center gap-4 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
+    class="group w-full card-modern p-4 transition-all duration-300 hover:scale-[1.02] flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 border-b border-gray-200 dark:border-gray-700/50 last:border-0"
     :class="{ 'opacity-50': !node.enabled }"
   >
-    <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full">
-      <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">
-        {{ index }}
-      </span>
-    </div>
+    <!-- 基础信息：序号、协议和节点名称 -->
+    <div class="flex items-center gap-3 flex-1 min-w-0">
+      <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-200 dark:bg-gray-700/50 rounded-full">
+        <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">
+          {{ index }}
+        </span>
+      </div>
 
-    <div class="flex-shrink-0 w-20 text-center">
-      <div
-        class="text-xs font-bold px-3 py-1 rounded-full border inline-block"
-        :class="protocolStyle.style"
-      >
-        {{ protocolStyle.text }}
+      <div class="flex-shrink-0 w-auto">
+        <div
+          class="text-xs font-bold px-3 py-1 rounded-full border inline-block whitespace-nowrap"
+          :class="protocolStyle.style"
+        >
+          {{ protocolStyle.text }}
+        </div>
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm text-gray-800 dark:text-gray-100 truncate" :title="node.name">
+          {{ node.name || '未命名节点' }}
+        </p>
+        <!-- 在非大屏幕上，将主机名和端口显示在节点名称下方 -->
+        <div class="flex items-center gap-2 mt-1 lg:hidden">
+          <p v-if="hostAndPort.host" class="font-mono text-xs text-gray-500 dark:text-gray-400 truncate" :title="hostAndPort.host">
+            {{ hostAndPort.host }}
+          </p>
+          <span v-if="hostAndPort.host && hostAndPort.port" class="text-gray-400 dark:text-gray-500">:</span>
+          <p v-if="hostAndPort.port" class="font-mono text-xs text-gray-500 dark:text-gray-400">
+            {{ hostAndPort.port }}
+          </p>
+        </div>
       </div>
     </div>
 
-    <div class="flex-1 min-w-0">
-      <p class="font-semibold text-sm text-gray-800 dark:text-gray-100 truncate" :title="node.name">
-        {{ node.name || '未命名节点' }}
-      </p>
+    <!-- 大屏幕显示：主机名和端口 -->
+    <div class="hidden lg:flex flex-1 items-center justify-end gap-4">
+      <div class="flex-1 min-w-0 max-w-xs">
+        <p class="font-mono text-xs text-gray-500 dark:text-gray-400 truncate" :title="hostAndPort.host">
+          {{ hostAndPort.host || 'N/A' }}
+        </p>
+      </div>
+
+      <div class="flex-shrink-0 w-12 text-right">
+         <p class="font-mono text-xs text-gray-500 dark:text-gray-400 truncate">
+          {{ hostAndPort.port || 'N/A' }}
+        </p>
+      </div>
     </div>
 
-    <div class="flex-1 min-w-0 hidden md:block">
-      <p class="font-mono text-xs text-gray-500 dark:text-gray-400 truncate" :title="hostAndPort.host">
-        {{ hostAndPort.host || 'N/A' }}
-      </p>
-    </div>
-
-    <div class="flex-shrink-0 w-16 text-center hidden md:block">
-       <p class="font-mono text-xs text-gray-500 dark:text-gray-400">
-        {{ hostAndPort.port || 'N/A' }}
-      </p>
-    </div>
-
-    <div class="flex-shrink-0 flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+    <!-- 操作按钮：在非大屏幕上始终显示，在大屏幕上悬停显示 -->
+    <div class="flex-shrink-0 flex items-center justify-end gap-1 mt-2 lg:mt-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200">
       <button @click.stop="emit('edit')" class="p-1.5 rounded-full hover:bg-gray-500/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" title="编辑节点">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>
       </button>
