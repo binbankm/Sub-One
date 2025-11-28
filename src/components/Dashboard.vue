@@ -13,7 +13,7 @@ import Card from './cards/Card.vue';
 import ManualNodeCard from './cards/ManualNodeCard.vue';
 import SubscriptionLinkGenerator from './SubscriptionLinkGenerator.vue';
 import ProfileCard from './cards/ProfileCard.vue';
-import ManualNodeList from './ManualNodeList.vue';
+
 import Modal from './modals/Modal.vue';
 import SubscriptionImportModal from './modals/SubscriptionImportModal.vue';
 import NodeDetailsModal from './modals/NodeDetailsModal.vue';
@@ -115,7 +115,7 @@ const activeNodeCount = computed(() => {
 const isSortingSubs = ref(false);
 const isSortingNodes = ref(false);
 
-const manualNodeViewMode = ref('card');
+
 
 // --- 編輯專用模態框狀態 ---
 const editingSubscription = ref(null);
@@ -204,10 +204,6 @@ onMounted(async () => {
   try {
     initializeState();
     window.addEventListener('beforeunload', handleBeforeUnload);
-    const savedViewMode = localStorage.getItem('manualNodeViewMode');
-    if (savedViewMode) {
-      manualNodeViewMode.value = savedViewMode;
-    }
     document.addEventListener('click', handleClickOutside);
     
 
@@ -224,10 +220,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
-const setViewMode = (mode) => {
-    manualNodeViewMode.value = mode;
-    localStorage.setItem('manualNodeViewMode', mode);
-};
+
 
 // --- 其他 JS 逻辑 (省略) ---
 const handleDiscard = () => {
@@ -1115,16 +1108,6 @@ const handleNodeDragEnd = async (evt) => {
             </div>
             
             <div class="flex flex-wrap items-center gap-2 ml-auto">
-              <!-- 视图切换 -->
-              <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center">
-                  <button @click="setViewMode('card')" class="p-2 sm:p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                  </button>
-                  <button @click="setViewMode('list')" class="p-2 sm:p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'list' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
-                  </button>
-              </div>
-
               <!-- 主要操作按钮 -->
               <div class="flex flex-wrap items-center gap-2">
                 <button @click="handleAddNode" class="btn-modern-enhanced btn-add text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
@@ -1180,7 +1163,6 @@ const handleNodeDragEnd = async (evt) => {
         
         <!-- 节点内容区域 -->
         <div v-if="manualNodes.length > 0">
-          <div v-if="manualNodeViewMode === 'card'">
              <draggable 
               v-if="isSortingNodes"
               tag="div" 
@@ -1208,18 +1190,6 @@ const handleNodeDragEnd = async (evt) => {
                   @delete="handleDeleteNodeWithCleanup(node.id)" />
               </div>
             </div>
-          </div>
-
-          <div v-if="manualNodeViewMode === 'list'" class="space-y-3">
-              <ManualNodeList
-                  v-for="(node, index) in paginatedManualNodes"
-                  :key="node.id"
-                  :node="node"
-                  :index="(manualNodesCurrentPage - 1) * manualNodesPerPage + index + 1"
-                  @edit="handleEditNode(node.id)"
-                  @delete="handleDeleteNodeWithCleanup(node.id)"
-              />
-          </div>
           
           <div v-if="manualNodesTotalPages > 1 && !isSortingNodes" class="flex justify-center items-center gap-2 sm:gap-4 mt-10 text-base font-medium">
             <button @click="changeManualNodesPage(manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1" class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center">&laquo; <span class="hidden xs:inline ml-1">上一页</span></button>
