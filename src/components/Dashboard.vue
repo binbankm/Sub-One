@@ -928,7 +928,7 @@ const handleNodeDragEnd = async (evt) => {
       
       <!-- 订阅管理标签页 -->
       <div v-if="activeTab === 'subscriptions'" class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4 sm:gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
           <!-- 标题区域已移除，由外层布局统一管理 -->
           <div class="flex-1"></div>
                       <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
@@ -1012,7 +1012,7 @@ const handleNodeDragEnd = async (evt) => {
               </div>
             </template>
           </draggable>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
                   <Card 
                       :sub="subscription" 
@@ -1024,9 +1024,9 @@ const handleNodeDragEnd = async (evt) => {
               </div>
           </div>
           <div v-if="subsTotalPages > 1 && !isSortingSubs" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
-              <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-4 sm:px-6 py-2 sm:py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
-        <span class="mx-2 sm:mx-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ subsCurrentPage }}/{{ subsTotalPages }}页</span>
-        <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-4 sm:px-6 py-2 sm:py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
+              <button @click="changeSubsPage(subsCurrentPage - 1)" :disabled="subsCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
+        <span class="mx-4 text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ subsCurrentPage }}/{{ subsTotalPages }}页</span>
+        <button @click="changeSubsPage(subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
           </div>
         </div>
         <div v-else class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
@@ -1060,7 +1060,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
         </div>
         
-        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           <ProfileCard
             v-for="profile in paginatedProfiles"
             :key="profile.id"
@@ -1074,9 +1074,9 @@ const handleNodeDragEnd = async (evt) => {
           />
         </div>
         <div v-if="profilesTotalPages > 1" class="flex justify-center items-center space-x-6 mt-10 text-base font-medium">
-          <button @click="changeProfilesPage(profilesCurrentPage - 1)" :disabled="profilesCurrentPage === 1" class="px-4 sm:px-6 py-2 sm:py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
-        <span class="mx-2 sm:mx-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ profilesCurrentPage }}/{{ profilesTotalPages }}页</span>
-        <button @click="changeProfilesPage(profilesCurrentPage + 1)" :disabled="profilesCurrentPage === profilesTotalPages" class="px-4 sm:px-6 py-2 sm:py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
+          <button @click="changeProfilesPage(profilesCurrentPage - 1)" :disabled="profilesCurrentPage === 1" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">&laquo; 上一页</button>
+        <span class="mx-4 text-sm text-gray-700 dark:text-gray-300 font-medium">第{{ profilesCurrentPage }}/{{ profilesTotalPages }}页</span>
+        <button @click="changeProfilesPage(profilesCurrentPage + 1)" :disabled="profilesCurrentPage === profilesTotalPages" class="px-6 py-3 rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium">下一页 &raquo;</button>
         </div>
         <div v-if="profiles.length === 0" class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
           <div class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
