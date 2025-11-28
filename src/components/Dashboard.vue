@@ -1100,9 +1100,9 @@ const handleNodeDragEnd = async (evt) => {
           <div class="flex items-center gap-4">
           </div>
           
-          <div class="flex flex-wrap items-center gap-2 w-full justify-between">
+          <div class="flex flex-wrap items-center gap-2 w-full">
             <!-- 搜索框 -->
-            <div class="relative w-full sm:w-56 mb-2 sm:mb-0">
+            <div class="relative w-full sm:w-56 mb-2 sm:mb-0 flex-shrink-0">
               <input 
                 type="text" 
                 v-model="searchTerm"
@@ -1114,7 +1114,7 @@ const handleNodeDragEnd = async (evt) => {
               </svg>
             </div>
             
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 ml-auto">
               <!-- 视图切换 -->
               <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center">
                   <button @click="setViewMode('card')" class="p-2 sm:p-3 rounded-xl transition-colors hover-lift" :class="manualNodeViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'">
