@@ -716,7 +716,7 @@ const handleNodeDragEnd = async (evt) => {
       <!-- 仪表盘标签页 -->
       <div v-if="activeTab === 'dashboard'" class="space-y-6 lg:space-y-8">
         <!-- 统计卡片 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 min-[350px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <!-- 总订阅数 -->
           <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-4">
@@ -803,7 +803,7 @@ const handleNodeDragEnd = async (evt) => {
         </div>
         
         <!-- 订阅状态图表 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <!-- 订阅状态分布 -->
           <div class="lg:col-span-2 bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
@@ -986,7 +986,7 @@ const handleNodeDragEnd = async (evt) => {
           <draggable 
             v-if="isSortingSubs" 
             tag="div" 
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8" 
             v-model="subscriptions" 
             :item-key="item => item.id"
             animation="300" 
@@ -1005,7 +1005,7 @@ const handleNodeDragEnd = async (evt) => {
               </div>
             </template>
           </draggable>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
                   <Card 
                       :sub="subscription" 
@@ -1053,7 +1053,7 @@ const handleNodeDragEnd = async (evt) => {
           </div>
         </div>
         
-        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div v-if="profiles.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           <ProfileCard
             v-for="profile in paginatedProfiles"
             :key="profile.id"
@@ -1166,7 +1166,7 @@ const handleNodeDragEnd = async (evt) => {
              <draggable 
               v-if="isSortingNodes"
               tag="div" 
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8" 
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8" 
               v-model="manualNodes" 
               :item-key="item => item.id" 
               animation="300" 
@@ -1182,7 +1182,7 @@ const handleNodeDragEnd = async (evt) => {
                 </div>
               </template>
             </draggable>
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               <div v-for="node in paginatedManualNodes" :key="node.id">
                 <ManualNodeCard 
                   :node="node" 
@@ -1332,14 +1332,6 @@ const handleNodeDragEnd = async (evt) => {
   .btn-modern-enhanced {
     font-size: 0.8125rem !important;
     padding: 0.5rem 0.75rem !important;
-  }
-
-  /* 统计卡片网格调整为双列，但仅在屏幕宽度足够时 (>=350px) */
-  @media (min-width: 350px) {
-    .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 0.75rem !important;
-    }
   }
 
   /* 搜索框和操作按钮响应式布局 */
