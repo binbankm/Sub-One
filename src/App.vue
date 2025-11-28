@@ -403,6 +403,7 @@ html.dark .quick-action-btn:hover {
 }
 
 /* ==================== Responsive Design ==================== */
+/* 平板和小型桌面 (≤1024px) */
 @media (max-width: 1024px) {
   .main-content {
     margin-left: 0;
@@ -410,6 +411,45 @@ html.dark .quick-action-btn:hover {
   
   .main-content-full {
     margin-left: 0;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-description {
+    font-size: 0.8125rem;
+  }
+}
+
+/* 针对小屏手机进一步优化 (≤640px) */
+@media (max-width: 640px) {
+  .content-wrapper {
+    padding: 0.75rem;
+  }
+
+  .page-header {
+    margin-bottom: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .page-description {
+    font-size: 0.75rem;
+  }
+
+  .dashboard-footer {
+    padding-top: 1.5rem;
   }
 }
 </style>

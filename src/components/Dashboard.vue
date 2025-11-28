@@ -1321,6 +1321,7 @@ const handleNodeDragEnd = async (evt) => {
     @update:show="showProfileNodeDetailsModal = $event" 
   />
   
+  
 
   
 </template>
@@ -1344,5 +1345,32 @@ const handleNodeDragEnd = async (evt) => {
 .slide-fade-sm-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 1024px) {
+  /* 强制移动端汉堡菜单显示时，主界面不受影响 */
+  .container-optimized {
+    width: 100% !important;
+  }
+}
+
+/* 小屏手机优化 (≤640px) */
+@media (max-width: 640px) {
+  /* 按钮文字在小屏幕上可见 */
+  .btn-modern-enhanced {
+    font-size: 0.8125rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* 统计卡片网格调整为双列 */
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* 搜索框和操作按钮响应式布局 */
+  .flex.flex-wrap.items-center.gap-3 {
+    gap: 0.5rem !important;
+  }
 }
 </style>

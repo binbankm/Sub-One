@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useThemeStore } from '../../stores/theme.js';
 import { useLayoutStore } from '../../stores/layout.js';
 
@@ -18,6 +18,7 @@ const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
 
 const isCollapsed = ref(false);
+const isMobileMenuOpen = ref(false);
 
 const navigationItems = computed(() => [
   {
@@ -89,13 +90,25 @@ const utilityItems = computed(() => [
 const selectTab = (tabId) => {
   if (tabId === 'help') {
     emit('help');
+    // 在移动端选择后关闭菜单
+    if (window.innerWidth <= 1024) {
+      isMobileMenuOpen.value = false;
+    }
     return;
   }
   if (tabId === 'settings') {
     emit('settings');
+    // 在移动端选择后关闭菜单
+    if (window.innerWidth <= 1024) {
+      isMobileMenuOpen.value = false;
+    }
     return;
   }
   emit('update:modelValue', tabId);
+  // 在移动端选择后关闭菜单
+  if (window.innerWidth <= 1024) {
+    isMobileMenuOpen.value = false;
+  }
 };
 
 const handleLogout = () => {
@@ -106,12 +119,74 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
   layoutStore.toggleSidebar();
 };
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false;
+};
+
+// 监听窗口大小变化，在桌面端自动关闭移动菜单
+const handleResize = () => {
+  if (window.innerWidth > 1024) {
+    isMobileMenuOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
+  <!-- 移动端遮罩层 -->
+  <Transition name="fade-overlay">
+    <div 
+      v-if="isMobileMenuOpen" 
+      class="mobile-overlay"
+      @click="closeMobileMenu"
+    ></div>
+  </Transition>
+
+  <!-- 移动端汉堡菜单按钮 -->
+  <button 
+    class="mobile-menu-button"
+    @click="toggleMobileMenu"
+    :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
+  >
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      class="w-6 h-6" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path 
+        v-if="!isMobileMenuOpen"
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        stroke-width="2" 
+        d="M4 6h16M4 12h16M4 18h16" 
+      />
+      <path 
+        v-else
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        stroke-width="2" 
+        d="M6 18L18 6M6 6l12 12" 
+      />
+    </svg>
+  </button>
+
   <aside 
     class="sidebar"
-    :class="{ 'sidebar-collapsed': isCollapsed }"
+    :class="{ 'sidebar-collapsed': isCollapsed, 'sidebar-mobile-open': isMobileMenuOpen }"
   >
     <!-- Sidebar Header -->
     <div class="sidebar-header">
@@ -768,14 +843,87 @@ html.dark .logout-btn {
   transform: translateX(-10px);
 }
 
-/* Mobile */
+/* 移动端汉堡菜单按钮 */
+.mobile-menu-button {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  color: hsl(243, 47%, 40%);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu-button:hover {
+  background: white;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+html.dark .mobile-menu-button {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: hsl(243, 87%, 70%);
+}
+
+html.dark .mobile-menu-button:hover {
+  background: rgba(15, 23, 42, 1);
+}
+
+/* 移动端遮罩层 */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 39;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* 遮罩层过渡效果 */
+.fade-overlay-enter-active,
+.fade-overlay-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-overlay-enter-from,
+.fade-overlay-leave-to {
+  opacity: 0;
+}
+
+/* Mobile 响应式设计 */
 @media (max-width: 1024px) {
+  .mobile-menu-button {
+    display: flex;
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+
   .sidebar {
     transform: translateX(-100%);
   }
   
-  .sidebar.open {
+  .sidebar-mobile-open {
     transform: translateX(0);
+  }
+
+  /* 移动端强制全宽侧边栏 */
+  .sidebar-collapsed {
+    width: 280px;
   }
 }
 </style>
