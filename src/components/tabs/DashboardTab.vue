@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import NodeGeoDistribution from '../NodeGeoDistribution.vue';
 
 const props = defineProps({
   subscriptions: {
@@ -221,5 +222,11 @@ const activeNodeCount = computed(() => {
         </div>
       </div>
     </div>
+    
+    <!-- 节点地理分布 -->
+    <NodeGeoDistribution 
+      :subscriptions="subscriptions"
+      :manual-nodes="manualNodes"
+    />
   </div>
 </template>
