@@ -11,7 +11,7 @@ import { useManualNodes } from '../../composables/useManualNodes.js';
 // --- 组件导入 ---
 import Card from '../cards/SubscriptionCard.vue';
 import ManualNodeCard from '../cards/ManualNodeCard.vue';
-import SubscriptionLinkGenerator from './SubscriptionLinkGenerator.vue';
+import SubscriptionLinkGenerator from '../cards/SubscriptionLinkGeneratorCard.vue';
 import ProfileCard from '../cards/ProfileCard.vue';
 
 import Modal from '../modals/BaseModal.vue';
