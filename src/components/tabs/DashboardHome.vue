@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { detectRegion } from '../../lib/utils.js';
+import { detectRegion, getRegionCode } from '../../lib/utils.js';
+
 const props = defineProps({
   subscriptions: { type: Array, required: true },
   activeSubscriptions: { type: Number, required: true },
@@ -235,7 +236,13 @@ const regionDistribution = computed(() => {
         <div v-for="item in regionDistribution" :key="item.name" class="bg-white/50 dark:bg-gray-700/30 rounded-xl p-3 border border-gray-100 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-700/50 transition-colors">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
-                <span class="text-lg">{{ item.name === '香港' ? '🇭🇰' : item.name === '台湾' ? '🇹🇼' : item.name === '日本' ? '🇯🇵' : item.name === '美国' ? '🇺🇸' : item.name === '新加坡' ? '🇸🇬' : item.name === '韩国' ? '🇰🇷' : '🌍' }}</span>
+                <img 
+                  v-if="getRegionCode(item.name)" 
+                  :src="`https://flagcdn.com/w40/${getRegionCode(item.name)}.png`" 
+                  :alt="item.name"
+                  class="w-6 h-4 object-cover rounded-[2px] shadow-sm"
+                />
+                <span v-else class="text-lg">🌍</span>
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
             </div>
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ item.count }} 节点</span>

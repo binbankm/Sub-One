@@ -234,3 +234,50 @@ export function detectRegion(name) {
   if (n.match(/(BR|BRAZIL|巴西|🇧🇷)/)) return '巴西';
   return '其他';
 }
+
+/**
+ * Get ISO country code from region name
+ * @param {string} region 
+ * @returns {string|null}
+ */
+export function getRegionCode(region) {
+  const codes = {
+    '香港': 'hk',
+    '台湾': 'tw',
+    '日本': 'jp',
+    '美国': 'us',
+    '新加坡': 'sg',
+    '韩国': 'kr',
+    '德国': 'de',
+    '英国': 'gb',
+    '加拿大': 'ca',
+    '法国': 'fr',
+    '俄罗斯': 'ru',
+    '澳大利亚': 'au',
+    '印度': 'in',
+    '巴西': 'br',
+    '荷兰': 'nl',
+    '土耳其': 'tr',
+    '阿根廷': 'ar',
+    '泰国': 'th',
+    '越南': 'vn',
+    '菲律宾': 'ph',
+    '马来西亚': 'my',
+    '印度尼西亚': 'id',
+    '意大利': 'it',
+    '瑞士': 'ch',
+    '瑞典': 'se',
+    '挪威': 'no',
+    '芬兰': 'fi',
+    '丹麦': 'dk',
+    '爱尔兰': 'ie',
+    '波兰': 'pl',
+    '乌克兰': 'ua',
+    '南非': 'za',
+    '埃及': 'eg',
+    '以色列': 'il',
+    '阿联酋': 'ae',
+    '沙特阿拉伯': 'sa'
+  };
+  return codes[region] || null;
+}
