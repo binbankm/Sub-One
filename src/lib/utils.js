@@ -4,10 +4,10 @@
  */
 export function extractNodeName(url) {
   if (!url) return '';
-  
+
   const trimmedUrl = url.trim();
   if (!trimmedUrl) return '';
-  
+
   // 优先检查URL片段（#后面的内容）
   const hashIndex = trimmedUrl.indexOf('#');
   if (hashIndex !== -1 && hashIndex < trimmedUrl.length - 1) {
@@ -17,45 +17,45 @@ export function extractNodeName(url) {
       // 解码失败时静默处理
     }
   }
-  
+
   // 检查协议
   const protocolIndex = trimmedUrl.indexOf('://');
   if (protocolIndex === -1) return '';
-  
+
   const protocol = trimmedUrl.substring(0, protocolIndex);
   const mainPart = trimmedUrl.substring(protocolIndex + 3).split('#')[0];
-  
+
   try {
     switch (protocol) {
       case 'vmess': {
         // 优化Base64解码
         const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
         const binaryString = atob(padded);
-        
+
         // 优化字节转换
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        
+
         const jsonString = new TextDecoder('utf-8').decode(bytes);
         const node = JSON.parse(jsonString);
         return node.ps || '';
       }
-      
+
       case 'trojan':
       case 'vless': {
         const atIndex = mainPart.indexOf('@');
         if (atIndex === -1) return '';
         return mainPart.substring(atIndex + 1).split(':')[0] || '';
       }
-      
+
       case 'ss': {
         const atIndex = mainPart.indexOf('@');
         if (atIndex !== -1) {
           return mainPart.substring(atIndex + 1).split(':')[0] || '';
         }
-        
+
         try {
           const decodedSS = atob(mainPart);
           const ssDecodedAtIndex = decodedSS.indexOf('@');
@@ -67,7 +67,7 @@ export function extractNodeName(url) {
         }
         return '';
       }
-      
+
       default:
         if (trimmedUrl.startsWith('http')) {
           try {
@@ -95,7 +95,7 @@ export function prependNodeName(link, prefix) {
   if (!prefix || !link) return link;
 
   const hashIndex = link.lastIndexOf('#');
-  
+
   // 如果链接没有 #fragment，直接添加前缀
   if (hashIndex === -1) {
     return `${link}#${encodeURIComponent(prefix)}`;
@@ -103,7 +103,7 @@ export function prependNodeName(link, prefix) {
 
   const baseLink = link.substring(0, hashIndex);
   const originalName = decodeURIComponent(link.substring(hashIndex + 1));
-  
+
   // 如果原始名称已经包含了前缀，则不再重复添加
   if (originalName.startsWith(prefix)) {
     return link;
@@ -126,7 +126,7 @@ export function extractHostAndPort(url) {
     if (protocolEndIndex === -1) throw new Error('无效的 URL：缺少协议头');
 
     const protocol = url.substring(0, protocolEndIndex);
-    
+
     const fragmentStartIndex = url.indexOf('#');
     const mainPartEndIndex = fragmentStartIndex === -1 ? url.length : fragmentStartIndex;
     let mainPart = url.substring(protocolEndIndex + 3, mainPartEndIndex);
@@ -136,12 +136,12 @@ export function extractHostAndPort(url) {
       const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
       const decodedString = atob(padded);
       const nodeConfig = JSON.parse(decodedString);
-      return { 
-        host: nodeConfig.add || '', 
-        port: nodeConfig.port ? String(nodeConfig.port) : '' 
+      return {
+        host: nodeConfig.add || '',
+        port: nodeConfig.port ? String(nodeConfig.port) : ''
       };
     }
-    
+
     // SS/SSR Base64 解码处理
     let decoded = false;
     if ((protocol === 'ss' || protocol === 'ssr') && mainPart.indexOf('@') === -1) {
@@ -161,7 +161,7 @@ export function extractHostAndPort(url) {
         return { host: parts[0], port: parts[1] };
       }
     }
-    
+
     // 通用解析逻辑 (适用于 VLESS, Trojan, SS原文, 解码后的SS等)
     const atIndex = mainPart.lastIndexOf('@');
     let serverPart = atIndex !== -1 ? mainPart.substring(atIndex + 1) : mainPart;
@@ -177,7 +177,7 @@ export function extractHostAndPort(url) {
     }
 
     const lastColonIndex = serverPart.lastIndexOf(':');
-    
+
     // 处理IPv6地址
     if (serverPart.startsWith('[') && serverPart.includes(']')) {
       const bracketEndIndex = serverPart.lastIndexOf(']');
@@ -197,7 +197,7 @@ export function extractHostAndPort(url) {
       }
       return { host: potentialHost, port: potentialPort };
     }
-    
+
     if (serverPart) {
       return { host: serverPart, port: '' };
     }
@@ -208,4 +208,29 @@ export function extractHostAndPort(url) {
     console.error('提取主机和端口失败:', url, e);
     return { host: '', port: '' };
   }
+}
+
+/**
+ * Detect region from node name
+ * @param {string} name 
+ * @returns {string}
+ */
+export function detectRegion(name) {
+  if (!name) return '其他';
+  const n = name.toUpperCase();
+  if (n.match(/(HK|HONG KONG|香港|🇭🇰)/)) return '香港';
+  if (n.match(/(TW|TAIWAN|台湾|臺灣|🇹🇼)/)) return '台湾';
+  if (n.match(/(JP|JAPAN|日本|🇯🇵)/)) return '日本';
+  if (n.match(/(US|USA|UNITED STATES|美国|🇺🇸)/)) return '美国';
+  if (n.match(/(SG|SINGAPORE|新加坡|🇸🇬)/)) return '新加坡';
+  if (n.match(/(KR|KOREA|韩国|🇰🇷)/)) return '韩国';
+  if (n.match(/(DE|GERMANY|德国|🇩🇪)/)) return '德国';
+  if (n.match(/(UK|UNITED KINGDOM|英国|🇬🇧)/)) return '英国';
+  if (n.match(/(CA|CANADA|加拿大|🇨🇦)/)) return '加拿大';
+  if (n.match(/(FR|FRANCE|法国|🇫🇷)/)) return '法国';
+  if (n.match(/(RU|RUSSIA|俄罗斯|🇷🇺)/)) return '俄罗斯';
+  if (n.match(/(AU|AUSTRALIA|澳大利亚|🇦🇺)/)) return '澳大利亚';
+  if (n.match(/(IN|INDIA|印度|🇮🇳)/)) return '印度';
+  if (n.match(/(BR|BRAZIL|巴西|🇧🇷)/)) return '巴西';
+  return '其他';
 }

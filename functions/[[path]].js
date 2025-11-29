@@ -11,6 +11,107 @@ const SESSION_DURATION = 8 * 60 * 60 * 1000;
 
 
 /**
+ * Detect region from node name
+ * @param {string} name 
+ * @returns {string}
+ */
+function detectRegion(name) {
+    if (!name) return '其他';
+    const n = name.toUpperCase();
+    if (n.match(/(HK|HONG KONG|香港|🇭🇰)/)) return '香港';
+    if (n.match(/(TW|TAIWAN|台湾|臺灣|🇹🇼)/)) return '台湾';
+    if (n.match(/(JP|JAPAN|日本|🇯🇵)/)) return '日本';
+    if (n.match(/(US|USA|UNITED STATES|美国|🇺🇸)/)) return '美国';
+    if (n.match(/(SG|SINGAPORE|新加坡|🇸🇬)/)) return '新加坡';
+    if (n.match(/(KR|KOREA|韩国|🇰🇷)/)) return '韩国';
+    if (n.match(/(DE|GERMANY|德国|🇩🇪)/)) return '德国';
+    if (n.match(/(UK|UNITED KINGDOM|英国|🇬🇧)/)) return '英国';
+    if (n.match(/(CA|CANADA|加拿大|🇨🇦)/)) return '加拿大';
+    if (n.match(/(FR|FRANCE|法国|🇫🇷)/)) return '法国';
+    if (n.match(/(RU|RUSSIA|俄罗斯|🇷🇺)/)) return '俄罗斯';
+    if (n.match(/(AU|AUSTRALIA|澳大利亚|🇦🇺)/)) return '澳大利亚';
+    if (n.match(/(IN|INDIA|印度|🇮🇳)/)) return '印度';
+    if (n.match(/(BR|BRAZIL|巴西|🇧🇷)/)) return '巴西';
+    return '其他';
+}
+
+/**
+ * Parse node content to get count and region distribution
+ * @param {string} text 
+ * @returns {{count: number, regions: Object}}
+ */
+function parseNodeRegions(text) {
+    const regions = {};
+    let nodeCount = 0;
+    const addRegion = (name) => {
+        const region = detectRegion(name);
+        regions[region] = (regions[region] || 0) + 1;
+    };
+
+    // 1. Try YAML (Clash)
+    try {
+        // Simple check to avoid parsing non-yaml as yaml which might be slow or throw
+        if (text.includes('proxies:')) {
+            const yamlContent = yaml.load(text);
+            if (yamlContent && yamlContent.proxies && Array.isArray(yamlContent.proxies)) {
+                yamlContent.proxies.forEach(p => {
+                    if (p.name) addRegion(p.name);
+                });
+                return { count: yamlContent.proxies.length, regions };
+            }
+        }
+    } catch (e) { }
+
+    // 2. Try Base64 or Raw
+    let decodedText = text;
+    // Check if it looks like base64 (no spaces, long enough)
+    if (!text.includes(' ') && text.length > 20) {
+        try {
+            decodedText = atob(text.replace(/\s/g, ''));
+        } catch (e) { }
+    }
+
+    const lines = decodedText.split(/[\r\n]+/);
+    const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!nodeRegex.test(trimmed)) continue;
+
+        nodeCount++;
+
+        // Try to extract name
+        let name = '';
+        if (trimmed.startsWith('vmess://')) {
+            try {
+                const b64 = trimmed.substring(8);
+                const json = JSON.parse(atob(b64));
+                if (json.ps) name = json.ps;
+            } catch (e) { }
+        }
+
+        if (!name) {
+            const hashIndex = trimmed.lastIndexOf('#');
+            if (hashIndex !== -1) {
+                try {
+                    name = decodeURIComponent(trimmed.substring(hashIndex + 1));
+                } catch (e) {
+                    name = trimmed.substring(hashIndex + 1);
+                }
+            }
+        }
+
+        if (name) {
+            addRegion(name);
+        } else {
+            regions['其他'] = (regions['其他'] || 0) + 1;
+        }
+    }
+
+    return { count: nodeCount, regions };
+}
+
+/**
  * 计算数据的简单哈希值，用于检测变更
  * @param {any} data - 要计算哈希的数据
  * @returns {string} - 数据的哈希值
@@ -259,42 +360,11 @@ async function handleCronTrigger(env) {
 
                 if (nodeCountResult.status === 'fulfilled' && nodeCountResult.value.ok) {
                     const text = await nodeCountResult.value.text();
-                    let nodeCount = 0;
+                    const { count, regions } = parseNodeRegions(text);
 
-                    // 方法1: 嘗試 Base64 解碼
-                    try {
-                        const decoded = atob(text.replace(/\s/g, ''));
-                        const matches = decoded.match(nodeRegex);
-                        if (matches) {
-                            nodeCount = matches.length;
-                        }
-                    } catch (e) {
-                        // Base64 解码失败，继续尝试其他方法
-                    }
-
-                    // 方法2: 嘗試 YAML 解析 (Clash 配置)
-                    if (nodeCount === 0) {
-                        try {
-                            const yamlContent = yaml.load(text);
-                            if (yamlContent && yamlContent.proxies && Array.isArray(yamlContent.proxies)) {
-                                nodeCount = yamlContent.proxies.length;
-                                console.log(`Cron: Parsed Clash config for ${sub.name}, found ${nodeCount} proxies`);
-                            }
-                        } catch (e) {
-                            // YAML 解析失败，继续尝试其他方法
-                        }
-                    }
-
-                    // 方法3: 直接匹配原始文本
-                    if (nodeCount === 0) {
-                        const matches = text.match(nodeRegex);
-                        if (matches) {
-                            nodeCount = matches.length;
-                        }
-                    }
-
-                    if (nodeCount > 0) {
-                        sub.nodeCount = nodeCount;
+                    if (count > 0) {
+                        sub.nodeCount = count;
+                        sub.regions = regions; // Store regions
                         changesMade = true;
                     }
                 } else if (nodeCountResult.status === 'rejected') {
@@ -599,47 +669,9 @@ async function handleApiRequest(request, env) {
                     const nodeCountResponse = responses[1].value;
                     const text = await nodeCountResponse.text();
 
-                    // 尝试多种解析方法
-                    let nodeCount = 0;
-
-                    // 方法1: 尝试Base64解码后匹配节点链接
-                    try {
-                        const decoded = atob(text.replace(/\s/g, ''));
-                        const lineMatches = decoded.match(/^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls):\/\//gm);
-                        if (lineMatches) {
-                            nodeCount = lineMatches.length;
-                        }
-                    } catch (e) {
-                        // Base64解码失败，继续尝试其他方法
-                    }
-
-                    // 方法2: 如果是YAML格式，解析Clash配置
-                    if (nodeCount === 0) {
-                        try {
-                            console.log('[YAML Parse] Attempting to parse as YAML/Clash config...');
-                            const yamlContent = yaml.load(text);
-                            console.log('[YAML Parse] Successfully parsed YAML');
-                            if (yamlContent && yamlContent.proxies && Array.isArray(yamlContent.proxies)) {
-                                nodeCount = yamlContent.proxies.length;
-                                console.log(`[YAML Parse] Found ${nodeCount} proxies in Clash config`);
-                            } else {
-                                console.log('[YAML Parse] YAML parsed but no proxies array found');
-                            }
-                        } catch (e) {
-                            console.error('[YAML Parse] YAML parsing failed:', e.message);
-                            // 继续尝试其他方法
-                        }
-                    }
-
-                    // 方法3: 直接匹配原始文本中的节点链接
-                    if (nodeCount === 0) {
-                        const lineMatches = text.match(/^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls):\/\//gm);
-                        if (lineMatches) {
-                            nodeCount = lineMatches.length;
-                        }
-                    }
-
-                    result.count = nodeCount;
+                    const { count, regions } = parseNodeRegions(text);
+                    result.count = count;
+                    result.regions = regions;
                 } else if (responses[1].status === 'rejected') {
                     console.error(`Node count request for ${subUrl} rejected:`, responses[1].reason);
                 }
@@ -654,6 +686,7 @@ async function handleApiRequest(request, env) {
                     if (subToUpdate) {
                         subToUpdate.nodeCount = result.count;
                         subToUpdate.userInfo = result.userInfo;
+                        if (result.regions) subToUpdate.regions = result.regions;
 
                         await env.SUB_ONE_KV.put(KV_KEY_SUBS, JSON.stringify(allSubs));
                     }
@@ -737,46 +770,14 @@ async function handleApiRequest(request, env) {
                                 sub.userInfo = info;
                             }
 
-                            // 更新节点数量
+                            // 更新节点数量和区域
                             const text = await response.text();
+                            const { count, regions } = parseNodeRegions(text);
 
-                            // 尝试多种解析方法
-                            let nodeCount = 0;
+                            sub.nodeCount = count;
+                            sub.regions = regions;
 
-                            // 方法1: 尝试Base64解码后匹配节点链接
-                            try {
-                                const decoded = atob(text.replace(/\s/g, ''));
-                                const lineMatches = decoded.match(/^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//gm);
-                                if (lineMatches) {
-                                    nodeCount = lineMatches.length;
-                                }
-                            } catch (e) {
-                                // Base64解码失败，继续尝试其他方法
-                            }
-
-                            // 方法2: 如果是YAML格式，解析Clash配置
-                            if (nodeCount === 0) {
-                                try {
-                                    const yamlContent = yaml.load(text);
-                                    if (yamlContent && yamlContent.proxies && Array.isArray(yamlContent.proxies)) {
-                                        nodeCount = yamlContent.proxies.length;
-                                    }
-                                } catch (e) {
-                                    // YAML解析失败，继续尝试其他方法
-                                }
-                            }
-
-                            // 方法3: 直接匹配原始文本中的节点链接
-                            if (nodeCount === 0) {
-                                const lineMatches = text.match(/^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//gm);
-                                if (lineMatches) {
-                                    nodeCount = lineMatches.length;
-                                }
-                            }
-
-                            sub.nodeCount = nodeCount;
-
-                            return { id: sub.id, success: true, nodeCount: sub.nodeCount, userInfo: sub.userInfo };
+                            return { id: sub.id, success: true, nodeCount: sub.nodeCount, userInfo: sub.userInfo, regions: sub.regions };
                         } else {
                             return { id: sub.id, success: false, error: `HTTP ${response.status}` };
                         }

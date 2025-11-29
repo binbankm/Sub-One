@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import { detectRegion } from '../../lib/utils.js';
+const props = defineProps({
   subscriptions: { type: Array, required: true },
   activeSubscriptions: { type: Number, required: true },
   totalNodeCount: { type: Number, required: true },
@@ -17,6 +19,37 @@ defineEmits([
   'add-node',
   'add-profile'
 ]);
+
+const regionDistribution = computed(() => {
+  const regions = {};
+  
+  // 1. From subscriptions (if they have regions data)
+  props.subscriptions.forEach(sub => {
+    if (sub.enabled && sub.regions) {
+      Object.entries(sub.regions).forEach(([region, count]) => {
+        regions[region] = (regions[region] || 0) + count;
+      });
+    }
+  });
+  
+  // 2. From manual nodes
+  props.manualNodes.forEach(node => {
+    if (node.enabled) {
+      const region = detectRegion(node.name);
+      regions[region] = (regions[region] || 0) + 1;
+    }
+  });
+  
+  // Convert to array and sort
+  const total = Object.values(regions).reduce((a, b) => a + b, 0);
+  return Object.entries(regions)
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: total > 0 ? (count / total) * 100 : 0
+    }))
+    .sort((a, b) => b.count - a.count);
+});
 </script>
 
 <template>
@@ -186,6 +219,30 @@ defineEmits([
             </svg>
             创建订阅组
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 节点地区分布 -->
+    <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">节点地区分布</h3>
+      
+      <div v-if="regionDistribution.length === 0" class="text-center text-gray-500 py-4">
+        暂无数据
+      </div>
+      
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div v-for="item in regionDistribution" :key="item.name" class="bg-white/50 dark:bg-gray-700/30 rounded-xl p-3 border border-gray-100 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-700/50 transition-colors">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">{{ item.name === '香港' ? '🇭🇰' : item.name === '台湾' ? '🇹🇼' : item.name === '日本' ? '🇯🇵' : item.name === '美国' ? '🇺🇸' : item.name === '新加坡' ? '🇸🇬' : item.name === '韩国' ? '🇰🇷' : '🌍' }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
+            </div>
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ item.count }} 节点</span>
+          </div>
+          <div class="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-2">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-500" :style="{ width: `${item.percentage}%` }"></div>
+          </div>
         </div>
       </div>
     </div>
