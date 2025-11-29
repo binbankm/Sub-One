@@ -199,7 +199,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                 id="profile-name"
                 v-model="localProfile.name"
                 placeholder="例如：家庭共享"
-                class="input-modern-enhanced"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
             </div>
             
@@ -213,7 +213,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                 id="profile-custom-id"
                 v-model="localProfile.customId"
                 placeholder="如: home, game (限字母、数字、-、_)"
-                class="input-modern-enhanced"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
                <p class="text-xs text-gray-400 mt-1.5">设置后，订阅链接会更短，如 /token/home</p>
             </div>
@@ -228,7 +228,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                 id="profile-subconverter"
                 v-model="localProfile.subConverter"
                 placeholder="留空则使用全局设置"
-                class="input-modern-enhanced"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
               <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 SubConverter 后端地址。</p>
             </div>
@@ -243,7 +243,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                 id="profile-subconfig"
                 v-model="localProfile.subConfig"
                 placeholder="留空则使用全局设置"
-                class="input-modern-enhanced"
+                class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
               >
               <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 Subconverter 配置文件。</p>
             </div>
@@ -258,7 +258,7 @@ const handleDeselectAll = (listName, sourceArray) => {
                     type="date"
                     id="profile-expires-at"
                     v-model="localProfile.expiresAt"
-                    class="input-modern-enhanced"
+                    class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                 >
                 <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
