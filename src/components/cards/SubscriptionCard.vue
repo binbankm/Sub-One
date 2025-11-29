@@ -24,6 +24,14 @@ const copyUrl = async () => {
   }
 };
 
+// URL显示状态
+const showUrl = ref(false);
+
+// 切换URL显示状态
+const toggleUrlVisibility = () => {
+  showUrl.value = !showUrl.value;
+};
+
 // 鼠标事件处理
 const mouseDownTime = ref(0);
 const mouseDownPosition = ref({ x: 0, y: 0 });
@@ -128,43 +136,38 @@ const trafficColorClass = computed(() => {
 
 <template>
   <div 
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 group relative overflow-hidden transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg flex flex-col h-full"
-    :class="{ 'opacity-60': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
+    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[280px] sm:min-h-[240px] shadow-sm hover:shadow-lg"
+    :class="{ 'opacity-50': !sub.enabled, 'ring-2 ring-indigo-500/50': sub.isNew }"
     @mousedown="handleMouseDown"
   >
-    <div class="relative z-10 flex-1 flex flex-col p-4 sm:p-5">
+    <div class="relative z-10 flex-1 flex flex-col p-5">
       <!-- 头部区域 -->
-      <div class="flex items-start justify-between gap-3 mb-4">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="font-bold text-base text-gray-900 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" :title="sub.name || '未命名订阅'">
-                {{ sub.name || '未命名订阅' }}
-              </h3>
+      <div class="flex items-start justify-between gap-3 mb-4 sm:mb-6">
+        <div class="w-full truncate">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-all duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
             </div>
-            <div class="flex items-center gap-2 mt-0.5">
-              <span class="text-[10px] px-1.5 py-0.5 rounded border font-medium uppercase tracking-wider" :class="protocolStyle.style">{{ protocolStyle.text }}</span>
-              <span v-if="sub.nodeCount > 0" class="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
-                <span class="w-1 h-1 rounded-full bg-green-500"></span>
-                {{ sub.nodeCount }} 节点
-              </span>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-lg text-gray-800 dark:text-gray-100 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300" :title="sub.name || '未命名订阅'">
+                {{ sub.name || '未命名订阅' }}
+              </p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs px-2 py-1 rounded-lg border" :class="protocolStyle.style">{{ protocolStyle.text }}</span>
+              </div>
             </div>
           </div>
         </div>
         
-        <!-- 操作按钮 (Hover显示) -->
-        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button @click.stop="emit('edit')" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="编辑">
+        <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <button @click.stop="emit('edit')" class="p-2.5 rounded-xl hover:bg-indigo-500/10 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 hover-lift" title="编辑">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
             </svg>
           </button>
-          <button @click.stop="emit('delete')" class="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors" title="删除">
+          <button @click.stop="emit('delete')" class="p-2.5 rounded-xl hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all duration-200 hover-lift" title="删除">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -172,76 +175,108 @@ const trafficColorClass = computed(() => {
         </div>
       </div>
       
-      <!-- 链接区域 (紧凑版) -->
-      <div class="mb-4 group/url">
-        <div class="relative flex items-center">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-          </div>
+      <!-- URL区域 -->
+      <div class="flex-grow flex flex-col justify-start space-y-3 sm:space-y-4">
+        <div class="relative">
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">订阅链接</label>
           <input 
             type="text" 
-            :value="sub.url"
+            :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'"
             readonly 
-            class="w-full pl-9 pr-20 py-2 text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-colors truncate" 
+            class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-50/60 dark:bg-gray-900/75 border border-gray-200 dark:border-gray-700 rounded-xl transition-all duration-300 focus-enhanced" 
+            :class="{ 'select-none': !showUrl }"
           />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-1">
+          <div class="flex items-center gap-2 mt-2 sm:mt-3">
             <button 
-              @click.stop="copyUrl"
-              class="px-2 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
+              @click.stop="toggleUrlVisibility"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-orange-500/20 text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
+              :title="showUrl ? '隐藏链接' : '显示链接'"
             >
+              <svg v-if="showUrl" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+              </svg>
+              <svg v-else class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {{ showUrl ? '隐藏' : '显示' }}
+            </button>
+            <button 
+              v-if="showUrl"
+              @click.stop="copyUrl"
+              class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 flex items-center gap-1 sm:gap-2 text-xs font-medium hover-lift"
+              title="复制链接"
+            >
+              <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
               复制
             </button>
           </div>
         </div>
-      </div>
-      
-      <!-- 流量信息 (紧凑版) -->
-      <div v-if="trafficInfo" class="mt-auto bg-gray-50/50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700/50">
-        <div class="flex justify-between items-center mb-2">
-          <div class="flex items-baseline gap-1">
-            <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ trafficInfo.used }}</span>
-            <span class="text-xs text-gray-400">/ {{ trafficInfo.total }}</span>
-          </div>
-          <span v-if="expiryInfo" class="text-[10px] px-1.5 py-0.5 rounded-md bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 shadow-sm" :class="expiryInfo.style">
-            {{ expiryInfo.daysRemaining }}
-          </span>
-        </div>
         
-        <div class="relative w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div 
-            class="absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out"
-            :class="trafficColorClass"
-            :style="{ width: trafficInfo.percentage + '%' }"
-          ></div>
+        <!-- 流量信息 -->
+        <!-- 流量信息 -->
+        <div v-if="trafficInfo" class="mt-2 p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm">
+          <div class="flex justify-between items-end mb-2">
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              流量使用
+            </span>
+            <div class="text-right">
+              <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ trafficInfo.used }}</span>
+              <span class="text-xs text-gray-400 mx-1">/</span>
+              <span class="text-xs text-gray-500">{{ trafficInfo.total }}</span>
+            </div>
+          </div>
+          <div class="relative w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              class="absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out shadow-sm"
+              :class="trafficColorClass"
+              :style="{ width: trafficInfo.percentage + '%' }"
+            >
+              <div class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+            </div>
+          </div>
+          <div class="flex justify-between mt-2 items-center">
+            <span class="text-[10px] text-gray-400 font-medium">已用 {{ trafficInfo.percentage.toFixed(1) }}%</span>
+            <span v-if="expiryInfo" class="text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-600" :class="expiryInfo.style">{{ expiryInfo.daysRemaining }}</span>
+          </div>
         </div>
-      </div>
-      
-      <div v-else class="mt-auto flex items-center justify-center h-[66px] bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 text-xs text-gray-400">
-        暂无流量信息
       </div>
 
-      <!-- 底部开关 -->
+      <!-- 底部控制区域 -->
       <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50" @click.stop>
-        <div class="flex items-center gap-2">
-          <label class="relative inline-flex items-center cursor-pointer">
+        <div class="flex items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer group/toggle">
             <input type="checkbox" :checked="sub.enabled" @change="emit('change')" class="sr-only peer">
-            <div class="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[0px] after:left-[0px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500"></div>
+            <div class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500 group-hover/toggle:shadow-md transition-all duration-300"></div>
           </label>
-          <span class="text-xs text-gray-400 dark:text-gray-500">{{ sub.enabled ? '已启用' : '已禁用' }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">{{ sub.enabled ? '已启用' : '已禁用' }}</span>
         </div>
         
-        <button 
-          @click.stop="emit('update')" 
-          :disabled="sub.isUpdating" 
-          class="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors disabled:opacity-50" 
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" :class="{'animate-spin': sub.isUpdating}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          {{ sub.isUpdating ? '更新中' : '更新' }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button @click.stop="emit('showNodes')" class="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
+            <span class="w-1.5 h-1.5 rounded-full" :class="sub.nodeCount > 0 ? 'bg-green-500' : 'bg-gray-300'"></span>
+            {{ sub.nodeCount }} 节点
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-0 group-hover/btn:opacity-100 -ml-1 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <button 
+            @click.stop="emit('update')" 
+            :disabled="sub.isUpdating" 
+            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+            :title="sub.isUpdating ? '更新中...' : '更新订阅'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{'animate-spin text-indigo-500': sub.isUpdating}" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
