@@ -189,39 +189,5 @@ defineEmits([
         </div>
       </div>
     </div>
-
-    <!-- 地区分布分析 -->
-    <div class="bg-gradient-to-br from-white/80 to-white/40 dark:from-gray-800/90 dark:to-gray-800/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 dark:border-gray-700/50 shadow-xl hover:shadow-2xl transition-all duration-300">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">资源地区分布</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">基于订阅和手动节点的名称分析</p>
-        </div>
-      </div>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="(item, index) in regionStats" :key="item.region" class="relative overflow-hidden rounded-xl bg-gray-50/50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700 p-3 hover:bg-white dark:hover:bg-gray-700 transition-colors group">
-          <div class="flex items-center justify-between relative z-10">
-            <div class="flex items-center gap-3">
-              <span class="text-2xl">{{ item.flag }}</span>
-              <div>
-                <p class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ item.region }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.count }} 个资源</p>
-              </div>
-            </div>
-            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ item.percentage }}%</span>
-          </div>
-          <!-- 进度条背景 -->
-          <div class="absolute bottom-0 left-0 h-1 bg-indigo-500/20 w-full">
-            <div class="h-full bg-indigo-500" :style="{ width: item.percentage + '%' }"></div>
-          </div>
-        </div>
-        
-        <!-- 如果没有数据 -->
-        <div v-if="regionStats.length === 0" class="col-span-full text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-          暂无足够的名称数据进行地区分析
-        </div>
-      </div>
-    </div>
   </div>
 </template>
