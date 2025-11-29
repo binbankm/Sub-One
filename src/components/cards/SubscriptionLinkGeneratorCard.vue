@@ -103,7 +103,7 @@ onUnmounted(() => {
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
           <div class="relative">
-            <select v-model="selectedId" class="w-full px-4 py-3 text-sm bg-white/60 dark:bg-gray-800/75 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 appearance-none cursor-pointer">
+            <select v-model="selectedId" class="w-full px-4 py-3 text-sm text-gray-900 dark:text-white bg-white/60 dark:bg-gray-800/75 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 appearance-none cursor-pointer">
               <option value="default" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">默认订阅 (全部启用节点)</option>
               <option v-for="profile in profiles" :key="profile.id" :value="profile.customId || profile.id" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">
                 {{ profile.name }}
