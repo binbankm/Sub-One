@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
-import Modal from './Modal.vue';
+import Modal from './BaseModal.vue';
 import { fetchSettings, saveSettings } from '../../lib/api.js';
 import { useToastStore } from '../../stores/toast.js';
 import { useThemeStore } from '../../stores/theme.js';

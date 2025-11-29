@@ -1,5 +1,5 @@
 <script setup>
-import { useToastStore } from '../stores/toast.js';
+import { useToastStore } from '../../stores/toast.js';
 
 const toastStore = useToastStore();
 

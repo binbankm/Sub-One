@@ -279,7 +279,7 @@
 </template>
 
 <script setup>
-import Modal from './Modal.vue';
+import Modal from './BaseModal.vue';
 
 const props = defineProps({
   show: {

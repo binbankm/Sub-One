@@ -6,11 +6,11 @@ import { useThemeStore } from './stores/theme.js';
 import { useLayoutStore } from './stores/layout.js';
 import { storeToRefs } from 'pinia';
 
-import Dashboard from './components/Dashboard.vue';
-import Login from './components/Login.vue';
-import Sidebar from './components/layout/Sidebar.vue';
-import Toast from './components/Toast.vue';
-import Footer from './components/layout/Footer.vue';
+import Dashboard from './components/views/DashboardView.vue';
+import Login from './components/views/LoginView.vue';
+import Sidebar from './components/layout/AppSidebar.vue';
+import Toast from './components/common/Toast.vue';
+import Footer from './components/layout/AppFooter.vue';
 
 const SettingsModal = defineAsyncComponent(() => import('./components/modals/SettingsModal.vue'));
 const HelpModal = defineAsyncComponent(() => import('./components/modals/HelpModal.vue'));
