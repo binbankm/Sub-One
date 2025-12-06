@@ -3,13 +3,14 @@
 > 🚀 基于 Vue.js 3 的现代化订阅管理工具，专为 Cloudflare Pages 设计
 
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.0+-4FC08D?style=flat&logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.0+-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare_Pages-Deploy-blue?style=flat&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 📖 项目简介
 
-**Sub-One Manager** 是一款专为网络订阅管理而设计的现代化Web应用。它基于Vue.js 3构建，采用最新的前端技术栈，为用户提供直观、高效的订阅管理体验。
+**Sub-One Manager** 是一款专为网络订阅管理而设计的现代化Web应用。它基于Vue.js 3构建，采用最新的前端技术栈，为用户提供直观、高效的订阅管理体验。 （界面可能有人不喜欢，只是增加些趣味性，代码还不够完善，不喜勿喷。）
 
 ### 🎯 项目特色
 - **🚀 现代化架构**: 基于Vue.js 3 Composition API，响应式设计
@@ -19,159 +20,138 @@
 - **🔒 安全可靠**: 完善的权限控制和数据加密
 - **🏷️ 标签页布局**: 顶部标签页导航，功能模块清晰分离
 
-## ✨ 核心功能
-
-### 🏷️ 标签页导航系统
-- **清晰分类**: 四个主要功能模块，独立的导航标签页区域
-- **订阅管理**: 管理机场订阅，查看节点信息和流量状态
-- **订阅组**: 组合管理节点，创建个性化配置
-- **链接生成**: 生成各种格式的订阅链接
-- **手动节点**: 管理单个节点链接，支持批量操作
-- **无缝切换**: 标签页间快速切换，保持所有功能完整
-- **模块化设计**: 导航标签页独立组件，便于维护和扩展
-
-
-### 📋 订阅管理
-- **多订阅支持**: 支持多个机场订阅同时管理，统一界面操作
-- **自动解析**: 智能解析订阅链接，自动获取节点信息
-- **流量监控**: 实时显示流量使用情况和到期时间
-- **智能分页**: 2行3列布局，支持分页浏览，操作更流畅
-
-### 👥 订阅组管理
-- **组合订阅**: 将多个订阅组合成订阅组，灵活配置
-- **节点筛选**: 支持按地区、协议等条件筛选节点
-- **自定义规则**: 包含/排除规则配置，满足个性化需求
-- **分页浏览**: 支持订阅组分页显示，管理大量数据
-
-### 🔗 链接生成
-- **多格式支持**: 支持Clash、Surge、Loon、Sing-Box、Base64等多种格式
-- **自适应格式**: 根据客户端自动选择最佳输出格式
-- **Token管理**: 支持固定Token和自动Token，灵活配置
-- **链接加密**: 敏感信息自动隐藏，保护隐私安全
-
-### ⚙️ 手动节点管理
-- **批量导入**: 支持批量导入节点链接，提高效率
-- **智能去重**: 自动去除重复节点，保持数据整洁
-- **地区排序**: 按地区自动排序节点，便于查找
-- **搜索功能**: 快速搜索特定节点，支持模糊匹配
-
-
-## 🛠️ 技术架构
-
-### 前端技术栈
-- **Vue.js 3.4+**: 采用Composition API，响应式设计
-- **TypeScript 5.9+**: 类型安全，提高代码质量
-- **Tailwind CSS 3.4+**: 现代化UI设计系统
-- **Pinia 3.0+**: 状态管理，响应式数据流
-- **Vue Router**: 单页应用路由管理
-- **Vite 5.2+**: 快速构建工具，开发体验优秀
-
-### 后端特性
-- **Cloudflare Workers**: 边缘计算，全球部署
-- **KV存储**: 高性能键值存储，数据持久化
-- **自动部署**: 一键部署到Cloudflare Pages
-- **CDN加速**: 全球CDN网络，访问速度快
-
 
 ### 🖼️ 界面预览
 
 #### 🔐 登录界面
-![登录界面](images/1.png)
+![登录界面](images/0.png)
 *简洁的登录界面，支持管理员密码验证*
+
+#### 📊 仪表盘
+![仪表盘](images/1.png)
+*主仪表盘界面，展示所有功能模块的概览*
 
 #### 📋 订阅管理
 ![订阅管理界面](images/2.png)
 *订阅管理界面，支持2行3列布局，包含分页控制*
 
-#### 🔗 订阅链接生成
-![订阅链接生成](images/3.png)
-*订阅链接生成面板，支持多种格式和自动Token提示*
+#### 👥 订阅组
+![订阅组界面](images/3.png)
+*订阅组管理界面，支持组合多个订阅和自定义配置*
 
-#### ⚙️ 手动节点管理
+#### ⚙️ 手动节点
 ![手动节点管理](images/4.png)
 *手动节点管理界面，支持4列网格布局和搜索功能*
 
-## 📱 使用指南
-
-### 添加订阅
-1. 点击"新增"按钮
-2. 输入订阅名称（可选，自动获取）
-3. 输入订阅链接（http/https格式）
-4. 配置包含/排除规则（可选）
-5. 保存订阅
-
-### 创建订阅组
-1. 点击"新增"按钮
-2. 输入订阅组名称
-3. 选择要包含的订阅和手动节点
-4. 配置自定义ID（可选）
-5. 设置到期时间（可选）
-
-### 生成订阅链接
-1. 选择订阅内容（默认或订阅组）
-2. 选择输出格式
-3. 点击"显示"查看链接
-4. 点击"复制"复制到剪贴板
-
-### 管理手动节点
-1. 点击"新增"添加单个节点
-2. 或使用"批量导入"添加多个节点
-3. 使用搜索功能快速查找节点
-4. 使用"一键排序"按地区排序
-5. 使用"一键去重"去除重复节点
-
-## 🛠️ 开发指南
 
 ### 项目结构
 ```
-src/
-├── components/          # Vue组件
-│   ├── Dashboard.vue   # 主仪表盘
-│   ├── Card.vue        # 订阅卡片
-│   ├── ProfileCard.vue # 订阅组卡片
-│   ├── DashboardSkeleton.vue # 加载骨架屏
-│   └── ...
-├── composables/         # 组合式函数
-│   ├── useSubscriptions.js
-│   └── useManualNodes.js
-├── stores/             # Pinia状态管理
-├── lib/                # 工具函数和API
-└── assets/             # 静态资源
+Sub-One/
+├── src/
+│   ├── components/              # Vue组件
+│   │   ├── cards/              # 卡片组件
+│   │   │   ├── ManualNodeCard.vue         # 手动节点卡片
+│   │   │   ├── ProfileCard.vue            # 订阅组卡片
+│   │   │   ├── SubscriptionCard.vue       # 订阅卡片
+│   │   │   └── SubscriptionLinkGeneratorCard.vue  # 链接生成卡片
+│   │   ├── layout/             # 布局组件
+│   │   │   ├── AppFooter.vue              # 页面底部
+│   │   │   └── AppSidebar.vue             # 侧边栏导航
+│   │   ├── modals/             # 模态框组件
+│   │   │   ├── BaseModal.vue              # 基础模态框
+│   │   │   ├── BulkImportModal.vue        # 批量导入
+│   │   │   ├── HelpModal.vue              # 帮助文档
+│   │   │   ├── NodeDetailsModal.vue       # 节点详情
+│   │   │   ├── ProfileModal.vue           # 订阅组编辑
+│   │   │   ├── SettingsModal.vue          # 设置面板
+│   │   │   └── SubscriptionImportModal.vue # 订阅导入
+│   │   ├── tabs/               # 标签页组件
+│   │   │   ├── DashboardHome.vue          # 仪表盘首页
+│   │   │   ├── GeneratorTab.vue           # 链接生成标签页
+│   │   │   ├── NodesTab.vue               # 手动节点标签页
+│   │   │   ├── ProfilesTab.vue            # 订阅组标签页
+│   │   │   └── SubscriptionsTab.vue       # 订阅管理标签页
+│   │   ├── views/              # 视图组件
+│   │   │   ├── DashboardView.vue          # 主仪表盘视图
+│   │   │   └── LoginView.vue              # 登录视图
+│   │   ├── common/             # 通用组件
+│   │   └── editors/            # 编辑器组件
+│   ├── composables/            # 组合式函数
+│   │   ├── useSubscriptions.ts            # 订阅数据管理
+│   │   └── useManualNodes.ts              # 手动节点管理
+│   ├── stores/                 # Pinia状态管理
+│   │   ├── layout.ts                      # 布局状态
+│   │   ├── session.ts                     # 会话管理
+│   │   ├── theme.ts                       # 主题配置
+│   │   ├── toast.ts                       # 消息提示
+│   │   └── ui.ts                          # UI状态
+│   ├── lib/                    # 工具函数和API
+│   │   ├── api.ts                         # API接口
+│   │   ├── subscription-parser.ts         # 订阅解析器
+│   │   └── utils.ts                       # 工具函数
+│   ├── assets/                 # 静态资源
+│   │   └── styles/                        # 样式文件
+│   ├── App.vue                 # 根组件
+│   ├── main.ts                 # 入口文件
+│   └── types.ts                # TypeScript类型定义
+├── functions/                  # Cloudflare Functions
+│   └── [[path]].ts            # API路由处理
+├── images/                     # 界面截图
+├── index.html                  # HTML入口
+├── package.json                # 项目配置
+├── tsconfig.json               # TypeScript配置
+├── tailwind.config.cjs         # Tailwind CSS配置
+├── vite.config.ts              # Vite配置
+└── wrangler.toml               # Cloudflare配置
 ```
 
-### 开发环境配置
-
 ### 核心组件
-- **Dashboard.vue**: 主界面，包含所有功能模块
-- **NavigationTabs.vue**: 独立的导航标签页组件，提供清晰的模块分类
-- **Header.vue**: 顶部导航栏，包含Logo和操作按钮
-- **SubscriptionLinkGenerator.vue**: 订阅链接生成器
-- **Card.vue**: 订阅卡片组件
-- **ProfileCard.vue**: 订阅组卡片组件
-- **DashboardSkeleton.vue**: 加载时的骨架屏组件
 
-### 状态管理
-- **useSubscriptions**: 订阅数据管理
-- **useManualNodes**: 手动节点管理
-- **useToastStore**: 消息提示管理
-- **useUIStore**: 界面状态管理
+#### 视图层 (Views)
+- **LoginView.vue**: 登录界面，管理员密码验证
+- **DashboardView.vue**: 主仪表盘视图，整合所有功能模块
 
-## 🔒 安全特性
+#### 标签页 (Tabs)
+- **DashboardHome.vue**: 仪表盘首页，展示统计信息和快捷操作
+- **SubscriptionsTab.vue**: 订阅管理标签页，管理机场订阅
+- **ProfilesTab.vue**: 订阅组标签页，组合管理节点
+- **GeneratorTab.vue**: 链接生成标签页，生成各种格式订阅链接
+- **NodesTab.vue**: 手动节点标签页，管理单个节点
 
-- **Token验证**: 严格的Token验证机制
-- **数据加密**: 敏感数据加密存储
-- **访问控制**: 基于Token的访问控制
-- **错误处理**: 完善的错误边界处理
-- **输入验证**: 严格的用户输入验证
+#### 卡片组件 (Cards)
+- **SubscriptionCard.vue**: 订阅卡片，显示订阅信息和流量状态
+- **ProfileCard.vue**: 订阅组卡片，显示订阅组配置
+- **ManualNodeCard.vue**: 手动节点卡片，显示节点信息
+- **SubscriptionLinkGeneratorCard.vue**: 链接生成卡片，生成订阅链接
 
-## 🚀 性能优化
+#### 模态框 (Modals)
+- **BaseModal.vue**: 基础模态框组件，统一弹窗样式
+- **SubscriptionImportModal.vue**: 订阅导入弹窗
+- **ProfileModal.vue**: 订阅组编辑弹窗
+- **NodeDetailsModal.vue**: 节点详情弹窗
+- **BulkImportModal.vue**: 批量导入弹窗
+- **SettingsModal.vue**: 设置面板弹窗
+- **HelpModal.vue**: 帮助文档弹窗
 
-- **代码分割**: 按需加载，减少初始包大小
-- **懒加载**: 图片和组件懒加载
-- **虚拟滚动**: 大量数据的高效渲染
-- **缓存策略**: 智能缓存，提升访问速度
-- **CDN加速**: 全球CDN网络，就近访问
+#### 布局组件 (Layout)
+- **AppSidebar.vue**: 侧边栏导航，标签页切换和功能入口
+- **AppFooter.vue**: 页面底部，显示版权和链接信息
 
+### 状态管理 (Stores)
+- **session.ts**: 会话管理，处理登录状态和认证
+- **theme.ts**: 主题配置，管理深色/浅色模式
+- **layout.ts**: 布局状态，管理侧边栏和界面布局
+- **toast.ts**: 消息提示，统一管理提示信息
+- **ui.ts**: UI状态，管理界面交互状态
+
+### 组合式函数 (Composables)
+- **useSubscriptions.ts**: 订阅数据管理，处理订阅的增删改查
+- **useManualNodes.ts**: 手动节点管理，处理节点的批量操作
+
+### 工具库 (Lib)
+- **api.ts**: API接口，与后端通信
+- **subscription-parser.ts**: 订阅解析器，解析各种订阅格式
+- **utils.ts**: 工具函数，通用辅助方法
 
 ## 🚀 快速开始
 
@@ -270,12 +250,6 @@ https://your-project-name.pages.dev
    - 检查`ADMIN_PASSWORD`是否正确设置
    - 确认环境变量已生效
    - 清除浏览器缓存
-
-### 调试技巧
-- 查看Cloudflare Pages的构建日志
-- 检查浏览器控制台的错误信息
-- 使用Cloudflare的实时日志功能
-- 使用Vue DevTools进行前端调试
 
 ## 🔒 安全建议
 
