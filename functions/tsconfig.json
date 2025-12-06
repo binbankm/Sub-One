@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "lib": [
+            "esnext"
+        ],
+        "types": [
+            "@cloudflare/workers-types"
+        ],
+        "strict": true,
+        "noImplicitAny": false,
+        "noEmit": true,
+        "allowJs": true
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.js"
+    ]
+}

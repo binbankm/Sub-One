@@ -1,0 +1,453 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import type { Subscription, Profile, Node } from '../../types';
+
+defineProps<{
+  subscriptions: Subscription[];
+  activeSubscriptions: number;
+  totalNodeCount: number;
+  activeNodeCount: number;
+  profiles: Profile[];
+  activeProfiles: number;
+  manualNodes: Node[];
+  activeManualNodes: number;
+  isUpdatingAllSubs: boolean;
+}>();
+
+defineEmits<{
+  (e: 'add-subscription'): void;
+  (e: 'update-all-subscriptions'): void;
+  (e: 'add-node'): void;
+  (e: 'add-profile'): void;
+}>();
+
+// 励志语录数据
+const quotes = [
+  {
+    text: "成功不是终点，失败也不是终结，唯有勇气才是永恒。",
+    author: "温斯顿·丘吉尔",
+    category: "励志"
+  },
+  {
+    text: "代码如诗，每一行都是对完美的追求。",
+    author: "极客箴言",
+    category: "技术"
+  },
+  {
+    text: "今天的努力，是为了明天更好的自己。",
+    author: "佚名",
+    category: "励志"
+  },
+  {
+    text: "优秀的程序员不是写代码最多的，而是删代码最多的。",
+    author: "编程智慧",
+    category: "技术"
+  },
+  {
+    text: "保持简单，保持优雅，保持高效。",
+    author: "设计哲学",
+    category: "技术"
+  },
+  {
+    text: "每一次调试，都是与bug的一场较量。",
+    author: "程序员日常",
+    category: "幽默"
+  },
+  {
+    text: "不要害怕重构，害怕的应该是技术债。",
+    author: "代码整洁之道",
+    category: "技术"
+  },
+  {
+    text: "真正的智慧不在于知道所有答案，而在于提出正确的问题。",
+    author: "苏格拉底",
+    category: "励志"
+  },
+  {
+    text: "让代码自己说话，注释只是辅助。",
+    author: "Clean Code",
+    category: "技术"
+  },
+  {
+    text: "bug不会因为你忽视它而消失，只会在生产环境中惊艳亮相。",
+    author: "墨菲定律",
+    category: "幽默"
+  },
+  {
+    text: "持续学习，永不止步。今天比昨天更强大。",
+    author: "成长心态",
+    category: "励志"
+  },
+  {
+    text: "好的架构不是设计出来的，而是演化出来的。",
+    author: "架构之道",
+    category: "技术"
+  },
+  {
+    text: "测试不是负担，而是对代码的信心保障。",
+    author: "TDD实践",
+    category: "技术"
+  },
+  {
+    text: "编程不仅是科学，更是艺术。",
+    author: "Donald Knuth",
+    category: "技术"
+  },
+  {
+    text: "越简单的方案，越容易维护。",
+    author: "KISS原则",
+    category: "技术"
+  }
+];
+
+// 当前语录
+const currentQuote = ref(quotes[0]);
+const isRefreshing = ref(false);
+
+// 获取随机语录
+const getRandomQuote = () => {
+  let newQuote;
+  do {
+    newQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  } while (newQuote === currentQuote.value && quotes.length > 1);
+  return newQuote;
+};
+
+// 刷新语录
+const refreshQuote = () => {
+  isRefreshing.value = true;
+  setTimeout(() => {
+    currentQuote.value = getRandomQuote();
+    isRefreshing.value = false;
+  }, 300);
+};
+
+// 初始化时随机选择一条语录
+onMounted(() => {
+  currentQuote.value = getRandomQuote();
+});
+</script>
+
+<template>
+  <div class="space-y-6">
+
+    <!-- 励志语录卡片 - 顶部 -->
+    <div
+      class="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-indigo-400/20 border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
+
+      <!-- 柔和背景装饰 -->
+      <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50"></div>
+      <div
+        class="absolute top-0 right-0 w-64 h-64 bg-pink-300/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700">
+      </div>
+      <div
+        class="absolute bottom-0 left-0 w-48 h-48 bg-purple-300/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform duration-700">
+      </div>
+
+      <div class="relative z-10">
+        <!-- 顶部标题栏 -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <!-- 图标装饰 -->
+            <div
+              class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-400/30 to-purple-400/30 backdrop-blur-md flex items-center justify-center border border-white/20">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-gray-800 dark:text-white font-bold text-base">每日一言</h3>
+              <p class="text-gray-500 dark:text-gray-400 text-xs">Daily Inspiration</p>
+            </div>
+          </div>
+
+          <!-- 分类标签和刷新按钮 -->
+          <div class="flex items-center gap-2">
+            <span :class="{
+              'bg-yellow-400/20 text-yellow-700 dark:text-yellow-300 border-yellow-400/30': currentQuote.category === '励志',
+              'bg-blue-400/20 text-blue-700 dark:text-blue-300 border-blue-400/30': currentQuote.category === '技术',
+              'bg-green-400/20 text-green-700 dark:text-green-300 border-green-400/30': currentQuote.category === '幽默'
+            }" class="px-2.5 py-1 rounded-lg text-xs font-medium backdrop-blur-md border transition-all duration-300">
+              {{ currentQuote.category }}
+            </span>
+
+            <!-- 刷新按钮 -->
+            <button @click="refreshQuote" :disabled="isRefreshing"
+              class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-white/20"
+              title="换一条">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform duration-500"
+                :class="{ 'rotate-180': isRefreshing }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 语录内容 -->
+        <div :key="currentQuote.text" class="quote-content animate-fadeIn">
+          <!-- 语录文本 -->
+          <blockquote class="my-3">
+            <p class="text-gray-800 dark:text-white text-lg md:text-xl font-semibold leading-relaxed mb-2">
+              "{{ currentQuote.text }}"
+            </p>
+            <footer class="flex items-center gap-2">
+              <div class="h-px flex-1 bg-gray-300/30 dark:bg-white/10"></div>
+              <cite class="text-gray-600 dark:text-gray-400 text-xs not-italic font-medium">
+                {{ currentQuote.author }}
+              </cite>
+              <div class="h-px flex-1 bg-gray-300/30 dark:bg-white/10"></div>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bento Grid 布局核心 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+
+      <!-- 1. 核心指标卡片 (占据 2 列) -->
+      <div
+        class="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-indigo-500/30 to-purple-600/30 border border-indigo-300/20 rounded-3xl p-6 shadow-xl shadow-indigo-500/10 relative overflow-hidden group min-h-[220px]">
+        <!-- 背景装饰 -->
+        <div
+          class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700">
+        </div>
+        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
+
+        <div class="relative z-10 h-full flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-600 dark:text-indigo-100 font-medium mb-1 text-sm">订阅源状态</p>
+              <h3 class="text-5xl font-bold tracking-tight text-gray-900 dark:text-white">{{ subscriptions.length
+              }}<span class="text-2xl text-gray-600 dark:text-indigo-200 font-normal ml-2">个</span></h3>
+            </div>
+            <div class="bg-indigo-100 dark:bg-white/20 backdrop-blur-md p-2 rounded-xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-indigo-600 dark:text-white" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="mt-8">
+            <div class="flex justify-between items-end mb-2">
+              <span class="text-gray-600 dark:text-indigo-100 text-sm">活跃度</span>
+              <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions }} <span
+                  class="text-sm font-normal text-gray-500 dark:text-indigo-200">/ {{ subscriptions.length
+                  }}</span></span>
+            </div>
+            <!-- 进度条 -->
+            <div class="w-full bg-gray-200 dark:bg-black/20 rounded-full h-3 backdrop-blur-sm overflow-hidden">
+              <div
+                class="bg-indigo-600 dark:bg-white h-full rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)] dark:shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-1000 ease-out"
+                :style="{ width: subscriptions.length > 0 ? `${(activeSubscriptions / subscriptions.length) * 100}%` : '0%' }">
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-indigo-200 mt-2">
+              {{ subscriptions.length === 0 ? '暂无订阅，请添加' : `系统中有 ${subscriptions.length - activeSubscriptions}
+              个订阅处于停用状态` }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 智能更新卡片 (占据 1 列) -->
+      <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
+        class="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between h-full min-h-[220px]">
+
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        </div>
+
+        <div class="relative z-10">
+          <div
+            class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300">
+            <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <svg v-else class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+            {{ isUpdatingAllSubs ? '正在更新...' : '立即更新' }}
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ isUpdatingAllSubs ? '正在同步最新节点信息' : '同步所有订阅源的节点信息' }}
+          </p>
+        </div>
+      </button>
+
+      <!-- 3. 数据指标行 (3个等宽卡片) -->
+
+      <!-- 节点池 -->
+      <div
+        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
+        <div class="flex items-center gap-4 mb-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4" />
+            </svg>
+          </div>
+          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">节点池</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ totalNodeCount }}</h4>
+          <span class="text-sm text-emerald-500 font-medium">{{ activeNodeCount }} 可用</span>
+        </div>
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
+          <div class="bg-emerald-500 h-1.5 rounded-full"
+            :style="{ width: totalNodeCount > 0 ? `${(activeNodeCount / totalNodeCount) * 100}%` : '0%' }"></div>
+        </div>
+      </div>
+
+      <!-- 订阅组 -->
+      <div
+        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
+        <div class="flex items-center gap-4 mb-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">订阅组</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ profiles.length }}</h4>
+          <span class="text-sm text-purple-500 font-medium">{{ activeProfiles }} 启用</span>
+        </div>
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
+          <div class="bg-purple-500 h-1.5 rounded-full"
+            :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
+        </div>
+      </div>
+
+      <!-- 手动节点 -->
+      <div
+        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
+        <div class="flex items-center gap-4 mb-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">手动节点</span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ manualNodes.length }}</h4>
+          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">个节点</span>
+        </div>
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
+          <div class="bg-orange-500 h-1.5 rounded-full w-full"></div>
+        </div>
+      </div>
+
+      <!-- 4. 快捷操作行 (3个横向卡片) -->
+      <button @click="$emit('add-subscription')"
+        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 min-h-[120px]">
+        <div
+          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <div class="text-left">
+          <p
+            class="font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            添加订阅</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">支持 HTTP/HTTPS</p>
+        </div>
+      </button>
+
+      <button @click="$emit('add-node')"
+        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 min-h-[120px]">
+        <div
+          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="text-left">
+          <p
+            class="font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+            添加节点</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">支持多种协议</p>
+        </div>
+      </button>
+
+      <button @click="$emit('add-profile')"
+        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-300 min-h-[120px]">
+        <div
+          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+        </div>
+        <div class="text-left">
+          <p
+            class="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+            创建订阅组</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">组合订阅和节点</p>
+        </div>
+      </button>
+
+    </div>
+
+  </div>
+</template>
+
+<style scoped>
+/* 语录淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 语录卡片悬浮效果增强 */
+.quote-content:hover {
+  transform: scale(1.01);
+  transition: transform 0.3s ease;
+}
+
+/* 自定义脉动动画 */
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+</style>

@@ -1,16 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useToastStore } from '../../stores/toast.js';
-import Modal from './Modal.vue';
-import { subscriptionParser } from '../../lib/subscriptionParser.js';
+import { useToastStore } from '../../stores/toast';
+import Modal from './BaseModal.vue';
+import { subscriptionParser } from '../../lib/subscription-parser';
+import type { Node } from '../../types';
 
-const props = defineProps({
-  show: Boolean,
-  addNodesFromBulk: Function, // New prop
-  onImportSuccess: Function, // New prop for direct save
-});
+const props = defineProps<{
+  show: boolean;
+  addNodesFromBulk: (nodes: Node[]) => void;
+  onImportSuccess?: () => Promise<void>;
+}>();
 
-const emit = defineEmits(['update:show']);
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void;
+}>();
 
 const subscriptionUrl = ref('');
 const isLoading = ref(false);
@@ -26,7 +29,7 @@ watch(() => props.show, (newVal) => {
   }
 });
 
-const isValidUrl = (url) => {
+const isValidUrl = (url: string) => {
   try {
     const u = new URL(url);
     return u.protocol === 'http:' || u.protocol === 'https:';
@@ -35,7 +38,7 @@ const isValidUrl = (url) => {
   }
 };
 
-const parseNodes = (content) => {
+const parseNodes = (content: string) => {
   // 使用新的订阅解析器
   return subscriptionParser.parse(content, '导入的订阅');
 };
@@ -75,7 +78,7 @@ const importSubscription = async () => {
       errorMessage.value = '未能从订阅链接中解析出任何节点。请检查链接内容。';
       // 失败时不关闭模态框，让用户看到错误信息
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('导入订阅失败:', error);
     errorMessage.value = `导入失败: ${error.message}`;
     toastStore.showToast(`导入失败: ${error.message}`, 'error');
@@ -89,14 +92,11 @@ const importSubscription = async () => {
 </script>
 
 <template>
-  <Modal
-    :show="show"
-    @update:show="emit('update:show', $event)"
-    @confirm="importSubscription"
-    confirm-text="导入"
-    :confirm-disabled="isLoading"
-  >
-    <template #title><h3 class="text-lg font-bold gradient-text">导入订阅</h3></template>
+  <Modal :show="show" @update:show="emit('update:show', $event)" @confirm="importSubscription" confirm-text="导入"
+    :confirm-disabled="isLoading">
+    <template #title>
+      <h3 class="text-lg font-bold gradient-text">导入订阅</h3>
+    </template>
     <template #body>
       <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
         请输入订阅链接，系统将尝试解析其中的节点信息。支持多种格式：
@@ -108,14 +108,10 @@ const importSubscription = async () => {
         <li>其他 YAML 格式的节点配置</li>
         <li>支持的协议：SS、SSR、VMess、VLESS、Trojan、Hysteria、TUIC、Socks5 等</li>
       </ul>
-      <input
-        type="text"
-        v-model="subscriptionUrl"
-        placeholder="https://example.com/your-subscription-link"
-        class="input-modern w-full"
-        @keyup.enter="importSubscription"
-      />
-      <div v-if="errorMessage" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+      <input type="text" v-model="subscriptionUrl" placeholder="https://example.com/your-subscription-link"
+        class="input-modern w-full" @keyup.enter="importSubscription" />
+      <div v-if="errorMessage"
+        class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
         <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
       </div>
     </template>
