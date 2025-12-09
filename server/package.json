@@ -1,0 +1,33 @@
+{
+    "name": "sub-one-server",
+    "version": "1.0.0",
+    "description": "Backend for Sub-One",
+    "main": "dist/index.js",
+    "scripts": {
+        "start": "node dist/index.js",
+        "dev": "nodemon src/index.ts",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "axios": "^1.6.8",
+        "body-parser": "^1.20.2",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "ioredis": "^5.4.1",
+        "js-yaml": "^4.1.0",
+        "node-cron": "^3.0.3"
+    },
+    "devDependencies": {
+        "@types/cookie-parser": "^1.4.7",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^20.12.7",
+        "@types/node-cron": "^3.0.11",
+        "nodemon": "^3.1.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.4.5"
+    }
+}

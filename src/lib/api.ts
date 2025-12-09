@@ -1,3 +1,5 @@
+import { subscriptionParser } from './subscription-parser';
+
 export async function fetchInitialData() {
     try {
         const response = await fetch('/api/data');
@@ -5,7 +7,6 @@ export async function fetchInitialData() {
             console.error("Session invalid or API error, status:", response.status);
             return null;
         }
-        // 后端已经更新，会返回 { subs, profiles, config }
         return await response.json();
     } catch (error) {
         console.error("Failed to fetch initial data:", error);
@@ -27,10 +28,8 @@ export async function login(password: string) {
     }
 }
 
-// [核心修改] saveSubs 现在接收并发送 profiles
 export async function saveSubs(subs: any[], profiles: any[]) {
     try {
-        // 数据预验证
         if (!Array.isArray(subs) || !Array.isArray(profiles)) {
             return { success: false, message: '数据格式错误：subs 和 profiles 必须是数组' };
         }
@@ -38,11 +37,9 @@ export async function saveSubs(subs: any[], profiles: any[]) {
         const response = await fetch('/api/subs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // 将 subs 和 profiles 一起发送
             body: JSON.stringify({ subs, profiles })
         });
 
-        // 检查HTTP状态码
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
@@ -52,8 +49,6 @@ export async function saveSubs(subs: any[], profiles: any[]) {
         return await response.json();
     } catch (error: any) {
         console.error('saveSubs 网络请求失败:', error);
-
-        // 根据错误类型返回更具体的错误信息
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             return { success: false, message: '网络连接失败，请检查网络连接' };
         } else if (error.name === 'SyntaxError') {
@@ -66,13 +61,43 @@ export async function saveSubs(subs: any[], profiles: any[]) {
 
 export async function fetchNodeCount(subUrl: string) {
     try {
-        const res = await fetch('/api/node_count', {
+        const trafficResponse = await fetch('/api/fetch_external_url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: subUrl })
         });
-        const data = await res.json();
-        return data; // [修正] 直接返回整个对象 { count, userInfo }
+
+        let userInfo = null;
+        let text = '';
+
+        if (trafficResponse.ok) {
+            const data = await trafficResponse.json();
+            text = data.content;
+
+            if (data.headers) {
+                const userInfoHeader = data.headers['subscription-userinfo'] || data.headers['Subscription-Userinfo'];
+                if (userInfoHeader) {
+                    const info: any = {};
+                    userInfoHeader.split(';').forEach((part: string) => {
+                        const [key, value] = part.trim().split('=');
+                        if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                    });
+                    userInfo = info;
+                }
+            }
+        } else {
+            return { count: 0, userInfo: null };
+        }
+
+        let nodeCount = 0;
+        try {
+            const nodes = subscriptionParser.parse(text);
+            nodeCount = nodes.length;
+        } catch (e) {
+            console.error(`Local parse failed for ${subUrl}:`, e);
+        }
+
+        return { count: nodeCount, userInfo };
     } catch (e) {
         console.error('fetchNodeCount error:', e);
         return { count: 0, userInfo: null };
@@ -98,7 +123,6 @@ export async function saveSettings(settings: any) {
             body: JSON.stringify(settings)
         });
 
-        // 检查HTTP状态码
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
@@ -108,8 +132,6 @@ export async function saveSettings(settings: any) {
         return await response.json();
     } catch (error: any) {
         console.error('saveSettings 网络请求失败:', error);
-
-        // 根据错误类型返回更具体的错误信息
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             return { success: false, message: '网络连接失败，请检查网络连接' };
         } else if (error.name === 'SyntaxError') {
@@ -120,11 +142,6 @@ export async function saveSettings(settings: any) {
     }
 }
 
-/**
- * 批量更新订阅的节点信息
- * @param {string[]} subscriptionIds - 要更新的订阅ID数组
- * @returns {Promise<Object>} - 更新结果
- */
 export async function batchUpdateNodes(subscriptionIds: string[]) {
     try {
         const response = await fetch('/api/batch_update_nodes', {
@@ -147,12 +164,6 @@ export async function batchUpdateNodes(subscriptionIds: string[]) {
     }
 }
 
-
-/**
- * 测试订阅链接延迟
- * @param {string} url - 要测试的URL
- * @returns {Promise<Object>} - 测试结果 { success, latency, status, error }
- */
 export async function testLatency(url: string) {
     try {
         const response = await fetch('/api/latency_test', {

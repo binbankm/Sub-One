@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: sub-one
+    ports:
+      - "3055:3055"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=3055
+      - DATA_DIR=/app/data
+      - ADMIN_PASSWORD=admin
+      # Uncomment to use Redis
+      # - REDIS_URL=redis://redis:6379
+    restart: always
+    # depends_on:
+    #   - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  subconverter:
+    image: tindy2013/subconverter:latest
+    container_name: sub-one-subconverter
+    restart: always
+    ports:
+      - "25500:25500"
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: sub-one-redis
+  #   restart: always
+  #   volumes:
+  #     - redis-data:/data
+
+# volumes:
+#   redis-data:

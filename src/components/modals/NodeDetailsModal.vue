@@ -36,7 +36,7 @@ const selectedNodes = ref(new Set<string>());
 const toastStore = useToastStore();
 
 // 监听模态框显示状态
-watch(() => props.show, async (newVal) => {
+watch(() => props.show, async (newVal: boolean) => {
   if (newVal) {
     if (props.profile) {
       await fetchProfileNodes();
@@ -55,7 +55,7 @@ watch(() => props.show, async (newVal) => {
 const filteredNodes = computed(() => {
   if (!searchTerm.value) return nodes.value;
   const term = searchTerm.value.toLowerCase();
-  return nodes.value.filter(node =>
+  return nodes.value.filter((node: DisplayNode) =>
     node.name.toLowerCase().includes(term) ||
     node.url.toLowerCase().includes(term)
   );
@@ -79,7 +79,8 @@ const fetchNodes = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const content = await response.text();
+    const data = await response.json();
+    const content = data.content;
     const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
     // Apply filtering and processing
     const processedNodes = subscriptionParser.processNodes(parsedNodes, props.subscription?.name || '', {
@@ -115,7 +116,7 @@ const fetchProfileNodes = async () => {
 
     // 1. 添加手动节点
     if (props.allManualNodes) {
-      const selectedManualNodes = props.allManualNodes.filter(node =>
+      const selectedManualNodes = props.allManualNodes.filter((node: Node) =>
         props.profile!.manualNodes.includes(node.id)
       );
 
@@ -133,12 +134,12 @@ const fetchProfileNodes = async () => {
 
     // 2. 添加订阅节点
     if (props.allSubscriptions) {
-      const selectedSubscriptions = props.allSubscriptions.filter(sub =>
+      const selectedSubscriptions = props.allSubscriptions.filter((sub: Subscription) =>
         props.profile!.subscriptions.includes(sub.id) && sub.enabled
       );
 
       // 并行获取所有订阅内容，提升速度
-      const promises = selectedSubscriptions.map(async (subscription) => {
+      const promises = selectedSubscriptions.map(async (subscription: Subscription) => {
         if (subscription.url && subscription.url.startsWith('http')) {
           try {
             const response = await fetch('/api/fetch_external_url', {
@@ -148,7 +149,8 @@ const fetchProfileNodes = async () => {
             });
 
             if (response.ok) {
-              const content = await response.text();
+              const data = await response.json();
+              const content = data.content;
               const parsedNodes = subscriptionParser.parse(content, subscription.name);
               // 标记来源，方便显示
               return parsedNodes.map(node => ({
@@ -169,7 +171,7 @@ const fetchProfileNodes = async () => {
       });
 
       const results = await Promise.all(promises);
-      results.forEach(subNodes => profileNodes.push(...subNodes));
+      results.forEach((subNodes: DisplayNode[]) => profileNodes.push(...subNodes));
     }
 
     nodes.value = profileNodes;
@@ -222,15 +224,15 @@ const toggleSelectAll = () => {
   if (selectedNodes.value.size === filteredNodes.value.length) {
     selectedNodes.value.clear();
   } else {
-    filteredNodes.value.forEach(node => selectedNodes.value.add(node.id));
+    filteredNodes.value.forEach((node: DisplayNode) => selectedNodes.value.add(node.id));
   }
 };
 
 // 复制选中的节点
 const copySelectedNodes = () => {
   const selectedNodeUrls = filteredNodes.value
-    .filter(node => selectedNodes.value.has(node.id))
-    .map(node => node.url);
+    .filter((node: DisplayNode) => selectedNodes.value.has(node.id))
+    .map((node: DisplayNode) => node.url);
 
   if (selectedNodeUrls.length === 0) {
     toastStore.showToast('请先选择要复制的节点', 'warning');
