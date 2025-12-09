@@ -218,8 +218,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
     const subconverterUrl = new URL(`${cleanSubConverter}/sub`);
     subconverterUrl.searchParams.set('target', targetFormat);
 
-    const uaLow = userAgentHeader.toLowerCase();
-    if (targetFormat === 'clash' && (uaLow.includes('mihomo') || uaLow.includes('clash-verge') || uaLow.includes('meta') || uaLow.includes('flyclash'))) {
+    if (targetFormat === 'clash') {
         subconverterUrl.searchParams.set('ver', 'meta');
     }
 
