@@ -242,6 +242,7 @@ export class SubscriptionParser {
         let url = `vless://${proxy.uuid}@${proxy.server}:${proxy.port}`;
         const queryParams: string[] = [];
 
+        // Network type
         if (proxy.network && proxy.network !== 'tcp') {
             queryParams.push(`type=${proxy.network}`);
 
@@ -252,14 +253,55 @@ export class SubscriptionParser {
                 if (proxy['ws-opts']?.headers?.Host) {
                     queryParams.push(`host=${proxy['ws-opts'].headers.Host}`);
                 }
+            } else if (proxy.network === 'grpc') {
+                if (proxy['grpc-opts']?.['grpc-service-name']) {
+                    queryParams.push(`serviceName=${encodeURIComponent(proxy['grpc-opts']['grpc-service-name'])}`);
+                }
             }
         }
 
-        if (proxy.tls === 'tls') {
+        // Security
+        if (proxy.tls === true || proxy.tls === 'true' || proxy.tls === 'tls') {
             queryParams.push('security=tls');
-            if (proxy.sni) {
-                queryParams.push(`sni=${proxy.sni}`);
+        } else if (proxy.reality === true || proxy.reality === 'true' || proxy['client-fingerprint']) {
+            // Auto-detect reality based on presence of reality fields or fingerprint
+            if (proxy['reality-opts'] || proxy.servername || proxy.sni) {
+                queryParams.push('security=reality');
             }
+        }
+
+        // Common TLS/Reality fields
+        const sni = proxy.sni || proxy.servername;
+        if (sni) {
+            queryParams.push(`sni=${sni}`);
+        }
+
+        const fp = proxy['client-fingerprint'] || proxy.fingerprint;
+        if (fp) {
+            queryParams.push(`fp=${fp}`);
+        }
+
+        const alpn = proxy.alpn;
+        if (alpn && Array.isArray(alpn)) {
+            queryParams.push(`alpn=${alpn.join(',')}`);
+        }
+
+        // Reality specific fields
+        if (proxy['reality-opts']) {
+            if (proxy['reality-opts']['public-key']) {
+                queryParams.push(`pbk=${proxy['reality-opts']['public-key']}`);
+            }
+            if (proxy['reality-opts']['short-id']) {
+                queryParams.push(`sid=${proxy['reality-opts']['short-id']}`);
+            }
+            if (proxy['reality-opts']['spider-x']) {
+                queryParams.push(`spx=${proxy['reality-opts']['spider-x']}`);
+            }
+        }
+
+        // Flow (Vision)
+        if (proxy.flow) {
+            queryParams.push(`flow=${proxy.flow}`);
         }
 
         if (queryParams.length > 0) {
