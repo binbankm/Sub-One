@@ -30,7 +30,7 @@ const defaultSettings: Settings = {
     FileName: 'Sub-One',
     mytoken: 'auto',
     profileToken: '',
-    subConverter: 'subconverter:25500',
+    subConverter: '',
     subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
     prependSubName: true,
     NotifyThresholdDays: 3,
