@@ -8,7 +8,7 @@ import { cronService, subscriptionService } from './services';
 import { storage } from './storage';
 import { Settings, Subscription, Profile } from './types';
 import { sendTgNotification, formatBytes } from './utils';
-import fetch from 'node-fetch'; // Ensure node-fetch is imported
+// fetch is global in Node 20+
 
 const app = express();
 
