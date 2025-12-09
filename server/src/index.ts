@@ -8,6 +8,7 @@ import { cronService, subscriptionService } from './services';
 import { storage } from './storage';
 import { Settings, Subscription, Profile } from './types';
 import { sendTgNotification, formatBytes } from './utils';
+import fetch from 'node-fetch'; // Ensure node-fetch is imported
 
 const app = express();
 
@@ -156,98 +157,103 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
         }
     }
 
-    const upstreamUserAgent = 'Clash.Meta/v1.16.0';
-    const combinedNodeList = await subscriptionService.generateCombinedNodeList(appConfig, upstreamUserAgent, targetSubs, prependedContentForSubconverter);
+    // --- Pass-through Mode Implementation ---
 
-    if (targetFormat === 'base64') {
-        let contentToEncode = isProfileExpired ? DEFAULT_EXPIRED_NODE + '\n' : combinedNodeList;
-        const base64Content = Buffer.from(contentToEncode).toString('base64');
-        res.set({
-            "Content-Type": "text/plain; charset=utf-8",
-            'Cache-Control': 'no-store, no-cache'
-        });
-        return res.send(base64Content);
+    // 1. Collect all subscription URLs
+    const subscriptionUrls: string[] = [];
+    const manualNodes: string[] = [];
+
+    targetSubs.forEach(sub => {
+        if (sub.url.startsWith('http')) {
+            subscriptionUrls.push(sub.url);
+        } else {
+            manualNodes.push(sub.url);
+        }
+    });
+
+    // 2. Handle manual nodes (convert to data URI)
+    // Also prepend traffic info or expired info if needed
+    if (prependedContentForSubconverter) {
+        manualNodes.unshift(prependedContentForSubconverter);
     }
 
-    // Call Subconverter
-    const base64Content = Buffer.from(combinedNodeList).toString('base64');
-
-    // We can't easily use the callback URL method locally unless we have a public URL.
-    // Instead, we can POST the content to subconverter if it supports it, or we have to expose this server.
-    // The original code used a callback URL.
-    // Since we are in Docker, we might not have a public URL easily.
-    // However, most subconverters support `url` parameter which is a URL to the subscription.
-    // If we can't provide a public URL, we might be stuck unless we proxy the request differently.
-
-    // BUT, the original code constructs a callback URL:
-    // const callbackUrl = `${url.protocol}//${url.host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
-
-    // If the user is running this locally, `url.host` will be `localhost:3055`.
-    // If the subconverter is also local (or can access localhost), it works.
-    // If the subconverter is remote (url.v1.mk), it CANNOT access localhost.
-
-    // This is a critical point. If the user uses a remote subconverter, the server MUST be publicly accessible.
-    // OR, we can try to find a subconverter API that accepts content directly (POST).
-    // Standard subconverter (tindy2013/subconverter) supports `curl -d "content" ...`.
-
-    // Let's assume the standard behavior for now. If it fails, the user needs to use a local subconverter or expose the port.
-    // I will implement the callback URL logic, but warn about it.
-
-    // Actually, if we are converting to Docker, maybe we should include a local subconverter container?
-    // The user didn't explicitly ask for it, but it makes "complete conversion" sense.
-    // But for now, let's stick to the code logic.
-
-    const callbackToken = 'default-token'; // Simplified
-    const callbackPath = profileIdentifier ? `/sub/${token}/${profileIdentifier}` : `/sub/${token}`;
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const callbackUrl = `${protocol}://${host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
-
-    if (req.query.callback_token === callbackToken) {
-        res.set({
-            "Content-Type": "text/plain; charset=utf-8",
-            'Cache-Control': 'no-store, no-cache'
-        });
-        return res.send(base64Content);
+    // If profile is expired, we ignore everything else and just show the expired node
+    if (isProfileExpired) {
+        // Clear previous collections
+        subscriptionUrls.length = 0;
+        manualNodes.length = 0;
+        manualNodes.push(DEFAULT_EXPIRED_NODE);
     }
 
+    if (manualNodes.length > 0) {
+        const manualContent = manualNodes.join('\n');
+        const base64Manual = Buffer.from(manualContent).toString('base64');
+        // Subconverter supports data URI for raw content
+        subscriptionUrls.push(`data:text/plain;base64,${base64Manual}`);
+    }
+
+    // 3. Construct Subconverter URL
+    // Use configured address, but fallback to internal if empty
     let cleanSubConverter = effectiveSubConverter.replace(/\/$/, '');
+    if (!cleanSubConverter) {
+        cleanSubConverter = 'http://subconverter:25500';
+    }
     if (!cleanSubConverter.startsWith('http')) {
         cleanSubConverter = `http://${cleanSubConverter}`;
     }
+
     const subconverterUrl = new URL(`${cleanSubConverter}/sub`);
     subconverterUrl.searchParams.set('target', targetFormat);
+    subconverterUrl.searchParams.set('url', subscriptionUrls.join('|'));
 
     if (targetFormat === 'clash') {
         subconverterUrl.searchParams.set('ver', 'meta');
     }
 
-    subconverterUrl.searchParams.set('url', callbackUrl);
     if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
         subconverterUrl.searchParams.set('config', effectiveSubConfig);
     }
     subconverterUrl.searchParams.set('new_name', 'true');
+    subconverterUrl.searchParams.set('filename', subName); // Set filename for Content-Disposition
 
+    // 4. Proxy the request
     try {
+        // We use node-fetch to stream the response
         const subResponse = await fetch(subconverterUrl.toString(), {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
         if (!subResponse.ok) {
-            return res.status(502).send(`Error connecting to subconverter: ${subResponse.status}`);
+            const errorText = await subResponse.text();
+            console.error(`Subconverter error ${subResponse.status}: ${errorText}`);
+            return res.status(502).send(`Error connecting to subconverter: ${subResponse.status} ${errorText}`);
         }
 
-        const responseText = await subResponse.text();
+        // Forward headers
         const contentType = subResponse.headers.get('content-type') || 'text/plain; charset=utf-8';
+        const contentDisposition = subResponse.headers.get('content-disposition');
 
         res.set({
             'Content-Type': contentType,
-            'Content-Disposition': `attachment; filename*=utf-8''${encodeURIComponent(subName)}`,
             'Cache-Control': 'no-store, no-cache'
         });
-        res.send(responseText);
+
+        if (contentDisposition) {
+            res.set('Content-Disposition', contentDisposition);
+        } else {
+            res.set('Content-Disposition', `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
+        }
+
+        // Pipe the body
+        if (subResponse.body) {
+            // @ts-ignore
+            subResponse.body.pipe(res);
+        } else {
+            res.end();
+        }
+
     } catch (error: any) {
-        console.error(`Subconverter error: ${error.message}`);
+        console.error(`Subconverter proxy error: ${error.message}`);
         res.status(502).send(`Error connecting to subconverter: ${error.message}`);
     }
 };
