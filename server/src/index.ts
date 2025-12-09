@@ -211,7 +211,6 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
         return res.send(base64Content);
     }
 
-    // Call Subconverter via POST
     let cleanSubConverter = effectiveSubConverter.replace(/\/$/, '');
     if (!cleanSubConverter.startsWith('http')) {
         cleanSubConverter = `http://${cleanSubConverter}`;
@@ -223,7 +222,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
         subconverterUrl.searchParams.set('ver', 'meta');
     }
 
-    // subconverterUrl.searchParams.set('url', callbackUrl); // No longer using callback URL
+    subconverterUrl.searchParams.set('url', callbackUrl);
     if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
         subconverterUrl.searchParams.set('config', effectiveSubConfig);
     }
@@ -231,18 +230,11 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
 
     try {
         const subResponse = await fetch(subconverterUrl.toString(), {
-            method: 'POST',
-            headers: {
-                'User-Agent': 'Mozilla/5.0',
-                'Content-Type': 'text/plain; charset=utf-8'
-            },
-            body: combinedNodeList // Send raw node list directly
+            headers: { 'User-Agent': 'Mozilla/5.0' }
         });
 
         if (!subResponse.ok) {
-            const errorText = await subResponse.text();
-            console.error(`Subconverter error ${subResponse.status}: ${errorText}`);
-            return res.status(502).send(`Error connecting to subconverter: ${subResponse.status} ${errorText}`);
+            return res.status(502).send(`Error connecting to subconverter: ${subResponse.status}`);
         }
 
         const responseText = await subResponse.text();
