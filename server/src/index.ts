@@ -244,13 +244,9 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
             res.set('Content-Disposition', `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
         }
 
-        // Pipe the body
-        if (subResponse.body) {
-            // @ts-ignore
-            subResponse.body.pipe(res);
-        } else {
-            res.end();
-        }
+        // Read body as text and send (safer than piping Web Streams)
+        const responseText = await subResponse.text();
+        res.send(responseText);
 
     } catch (error: any) {
         console.error(`Subconverter proxy error: ${error.message}`);
