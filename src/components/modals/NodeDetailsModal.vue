@@ -79,7 +79,7 @@ const fetchNodes = async () => {
       throw new Error(result.message || '解析订阅失败');
     }
 
-    nodes.value = result.nodes.map(n => ({
+    nodes.value = result.nodes.map((n: any) => ({
       id: n.id,
       name: n.name,
       url: n.url,
@@ -136,12 +136,13 @@ const fetchProfileNodes = async () => {
           try {
             // 使用新的 parseSubscription API
             const result = await parseSubscription(subscription.url, {
-              subscriptionName: subscription.name
+              subscriptionName: subscription.name,
+              exclude: subscription.exclude
             });
 
             if (result.success && result.nodes.length > 0) {
               // 标记来源，方便显示
-              return result.nodes.map(node => ({
+              return result.nodes.map((node: any) => ({
                 id: node.id,
                 name: node.name,
                 url: node.url,
