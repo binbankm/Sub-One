@@ -34,7 +34,7 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 
 # Create data directory
-RUN mkdir -p ./data
+RUN mkdir -p /app/data
 
 # Environment variables
 ENV PORT=3055

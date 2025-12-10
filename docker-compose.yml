@@ -1,20 +1,23 @@
 version: '3.8'
 
 services:
-  app:
+  sub-one:
     image: binbankm/sub-one:latest
     container_name: sub-one
     ports:
-      - "3055:3055"
+      - "${PORT:-3055}:3055"
     volumes:
-      - ./data:/app/data
+      # 数据持久化目录 (VPS首次部署需要: mkdir -p /root/sub-one-data && chmod 755 /root/sub-one-data)
+      - /root/sub-one-data:/app/data
     environment:
+      - TZ=Asia/Shanghai
       - PORT=${PORT:-3055}
+      - NODE_ENV=${NODE_ENV:-production}
       - DATA_DIR=${DATA_DIR:-/app/data}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       # Uncomment to use Redis
       # - REDIS_URL=redis://redis:6379
-    restart: always
+    restart: unless-stopped
     # depends_on:
     #   - redis
     extra_hosts:
@@ -23,14 +26,14 @@ services:
   # subconverter:
   #   image: asdlokj1qpi233/subconverter:latest
   #   container_name: sub-one-subconverter
-  #   restart: always
+  #   restart: unless-stopped
   #   ports:
   #     - "25500:25500"
 
   # redis:
   #   image: redis:alpine
   #   container_name: sub-one-redis
-  #   restart: always
+  #   restart: unless-stopped
   #   volumes:
   #     - redis-data:/data
 
