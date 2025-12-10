@@ -67,9 +67,9 @@ const subLink = computed(() => {
     return url;
   }
 
-  // 优化：使用正确的参数名target，确保后端能正确识别格式
+  // 优化：使用简洁的短格式参数（如 ?clash），与原版保持一致
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
-  return `${url}?target=${formatParam}`;
+  return `${url}?${formatParam}`;
 });
 
 const copyToClipboard = async () => {
