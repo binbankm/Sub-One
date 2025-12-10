@@ -1934,7 +1934,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
             const responseText = await subconverterResponse.text();
             const responseHeaders = new Headers(subconverterResponse.headers);
-            responseHeaders.set("Content-Disposition", `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
+            responseHeaders.set("Content-Disposition", `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
 
             // 设置正确的Content-Type
             let contentType = 'text/plain; charset=utf-8';
@@ -1987,7 +1987,11 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         } else {
             contentToEncode = combinedNodeList;
         }
-        const headers = { "Content-Type": "text/plain; charset=utf-8", 'Cache-Control': 'no-store, no-cache' };
+        const headers = {
+            "Content-Type": "text/plain; charset=utf-8",
+            'Cache-Control': 'no-store, no-cache',
+            'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}`
+        };
         return new Response(btoa(unescape(encodeURIComponent(contentToEncode))), { headers });
     }
 
@@ -2038,7 +2042,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         }
         const responseText = await subconverterResponse.text();
         const responseHeaders = new Headers(subconverterResponse.headers);
-        responseHeaders.set("Content-Disposition", `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
+        responseHeaders.set("Content-Disposition", `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
 
         // 优化：根据目标格式设置正确的Content-Type，确保客户端能正确识别和导入
         let contentType = 'text/plain; charset=utf-8';
