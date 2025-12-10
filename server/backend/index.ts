@@ -30,6 +30,29 @@ app.use(express.static(path.join(__dirname, '../../dist')));
 app.use('/api', apiRoutes);
 
 
+// Proxy Route to bypass WAF on upstream subscriptions
+app.get('/proxy-content', async (req, res) => {
+    const url = req.query.url as string;
+    if (!url) return res.status(400).send('Missing url');
+    try {
+        // Use a browser-like or Clash UA to bypass WAF
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'Clash.Meta/v1.16.0' }
+        });
+        if (!response.ok) {
+            return res.status(response.status).send(await response.text());
+        }
+        // Forward headers
+        const contentType = response.headers.get('content-type');
+        if (contentType) res.set('Content-Type', contentType);
+
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (e: any) {
+        res.status(502).send(e.message);
+    }
+});
+
 // Subscription Handler
 const handleSubRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const userAgentHeader = req.headers['user-agent'] || "Unknown";
@@ -155,9 +178,15 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     const subscriptionUrls: string[] = [];
     const manualNodes: string[] = [];
 
+    // Construct base URL for the proxy
+    // We use the request's host to ensure the Subconverter (external or internal) can reach us back
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     targetSubs.forEach(sub => {
         if (sub.url.startsWith('http')) {
-            subscriptionUrls.push(sub.url);
+            // Use proxy to bypass WAF
+            const proxyUrl = `${baseUrl}/proxy-content?url=${encodeURIComponent(sub.url)}`;
+            subscriptionUrls.push(proxyUrl);
         } else {
             manualNodes.push(sub.url);
         }
@@ -195,7 +224,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     }
 
     const subconverterUrl = new URL(`${cleanSubConverter}/sub`);
-    subconverterUrl.searchParams.set('target', targetFormat);
+    subconverterUrl.searchParams.set('target', targetFormat === 'base64' ? 'mixed' : targetFormat);
     subconverterUrl.searchParams.set('url', subscriptionUrls.join('|'));
 
     if (targetFormat === 'clash') {
