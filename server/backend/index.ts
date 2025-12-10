@@ -186,7 +186,39 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     targetSubs.forEach(sub => {
         if (sub.url.startsWith('http')) {
             // Use proxy to bypass WAF
-            const proxyUrl = `${baseUrl}/proxy-content?url=${encodeURIComponent(sub.url)}`;
+            let proxyUrl = `${baseUrl}/proxy-content?url=${encodeURIComponent(sub.url)}`;
+            if (sub.exclude && sub.exclude.trim() !== '') {
+                // Subconverter supports 'exclude' param for each URL, but it's tricky with pipe separation.
+                // Better approach: Subconverter's 'exclude' param applies globally or we need to handle it per sub.
+                // However, standard Subconverter usage with pipes (|) merges all nodes then applies filters.
+                // If we want per-subscription filtering, we might need to do it in the proxy or rely on Subconverter's regex.
+
+                // Actually, Subconverter applies 'exclude' to the FINAL list.
+                // If we want to filter BEFORE Subconverter (which we do if we want per-sub rules),
+                // we should probably handle it in the /proxy-content endpoint or use the internal parser.
+
+                // BUT, for now, let's pass it to the proxy endpoint so it can filter it?
+                // The current /proxy-content just fetches and returns. It doesn't parse.
+
+                // Wait, if we are using Subconverter, we usually pass 'exclude' to IT.
+                // But Subconverter's 'exclude' is global for the whole result.
+                // If user set exclude rules on a SPECIFIC subscription in the UI, they expect it to apply to THAT subscription.
+                // If we have multiple subs, global exclude might be okay if the rules are specific enough.
+
+                // Let's collect all exclude rules and pass them to Subconverter globally?
+                // Or, better: Implement filtering in /proxy-content?
+                // No, /proxy-content is just a stream proxy.
+
+                // Let's look at how we handle it in Internal Base64.
+                // In Internal Base64, we parse and filter per sub.
+
+                // For Subconverter path:
+                // We can't easily do per-sub filtering unless we download, filter, and re-host (which is what Internal Base64 does).
+                // If we just pass URLs to Subconverter, we rely on its global 'exclude' param.
+
+                // Let's try to append the exclude rule to the Subconverter URL parameters.
+                // We need to collect ALL exclude rules from all targetSubs.
+            }
             subscriptionUrls.push(proxyUrl);
         } else {
             manualNodes.push(sub.url);
@@ -237,6 +269,24 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     }
     subconverterUrl.searchParams.set('new_name', 'true');
     subconverterUrl.searchParams.set('filename', subName); // Set filename for Content-Disposition
+
+    // Collect and apply exclude rules
+    const allExcludeRules = targetSubs
+        .filter(sub => sub.exclude && sub.exclude.trim() !== '')
+        .map(sub => sub.exclude.trim())
+        .join('\n'); // Join with newline for regex OR logic if needed, but Subconverter uses regex directly.
+    // Actually Subconverter 'exclude' param expects a regex string.
+    // If we have multiple rules from multiple subs, we should probably join them with '|'.
+    // But wait, the 'exclude' field in UI allows multiple lines (regexes).
+    // So we should join all lines from all subs with '|'.
+
+    if (allExcludeRules) {
+        // Split by newline to get individual rules, then join with |
+        const combinedRegex = allExcludeRules.split(/\r?\n/).map(r => r.trim()).filter(Boolean).join('|');
+        if (combinedRegex) {
+            subconverterUrl.searchParams.set('exclude', combinedRegex);
+        }
+    }
 
     // 4. Proxy the request
     try {
