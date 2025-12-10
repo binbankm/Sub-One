@@ -59,8 +59,8 @@ const subLink = computed(() => {
 
   // 构建基础URL
   const url = selectedId.value === 'default'
-    ? `${baseUrl}/sub/${token}`
-    : `${baseUrl}/sub/${token}/${selectedId.value}`;
+    ? `${baseUrl}/${token}`
+    : `${baseUrl}/${token}/${selectedId.value}`;
 
   // 根据格式添加参数
   if (format === '自适应') {

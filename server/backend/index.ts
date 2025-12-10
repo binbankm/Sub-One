@@ -31,7 +31,7 @@ app.use('/api', apiRoutes);
 
 
 // Subscription Handler
-const handleSubRequest = async (req: express.Request, res: express.Response) => {
+const handleSubRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const userAgentHeader = req.headers['user-agent'] || "Unknown";
     const { token, profile: profileIdentifier } = req.params;
 
@@ -54,7 +54,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
 
     if (profileIdentifier) {
         if (!token || token !== appConfig.profileToken) {
-            return res.status(403).send('Invalid Profile Token');
+            return next();
         }
         const profile = allProfiles.find(p => (p.customId && p.customId === profileIdentifier) || p.id === profileIdentifier);
         if (profile && profile.enabled) {
@@ -86,7 +86,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
         }
     } else {
         if (!token || token !== appConfig.mytoken) {
-            return res.status(403).send('Invalid Token');
+            return next();
         }
         targetSubs = allSubs.filter(s => s.enabled);
     }
@@ -246,8 +246,8 @@ const handleSubRequest = async (req: express.Request, res: express.Response) => 
     }
 };
 
-app.get('/sub/:token', handleSubRequest);
-app.get('/sub/:token/:profile', handleSubRequest);
+app.get('/:token', handleSubRequest);
+app.get('/:token/:profile', handleSubRequest);
 
 // Fallback for SPA
 app.get('*', (req, res) => {

@@ -1719,7 +1719,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
         // [修正] 使用 config 變量
         if (!token || token !== config.profileToken) {
-            return new Response('Invalid Profile Token', { status: 403 });
+            return context.next();
         }
         const profile = allProfiles.find(p => (p.customId && p.customId === profileIdentifier) || p.id === profileIdentifier);
         if (profile && profile.enabled) {
@@ -1760,7 +1760,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         }
     } else {
         if (!token || token !== config.mytoken) {
-            return new Response('Invalid Token', { status: 403 });
+            return context.next();
         }
         targetSubs = allSubs.filter(s => s.enabled);
         effectiveSubConverter = config.subConverter;
