@@ -1,5 +1,3 @@
-import { subscriptionParser } from './subscription-parser';
-
 export async function fetchInitialData() {
     try {
         const response = await fetch('/api/data');
@@ -59,50 +57,6 @@ export async function saveSubs(subs: any[], profiles: any[]) {
     }
 }
 
-export async function fetchNodeCount(subUrl: string) {
-    try {
-        const trafficResponse = await fetch('/api/fetch_external_url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: subUrl })
-        });
-
-        let userInfo = null;
-        let text = '';
-
-        if (trafficResponse.ok) {
-            const data = await trafficResponse.json();
-            text = data.content;
-
-            if (data.headers) {
-                const userInfoHeader = data.headers['subscription-userinfo'] || data.headers['Subscription-Userinfo'];
-                if (userInfoHeader) {
-                    const info: any = {};
-                    userInfoHeader.split(';').forEach((part: string) => {
-                        const [key, value] = part.trim().split('=');
-                        if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
-                    });
-                    userInfo = info;
-                }
-            }
-        } else {
-            return { count: 0, userInfo: null };
-        }
-
-        let nodeCount = 0;
-        try {
-            const nodes = subscriptionParser.parse(text);
-            nodeCount = nodes.length;
-        } catch (e) {
-            console.error(`Local parse failed for ${subUrl}:`, e);
-        }
-
-        return { count: nodeCount, userInfo };
-    } catch (e) {
-        console.error('fetchNodeCount error:', e);
-        return { count: 0, userInfo: null };
-    }
-}
 
 export async function fetchSettings() {
     try {
@@ -185,5 +139,80 @@ export async function testLatency(url: string) {
     } catch (error) {
         console.error("Latency test failed:", error);
         return { success: false, message: '网络请求失败' };
+    }
+}
+
+/**
+ * 新增函数: 后端直接解析订阅源
+ * 解决前端拼接复杂、容易出错的问题
+ * 
+ * @param url 订阅源URL
+ * @param options 可选参数
+ * @param options.subscriptionName 订阅名称
+ * @param options.exclude 排除规则
+ * @param options.prependSubName 是否添加订阅名前缀
+ * @returns 解析结果，包含节点列表和流量信息
+ */
+export async function parseSubscription(url: string, options?: {
+    subscriptionName?: string;
+    exclude?: string;
+    prependSubName?: boolean;
+}) {
+    try {
+        console.log(`[API] 调用后端解析订阅: ${url}`);
+
+        const response = await fetch('/api/parse_subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url,
+                subscriptionName: options?.subscriptionName,
+                exclude: options?.exclude,
+                prependSubName: options?.prependSubName
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.error || `服务器错误 (${response.status})`;
+            return {
+                success: false,
+                message: errorMessage,
+                nodes: [],
+                userInfo: null,
+                count: 0
+            };
+        }
+
+        const result = await response.json();
+        console.log(`[API] 后端解析成功，获取 ${result.count} 个节点`);
+        return result;
+    } catch (error: any) {
+        console.error('parseSubscription 网络请求失败:', error);
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            return {
+                success: false,
+                message: '网络连接失败，请检查网络连接',
+                nodes: [],
+                userInfo: null,
+                count: 0
+            };
+        } else if (error.name === 'SyntaxError') {
+            return {
+                success: false,
+                message: '服务器响应格式错误',
+                nodes: [],
+                userInfo: null,
+                count: 0
+            };
+        } else {
+            return {
+                success: false,
+                message: `网络请求失败: ${error.message}`,
+                nodes: [],
+                userInfo: null,
+                count: 0
+            };
+        }
     }
 }

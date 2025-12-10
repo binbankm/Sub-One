@@ -516,30 +516,144 @@ async function handleApiRequest(request: Request, env: Env) {
             return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
         }
 
-        case '/fetch_external_url': { // New case
+        /**
+         * 新增端点: 后端直接获取并解析订阅源
+         * 解决前端拼接复杂、容易出错的问题
+         * 
+         * 请求参数:
+         * - url: 订阅源URL
+         * - subscriptionName: 订阅名称（可选）
+         * - exclude: 排除规则（可选）
+         * - prependSubName: 是否添加订阅名前缀（可选）
+         * 
+         * 返回数据:
+         * - success: 是否成功
+         * - nodes: 解析后的节点列表
+         * - userInfo: 流量信息（如果有）
+         * - count: 节点数量
+         */
+        case '/parse_subscription': {
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-            const { url: externalUrl } = await request.json() as any;
-            if (!externalUrl || typeof externalUrl !== 'string' || !/^https?:\/\//.test(externalUrl)) {
-                return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
+
+            const body = await request.json() as any;
+            const { url: subUrl, subscriptionName, exclude, prependSubName } = body;
+
+            // 验证URL
+            if (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl)) {
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: 'Invalid or missing url parameter'
+                }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
 
             try {
-                const response = await fetch(new Request(externalUrl, {
-                    headers: { 'User-Agent': 'Sub-One-Proxy/1.0' }, // Identify as proxy
+                console.log(`[Parse Subscription] 开始解析: ${subUrl}`);
+
+                // 并行请求流量信息和节点内容
+                const trafficRequest = fetch(new Request(subUrl, {
+                    headers: { 'User-Agent': 'Clash for Windows/0.20.39' },
                     redirect: "follow",
-                    cf: { insecureSkipVerify: true } // Allow insecure SSL for flexibility
+                    cf: { insecureSkipVerify: true }
                 } as any));
 
-                if (!response.ok) {
-                    return new Response(JSON.stringify({ error: `Failed to fetch external URL: ${response.status} ${response.statusText}` }), { status: response.status });
+                const nodeRequest = fetch(new Request(subUrl, {
+                    headers: { 'User-Agent': 'Clash.Meta/v1.16.0' }, // 使用 Meta UA 获取完整配置
+                    redirect: "follow",
+                    cf: { insecureSkipVerify: true }
+                } as any));
+
+                const [trafficResult, nodeResult] = await Promise.allSettled([
+                    Promise.race([trafficRequest, new Promise<Response>((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout')), 15000)
+                    )]),
+                    Promise.race([nodeRequest, new Promise<Response>((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout')), 15000)
+                    )])
+                ]);
+
+                let userInfo: any = null;
+                let nodes: Node[] = [];
+
+                // 1. 处理流量信息
+                if (trafficResult.status === 'fulfilled' && trafficResult.value.ok) {
+                    const userInfoHeader = trafficResult.value.headers.get('subscription-userinfo');
+                    if (userInfoHeader) {
+                        const info: any = {};
+                        userInfoHeader.split(';').forEach((part: string) => {
+                            const [key, value] = part.trim().split('=');
+                            if (key && value) {
+                                info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                            }
+                        });
+                        userInfo = info;
+                        console.log(`[Parse Subscription] 获取到流量信息:`, userInfo);
+                    }
+                } else if (trafficResult.status === 'rejected') {
+                    console.warn(`[Parse Subscription] 流量信息请求失败:`, trafficResult.reason.message);
                 }
 
-                const content = await response.text();
-                return new Response(content, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+                // 2. 处理节点内容
+                if (nodeResult.status === 'fulfilled' && nodeResult.value.ok) {
+                    const content = await nodeResult.value.text();
+                    console.log(`[Parse Subscription] 获取到内容，长度: ${content.length} bytes`);
 
-            } catch (e: any) {
-                console.error(`[API Error /fetch_external_url] Failed to fetch ${externalUrl}:`, e);
-                return new Response(JSON.stringify({ error: `Failed to fetch external URL: ${e.message}` }), { status: 500 });
+                    // 使用订阅解析器解析
+                    try {
+                        nodes = subscriptionParser.parse(content, subscriptionName || '订阅', {
+                            exclude: exclude,
+                            prependSubName: prependSubName !== undefined ? prependSubName : false
+                        });
+                        console.log(`[Parse Subscription] 成功解析 ${nodes.length} 个节点`);
+                    } catch (parseError: any) {
+                        console.error(`[Parse Subscription] 解析失败:`, parseError);
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: `解析订阅内容失败: ${parseError.message}`,
+                            userInfo: userInfo,
+                            nodes: [],
+                            count: 0
+                        }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
+                } else if (nodeResult.status === 'rejected') {
+                    console.error(`[Parse Subscription] 节点内容请求失败:`, nodeResult.reason.message);
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: `获取订阅内容失败: ${nodeResult.reason.message}`,
+                        userInfo: userInfo,
+                        nodes: [],
+                        count: 0
+                    }), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                }
+
+                // 3. 返回结果
+                return new Response(JSON.stringify({
+                    success: true,
+                    nodes: nodes,
+                    userInfo: userInfo,
+                    count: nodes.length,
+                    message: `成功获取并解析 ${nodes.length} 个节点`
+                }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+            } catch (error: any) {
+                console.error(`[Parse Subscription] 未预期的错误:`, error);
+                return new Response(JSON.stringify({
+                    success: false,
+                    error: `服务器错误: ${error.message}`,
+                    nodes: [],
+                    count: 0
+                }), {
+                    status: 500,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
         }
 
@@ -1746,11 +1860,125 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         }
     }
 
+    // ========================================================================
+    // 🚀 混合模式：智能判断是否可以使用直接传URL的快速路径
+    // ========================================================================
+
+    // 判断是否满足快速路径条件
+    const httpSubs = targetSubs.filter(s => s.url && s.url.toLowerCase().startsWith('http'));
+    const hasManualNodes = targetSubs.some(s => !s.url || !s.url.toLowerCase().startsWith('http'));
+    const hasExcludeRules = targetSubs.some(s => s.exclude && s.exclude.trim() !== '');
+    const needsPrependName = config.prependSubName === true;
+    const hasTrafficInfo = prependedContentForSubconverter !== '';
+
+    // 快速路径条件：
+    // 1. 非base64格式（因为base64总是需要后端处理）
+    // 2. 只有HTTP订阅（没有手动节点）
+    // 3. 没有过滤规则
+    // 4. 不需要添加订阅名前缀
+    // 5. 没有流量信息节点
+    // 6. 不是过期订阅
+    const canUseFastPath = targetFormat !== 'base64'
+        && httpSubs.length > 0
+        && !hasManualNodes
+        && !hasExcludeRules
+        && !needsPrependName
+        && !hasTrafficInfo
+        && !isProfileExpired;
+
+    if (canUseFastPath) {
+        // 🚀 快速路径：直接传URL给Subconverter
+        console.log(`[Fast Path] Using direct URL mode for ${httpSubs.length} subscriptions`);
+
+        try {
+            // 多个订阅用 | 分隔（Subconverter支持）
+            const urls = httpSubs.map(s => encodeURIComponent(s.url)).join('|');
+
+            // 构建Subconverter URL
+            let cleanSubConverter = effectiveSubConverter.replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const subconverterUrl = new URL(`https://${cleanSubConverter}/sub`);
+            subconverterUrl.searchParams.set('target', targetFormat);
+            subconverterUrl.searchParams.set('url', urls); // 直接传原始订阅URL
+
+            // 针对 Clash Meta 内核添加 ver=meta 参数
+            const uaLow = userAgentHeader.toLowerCase();
+            if (targetFormat === 'clash' && (
+                uaLow.includes('mihomo') ||
+                uaLow.includes('clash-verge') ||
+                uaLow.includes('meta') ||
+                uaLow.includes('flyclash')
+            )) {
+                subconverterUrl.searchParams.set('ver', 'meta');
+            }
+
+            // 添加配置URL（如果有）
+            if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge')
+                && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
+                subconverterUrl.searchParams.set('config', effectiveSubConfig);
+            }
+
+            subconverterUrl.searchParams.set('new_name', 'true');
+
+            console.log(`[Fast Path] Subconverter URL: ${subconverterUrl.toString()}`);
+
+            // 直接请求Subconverter
+            const subconverterResponse = await fetch(subconverterUrl.toString(), {
+                method: 'GET',
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+            });
+
+            if (!subconverterResponse.ok) {
+                console.error(`[Fast Path] Subconverter failed: ${subconverterResponse.status}`);
+                throw new Error(`Subconverter returned status: ${subconverterResponse.status}`);
+            }
+
+            const responseText = await subconverterResponse.text();
+            const responseHeaders = new Headers(subconverterResponse.headers);
+            responseHeaders.set("Content-Disposition", `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
+
+            // 设置正确的Content-Type
+            let contentType = 'text/plain; charset=utf-8';
+            if (targetFormat === 'clash' || targetFormat === 'singbox' || targetFormat === 'surge' || targetFormat === 'loon') {
+                contentType = 'application/x-yaml; charset=utf-8';
+            }
+            responseHeaders.set('Content-Type', contentType);
+            responseHeaders.set('Cache-Control', 'no-store, no-cache');
+
+            console.log(`[Fast Path] ✅ Success! Returned ${responseText.length} bytes`);
+            return new Response(responseText, {
+                status: subconverterResponse.status,
+                statusText: subconverterResponse.statusText,
+                headers: responseHeaders
+            });
+
+        } catch (error: any) {
+            // 快速路径失败，降级到标准路径
+            console.error(`[Fast Path] ❌ Failed, falling back to standard path:`, error.message);
+            // 继续执行下面的标准路径代码
+        }
+    } else {
+        // 记录为什么不能使用快速路径
+        const reasons: string[] = [];
+        if (targetFormat === 'base64') reasons.push('base64格式需要后端处理');
+        if (hasManualNodes) reasons.push('包含手动节点');
+        if (hasExcludeRules) reasons.push('包含过滤规则');
+        if (needsPrependName) reasons.push('需要添加订阅名前缀');
+        if (hasTrafficInfo) reasons.push('包含流量信息节点');
+        if (isProfileExpired) reasons.push('订阅已过期');
+        console.log(`[Standard Path] Reason: ${reasons.join(', ')}`);
+    }
+
+    // ========================================================================
+    // 🔄 标准路径：后端处理（保留原有完整逻辑）
+    // ========================================================================
+    console.log(`[Standard Path] Using backend processing for ${targetSubs.length} sources`);
+
     // 使用固定的 User-Agent 请求上游订阅，避免因客户端 UA 导致被屏蔽或返回错误格式
     // 使用 Clash.Meta UA 以获取更详细的 YAML 配置 (包含 TLS/SNI 等)
     const upstreamUserAgent = 'Clash.Meta/v1.16.0';
     console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
     const combinedNodeList = await generateCombinedNodeList(context, config, upstreamUserAgent, targetSubs, prependedContentForSubconverter);
+
 
     if (targetFormat === 'base64') {
         let contentToEncode;

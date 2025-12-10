@@ -5,25 +5,17 @@ import { subscriptionParser } from './parser';
 import { sendTgNotification } from './utils';
 import { Settings } from './types';
 import { subscriptionService } from './services';
+import {
+    KV_KEY_SUBS,
+    KV_KEY_PROFILES,
+    KV_KEY_SETTINGS,
+    COOKIE_NAME,
+    SESSION_DURATION,
+    defaultSettings
+} from './constants';
 
 const router = express.Router();
 
-const KV_KEY_SUBS = 'sub_one_subscriptions_v1';
-const KV_KEY_PROFILES = 'sub_one_profiles_v1';
-const KV_KEY_SETTINGS = 'worker_settings_v1';
-const COOKIE_NAME = 'auth_session';
-const SESSION_DURATION = 8 * 60 * 60 * 1000;
-
-const defaultSettings: Settings = {
-    FileName: 'Sub-One',
-    mytoken: 'auto',
-    profileToken: '',
-    subConverter: 'url.v1.mk',
-    subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
-    prependSubName: true,
-    NotifyThresholdDays: 3,
-    NotifyThresholdPercent: 90
-};
 
 // Auth Middleware
 const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -158,33 +150,6 @@ router.post('/node_count', async (req, res) => {
     res.json(result);
 });
 
-router.post('/fetch_external_url', async (req, res) => {
-    const { url: externalUrl } = req.body;
-    if (!externalUrl || typeof externalUrl !== 'string' || !/^https?:\/\//.test(externalUrl)) {
-        return res.status(400).json({ error: 'Invalid or missing url' });
-    }
-
-    try {
-        const response = await fetch(externalUrl, {
-            headers: { 'User-Agent': 'Sub-One-Proxy/1.0' },
-            redirect: "follow"
-        } as any);
-
-        if (!response.ok) {
-            return res.status(response.status).json({ error: `Failed to fetch external URL: ${response.status} ${response.statusText}` });
-        }
-
-        const content = await response.text();
-        const headers: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
-            headers[key] = value;
-        });
-        res.json({ content, headers });
-    } catch (e: any) {
-        res.status(500).json({ error: `Failed to fetch external URL: ${e.message}` });
-    }
-});
-
 router.post('/batch_update_nodes', async (req, res) => {
     try {
         const { subscriptionIds } = req.body;
@@ -311,6 +276,130 @@ router.post('/latency_test', async (req, res) => {
         }
     } catch (e: any) {
         res.json({ success: false, error: e.message === 'The user aborted a request.' ? 'Timeout' : e.message });
+    }
+});
+
+/**
+ * 新增端点: 后端直接获取并解析订阅源
+ * 解决前端拼接复杂、容易出错的问题
+ * 
+ * 请求参数:
+ * - url: 订阅源URL
+ * - subscriptionName: 订阅名称（可选）
+ * - exclude: 排除规则（可选）
+ * - prependSubName: 是否添加订阅名前缀（可选）
+ * 
+ * 返回数据:
+ * - success: 是否成功
+ * - nodes: 解析后的节点列表
+ * - userInfo: 流量信息（如果有）
+ * - count: 节点数量
+ */
+router.post('/parse_subscription', async (req, res) => {
+    const { url: subUrl, subscriptionName, exclude, prependSubName } = req.body;
+
+    // 验证URL
+    if (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl)) {
+        return res.status(400).json({
+            success: false,
+            error: 'Invalid or missing url parameter'
+        });
+    }
+
+    try {
+        console.log(`[Parse Subscription] 开始解析: ${subUrl}`);
+
+        // 并行请求流量信息和节点内容
+        const trafficRequest = fetch(subUrl, {
+            headers: { 'User-Agent': 'Clash for Windows/0.20.39' },
+            redirect: "follow"
+        } as any);
+
+        const nodeRequest = fetch(subUrl, {
+            headers: { 'User-Agent': 'Clash.Meta/v1.16.0' }, // 使用 Meta UA 获取完整配置
+            redirect: "follow"
+        } as any);
+
+        const [trafficResult, nodeResult] = await Promise.allSettled([
+            Promise.race([trafficRequest, new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 15000)
+            )]),
+            Promise.race([nodeRequest, new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 15000)
+            )])
+        ]);
+
+        let userInfo: any = null;
+        let nodes: any[] = [];
+
+        // 1. 处理流量信息
+        if (trafficResult.status === 'fulfilled' && trafficResult.value.ok) {
+            const userInfoHeader = trafficResult.value.headers.get('subscription-userinfo');
+            if (userInfoHeader) {
+                const info: any = {};
+                userInfoHeader.split(';').forEach(part => {
+                    const [key, value] = part.trim().split('=');
+                    if (key && value) {
+                        info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                    }
+                });
+                userInfo = info;
+                console.log(`[Parse Subscription] 获取到流量信息:`, userInfo);
+            }
+        } else if (trafficResult.status === 'rejected') {
+            console.warn(`[Parse Subscription] 流量信息请求失败:`, trafficResult.reason.message);
+        }
+
+        // 2. 处理节点内容
+        if (nodeResult.status === 'fulfilled' && nodeResult.value.ok) {
+            const content = await nodeResult.value.text();
+            console.log(`[Parse Subscription] 获取到内容，长度: ${content.length} bytes`);
+
+            // 使用订阅解析器解析
+            try {
+                nodes = subscriptionParser.parse(content, subscriptionName || '订阅', {
+                    exclude: exclude,
+                    prependSubName: prependSubName !== undefined ? prependSubName : false
+                });
+                console.log(`[Parse Subscription] 成功解析 ${nodes.length} 个节点`);
+            } catch (parseError: any) {
+                console.error(`[Parse Subscription] 解析失败:`, parseError);
+                return res.json({
+                    success: false,
+                    error: `解析订阅内容失败: ${parseError.message}`,
+                    userInfo: userInfo,
+                    nodes: [],
+                    count: 0
+                });
+            }
+        } else if (nodeResult.status === 'rejected') {
+            console.error(`[Parse Subscription] 节点内容请求失败:`, nodeResult.reason.message);
+            return res.json({
+                success: false,
+                error: `获取订阅内容失败: ${nodeResult.reason.message}`,
+                userInfo: userInfo,
+                nodes: [],
+                count: 0
+            });
+        }
+
+        // 3. 返回结果
+        res.json({
+            success: true,
+            nodes: nodes,
+            userInfo: userInfo,
+            count: nodes.length,
+            message: `成功获取并解析 ${nodes.length} 个节点`
+        });
+
+    } catch (error: any) {
+        console.error(`[Parse Subscription] 未预期的错误:`, error);
+        res.status(500).json({
+            success: false,
+            error: `服务器错误: ${error.message}`,
+            nodes: [],
+            count: 0
+        });
     }
 });
 

@@ -83,7 +83,17 @@ const handleSave = async () => {
 
   isSaving.value = true;
   try {
-    const result = await saveSettings(settings.value);
+    // 过滤空值：删除为空的字段，这样会使用默认值
+    const settingsToSave: any = {};
+    for (const key in settings.value) {
+      const value = settings.value[key as keyof AppConfig];
+      // 只保存非空值（空字符串、null、undefined 都视为空）
+      if (value !== '' && value !== null && value !== undefined) {
+        settingsToSave[key] = value;
+      }
+    }
+
+    const result = await saveSettings(settingsToSave);
     if (result.success) {
       // 弹出成功提示
       showToast('设置已保存，页面将自动刷新...', 'success');

@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import Modal from './BaseModal.vue';
-import { subscriptionParser } from '../../lib/subscription-parser';
+import { parseSubscription } from '../../lib/api';
 import type { Node } from '../../types';
 
 const props = defineProps<{
@@ -38,11 +38,6 @@ const isValidUrl = (url: string) => {
   }
 };
 
-const parseNodes = (content: string) => {
-  // 使用新的订阅解析器
-  return subscriptionParser.parse(content, '导入的订阅');
-};
-
 const importSubscription = async () => {
   errorMessage.value = '';
   if (!isValidUrl(subscriptionUrl.value)) {
@@ -52,26 +47,22 @@ const importSubscription = async () => {
 
   isLoading.value = true;
   try {
-    const response = await fetch('/api/fetch_external_url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: subscriptionUrl.value })
+    // 使用新的 parseSubscription API
+    const result = await parseSubscription(subscriptionUrl.value, {
+      subscriptionName: '导入的订阅'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    if (!result.success) {
+      throw new Error(result.message || '解析订阅失败');
     }
-    const content = await response.text();
-    const newNodes = parseNodes(content);
 
-    if (newNodes.length > 0) {
-      props.addNodesFromBulk(newNodes);
+    if (result.nodes.length > 0) {
+      props.addNodesFromBulk(result.nodes);
       // 调用直接保存函数
       if (props.onImportSuccess) {
         await props.onImportSuccess();
       }
-      toastStore.showToast(`成功添加了 ${newNodes.length} 个节点。`, 'success');
+      toastStore.showToast(`✅ 成功添加了 ${result.nodes.length} 个节点。`, 'success');
       // 只有在成功时才关闭模态框
       emit('update:show', false);
     } else {
@@ -81,13 +72,12 @@ const importSubscription = async () => {
   } catch (error: any) {
     console.error('导入订阅失败:', error);
     errorMessage.value = `导入失败: ${error.message}`;
-    toastStore.showToast(`导入失败: ${error.message}`, 'error');
+    toastStore.showToast(`❌ 导入失败: ${error.message}`, 'error');
     // 失败时不关闭模态框，让用户看到错误信息
   } finally {
     isLoading.value = false;
   }
 };
-
 
 </script>
 

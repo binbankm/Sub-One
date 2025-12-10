@@ -2,10 +2,115 @@ import * as yaml from 'js-yaml';
 import * as crypto from 'crypto';
 import { Node } from './types';
 
+/**
+ * 节点处理选项
+ */
 interface ProcessOptions {
+    /** 过滤规则，支持 keep: 和 proto: 前缀 */
     exclude?: string;
+    /** 是否在节点名前添加订阅名 */
     prependSubName?: boolean;
 }
+
+/**
+ * Clash 代理配置类型定义
+ */
+interface ClashProxy {
+    /** 节点名称 */
+    name: string;
+    /** 代理类型 */
+    type: 'vmess' | 'vless' | 'trojan' | 'ss' | 'ssr' | 'hysteria' | 'hysteria2' | 'tuic' | 'socks5' | 'anytls';
+    /** 服务器地址 */
+    server: string;
+    /** 服务器端口 */
+    port: number;
+    /** 密码（适用于 Trojan, SS 等） */
+    password?: string;
+    /** UUID（适用于 VMess, VLESS） */
+    uuid?: string;
+    /** 加密方式（适用于 SS, VLESS） */
+    cipher?: string;
+    encryption?: string;
+    /** 传输协议（ws, grpc, h2 等） */
+    network?: string;
+    /** WebSocket 路径 */
+    'ws-path'?: string;
+    wsPath?: string;
+    path?: string;  // 另一种路径字段
+    /** WebSocket Host */
+    'ws-headers'?: { Host?: string };
+    wsHeaders?: { Host?: string };
+    host?: string;  // 另一种host字段
+    /** WebSocket 选项 */
+    'ws-opts'?: {
+        path?: string;
+        headers?: { Host?: string };
+        [key: string]: any;
+    };
+    /** gRPC 选项 */
+    'grpc-opts'?: {
+        'grpc-service-name'?: string;
+        [key: string]: any;
+    };
+    /** gRPC 服务名 */
+    'grpc-service-name'?: string;
+    grpcServiceName?: string;
+    /** TLS 设置 */
+    tls?: boolean | 'true' | 'tls';  // 兼容多种格式
+    /** SNI */
+    sni?: string;
+    servername?: string;
+    /** 跳过证书验证 */
+    'skip-cert-verify'?: boolean;
+    skipCertVerify?: boolean;
+    /** ALPN */
+    alpn?: string[];
+    /** Client Fingerprint */
+    'client-fingerprint'?: string;
+    fingerprint?: string;
+    /** VMess 特有 */
+    alterId?: number;
+    /** VLESS 特有 */
+    flow?: string;
+    /** Reality 设置 */
+    reality?: boolean;
+    'reality-opts'?: {
+        'public-key'?: string;
+        'short-id'?: string;
+        'spider-x'?: string;
+        [key: string]: any;
+    };
+    /** Hysteria 特有 */
+    protocol?: string;
+    up?: string;
+    down?: string;
+    'up-speed'?: number;
+    'down-speed'?: number;
+    obfs?: string;
+    'obfs-password'?: string;
+    /** TUIC 特有 */
+    token?: string;
+    'reduce-rtt'?: boolean;
+    'congestion-controller'?: string;
+    /** Socks5 特有 */
+    username?: string;
+    /** 其他可能的字段 */
+    [key: string]: any;
+}
+
+/**
+ * Clash 配置文件类型
+ */
+interface ClashConfig {
+    /** 代理节点列表 */
+    proxies?: ClashProxy[];
+    /** 代理组 */
+    'proxy-groups'?: any[];
+    /** 规则 */
+    rules?: string[];
+    [key: string]: any;
+}
+
 
 export class SubscriptionParser {
     supportedProtocols: string[];
@@ -15,11 +120,16 @@ export class SubscriptionParser {
     _nodeRegex: RegExp | null;
     _protocolRegex: RegExp;
 
+    // 性能优化：正则缓存，避免重复编译
+    private _regexCache: Map<string, RegExp> = new Map();
+
     constructor() {
         this.supportedProtocols = [
             'ss', 'ssr', 'vmess', 'vless', 'trojan',
             'hysteria', 'hysteria2', 'hy', 'hy2',
-            'tuic', 'anytls', 'socks5'
+            'tuic',
+            'anytls',  // AnyTLS: 反TLS指纹检测协议 (格式: anytls://password@server:port)
+            'socks5'
         ];
 
         this._base64Regex = /^[A-Za-z0-9+\/=]+$/;
@@ -29,7 +139,23 @@ export class SubscriptionParser {
         this._protocolRegex = /^(.*?):\/\//;
     }
 
-    decodeBase64(str: string) {
+    /**
+     * 获取缓存的正则表达式，避免重复编译
+     */
+    private getCompiledRegex(pattern: string, flags: string = 'i'): RegExp {
+        const cacheKey = `${pattern}|${flags}`;
+        if (!this._regexCache.has(cacheKey)) {
+            this._regexCache.set(cacheKey, new RegExp(pattern, flags));
+        }
+        return this._regexCache.get(cacheKey)!;
+    }
+
+    /**
+     * 解码 Base64 字符串，优先使用 UTF-8 解码
+     * @param str - Base64 编码的字符串
+     * @returns 解码后的字符串
+     */
+    decodeBase64(str: string): string {
         try {
             const binaryString = atob(str);
             const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
@@ -40,6 +166,28 @@ export class SubscriptionParser {
         }
     }
 
+    /**
+     * 解析订阅内容，自动识别格式（Base64、YAML、纯文本等）
+     * 
+     * @param content - 订阅内容
+     * @param subscriptionName - 订阅名称，用于节点命名
+     * @param options - 处理选项
+     * @param options.exclude - 过滤规则，支持 keep: 和 proto: 前缀
+     * @param options.prependSubName - 是否在节点名前添加订阅名
+     * @returns 解析后的节点数组
+     * 
+     * @example
+     * ```typescript
+     * // 基本使用
+     * const nodes = parser.parse(base64Content, '我的订阅');
+     * 
+     * // 带过滤规则
+     * const nodes = parser.parse(content, '订阅', {
+     *   exclude: 'keep:香港\nproto:vmess',
+     *   prependSubName: true
+     * });
+     * ```
+     */
     parse(content: string, subscriptionName = '', options: ProcessOptions = {}): Node[] {
         if (!content || typeof content !== 'string') {
             return [];
@@ -94,6 +242,12 @@ export class SubscriptionParser {
         }
     }
 
+    /**
+     * 解析 YAML 格式的订阅内容
+     * @param content - YAML 内容
+     * @param subscriptionName - 订阅名称
+     * @returns 节点数组
+     */
     parseYAML(content: string, subscriptionName: string): Node[] {
         try {
             const parsed: any = yaml.load(content);
@@ -139,7 +293,13 @@ export class SubscriptionParser {
         return this.parseNodeLines(nodeLines, subscriptionName);
     }
 
-    parseClashProxies(proxies: any[], subscriptionName: string): Node[] {
+    /**
+     * 解析 Clash 代理列表
+     * @param proxies - Clash 代理数组
+     * @param subscriptionName - 订阅名称
+     * @returns 节点数组
+     */
+    parseClashProxies(proxies: ClashProxy[], subscriptionName: string): Node[] {
         const nodes: Node[] = [];
 
         for (const proxy of proxies) {
@@ -178,7 +338,12 @@ export class SubscriptionParser {
         return nodes;
     }
 
-    convertClashProxyToUrl(proxy: any) {
+    /**
+     * 将 Clash 代理配置转换为节点 URL
+     * @param proxy - Clash 代理对象
+     * @returns 节点 URL，失败返回 null
+     */
+    convertClashProxyToUrl(proxy: ClashProxy): string | null {
         const type = proxy.type?.toLowerCase();
         const server = proxy.server;
         const port = proxy.port;
@@ -196,17 +361,25 @@ export class SubscriptionParser {
             ['hysteria', () => this.buildHysteriaUrl(proxy)],
             ['hysteria2', () => this.buildHysteriaUrl(proxy)],
             ['tuic', () => this.buildTUICUrl(proxy)],
-            ['socks5', () => this.buildSocks5Url(proxy)]
+            ['socks5', () => this.buildSocks5Url(proxy)],
+            ['anytls', () => this.buildAnytlsUrl(proxy)]  // AnyTLS: 反TLS指纹检测协议
         ]);
 
         const handler = proxyTypeHandlers.get(type);
         if (handler) {
             return handler();
         }
+
+        // 未知协议返回 null
         return null;
     }
 
-    buildVmessUrl(proxy: any) {
+    /**
+     * 构建 VMess URL
+     * @param proxy - Clash 代理对象
+     * @returns VMess URL
+     */
+    buildVmessUrl(proxy: ClashProxy): string {
         let tls = 'none';
         if (proxy.tls === true || proxy.tls === 'true' || proxy.tls === 'tls') {
             tls = 'tls';
@@ -238,7 +411,12 @@ export class SubscriptionParser {
         return `vmess://${base64}`;
     }
 
-    buildVlessUrl(proxy: any) {
+    /**
+     * 构建 VLESS URL
+     * @param proxy - Clash 代理对象
+     * @returns VLESS URL
+     */
+    buildVlessUrl(proxy: ClashProxy): string {
         let url = `vless://${proxy.uuid}@${proxy.server}:${proxy.port}`;
         const queryParams: string[] = [];
 
@@ -263,7 +441,7 @@ export class SubscriptionParser {
         // Security
         if (proxy.tls === true || proxy.tls === 'true' || proxy.tls === 'tls') {
             queryParams.push('security=tls');
-        } else if (proxy.reality === true || proxy.reality === 'true' || proxy['client-fingerprint']) {
+        } else if (proxy.reality === true || proxy['client-fingerprint']) {
             // Auto-detect reality based on presence of reality fields or fingerprint
             if (proxy['reality-opts'] || proxy.servername || proxy.sni) {
                 queryParams.push('security=reality');
@@ -315,7 +493,12 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildTrojanUrl(proxy: any) {
+    /**
+     * 构建 Trojan URL
+     * @param proxy - Clash 代理对象
+     * @returns Trojan URL
+     */
+    buildTrojanUrl(proxy: ClashProxy): string {
         let url = `trojan://${proxy.password}@${proxy.server}:${proxy.port}`;
 
         if (proxy.sni) {
@@ -329,7 +512,12 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildShadowsocksUrl(proxy: any) {
+    /**
+     * 构建 Shadowsocks URL
+     * @param proxy - Clash 代理对象
+     * @returns Shadowsocks URL
+     */
+    buildShadowsocksUrl(proxy: ClashProxy): string {
         const method = proxy.cipher;
         const password = proxy.password;
         const server = proxy.server;
@@ -447,6 +635,28 @@ export class SubscriptionParser {
         return url;
     }
 
+    /**
+     * 构建 AnyTLS URL
+     * @param proxy - Clash 代理对象
+     * @returns AnyTLS URL
+     * 
+     * Format: anytls://password@server:port#name
+     */
+    buildAnytlsUrl(proxy: ClashProxy): string {
+        const password = proxy.password || '';
+        const server = proxy.server;
+        const port = proxy.port;
+
+        let url = `anytls://${password}@${server}:${port}`;
+
+        if (proxy.name) {
+            url += `#${encodeURIComponent(proxy.name)}`;
+        }
+
+        return url;
+    }
+
+
     parseGenericNodes(nodes: any[], subscriptionName: string): Node[] {
         return nodes.map(node => ({
             id: crypto.randomUUID(),
@@ -466,6 +676,12 @@ export class SubscriptionParser {
             .filter((node): node is Node => node !== null);
     }
 
+    /**
+     * 解析单行节点链接
+     * @param line - 节点链接（如 vmess://, vless:// 等）
+     * @param subscriptionName - 订阅名称
+     * @returns 节点对象，解析失败返回 null
+     */
     parseNodeLine(line: string, subscriptionName: string): Node | null {
         if (!this._nodeRegex) {
             this._nodeRegex = new RegExp(`^(${this.supportedProtocols.join('|')}):\/\/`);
@@ -552,61 +768,91 @@ export class SubscriptionParser {
         return this._nodeRegex.test(line.trim());
     }
 
-    processNodes(nodes: Node[], subName: string, options: ProcessOptions = {}): Node[] {
-        let processed = nodes;
+    /**
+     * 编译过滤规则为可复用的过滤器对象
+     */
+    private compileFilterRules(exclude: string): {
+        isWhitelist: boolean;
+        protocols: Set<string>;
+        nameRegex: RegExp | null;
+    } {
+        const rules = exclude.trim().split('\n').map(r => r.trim()).filter(Boolean);
+        const keepRules = rules.filter(r => r.toLowerCase().startsWith('keep:'));
+        const isWhitelist = keepRules.length > 0;
+        const rulesToProcess = isWhitelist ? keepRules : rules;
 
-        if (options.exclude && options.exclude.trim()) {
-            const rules = options.exclude.trim().split('\n').map(r => r.trim()).filter(Boolean);
-            const keepRules = rules.filter(r => r.toLowerCase().startsWith('keep:'));
+        const protocols = new Set<string>();
+        const nameRegexParts: string[] = [];
 
-            if (keepRules.length > 0) {
-                const nameRegexParts: string[] = [];
-                const protocolsToKeep = new Set();
-                keepRules.forEach(rule => {
-                    const content = rule.substring(5).trim();
-                    if (content.toLowerCase().startsWith('proto:')) {
-                        content.substring(6).split(',').forEach(p => protocolsToKeep.add(p.trim().toLowerCase()));
-                    } else {
-                        nameRegexParts.push(content);
-                    }
-                });
-                const nameRegex = nameRegexParts.length ? new RegExp(nameRegexParts.join('|'), 'i') : null;
-
-                processed = processed.filter(node => {
-                    if (protocolsToKeep.has(node.protocol)) return true;
-                    if (nameRegex && nameRegex.test(node.name)) return true;
-                    return false;
-                });
+        rulesToProcess.forEach(rule => {
+            const content = isWhitelist ? rule.substring(5).trim() : rule;
+            if (content.toLowerCase().startsWith('proto:')) {
+                content.substring(6).split(',').forEach(p => protocols.add(p.trim().toLowerCase()));
             } else {
-                const protocolsToExclude = new Set();
-                const nameRegexParts: string[] = [];
-                rules.forEach(rule => {
-                    if (rule.toLowerCase().startsWith('proto:')) {
-                        rule.substring(6).split(',').forEach(p => protocolsToExclude.add(p.trim().toLowerCase()));
-                    } else {
-                        nameRegexParts.push(rule);
-                    }
-                });
-                const nameRegex = nameRegexParts.length ? new RegExp(nameRegexParts.join('|'), 'i') : null;
-
-                processed = processed.filter(node => {
-                    if (protocolsToExclude.has(node.protocol)) return false;
-                    if (nameRegex && nameRegex.test(node.name)) return false;
-                    return true;
-                });
+                nameRegexParts.push(content);
             }
+        });
+
+        const nameRegex = nameRegexParts.length
+            ? this.getCompiledRegex(nameRegexParts.join('|'), 'i')
+            : null;
+
+        return { isWhitelist, protocols, nameRegex };
+    }
+
+    /**
+     * 检查节点是否匹配过滤规则
+     */
+    private matchesFilter(node: Node, filter: ReturnType<typeof this.compileFilterRules>): boolean {
+        const { isWhitelist, protocols, nameRegex } = filter;
+
+        if (isWhitelist) {
+            // 白名单模式：匹配任一条件即保留
+            if (protocols.has(node.protocol)) return true;
+            if (nameRegex && nameRegex.test(node.name)) return true;
+            return false;
+        } else {
+            // 黑名单模式：匹配任一条件即排除
+            if (protocols.has(node.protocol)) return false;
+            if (nameRegex && nameRegex.test(node.name)) return false;
+            return true;
+        }
+    }
+
+    /**
+     * 处理节点列表，应用过滤和命名规则
+     * 性能优化：合并filter和map为单次遍历
+     */
+    processNodes(nodes: Node[], subName: string, options: ProcessOptions = {}): Node[] {
+        const needsFilter = options.exclude && options.exclude.trim();
+        const needsPrepend = options.prependSubName && subName;
+
+        // 如果不需要任何处理，直接返回
+        if (!needsFilter && !needsPrepend) {
+            return nodes;
         }
 
-        if (options.prependSubName && subName) {
-            processed = processed.map(node => {
-                if (!node.name.startsWith(subName)) {
-                    node.name = `${subName} - ${node.name}`;
-                    const hashIndex = node.url.lastIndexOf('#');
-                    const baseUrl = hashIndex !== -1 ? node.url.substring(0, hashIndex) : node.url;
-                    node.url = `${baseUrl}#${encodeURIComponent(node.name)}`;
-                }
-                return node;
-            });
+        // 预编译过滤规则（如果需要）
+        const filterRules = needsFilter ? this.compileFilterRules(options.exclude!) : null;
+
+        // 单次遍历完成过滤和前缀添加
+        const processed: Node[] = [];
+
+        for (const node of nodes) {
+            // 1. 检查过滤规则
+            if (filterRules && !this.matchesFilter(node, filterRules)) {
+                continue; // 跳过不匹配的节点
+            }
+
+            // 2. 添加订阅名前缀（如果需要）
+            if (needsPrepend && !node.name.startsWith(subName)) {
+                node.name = `${subName} - ${node.name}`;
+                const hashIndex = node.url.lastIndexOf('#');
+                const baseUrl = hashIndex !== -1 ? node.url.substring(0, hashIndex) : node.url;
+                node.url = `${baseUrl}#${encodeURIComponent(node.name)}`;
+            }
+
+            processed.push(node);
         }
 
         return processed;

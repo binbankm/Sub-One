@@ -12,6 +12,8 @@ services:
       - PORT=3055
       - DATA_DIR=/app/data
       - ADMIN_PASSWORD=admin
+      - DOCKER=true              # Docker环境标识，用于自动选择内部Subconverter
+      - NODE_ENV=production
       # Uncomment to use Redis
       # - REDIS_URL=redis://redis:6379
     restart: always

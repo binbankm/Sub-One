@@ -1,6 +1,6 @@
 // FILE: src/composables/useSubscriptions.ts
 import { ref, computed, watch, type Ref } from 'vue';
-import { fetchNodeCount, batchUpdateNodes } from '../lib/api';
+import { parseSubscription, batchUpdateNodes } from '../lib/api';
 import { useToastStore } from '../stores/toast';
 
 // 优化：预编译正则表达式，提升性能
@@ -51,10 +51,19 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
     }
 
     try {
-      const data = await fetchNodeCount(subToUpdate.url);
-      subToUpdate.nodeCount = data.count || 0;
-      subToUpdate.userInfo = data.userInfo || null;
-      return true;
+      // 使用新的 parseSubscription API
+      const result = await parseSubscription(subToUpdate.url, {
+        subscriptionName: subToUpdate.name
+      });
+
+      if (result.success) {
+        subToUpdate.nodeCount = result.count || 0;
+        subToUpdate.userInfo = result.userInfo || null;
+        return true;
+      } else {
+        console.error(`Failed to parse subscription ${subToUpdate.name}:`, result.message);
+        return false;
+      }
     } catch (error) {
       console.error(`Failed to fetch node count for ${subToUpdate.name}:`, error);
       return false;

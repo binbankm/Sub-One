@@ -2,22 +2,14 @@ import { storage } from './storage';
 import { subscriptionParser } from './parser';
 import { sendTgNotification, formatBytes } from './utils';
 import { Settings, Subscription, Node, Profile } from './types';
+import {
+    KV_KEY_SUBS,
+    KV_KEY_PROFILES,
+    KV_KEY_SETTINGS,
+    defaultSettings
+} from './constants';
 import * as cron from 'node-cron';
 
-const KV_KEY_SUBS = 'sub_one_subscriptions_v1';
-const KV_KEY_PROFILES = 'sub_one_profiles_v1';
-const KV_KEY_SETTINGS = 'worker_settings_v1';
-
-const defaultSettings: Settings = {
-    FileName: 'Sub-One',
-    mytoken: 'auto',
-    profileToken: '',
-    subConverter: 'url.v1.mk',
-    subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
-    prependSubName: true,
-    NotifyThresholdDays: 3,
-    NotifyThresholdPercent: 90
-};
 
 export class CronService {
     start() {

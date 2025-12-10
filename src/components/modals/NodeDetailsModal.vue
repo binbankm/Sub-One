@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { subscriptionParser } from '../../lib/subscription-parser';
+import { parseSubscription } from '../../lib/api';
 import type { Subscription, Profile, Node } from '../../types';
 
 const props = defineProps<{
@@ -69,25 +69,17 @@ const fetchNodes = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await fetch('/api/fetch_external_url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: props.subscription.url })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.content;
-    const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
-    // Apply filtering and processing
-    const processedNodes = subscriptionParser.processNodes(parsedNodes, props.subscription?.name || '', {
+    // 使用新的 parseSubscription API
+    const result = await parseSubscription(props.subscription.url, {
+      subscriptionName: props.subscription?.name || '',
       exclude: (props.subscription as any).exclude
     });
 
-    nodes.value = processedNodes.map(n => ({
+    if (!result.success) {
+      throw new Error(result.message || '解析订阅失败');
+    }
+
+    nodes.value = result.nodes.map(n => ({
       id: n.id,
       name: n.name,
       url: n.url,
@@ -98,7 +90,7 @@ const fetchNodes = async () => {
   } catch (error: any) {
     console.error('获取节点信息失败:', error);
     errorMessage.value = `获取节点信息失败: ${error.message}`;
-    toastStore.showToast('获取节点信息失败', 'error');
+    toastStore.showToast('❌ 获取节点信息失败', 'error');
   } finally {
     isLoading.value = false;
   }
@@ -142,18 +134,14 @@ const fetchProfileNodes = async () => {
       const promises = selectedSubscriptions.map(async (subscription: Subscription) => {
         if (subscription.url && subscription.url.startsWith('http')) {
           try {
-            const response = await fetch('/api/fetch_external_url', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: subscription.url })
+            // 使用新的 parseSubscription API
+            const result = await parseSubscription(subscription.url, {
+              subscriptionName: subscription.name
             });
 
-            if (response.ok) {
-              const data = await response.json();
-              const content = data.content;
-              const parsedNodes = subscriptionParser.parse(content, subscription.name);
+            if (result.success && result.nodes.length > 0) {
               // 标记来源，方便显示
-              return parsedNodes.map(node => ({
+              return result.nodes.map(node => ({
                 id: node.id,
                 name: node.name,
                 url: node.url,
