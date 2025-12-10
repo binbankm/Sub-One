@@ -8,6 +8,7 @@ import { cronService, subscriptionService } from './services';
 import { storage } from './storage';
 import { Settings, Subscription, Profile } from './types';
 import { sendTgNotification, formatBytes } from './utils';
+import { SubscriptionParser } from './parser';
 import {
     KV_KEY_SUBS,
     KV_KEY_PROFILES,
