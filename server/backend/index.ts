@@ -250,7 +250,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     // Use configured address, but fallback to internal if empty
     let cleanSubConverter = effectiveSubConverter.replace(/\/$/, '');
     if (!cleanSubConverter) {
-        cleanSubConverter = 'http://subconverter:25500';
+        cleanSubConverter = 'api.v1.mk';
     }
     if (!cleanSubConverter.startsWith('http')) {
         cleanSubConverter = `http://${cleanSubConverter}`;

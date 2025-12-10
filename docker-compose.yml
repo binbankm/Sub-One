@@ -2,18 +2,16 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: binbankm/sub-one:latest
     container_name: sub-one
     ports:
       - "3055:3055"
     volumes:
       - ./data:/app/data
     environment:
-      - PORT=3055
-      - DATA_DIR=/app/data
-      - ADMIN_PASSWORD=admin
-      - DOCKER=true              # Docker环境标识，用于自动选择内部Subconverter
-      - NODE_ENV=production
+      - PORT=${PORT:-3055}
+      - DATA_DIR=${DATA_DIR:-/app/data}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       # Uncomment to use Redis
       # - REDIS_URL=redis://redis:6379
     restart: always
@@ -22,12 +20,12 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  subconverter:
-    image: tindy2013/subconverter:latest
-    container_name: sub-one-subconverter
-    restart: always
-    ports:
-      - "25500:25500"
+  # subconverter:
+  #   image: asdlokj1qpi233/subconverter:latest
+  #   container_name: sub-one-subconverter
+  #   restart: always
+  #   ports:
+  #     - "25500:25500"
 
   # redis:
   #   image: redis:alpine

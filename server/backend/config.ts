@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env from current directory (server/)
 dotenv.config();
+
+// Also try to load .env from parent directory (project root)
+// This allows users to place .env in the root folder for convenience
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const config = {
     PORT: process.env.PORT || 3055,
