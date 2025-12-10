@@ -191,13 +191,13 @@ docker run -d \
   --name sub-one \
   --restart always \
   -p 3055:3055 \
-  -v $(pwd)/data:/app/data \
+  -v sub-one-data:/app/data \
   -e ADMIN_PASSWORD=admin \
   binbankm/sub-one:latest
 ```
 
 - **端口映射**: `-p 3055:3055` (访问地址: `http://ip:3055`)
-- **数据持久化**: `-v $(pwd)/data:/app/data` (数据保存在当前目录的 data 文件夹)
+- **数据持久化**: `-v sub-one-data:/app/data` (使用 Docker 卷存储数据，更安全方便)
 - **管理员密码**: `-e ADMIN_PASSWORD=admin` (请修改为您自己的密码)
 
 ### 🌐 Cloudflare Pages 部署
