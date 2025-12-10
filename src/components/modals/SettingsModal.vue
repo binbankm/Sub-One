@@ -20,7 +20,7 @@ const isSaving = ref(false);
 // 默认设置值
 const defaultSettings: AppConfig = {
   FileName: 'Sub-One',
-  subConverter: 'url.v1.mk',
+  subConverter: 'api.v1.mk',
   subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
   prependSubName: true,
   mytoken: 'auto',
