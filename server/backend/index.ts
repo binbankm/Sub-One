@@ -260,9 +260,13 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
         });
 
         if (contentDisposition) {
-            res.set('Content-Disposition', contentDisposition);
+            res.set({
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store, no-cache',
+                'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}`
+            });
         } else {
-            res.set('Content-Disposition', `attachment; filename*=utf-8''${encodeURIComponent(subName)}`);
+            res.set('Content-Disposition', `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
         }
 
         // Read body as text and send (safer than piping Web Streams)
