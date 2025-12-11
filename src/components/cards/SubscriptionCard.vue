@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { testLatency } from '../../lib/api';
 import type { Subscription } from '../../types';
 
 const props = defineProps<{
@@ -121,39 +120,7 @@ const trafficColorClass = computed(() => {
   return 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-blue-500/30';
 });
 
-const isTestingLatency = ref(false);
-const latencyResult = ref<{ latency?: number; status: number; color: string; error?: boolean } | null>(null);
 
-const handleTestLatency = async () => {
-  if (isTestingLatency.value || !props.sub.url) return;
-  isTestingLatency.value = true;
-  latencyResult.value = null;
-
-  const result = await testLatency(props.sub.url);
-
-  if (result.success) {
-    latencyResult.value = {
-      latency: result.latency,
-      status: result.status,
-      color: result.latency < 500 ? 'text-green-500' : (result.latency < 1500 ? 'text-yellow-500' : 'text-red-500')
-    };
-    toastStore.showToast(`连接成功: ${result.latency}ms`, 'success');
-  } else {
-    latencyResult.value = {
-      error: true,
-      status: result.status,
-      color: 'text-red-500'
-    };
-    toastStore.showToast(`连接失败: ${result.message}`, 'error');
-  }
-
-  isTestingLatency.value = false;
-
-  // Clear result after 5 seconds
-  setTimeout(() => {
-    latencyResult.value = null;
-  }, 5000);
-};
 </script>
 
 <template>
@@ -313,22 +280,6 @@ const handleTestLatency = async () => {
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- 延迟测试结果显示 -->
-          <span v-if="latencyResult" class="text-xs font-bold transition-all duration-300" :class="latencyResult.color">
-            {{ latencyResult.error ? 'Error' : `${latencyResult.latency}ms` }}
-          </span>
-
-          <!-- 延迟测试按钮 -->
-          <button @click.stop="handleTestLatency" :disabled="isTestingLatency"
-            class="p-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            :title="isTestingLatency ? '测试中...' : '测试连接延迟'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-              :class="{ 'animate-pulse text-amber-500': isTestingLatency }" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </button>
-
           <button @click.stop="emit('showNodes')"
             class="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
             <span class="w-1.5 h-1.5 rounded-full"

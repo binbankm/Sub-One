@@ -243,46 +243,6 @@ router.post('/settings', async (req, res) => {
     }
 });
 
-router.post('/latency_test', async (req, res) => {
-    const { url: testUrl } = req.body;
-    if (!testUrl || typeof testUrl !== 'string' || !/^https?:\/\//.test(testUrl)) {
-        return res.status(400).json({ error: 'Invalid or missing url' });
-    }
-
-    try {
-        const startTime = Date.now();
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        try {
-            const response = await fetch(testUrl, {
-                method: 'HEAD',
-                headers: { 'User-Agent': 'Sub-One-Latency-Tester/1.0' },
-                redirect: 'follow',
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            const endTime = Date.now();
-            res.json({ success: true, latency: endTime - startTime, status: response.status });
-        } catch (e) {
-            // Fallback to GET
-            const startTimeGet = Date.now();
-            const controllerGet = new AbortController();
-            const timeoutIdGet = setTimeout(() => controllerGet.abort(), 10000);
-            const responseGet = await fetch(testUrl, {
-                method: 'GET',
-                headers: { 'User-Agent': 'Sub-One-Latency-Tester/1.0' },
-                redirect: 'follow',
-                signal: controllerGet.signal
-            });
-            clearTimeout(timeoutIdGet);
-            const endTimeGet = Date.now();
-            res.json({ success: true, latency: endTimeGet - startTimeGet, status: responseGet.status });
-        }
-    } catch (e: unknown) {
-        res.json({ success: false, error: e instanceof Error && e.message === 'The user aborted a request.' ? 'Timeout' : (e instanceof Error ? e.message : String(e)) });
-    }
-});
 
 /**
  * 新增端点: 后端直接获取并解析订阅源

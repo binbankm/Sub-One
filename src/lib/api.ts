@@ -118,29 +118,6 @@ export async function batchUpdateNodes(subscriptionIds: string[]) {
     }
 }
 
-export async function testLatency(url: string) {
-    try {
-        const response = await fetch('/api/latency_test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            return {
-                success: false,
-                message: errorData.error || `HTTP ${response.status}`,
-                status: response.status
-            };
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error("Latency test failed:", error);
-        return { success: false, message: '网络请求失败' };
-    }
-}
 
 /**
  * 新增函数: 后端直接解析订阅源
