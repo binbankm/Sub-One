@@ -1,3 +1,19 @@
+export interface UserInfo {
+    upload?: number;
+    download?: number;
+    total?: number;
+    expire?: number;
+    [key: string]: string | number | boolean | undefined;
+}
+
+export interface OriginalProxy {
+    name?: string;
+    type?: string;
+    server?: string;
+    port?: number;
+    [key: string]: string | number | boolean | undefined | string[] | Record<string, unknown>;
+}
+
 export interface Node {
     id: string;
     name: string;
@@ -6,9 +22,9 @@ export interface Node {
     enabled: boolean;
     type: string;
     subscriptionName: string;
-    originalProxy?: any;
+    originalProxy?: OriginalProxy;
     nodeCount?: number;
-    userInfo?: any;
+    userInfo?: UserInfo;
     exclude?: string;
 }
 
@@ -18,7 +34,7 @@ export interface Subscription {
     url: string;
     enabled: boolean;
     exclude?: string;
-    userInfo?: any;
+    userInfo?: UserInfo;
     nodeCount?: number;
     lastNotifiedExpire?: number;
     lastNotifiedTraffic?: number;

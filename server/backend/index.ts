@@ -4,11 +4,10 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { config } from './config';
 import apiRoutes from './routes';
-import { cronService, subscriptionService } from './services';
+import { cronService } from './services';
 import { storage } from './storage';
 import { Settings, Subscription, Profile } from './types';
 import { sendTgNotification, formatBytes } from './utils';
-import { SubscriptionParser } from './parser';
 import {
     KV_KEY_SUBS,
     KV_KEY_PROFILES,
@@ -49,8 +48,8 @@ app.get('/proxy-content', async (req, res) => {
 
         const arrayBuffer = await response.arrayBuffer();
         res.send(Buffer.from(arrayBuffer));
-    } catch (e: any) {
-        res.status(502).send(e.message);
+    } catch (e: unknown) {
+        res.status(502).send(e instanceof Error ? e.message : String(e));
     }
 });
 
@@ -70,7 +69,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     const allProfiles = profilesData || [];
     const appConfig = { ...defaultSettings, ...settings };
 
-    let targetSubs: any[] = [];
+    let targetSubs: Subscription[] = [];
     let subName = appConfig.FileName;
     let effectiveSubConverter = appConfig.subConverter;
     let effectiveSubConfig = appConfig.subConfig;
@@ -91,7 +90,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
 
             if (isProfileExpired) {
                 subName = profile.name;
-                targetSubs = [{ id: 'expired-node', url: DEFAULT_EXPIRED_NODE, name: '您的订阅已到期', isExpiredNode: true }];
+                targetSubs = [{ id: 'expired-node', url: DEFAULT_EXPIRED_NODE, name: '您的订阅已到期', enabled: true }];
             } else {
                 subName = profile.name;
                 const profileSubIds = new Set(profile.subscriptions);
@@ -160,7 +159,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     let prependedContentForSubconverter = '';
     if (!isProfileExpired) {
         const totalRemainingBytes = targetSubs.reduce((acc, sub) => {
-            if (sub.enabled && sub.userInfo && sub.userInfo.total > 0) {
+            if (sub.enabled && sub.userInfo && sub.userInfo.total !== undefined && sub.userInfo.total > 0) {
                 const used = (sub.userInfo.upload || 0) + (sub.userInfo.download || 0);
                 return acc + Math.max(0, sub.userInfo.total - used);
             }
@@ -272,8 +271,8 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
 
     // Collect and apply exclude rules
     const allExcludeRules = targetSubs
-        .filter(sub => sub.exclude && sub.exclude.trim() !== '')
-        .map(sub => sub.exclude.trim())
+        .filter(sub => sub.exclude !== undefined && sub.exclude.trim() !== '')
+        .map(sub => sub.exclude!.trim())
         .join('\n'); // Join with newline for regex OR logic if needed, but Subconverter uses regex directly.
     // Actually Subconverter 'exclude' param expects a regex string.
     // If we have multiple rules from multiple subs, we should probably join them with '|'.
@@ -324,9 +323,9 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
         const responseText = await subResponse.text();
         res.send(responseText);
 
-    } catch (error: any) {
-        console.error(`Subconverter proxy error: ${error.message}`);
-        res.status(502).send(`Error connecting to subconverter: ${error.message}`);
+    } catch (error: unknown) {
+        console.error(`Subconverter proxy error: ${error instanceof Error ? error.message : String(error)}`);
+        res.status(502).send(`Error connecting to subconverter: ${error instanceof Error ? error.message : String(error)}`);
     }
 };
 

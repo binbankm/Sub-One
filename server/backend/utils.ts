@@ -10,8 +10,12 @@ export const formatBytes = (bytes: number, decimals = 2) => {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
-export function calculateDataHash(data: any): string {
-    const jsonString = JSON.stringify(data, Object.keys(data).sort());
+export function calculateDataHash(data: unknown): string {
+    // Type guard to ensure data is an object
+    if (typeof data !== 'object' || data === null) {
+        return JSON.stringify(data);
+    }
+    const jsonString = JSON.stringify(data, Object.keys(data as Record<string, unknown>).sort());
     let hash = 0;
     for (let i = 0; i < jsonString.length; i++) {
         const char = jsonString.charCodeAt(i);
@@ -21,7 +25,7 @@ export function calculateDataHash(data: any): string {
     return hash.toString();
 }
 
-export function hasDataChanged(oldData: any, newData: any): boolean {
+export function hasDataChanged(oldData: unknown, newData: unknown): boolean {
     if (!oldData && !newData) return false;
     if (!oldData || !newData) return true;
     return calculateDataHash(oldData) !== calculateDataHash(newData);

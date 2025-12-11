@@ -1,10 +1,9 @@
 import { storage } from './storage';
 import { subscriptionParser } from './parser';
 import { sendTgNotification, formatBytes } from './utils';
-import { Settings, Subscription, Node, Profile } from './types';
+import { Settings, Subscription, Node, UserInfo } from './types';
 import {
     KV_KEY_SUBS,
-    KV_KEY_PROFILES,
     KV_KEY_SETTINGS,
     defaultSettings
 } from './constants';
@@ -33,12 +32,12 @@ export class CronService {
                 try {
                     const trafficRequest = fetch(sub.url, {
                         headers: { 'User-Agent': 'Clash for Windows/0.20.39' },
-                        redirect: "follow",
-                    } as any);
+                        redirect: "follow"
+                    });
                     const nodeCountRequest = fetch(sub.url, {
                         headers: { 'User-Agent': 'Sub-One-Cron-Updater/1.0' },
-                        redirect: "follow",
-                    } as any);
+                        redirect: "follow"
+                    });
 
                     const [trafficResult, nodeCountResult] = await Promise.allSettled([
                         Promise.race([trafficRequest, new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 8000))]),
@@ -48,12 +47,14 @@ export class CronService {
                     if (trafficResult.status === 'fulfilled' && trafficResult.value.ok) {
                         const userInfoHeader = trafficResult.value.headers.get('subscription-userinfo');
                         if (userInfoHeader) {
-                            const info: any = {};
+                            const info: Partial<UserInfo> = {};
                             userInfoHeader.split(';').forEach(part => {
                                 const [key, value] = part.trim().split('=');
-                                if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                                if (key && value) {
+                                    (info as Record<string, string | number>)[key] = /^\d+$/.test(value) ? Number(value) : value;
+                                }
                             });
-                            sub.userInfo = info;
+                            sub.userInfo = info as UserInfo;
                             await this.checkAndNotify(sub, settings);
                             changesMade = true;
                         }
@@ -74,8 +75,8 @@ export class CronService {
                             changesMade = true;
                         }
                     }
-                } catch (e: any) {
-                    console.error(`Cron: Unhandled error while updating ${sub.name}`, e.message);
+                } catch (e: unknown) {
+                    console.error(`Cron: Unhandled error while updating ${sub.name}`, e instanceof Error ? e.message : String(e));
                 }
             }
         }
@@ -110,7 +111,7 @@ export class CronService {
         }
 
         const { upload, download, total } = sub.userInfo;
-        if (total > 0) {
+        if (total !== undefined && total > 0 && upload !== undefined && download !== undefined) {
             const used = upload + download;
             const usagePercent = Math.round((used / total) * 100);
 
@@ -128,7 +129,7 @@ export class CronService {
 }
 
 export class SubscriptionService {
-    async generateCombinedNodeList(config: Settings, userAgent: string, subs: any[], prependedContent = '') {
+    async generateCombinedNodeList(config: Settings, userAgent: string, subs: Subscription[], prependedContent = '') {
         const manualNodes = subs.filter(sub => !sub.url.toLowerCase().startsWith('http'));
         const parsedManualNodes = subscriptionParser.parseNodeLines(manualNodes.map(n => n.url), '手动节点');
 
@@ -144,9 +145,9 @@ export class SubscriptionService {
                 const response = await Promise.race([
                     fetch(sub.url, {
                         headers: { 'User-Agent': userAgent },
-                        redirect: "follow",
+                        redirect: "follow"
                         // cf: { insecureSkipVerify: true } // Not available in Node, might need https.Agent
-                    } as any),
+                    }),
                     new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
                 ]);
 

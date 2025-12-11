@@ -44,13 +44,13 @@ interface ClashProxy {
     /** WebSocket 选项 */
     'ws-opts'?: {
         path?: string;
-        headers?: { Host?: string };
-        [key: string]: any;
+        headers?: { Host?: string;[key: string]: string | undefined };
+        [key: string]: unknown;
     };
     /** gRPC 选项 */
     'grpc-opts'?: {
         'grpc-service-name'?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
     /** gRPC 服务名 */
     'grpc-service-name'?: string;
@@ -78,7 +78,7 @@ interface ClashProxy {
         'public-key'?: string;
         'short-id'?: string;
         'spider-x'?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
     /** Hysteria 特有 */
     protocol?: string;
@@ -95,7 +95,7 @@ interface ClashProxy {
     /** Socks5 特有 */
     username?: string;
     /** 其他可能的字段 */
-    [key: string]: any;
+    [key: string]: string | number | boolean | string[] | Record<string, unknown> | undefined;
 }
 
 /**
@@ -105,10 +105,10 @@ interface ClashConfig {
     /** 代理节点列表 */
     proxies?: ClashProxy[];
     /** 代理组 */
-    'proxy-groups'?: any[];
+    'proxy-groups'?: unknown[];
     /** 规则 */
     rules?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 
@@ -237,8 +237,8 @@ export class SubscriptionParser {
             }
 
             return this.parseNodeLines(decodedLines, subscriptionName);
-        } catch (error: any) {
-            throw new Error(`Base64解码失败: ${error.message}`);
+        } catch (error: unknown) {
+            throw new Error(`Base64解码失败: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -250,7 +250,7 @@ export class SubscriptionParser {
      */
     parseYAML(content: string, subscriptionName: string): Node[] {
         try {
-            const parsed: any = yaml.load(content);
+            const parsed = yaml.load(content) as ClashConfig;
             if (!parsed || typeof parsed !== 'object') {
                 throw new Error('无效的YAML格式');
             }
@@ -264,21 +264,21 @@ export class SubscriptionParser {
             }
 
             throw new Error('不支持的YAML格式');
-        } catch (error: any) {
-            throw new Error(`YAML解析失败: ${error.message}`);
+        } catch (error: unknown) {
+            throw new Error(`YAML解析失败: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
     parseClashConfig(content: string, subscriptionName: string): Node[] {
         try {
-            const parsed: any = yaml.load(content);
+            const parsed = yaml.load(content) as ClashConfig;
             if (!parsed || !parsed.proxies || !Array.isArray(parsed.proxies)) {
                 throw new Error('不是有效的Clash配置');
             }
 
             return this.parseClashProxies(parsed.proxies, subscriptionName);
-        } catch (error: any) {
-            throw new Error(`Clash配置解析失败: ${error.message}`);
+        } catch (error: unknown) {
+            throw new Error(`Clash配置解析失败: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -534,25 +534,25 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildShadowsocksRUrl(proxy: any) {
+    buildShadowsocksRUrl(proxy: ClashProxy): string {
         const config = [
             proxy.server,
             proxy.port,
             proxy.protocol || 'origin',
             proxy.cipher,
             proxy.obfs || 'plain',
-            btoa(proxy.password)
+            btoa(String(proxy.password || ''))
         ];
 
         const query = new URLSearchParams();
-        const params = [
+        const params: Array<[string, string | number | boolean | string[] | Record<string, unknown> | undefined]> = [
             ['protoparam', proxy['protocol-param']],
             ['obfsparam', proxy['obfs-param']],
             ['remarks', proxy.name]
         ];
 
         params.forEach(([key, value]) => {
-            if (value) {
+            if (value && typeof value === 'string') {
                 query.set(key, btoa(value));
             }
         });
@@ -567,18 +567,18 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildHysteriaUrl(proxy: any) {
+    buildHysteriaUrl(proxy: ClashProxy): string {
         let url = `hysteria://${proxy.server}:${proxy.port}`;
         const params = new URLSearchParams();
-        const paramPairs = [
+        const paramPairs: Array<[string, string | number | boolean | string[] | Record<string, unknown> | undefined]> = [
             ['protocol', proxy.protocol],
             ['sni', proxy.sni],
-            ['auth', proxy.auth],
-            ['alpn', proxy.alpn]
+            ['auth', proxy['obfs-password']],
+            ['alpn', Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn]
         ];
 
         paramPairs.forEach(([key, value]) => {
-            if (value) {
+            if (value && typeof value === 'string') {
                 params.set(key, value);
             }
         });
@@ -594,16 +594,16 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildTUICUrl(proxy: any) {
+    buildTUICUrl(proxy: ClashProxy): string {
         let url = `tuic://${proxy.uuid}:${proxy.password}@${proxy.server}:${proxy.port}`;
         const params = new URLSearchParams();
-        const paramPairs = [
+        const paramPairs: Array<[string, string | number | boolean | string[] | Record<string, unknown> | undefined]> = [
             ['sni', proxy.sni],
-            ['alpn', proxy.alpn]
+            ['alpn', Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn]
         ];
 
         paramPairs.forEach(([key, value]) => {
-            if (value) {
+            if (value && typeof value === 'string') {
                 params.set(key, value);
             }
         });
@@ -619,7 +619,7 @@ export class SubscriptionParser {
         return url;
     }
 
-    buildSocks5Url(proxy: any) {
+    buildSocks5Url(proxy: ClashProxy): string {
         let url = `socks5://`;
 
         if (proxy.username && proxy.password) {
@@ -657,16 +657,19 @@ export class SubscriptionParser {
     }
 
 
-    parseGenericNodes(nodes: any[], subscriptionName: string): Node[] {
-        return nodes.map(node => ({
-            id: crypto.randomUUID(),
-            name: node.name || '未命名节点',
-            url: node.url || '',
-            protocol: node.protocol || 'unknown',
-            enabled: true,
-            type: 'subscription',
-            subscriptionName: subscriptionName
-        }));
+    parseGenericNodes(nodes: unknown[], subscriptionName: string): Node[] {
+        return nodes.map((node: unknown) => {
+            const n = node as Record<string, unknown>;
+            return {
+                id: crypto.randomUUID(),
+                name: (n.name as string) || '未命名节点',
+                url: (n.url as string) || '',
+                protocol: (n.protocol as string) || 'unknown',
+                enabled: true,
+                type: 'subscription',
+                subscriptionName: subscriptionName
+            };
+        });
     }
 
     parseNodeLines(lines: string[], subscriptionName: string): Node[] {

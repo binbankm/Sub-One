@@ -11,7 +11,7 @@ export interface Storage {
 
 class FileStorage implements Storage {
     private filePath: string;
-    private data: Record<string, any> = {};
+    private data: Record<string, unknown> = {};
     private initialized = false;
 
     constructor() {
@@ -24,8 +24,8 @@ class FileStorage implements Storage {
             await fs.mkdir(path.dirname(this.filePath), { recursive: true });
             const content = await fs.readFile(this.filePath, 'utf-8');
             this.data = JSON.parse(content);
-        } catch (error: any) {
-            if (error.code !== 'ENOENT') {
+        } catch (error: unknown) {
+            if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code !== 'ENOENT') {
                 console.error('Failed to load data file:', error);
             }
             // If file doesn't exist, start with empty data
@@ -40,7 +40,7 @@ class FileStorage implements Storage {
 
     async get<T>(key: string): Promise<T | null> {
         await this.init();
-        return this.data[key] || null;
+        return (this.data[key] as T) || null;
     }
 
     async put<T>(key: string, value: T): Promise<void> {

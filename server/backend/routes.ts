@@ -3,8 +3,7 @@ import { storage } from './storage';
 import { config } from './config';
 import { subscriptionParser } from './parser';
 import { sendTgNotification } from './utils';
-import { Settings } from './types';
-import { subscriptionService } from './services';
+import { Settings, Subscription, Node, UserInfo } from './types';
 import {
     KV_KEY_SUBS,
     KV_KEY_PROFILES,
@@ -63,7 +62,7 @@ router.get('/data', async (req, res) => {
         const [subs, profiles, settings] = await Promise.all([
             storage.get(KV_KEY_SUBS).then(res => res || []),
             storage.get(KV_KEY_PROFILES).then(res => res || []),
-            storage.get(KV_KEY_SETTINGS).then(res => res || {} as any)
+            storage.get<Settings>(KV_KEY_SETTINGS).then(res => res || defaultSettings)
         ]);
         const configData = {
             FileName: settings.FileName || 'SUB_ONE',
@@ -90,9 +89,9 @@ router.post('/subs', async (req, res) => {
         ]);
 
         res.json({ success: true, message: '订阅源及订阅组已保存' });
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Save failed:', e);
-        res.status(500).json({ success: false, message: `保存失败: ${e.message}` });
+        res.status(500).json({ success: false, message: `保存失败: ${e instanceof Error ? e.message : String(e)}` });
     }
 });
 
@@ -102,23 +101,25 @@ router.post('/node_count', async (req, res) => {
         return res.status(400).json({ error: 'Invalid or missing url' });
     }
 
-    const result: { count: number; userInfo: any } = { count: 0, userInfo: null };
+    const result: { count: number; userInfo: UserInfo | null } = { count: 0, userInfo: null };
 
     try {
-        const trafficRequest = fetch(subUrl, { headers: { 'User-Agent': 'Clash for Windows/0.20.39' }, redirect: "follow" } as any);
-        const nodeCountRequest = fetch(subUrl, { headers: { 'User-Agent': 'Sub-One-Node-Counter/2.0' }, redirect: "follow" } as any);
+        const trafficRequest = fetch(subUrl, { headers: { 'User-Agent': 'Clash for Windows/0.20.39' }, redirect: "follow" });
+        const nodeCountRequest = fetch(subUrl, { headers: { 'User-Agent': 'Sub-One-Node-Counter/2.0' }, redirect: "follow" });
 
         const responses = await Promise.allSettled([trafficRequest, nodeCountRequest]);
 
         if (responses[0].status === 'fulfilled' && responses[0].value.ok) {
             const userInfoHeader = responses[0].value.headers.get('subscription-userinfo');
             if (userInfoHeader) {
-                const info: any = {};
+                const info: Partial<UserInfo> = {};
                 userInfoHeader.split(';').forEach(part => {
                     const [key, value] = part.trim().split('=');
-                    if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                    if (key && value) {
+                        (info as Record<string, string | number>)[key] = /^\d+$/.test(value) ? Number(value) : value;
+                    }
                 });
-                result.userInfo = info;
+                result.userInfo = info as UserInfo;
             }
         }
 
@@ -133,13 +134,15 @@ router.post('/node_count', async (req, res) => {
         }
 
         if (result.userInfo || result.count > 0) {
-            const originalSubs = await storage.get<any[]>(KV_KEY_SUBS) || [];
-            const allSubs = JSON.parse(JSON.stringify(originalSubs));
-            const subToUpdate = allSubs.find((s: any) => s.url === subUrl);
+            const originalSubs = await storage.get<Subscription[]>(KV_KEY_SUBS) || [];
+            const allSubs: Subscription[] = JSON.parse(JSON.stringify(originalSubs));
+            const subToUpdate = allSubs.find((s) => s.url === subUrl);
 
             if (subToUpdate) {
                 subToUpdate.nodeCount = result.count;
-                subToUpdate.userInfo = result.userInfo;
+                if (result.userInfo) {
+                    subToUpdate.userInfo = result.userInfo;
+                }
                 await storage.put(KV_KEY_SUBS, allSubs);
             }
         }
@@ -157,25 +160,27 @@ router.post('/batch_update_nodes', async (req, res) => {
             return res.status(400).json({ error: 'subscriptionIds must be an array' });
         }
 
-        const allSubs = await storage.get<any[]>(KV_KEY_SUBS) || [];
+        const allSubs = await storage.get<Subscription[]>(KV_KEY_SUBS) || [];
         const subsToUpdate = allSubs.filter(sub => subscriptionIds.includes(sub.id) && sub.url.startsWith('http'));
 
         const updatePromises = subsToUpdate.map(async (sub) => {
             try {
                 const response = await Promise.race([
-                    fetch(sub.url, { headers: { 'User-Agent': 'Sub-One-Batch-Updater/1.0' }, redirect: "follow" } as any),
+                    fetch(sub.url, { headers: { 'User-Agent': 'Sub-One-Batch-Updater/1.0' }, redirect: "follow" }),
                     new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
                 ]);
 
                 if (response.ok) {
                     const userInfoHeader = response.headers.get('subscription-userinfo');
                     if (userInfoHeader) {
-                        const info: any = {};
+                        const info: Partial<UserInfo> = {};
                         userInfoHeader.split(';').forEach(part => {
                             const [key, value] = part.trim().split('=');
-                            if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                            if (key && value) {
+                                (info as Record<string, string | number>)[key] = /^\d+$/.test(value) ? Number(value) : value;
+                            }
                         });
-                        sub.userInfo = info;
+                        sub.userInfo = info as UserInfo;
                     }
 
                     const text = await response.text();
@@ -190,8 +195,8 @@ router.post('/batch_update_nodes', async (req, res) => {
                 } else {
                     return { id: sub.id, success: false, error: `HTTP ${response.status}` };
                 }
-            } catch (error: any) {
-                return { id: sub.id, success: false, error: error.message };
+            } catch (error: unknown) {
+                return { id: sub.id, success: false, error: error instanceof Error ? error.message : String(error) };
             }
         });
 
@@ -207,8 +212,8 @@ router.post('/batch_update_nodes', async (req, res) => {
             message: '批量更新完成',
             results: updateResults
         });
-    } catch (error: any) {
-        res.status(500).json({ success: false, message: `批量更新失败: ${error.message}` });
+    } catch (error: unknown) {
+        res.status(500).json({ success: false, message: `批量更新失败: ${error instanceof Error ? error.message : String(error)}` });
     }
 });
 
@@ -255,7 +260,7 @@ router.post('/latency_test', async (req, res) => {
                 headers: { 'User-Agent': 'Sub-One-Latency-Tester/1.0' },
                 redirect: 'follow',
                 signal: controller.signal
-            } as any);
+            });
             clearTimeout(timeoutId);
             const endTime = Date.now();
             res.json({ success: true, latency: endTime - startTime, status: response.status });
@@ -269,13 +274,13 @@ router.post('/latency_test', async (req, res) => {
                 headers: { 'User-Agent': 'Sub-One-Latency-Tester/1.0' },
                 redirect: 'follow',
                 signal: controllerGet.signal
-            } as any);
+            });
             clearTimeout(timeoutIdGet);
             const endTimeGet = Date.now();
             res.json({ success: true, latency: endTimeGet - startTimeGet, status: responseGet.status });
         }
-    } catch (e: any) {
-        res.json({ success: false, error: e.message === 'The user aborted a request.' ? 'Timeout' : e.message });
+    } catch (e: unknown) {
+        res.json({ success: false, error: e instanceof Error && e.message === 'The user aborted a request.' ? 'Timeout' : (e instanceof Error ? e.message : String(e)) });
     }
 });
 
@@ -313,12 +318,12 @@ router.post('/parse_subscription', async (req, res) => {
         const trafficRequest = fetch(subUrl, {
             headers: { 'User-Agent': 'Clash for Windows/0.20.39' },
             redirect: "follow"
-        } as any);
+        });
 
         const nodeRequest = fetch(subUrl, {
             headers: { 'User-Agent': 'Clash.Meta/v1.16.0' }, // 使用 Meta UA 获取完整配置
             redirect: "follow"
-        } as any);
+        });
 
         const [trafficResult, nodeResult] = await Promise.allSettled([
             Promise.race([trafficRequest, new Promise<Response>((_, reject) =>
@@ -329,21 +334,21 @@ router.post('/parse_subscription', async (req, res) => {
             )])
         ]);
 
-        let userInfo: any = null;
-        let nodes: any[] = [];
+        let userInfo: UserInfo | null = null;
+        let nodes: Node[] = [];
 
         // 1. 处理流量信息
         if (trafficResult.status === 'fulfilled' && trafficResult.value.ok) {
             const userInfoHeader = trafficResult.value.headers.get('subscription-userinfo');
             if (userInfoHeader) {
-                const info: any = {};
+                const info: Partial<UserInfo> = {};
                 userInfoHeader.split(';').forEach(part => {
                     const [key, value] = part.trim().split('=');
                     if (key && value) {
-                        info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                        (info as Record<string, string | number>)[key] = /^\d+$/.test(value) ? Number(value) : value;
                     }
                 });
-                userInfo = info;
+                userInfo = info as UserInfo;
                 console.log(`[Parse Subscription] 获取到流量信息:`, userInfo);
             }
         } else if (trafficResult.status === 'rejected') {
@@ -362,11 +367,11 @@ router.post('/parse_subscription', async (req, res) => {
                     prependSubName: prependSubName !== undefined ? prependSubName : false
                 });
                 console.log(`[Parse Subscription] 成功解析 ${nodes.length} 个节点`);
-            } catch (parseError: any) {
+            } catch (parseError: unknown) {
                 console.error(`[Parse Subscription] 解析失败:`, parseError);
                 return res.json({
                     success: false,
-                    error: `解析订阅内容失败: ${parseError.message}`,
+                    error: `解析订阅内容失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
                     userInfo: userInfo,
                     nodes: [],
                     count: 0
@@ -392,11 +397,11 @@ router.post('/parse_subscription', async (req, res) => {
             message: `成功获取并解析 ${nodes.length} 个节点`
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`[Parse Subscription] 未预期的错误:`, error);
         res.status(500).json({
             success: false,
-            error: `服务器错误: ${error.message}`,
+            error: `服务器错误: ${error instanceof Error ? error.message : String(error)}`,
             nodes: [],
             count: 0
         });
