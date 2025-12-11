@@ -4,11 +4,12 @@ services:
   sub-one:
     image: binbankm/sub-one:latest
     container_name: sub-one
+    user: root
     ports:
       - "${PORT:-3055}:3055"
     volumes:
-      # 数据持久化目录 (VPS首次部署需要: mkdir -p /root/sub-one-data && chmod 755 /root/sub-one-data)
-      - /root/sub-one-data:/app/data
+      # 数据持久化目录 (VPS首次部署需要: mkdir -p ./sub-one-data && chmod 755 ./sub-one-data)
+      - ./sub-one-data:/app/data
     environment:
       - TZ=Asia/Shanghai
       - PORT=${PORT:-3055}

@@ -188,16 +188,17 @@ npm run preview
 
 ```bash
 docker run -d \
+  --user root \
   --name sub-one \
-  --restart always \
+  --restart unless-stopped \
   -p 3055:3055 \
-  -v sub-one-data:/app/data \
+  -v $(pwd)/sub-one-data:/app/data \
   -e ADMIN_PASSWORD=admin \
   binbankm/sub-one:latest
 ```
 
 - **端口映射**: `-p 3055:3055` (访问地址: `http://ip:3055`)
-- **数据持久化**: `-v sub-one-data:/app/data` (使用 Docker 卷存储数据，更安全方便)
+- **数据持久化**: `-v $(pwd)/sub-one-data:/app/data` (使用本地目录存储数据)
 - **管理员密码**: `-e ADMIN_PASSWORD=admin` (请修改为您自己的密码)
 
 ### 🌐 Cloudflare Pages 部署

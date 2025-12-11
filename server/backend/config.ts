@@ -13,6 +13,6 @@ export const config = {
     REDIS_URL: process.env.REDIS_URL,
     // Docker: DATA_DIR=/app/data (from docker-compose.yml env var)
     // Local: server/data (from backend/ or dist/ -> ../data)
-    DATA_DIR: process.env.DATA_DIR || path.resolve(__dirname, '../data'),
+    DATA_DIR: process.env.DATA_DIR || path.resolve(__dirname, '../../sub-one-data'),
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'admin',
 };
