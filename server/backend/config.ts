@@ -10,7 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const config = {
     PORT: process.env.PORT || 3055,
-    REDIS_URL: process.env.REDIS_URL,
+
     // Docker: DATA_DIR=/app/data (from docker-compose.yml env var)
     // Local: server/data (from backend/ or dist/ -> ../data)
     DATA_DIR: process.env.DATA_DIR || path.resolve(__dirname, '../../sub-one-data'),

@@ -16,14 +16,11 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - DATA_DIR=${DATA_DIR:-/app/data}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      # Uncomment to use Redis
-      # - REDIS_URL=redis://redis:6379
     restart: unless-stopped
-    # depends_on:
-    #   - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # 自建后端
   # subconverter:
   #   image: asdlokj1qpi233/subconverter:latest
   #   container_name: sub-one-subconverter
@@ -31,12 +28,3 @@ services:
   #   ports:
   #     - "25500:25500"
 
-  # redis:
-  #   image: redis:alpine
-  #   container_name: sub-one-redis
-  #   restart: unless-stopped
-  #   volumes:
-  #     - redis-data:/data
-
-# volumes:
-#   redis-data:

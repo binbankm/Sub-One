@@ -1,6 +1,6 @@
-import * as fs from 'fs/promises';
 import * as path from 'path';
-import Redis from 'ioredis';
+import sqlite3 from 'sqlite3';
+import { open, Database } from 'sqlite';
 import { config } from './config';
 
 export interface Storage {
@@ -9,72 +9,52 @@ export interface Storage {
     delete(key: string): Promise<void>;
 }
 
-class FileStorage implements Storage {
-    private filePath: string;
-    private data: Record<string, unknown> = {};
-    private initialized = false;
+class SQLiteStorage implements Storage {
+    private dbPromise: Promise<Database<sqlite3.Database, sqlite3.Statement>>;
 
     constructor() {
-        this.filePath = path.join(config.DATA_DIR, 'sub-one.json');
+        const dbPath = path.join(config.DATA_DIR, 'sub-one.sqlite');
+        this.dbPromise = this.init(dbPath);
     }
 
-    private async init() {
-        if (this.initialized) return;
-        try {
-            await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-            const content = await fs.readFile(this.filePath, 'utf-8');
-            this.data = JSON.parse(content);
-        } catch (error: unknown) {
-            if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code !== 'ENOENT') {
-                console.error('Failed to load data file:', error);
-            }
-            // If file doesn't exist, start with empty data
-            this.data = {};
-        }
-        this.initialized = true;
-    }
+    private async init(dbPath: string): Promise<Database<sqlite3.Database, sqlite3.Statement>> {
+        const fs = await import('fs/promises');
+        await fs.mkdir(path.dirname(dbPath), { recursive: true });
 
-    private async save() {
-        await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2));
-    }
+        const db = await open({
+            filename: dbPath,
+            driver: sqlite3.Database
+        });
 
-    async get<T>(key: string): Promise<T | null> {
-        await this.init();
-        return (this.data[key] as T) || null;
-    }
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS kv_store (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        `);
 
-    async put<T>(key: string, value: T): Promise<void> {
-        await this.init();
-        this.data[key] = value;
-        await this.save();
-    }
-
-    async delete(key: string): Promise<void> {
-        await this.init();
-        delete this.data[key];
-        await this.save();
-    }
-}
-
-class RedisStorage implements Storage {
-    private client: Redis;
-
-    constructor(url: string) {
-        this.client = new Redis(url);
+        return db;
     }
 
     async get<T>(key: string): Promise<T | null> {
-        const data = await this.client.get(key);
-        return data ? JSON.parse(data) : null;
+        const db = await this.dbPromise;
+        const result = await db.get('SELECT value FROM kv_store WHERE key = ?', key);
+        return result ? JSON.parse(result.value) : null;
     }
 
     async put<T>(key: string, value: T): Promise<void> {
-        await this.client.set(key, JSON.stringify(value));
+        const db = await this.dbPromise;
+        await db.run(
+            'INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)',
+            key,
+            JSON.stringify(value)
+        );
     }
 
     async delete(key: string): Promise<void> {
-        await this.client.del(key);
+        const db = await this.dbPromise;
+        await db.run('DELETE FROM kv_store WHERE key = ?', key);
     }
 }
 
-export const storage: Storage = config.REDIS_URL ? new RedisStorage(config.REDIS_URL) : new FileStorage();
+export const storage: Storage = new SQLiteStorage();
