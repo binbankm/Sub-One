@@ -231,15 +231,87 @@ watch(() => props.show, (newValue) => {
             <div class="group">
               <label for="subConverter"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">后端地址</label>
-              <input type="text" id="subConverter" v-model="settings.subConverter" class="input-modern-enhanced w-full"
-                placeholder="例如：sub.xeton.dev">
+              <div class="relative">
+                <select v-model="settings.subConverter" id="subConverter"
+                  class="input-modern-enhanced w-full pr-10 appearance-none cursor-pointer"
+                  @change="(e) => { if ((e.target as HTMLSelectElement).value === 'custom') settings.subConverter = '' }">
+                  <option value="api.v1.mk">
+                    api.v1.mk（推荐）
+                  </option>
+                  <option value="sub.xeton.dev">
+                    sub.xeton.dev
+                  </option>
+                  <option value="api.dler.io">
+                    api.dler.io
+                  </option>
+                  <option value="sub.id9.cc">
+                    sub.id9.cc
+                  </option>
+                  <option value="api.wcc.best">
+                    api.wcc.best
+                  </option>
+                  <option value="sub.d1.mk">
+                    sub.d1.mk
+                  </option>
+                  <option value="custom">自定义地址...</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <!-- 自定义输入框 -->
+              <input
+                v-if="!settings.subConverter || settings.subConverter === '' || (!['api.v1.mk', 'sub.xeton.dev', 'api.dler.io', 'sub.id9.cc', 'api.wcc.best', 'sub.d1.mk'].includes(settings.subConverter))"
+                type="text" v-model="settings.subConverter" class="input-modern-enhanced w-full mt-2"
+                placeholder="输入自定义后端地址...">
             </div>
             <div class="group">
               <label for="subConfig"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">配置文件
                 URL</label>
-              <input type="text" id="subConfig" v-model="settings.subConfig" class="input-modern-enhanced w-full"
-                placeholder="例如：https://raw.githubusercontent.com/.../config.ini">
+              <div class="relative">
+                <select v-model="settings.subConfig" id="subConfig"
+                  class="input-modern-enhanced w-full pr-10 appearance-none cursor-pointer"
+                  @change="(e) => { if ((e.target as HTMLSelectElement).value === 'custom') settings.subConfig = '' }">
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini">
+                    ACL4SSR 完整版（推荐）
+                  </option>
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online.ini">
+                    ACL4SSR 精简版
+                  </option>
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Mini.ini">
+                    ACL4SSR 极简版
+                  </option>
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_AdblockPlus.ini">
+                    ACL4SSR 去广告增强版
+                  </option>
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_NoReject.ini">
+                    ACL4SSR 无拦截版
+                  </option>
+                  <option
+                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_MultiCountry.ini">
+                    ACL4SSR 多国分组
+                  </option>
+                  <option value="custom">自定义 URL...</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <!-- 自定义输入框 -->
+              <input
+                v-if="!settings.subConfig || !settings.subConfig.startsWith('https://raw.githubusercontent.com/cmliu/ACL4SSR')"
+                type="text" v-model="settings.subConfig" class="input-modern-enhanced w-full mt-2"
+                placeholder="输入自定义配置 URL...">
             </div>
           </div>
         </section>
