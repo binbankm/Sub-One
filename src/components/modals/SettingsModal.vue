@@ -108,6 +108,41 @@ watch(() => props.show, (newValue) => {
     loadSettings();
   }
 }, { immediate: true });
+
+// 预设的后端地址选项
+const converterPresets = [
+  { label: 'api.v1.mk (推荐)', value: 'api.v1.mk' },
+  { label: 'url.v1.mk', value: 'url.v1.mk' },
+  { label: 'sub.xeton.dev', value: 'sub.xeton.dev' },
+  { label: 'api.dler.io', value: 'api.dler.io' },
+  { label: 'sub.id9.cc', value: 'sub.id9.cc' },
+  { label: '自定义', value: '' }
+];
+
+// 预设的配置文件选项
+const configPresets = [
+  {
+    label: 'ACL4SSR 在线完整版 (推荐)',
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini'
+  },
+  {
+    label: 'ACL4SSR 精简版',
+    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini.ini'
+  },
+  {
+    label: 'ACL4SSR 去广告版',
+    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_AdblockPlus.ini'
+  },
+  {
+    label: 'ACL4SSR 无测速版',
+    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_NoAuto.ini'
+  },
+  {
+    label: 'ACL4SSR 极简版',
+    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini_NoAuto.ini'
+  },
+  { label: '自定义', value: '' }
+];
 </script>
 
 <template>
@@ -218,18 +253,54 @@ watch(() => props.show, (newValue) => {
             SubConverter 服务
           </h4>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="group">
+            <!-- 后端地址 -->
+            <div class="group space-y-3">
               <label for="subConverter"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">后端地址</label>
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                后端地址
+              </label>
+
+              <!-- 预设选择 -->
+              <select
+                class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                @change="(e) => settings.subConverter = (e.target as HTMLSelectElement).value">
+                <option value="" disabled :selected="!converterPresets.some(p => p.value === settings.subConverter)">
+                  选择预设或自定义
+                </option>
+                <option v-for="preset in converterPresets" :key="preset.value" :value="preset.value"
+                  :selected="preset.value === settings.subConverter">
+                  {{ preset.label }}
+                </option>
+              </select>
+
+              <!-- 输入框 -->
               <input type="text" id="subConverter" v-model="settings.subConverter" class="input-modern-enhanced w-full"
-                placeholder="例如：sub.xeton.dev">
+                placeholder="例如：api.v1.mk">
             </div>
-            <div class="group">
+
+            <!-- 配置文件URL -->
+            <div class="group space-y-3">
               <label for="subConfig"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">配置文件
-                URL</label>
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                配置文件 URL
+              </label>
+
+              <!-- 预设选择 -->
+              <select
+                class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                @change="(e) => settings.subConfig = (e.target as HTMLSelectElement).value">
+                <option value="" disabled :selected="!configPresets.some(p => p.value === settings.subConfig)">
+                  选择预设或自定义
+                </option>
+                <option v-for="preset in configPresets" :key="preset.value" :value="preset.value"
+                  :selected="preset.value === settings.subConfig">
+                  {{ preset.label }}
+                </option>
+              </select>
+
+              <!-- 输入框 -->
               <input type="text" id="subConfig" v-model="settings.subConfig" class="input-modern-enhanced w-full"
-                placeholder="例如：https://raw.githubusercontent.com/.../config.ini">
+                placeholder="https://raw.githubusercontent.com/.../config.ini">
             </div>
           </div>
         </section>
