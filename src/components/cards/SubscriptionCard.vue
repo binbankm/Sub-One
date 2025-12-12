@@ -122,7 +122,7 @@ const trafficColorClass = computed(() => {
 });
 
 const isTestingLatency = ref(false);
-const latencyResult = ref<{ latency?: number; status: number; color: string; error?: boolean } | null>(null);
+const latencyResult = ref<{ available: boolean } | null>(null);
 
 const handleTestLatency = async () => {
   if (isTestingLatency.value || !props.sub.url) return;
@@ -133,18 +133,12 @@ const handleTestLatency = async () => {
 
   if (result.success) {
     latencyResult.value = {
-      latency: result.latency,
-      status: result.status,
-      color: result.latency < 500 ? 'text-green-500' : (result.latency < 1500 ? 'text-yellow-500' : 'text-red-500')
+      available: true
     };
-    toastStore.showToast(`连接成功: ${result.latency}ms`, 'success');
   } else {
     latencyResult.value = {
-      error: true,
-      status: result.status,
-      color: 'text-red-500'
+      available: false
     };
-    toastStore.showToast(`连接失败: ${result.message}`, 'error');
   }
 
   isTestingLatency.value = false;
@@ -313,18 +307,16 @@ const handleTestLatency = async () => {
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- 延迟测试结果显示 -->
-          <span v-if="latencyResult" class="text-xs font-bold transition-all duration-300" :class="latencyResult.color">
-            {{ latencyResult.error ? 'Error' : `${latencyResult.latency}ms` }}
-          </span>
-
           <!-- 延迟测试按钮 -->
           <button @click.stop="handleTestLatency" :disabled="isTestingLatency"
-            class="p-1.5 rounded-lg text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            :title="isTestingLatency ? '测试中...' : '测试连接延迟'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-              :class="{ 'animate-pulse text-amber-500': isTestingLatency }" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
+            class="p-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" :class="{
+              'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30': !latencyResult,
+              'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30': latencyResult && latencyResult.available,
+              'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30': latencyResult && !latencyResult.available
+            }"
+            :title="isTestingLatency ? '测试中...' : (latencyResult ? (latencyResult.available ? '可用' : '不可用') : '测试连接')">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" :class="{ 'animate-pulse': isTestingLatency }"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </button>

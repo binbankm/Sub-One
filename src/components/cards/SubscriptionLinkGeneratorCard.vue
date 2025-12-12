@@ -67,9 +67,9 @@ const subLink = computed(() => {
     return url;
   }
 
-  // 优化：使用正确的参数名target，确保后端能正确识别格式
+  // 使用简短格式，与原项目CF-Workers-SUB保持一致
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
-  return `${url}?target=${formatParam}`;
+  return `${url}?${formatParam}`;
 });
 
 const copyToClipboard = async () => {
@@ -97,7 +97,7 @@ const openNodePreview = () => {
 
   // Force base64 for preview to ensure we get raw node list
   const urlObj = new URL(subLink.value);
-  urlObj.searchParams.set('target', 'base64');
+  urlObj.searchParams.set('base64', '');
 
   previewSubscription.value = {
     name: '订阅预览',

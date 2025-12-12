@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import Modal from './BaseModal.vue';
-import { subscriptionParser } from '../../lib/subscription-parser';
+import { subscriptionParser } from '@shared/subscription-parser';
 import type { Node } from '../../types';
 
 const props = defineProps<{

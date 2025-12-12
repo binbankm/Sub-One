@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { subscriptionParser } from '../../lib/subscription-parser';
+import { subscriptionParser } from '@shared/subscription-parser';
 import type { Subscription, Profile, Node } from '../../types';
 
 const props = defineProps<{
@@ -150,8 +150,12 @@ const fetchProfileNodes = async () => {
             if (response.ok) {
               const content = await response.text();
               const parsedNodes = subscriptionParser.parse(content, subscription.name);
+              // 应用过滤规则 - 关键修复：确保订阅的exclude规则在订阅组中也生效
+              const processedNodes = subscriptionParser.processNodes(parsedNodes, subscription.name || '', {
+                exclude: subscription.exclude || ''
+              });
               // 标记来源，方便显示
-              return parsedNodes.map(node => ({
+              return processedNodes.map(node => ({
                 id: node.id,
                 name: node.name,
                 url: node.url,

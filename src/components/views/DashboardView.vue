@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, defineEmits, type PropType } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, type PropType } from 'vue';
 import { saveSubs, batchUpdateNodes } from '../../lib/api';
 import { extractNodeName } from '../../lib/utils';
 import { useToastStore } from '../../stores/toast';
@@ -921,7 +921,7 @@ const handleNodeDragEnd = async () => {
     </template>
   </Modal>
 
-  <Modal v-if="editingSubscription" v-model:show="showSubModal" @confirm="handleSaveSubscription">
+  <Modal v-if="editingSubscription" v-model:show="showSubModal" @confirm="handleSaveSubscription" size="2xl">
     <template #title>
       <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ isNewSubscription ? '新增订阅' : '编辑订阅' }}</h3>
     </template>
