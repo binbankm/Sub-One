@@ -178,6 +178,25 @@ npm run build
 # 预览构建结果
 npm run preview
 ```
+### 🐳 Docker 部署
+
+如果您拥有自己的服务器（VPS），可以使用 Docker 一键部署：
+
+```bash
+docker run -d \
+  --user root \
+  --name sub-one \
+  --restart unless-stopped \
+  -p 3055:3055 \
+  -v $(pwd)/sub-one-data:/app/data \
+  -e ADMIN_PASSWORD=admin \
+  binbankm/sub-one:latest
+```
+
+- **端口映射**: `-p 3055:3055` (访问地址: `http://ip:3055`)
+- **数据持久化**: `-v $(pwd)/sub-one-data:/app/data` (使用本地目录存储数据)
+- **管理员密码**: `-e ADMIN_PASSWORD=admin` (请修改为您自己的密码)
+
 
 ### 🌐 Cloudflare Pages 部署
 
