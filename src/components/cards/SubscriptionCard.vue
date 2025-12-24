@@ -1,3 +1,8 @@
+<!--
+  订阅卡片组件 - 显示订阅源信息
+  功能：启用/禁用、编辑、删除、更新、流量显示、延迟测试、批量选择
+-->
+
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useToastStore } from '../../stores/toast';
@@ -21,7 +26,7 @@ const emit = defineEmits<{
 
 const toastStore = useToastStore();
 
-// 复制URL函数
+/** 复制URL */
 const copyUrl = async () => {
   if (!props.sub.url) return;
   try {
@@ -33,15 +38,10 @@ const copyUrl = async () => {
   }
 };
 
-// URL显示状态
 const showUrl = ref(false);
+const toggleUrlVisibility = () => { showUrl.value = !showUrl.value; };
 
-// 切换URL显示状态
-const toggleUrlVisibility = () => {
-  showUrl.value = !showUrl.value;
-};
-
-// 鼠标事件处理
+/** 鼠标事件处理（支持拖拽排序） */
 const mouseDownTime = ref(0);
 const mouseDownPosition = ref({ x: 0, y: 0 });
 const hasDragged = ref(false);
@@ -51,13 +51,10 @@ const handleMouseDown = (event: MouseEvent) => {
   mouseDownPosition.value = { x: event.clientX, y: event.clientY };
   hasDragged.value = false;
 
-  // 添加鼠标移动和抬起事件监听
   const handleMouseMove = (e: MouseEvent) => {
     const deltaX = Math.abs(e.clientX - mouseDownPosition.value.x);
     const deltaY = Math.abs(e.clientY - mouseDownPosition.value.y);
-    if (deltaX > 5 || deltaY > 5) {
-      hasDragged.value = true;
-    }
+    if (deltaX > 5 || deltaY > 5) hasDragged.value = true;
   };
 
   const handleMouseUp = () => {
@@ -69,10 +66,7 @@ const handleMouseDown = (event: MouseEvent) => {
   document.addEventListener('mouseup', handleMouseUp);
 };
 
-
-
-
-
+/** 字节格式化 */
 const formatBytes = (bytes: number, decimals = 2) => {
   if (!+bytes) return '0 B';
   const k = 1024;
@@ -82,6 +76,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
+/** 流量信息 */
 const trafficInfo = computed(() => {
   const info = props.sub.userInfo;
   if (!info || info.total === undefined || info.download === undefined || info.upload === undefined) return null;
@@ -95,6 +90,7 @@ const trafficInfo = computed(() => {
   };
 });
 
+/** 过期信息 */
 const expiryInfo = computed(() => {
   const expireTimestamp = props.sub.userInfo?.expire;
   if (!expireTimestamp) return null;
@@ -113,6 +109,7 @@ const expiryInfo = computed(() => {
   };
 });
 
+/** 流量颜色 */
 const trafficColorClass = computed(() => {
   if (!trafficInfo.value) return '';
   const p = trafficInfo.value.percentage;
@@ -121,6 +118,7 @@ const trafficColorClass = computed(() => {
   return 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-blue-500/30';
 });
 
+/** 延迟测试 */
 const isTestingLatency = ref(false);
 const latencyResult = ref<{ available: boolean } | null>(null);
 
@@ -132,21 +130,14 @@ const handleTestLatency = async () => {
   const result = await testLatency(props.sub.url);
 
   if (result.success) {
-    latencyResult.value = {
-      available: true
-    };
+    latencyResult.value = { available: true };
   } else {
-    latencyResult.value = {
-      available: false
-    };
+    latencyResult.value = { available: false };
   }
 
   isTestingLatency.value = false;
 
-  // Clear result after 5 seconds
-  setTimeout(() => {
-    latencyResult.value = null;
-  }, 5000);
+  setTimeout(() => { latencyResult.value = null; }, 5000);
 };
 </script>
 
@@ -160,9 +151,8 @@ const handleTestLatency = async () => {
       'cursor-pointer': isBatchMode
     }" @mousedown="handleMouseDown" @click="isBatchMode ? emit('toggleSelect') : null">
     <div class="relative z-10 flex-1 flex flex-col p-5">
-      <!-- 头部区域 -->
+      <!-- 头部 -->
       <div class="flex items-start justify-between gap-3 mb-4 sm:mb-6">
-        <!-- 复选框（批量模式） -->
         <div v-if="isBatchMode" class="flex-shrink-0 pt-1" @click.stop>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" :checked="isSelected" @change="emit('toggleSelect')"
@@ -185,7 +175,6 @@ const handleTestLatency = async () => {
                 :title="sub.name || '未命名订阅'">
                 {{ sub.name || '未命名订阅' }}
               </p>
-              <!-- 规则过滤提示 -->
               <div v-if="sub.exclude && sub.exclude.trim()"
                 class="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 bg-gradient-to-r from-orange-500/15 to-amber-500/15 dark:from-orange-500/20 dark:to-amber-500/20 rounded-lg border border-orange-300/50 dark:border-orange-500/30 w-fit animate-pulse-slow"
                 :title="`已启用规则过滤: ${sub.exclude}`">
@@ -260,7 +249,6 @@ const handleTestLatency = async () => {
         </div>
 
         <!-- 流量信息 -->
-        <!-- 流量信息 -->
         <div v-if="trafficInfo"
           class="mt-2 p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm">
           <div class="flex justify-between items-end mb-2">
@@ -293,11 +281,11 @@ const handleTestLatency = async () => {
         </div>
       </div>
 
-      <!-- 底部控制区域 -->
+      <!-- 底部控制 -->
       <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700/50"
         @click.stop>
         <div class="flex items-center gap-3">
-          <label class="relative inline-flex items-center cursor-pointer group/toggle">
+          <label  class="relative inline-flex items-center cursor-pointer group/toggle">
             <input type="checkbox" :checked="sub.enabled" @change="emit('change')" class="sr-only peer">
             <div
               class="w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500 group-hover/toggle:shadow-md transition-all duration-300">
@@ -307,7 +295,6 @@ const handleTestLatency = async () => {
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- 延迟测试按钮 -->
           <button @click.stop="handleTestLatency" :disabled="isTestingLatency"
             class="p-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" :class="{
               'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30': !latencyResult,

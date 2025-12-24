@@ -416,24 +416,6 @@ const refreshNodes = async () => {
 </template>
 
 <style scoped>
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-.modal-inner-enter-active,
-.modal-inner-leave-active {
-  transition: all 0.25s ease;
-}
-
-.modal-inner-enter-from,
-.modal-inner-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
-}
+/* 模态框过渡动画已在 BaseModal.vue 中定义 */
 </style>
+

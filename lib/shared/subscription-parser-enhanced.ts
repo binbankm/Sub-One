@@ -13,7 +13,7 @@ import type { Node, ProcessOptions } from './types';
  * 5. 增强错误处理和日志记录
  * 6. 支持更多 Clash Meta 特性
  */
-export class SubscriptionParser {
+export class SubscriptionParserEnhanced {
     supportedProtocols: string[];
     _base64Regex: RegExp;
     _whitespaceRegex: RegExp;
@@ -47,23 +47,6 @@ export class SubscriptionParser {
         } catch (e) {
             console.warn('Base64 decoding failed, using fallback:', e);
             return atob(str);
-        }
-    }
-
-    /**
-     * 安全编码 Base64（UTF-8 支持）
-     */
-    encodeBase64(str: string): string {
-        try {
-            const bytes = new TextEncoder().encode(str);
-            const binaryString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
-            return btoa(binaryString);
-        } catch (e) {
-            console.warn('Base64 encoding failed, using fallback:', e);
-            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-                function toSolidBytes(_, p1) {
-                    return String.fromCharCode(parseInt(p1, 16));
-                }));
         }
     }
 
@@ -308,11 +291,6 @@ export class SubscriptionParser {
         if (proxy.id && !proxy.uuid) {
             proxy.uuid = proxy.id;
         }
-
-        // UDP 默认处理
-        if (proxy.udp === undefined) {
-            proxy.udp = true;
-        }
     }
 
     convertClashProxyToUrl(proxy: any): string | null {
@@ -334,68 +312,33 @@ export class SubscriptionParser {
             ['hysteria2', () => this.buildHysteriaUrlEnhanced(proxy)],
             ['hy2', () => this.buildHysteriaUrlEnhanced(proxy)],
             ['tuic', () => this.buildTUICUrl(proxy)],
-            ['anytls', () => this.buildAnyTlsUrl(proxy)],
             ['socks5', () => this.buildSocks5Url(proxy)],
             ['socks', () => this.buildSocks5Url(proxy)]
         ]);
 
         const handler = handlers.get(type);
-        if (!handler) {
-            console.warn(`不支持的代理类型: ${type}`);
-            return null;
+        if (handler) {
+            return handler();
         }
 
-        let url = handler();
-        if (!url) return null;
-
-        // 公共参数追加处理 (针对非 vmess 的 URI 模式)
-        if (!url.startsWith('vmess://') && !url.startsWith('ssr://')) {
-            try {
-                const urlParts = url.split('#');
-                let baseUrl = urlParts[0];
-                const fragment = urlParts.length > 1 ? '#' + urlParts[1] : '';
-
-                const separator = baseUrl.includes('?') ? '&' : '?';
-                const extraParams = new URLSearchParams();
-
-                // 补全 UDP
-                if (proxy.udp === true) extraParams.set('udp', '1');
-
-                // 补全跳过证书验证 (双参数支持以兼容不同后端)
-                if (proxy['skip-cert-verify'] === true) {
-                    extraParams.set('insecure', '1');
-                    extraParams.set('allowInsecure', '1');
-                }
-
-                // 补全 Fast Open
-                if (proxy.tfo === true) extraParams.set('tfo', '1');
-
-                const extraQuery = extraParams.toString();
-                if (extraQuery) {
-                    url = baseUrl + separator + extraQuery + fragment;
-                }
-            } catch (e) {
-                console.warn('追加公共参数失败:', e);
-            }
-        }
-
-        return url;
+        console.warn(`不支持的代理类型: ${type}`);
+        return null;
     }
 
     /**
-     * 构建 VMess URL（完善版 - 增强参数保留）
+     * 构建 VMess URL（完善版）
      */
     buildVmessUrl(proxy: any): string {
         const config: any = {
             v: '2',
             ps: proxy.name || 'VMess节点',
             add: proxy.server,
-            port: Number(proxy.port) || 443,
+            port: String(proxy.port),
             id: proxy.uuid || proxy.id,
-            aid: Number(proxy.alterId || proxy.aid || 0),
+            aid: String(proxy.alterId || proxy.aid || 0),
             scy: proxy.cipher || 'auto',
             net: proxy.network || 'tcp',
-            type: 'none',
+            type: '',
             host: '',
             path: '',
             tls: '',
@@ -404,25 +347,16 @@ export class SubscriptionParser {
             fp: ''
         };
 
-        // TLS 配置（增强版）
+        //TLS 配置
         if (proxy.tls === true || proxy.tls === 'true' || proxy.tls === 'tls') {
             config.tls = 'tls';
-            config.sni = proxy.servername || proxy.sni || '';
+            config.sni = proxy.sni || proxy.servername || '';
 
             if (proxy.alpn) {
                 config.alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
             }
 
             config.fp = proxy['client-fingerprint'] || proxy.fingerprint || '';
-
-            if (proxy['skip-cert-verify'] === true) {
-                config['skip-cert-verify'] = true;
-            }
-        }
-
-        // 添加 UDP 参数到 JSON (部分转换器支持)
-        if (proxy.udp === true) {
-            config.udp = true;
         }
 
         // 传输协议配置
@@ -465,7 +399,7 @@ export class SubscriptionParser {
         }
 
         const jsonStr = JSON.stringify(config);
-        const base64 = this.encodeBase64(jsonStr);
+        const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
         return `vmess://${base64}`;
     }
 
@@ -487,7 +421,7 @@ export class SubscriptionParser {
         params.set('encryption', 'none');
 
         // 传输协议
-        const network = proxy.network || 'tcp';
+        const network = proxy.network || proxy.type || 'tcp';
         params.set('type', network);
 
         // Flow（XTLS Vision）
@@ -524,7 +458,7 @@ export class SubscriptionParser {
             // spx - SpiderX (可选)
             const spx = opts['spider-x'] || opts.spiderX || opts.spx || '';
             if (spx) {
-                params.set('spx', spx);
+                params.set('spx', encodeURIComponent(spx));
             }
 
             // SNI (必需)
@@ -567,7 +501,7 @@ export class SubscriptionParser {
         switch (network) {
             case 'ws':
                 const wsOpts = proxy['ws-opts'] || {};
-                if (wsOpts.path) params.set('path', wsOpts.path);
+                if (wsOpts.path) params.set('path', encodeURIComponent(wsOpts.path));
                 if (wsOpts.headers?.Host) params.set('host', wsOpts.headers.Host);
 
                 // Early Data
@@ -584,7 +518,7 @@ export class SubscriptionParser {
             case 'h2':
             case 'http':
                 const h2Opts = proxy['h2-opts'] || {};
-                if (h2Opts.path) params.set('path', h2Opts.path);
+                if (h2Opts.path) params.set('path', encodeURIComponent(h2Opts.path));
                 if (h2Opts.host) {
                     const host = Array.isArray(h2Opts.host) ? h2Opts.host.join(',') : h2Opts.host;
                     params.set('host', host);
@@ -661,7 +595,7 @@ export class SubscriptionParser {
             switch (network) {
                 case 'ws':
                     const wsOpts = proxy['ws-opts'] || {};
-                    if (wsOpts.path) params.set('path', wsOpts.path);
+                    if (wsOpts.path) params.set('path', encodeURIComponent(wsOpts.path));
                     if (wsOpts.headers?.Host) params.set('host', wsOpts.headers.Host);
                     break;
 
@@ -692,7 +626,7 @@ export class SubscriptionParser {
         if (!server || !port || !method || !password) return '';
 
         const userInfo = `${method}:${password}`;
-        const base64UserInfo = this.encodeBase64(userInfo);
+        const base64UserInfo = btoa(userInfo);
         const serverPart = server.includes(':') && !server.startsWith('[') ? `[${server}]` : server;
         let url = `ss://${base64UserInfo}@${serverPart}:${port}`;
 
@@ -743,11 +677,11 @@ export class SubscriptionParser {
         ];
 
         const query = new URLSearchParams();
-        if (proxy['protocol-param']) query.set('protoparam', this.encodeBase64(proxy['protocol-param']));
-        if (proxy['obfs-param']) query.set('obfsparam', this.encodeBase64(proxy['obfs-param']));
-        if (proxy.name) query.set('remarks', this.encodeBase64(proxy.name));
+        if (proxy['protocol-param']) query.set('protoparam', btoa(proxy['protocol-param']));
+        if (proxy['obfs-param']) query.set('obfsparam', btoa(proxy['obfs-param']));
+        if (proxy.name) query.set('remarks', btoa(proxy.name));
 
-        const base64 = this.encodeBase64(config.join(':'));
+        const base64 = btoa(config.join(':'));
         let url = `ssr://${base64}`;
         if (query.toString()) url += `/?${query.toString()}`;
 
@@ -870,47 +804,6 @@ export class SubscriptionParser {
         return url;
     }
 
-    /**
-     * 构建 AnyTLS URL
-     */
-    buildAnyTlsUrl(proxy: any): string {
-        const server = proxy.server;
-        const port = proxy.port;
-        // AnyTLS 通常使用 client-id 或 password
-        const credential = proxy['client-id'] || proxy.uuid || proxy.id || proxy.password;
-
-        if (!server || !port) return '';
-
-        const serverPart = server.includes(':') && !server.startsWith('[') ? `[${server}]` : server;
-        let url = credential
-            ? `anytls://${encodeURIComponent(credential)}@${serverPart}:${port}`
-            : `anytls://${serverPart}:${port}`;
-
-        const params = new URLSearchParams();
-
-        const sni = proxy.sni || proxy.servername;
-        if (sni) params.set('sni', sni);
-
-        if (proxy.alpn) {
-            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
-            params.set('alpn', alpn);
-        }
-
-        if (proxy['skip-cert-verify'] === true) params.set('allowInsecure', '1');
-
-        const fp = proxy['client-fingerprint'] || proxy.fingerprint;
-        if (fp) params.set('fp', fp);
-
-        // AnyTLS 特定参数
-        if (proxy.idle_timeout) params.set('idle_timeout', String(proxy.idle_timeout));
-
-        const queryString = params.toString();
-        if (queryString) url += `?${queryString}`;
-        if (proxy.name) url += `#${encodeURIComponent(proxy.name)}`;
-
-        return url;
-    }
-
     parseGenericNodes(nodes: any[], subscriptionName: string): Node[] {
         return nodes.map(node => ({
             id: crypto.randomUUID(),
@@ -940,13 +833,9 @@ export class SubscriptionParser {
         if (!this._nodeRegex.test(line)) return null;
 
         let name = '';
-        const hashIndex = line.lastIndexOf('#');
+        const hashIndex = line.indexOf('#');
         if (hashIndex !== -1) {
-            try {
-                name = decodeURIComponent(line.substring(hashIndex + 1));
-            } catch (e) {
-                name = line.substring(hashIndex + 1);
-            }
+            name = decodeURIComponent(line.substring(hashIndex + 1) || '');
         }
 
         if (!name) {
@@ -982,8 +871,8 @@ export class SubscriptionParser {
                     }
                 }],
                 ['vless', () => {
-                    const match = url.match(/vless:\/\/.*@([^:]+):/);
-                    return match ? match[1] : 'VLESS节点';
+                    const vlessMatch = url.match(/vless:\/\/([^@]+)@([^:]+):(\d+)/);
+                    return vlessMatch ? vlessMatch[2] : 'VLESS节点';
                 }],
                 ['trojan', () => {
                     const trojanMatch = url.match(/trojan:\/\/([^@]+)@([^:]+):(\d+)/);
@@ -1067,27 +956,9 @@ export class SubscriptionParser {
             processed = processed.map(node => {
                 if (!node.name.startsWith(subName)) {
                     node.name = `${subName} - ${node.name}`;
-
-                    // 特殊处理 VMess，避免添加 # 导致部分客户端解析失败
-                    if (node.protocol === 'vmess' && node.url.startsWith('vmess://')) {
-                        try {
-                            const raw = node.url.substring(8);
-                            const decoded = this.decodeBase64(raw);
-                            const config = JSON.parse(decoded);
-                            config.ps = node.name;
-                            node.url = `vmess://${this.encodeBase64(JSON.stringify(config))}`;
-                        } catch (e) {
-                            // 解析失败则回退到 fragment 方式
-                            const hashIndex = node.url.lastIndexOf('#');
-                            const baseUrl = hashIndex !== -1 ? node.url.substring(0, hashIndex) : node.url;
-                            node.url = `${baseUrl}#${encodeURIComponent(node.name)}`;
-                        }
-                    } else {
-                        // 其他协议使用标准 # fragment
-                        const hashIndex = node.url.lastIndexOf('#');
-                        const baseUrl = hashIndex !== -1 ? node.url.substring(0, hashIndex) : node.url;
-                        node.url = `${baseUrl}#${encodeURIComponent(node.name)}`;
-                    }
+                    const hashIndex = node.url.lastIndexOf('#');
+                    const baseUrl = hashIndex !== -1 ? node.url.substring(0, hashIndex) : node.url;
+                    node.url = `${baseUrl}#${encodeURIComponent(node.name)}`;
                 }
                 return node;
             });
@@ -1134,4 +1005,4 @@ export class SubscriptionParser {
 }
 
 // 导出单例
-export const subscriptionParser = new SubscriptionParser();
+export const subscriptionParserEnhanced = new SubscriptionParserEnhanced();

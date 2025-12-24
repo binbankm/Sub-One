@@ -1,3 +1,8 @@
+<!--
+  手动节点卡片组件 - 显示单个手动节点的信息卡片
+  支持编辑、删除、批量选择功能
+-->
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Node } from '../../types';
@@ -14,11 +19,11 @@ const emit = defineEmits<{
   (e: 'toggleSelect'): void;
 }>();
 
+/** 从 URL 提取协议类型 */
 const getProtocol = (url?: string) => {
   try {
     if (!url) return 'unknown';
     const lowerUrl = url.toLowerCase();
-    // [更新] 新增 anytls 支援
     if (lowerUrl.startsWith('anytls://')) return 'anytls';
     if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://')) return 'hysteria2';
     if (lowerUrl.startsWith('hysteria://') || lowerUrl.startsWith('hy://')) return 'hysteria';
@@ -38,10 +43,10 @@ const getProtocol = (url?: string) => {
 
 const protocol = computed(() => getProtocol(props.node.url));
 
+/** 协议样式配置 - 不同协议使用不同的渐变色 */
 const protocolStyle = computed(() => {
   const p = protocol.value;
   switch (p) {
-    // [更新] 新增 anytls 的樣式
     case 'anytls':
       return { text: 'AnyTLS', style: 'bg-gradient-to-r from-slate-500/20 to-gray-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30' };
     case 'vless':
@@ -71,6 +76,7 @@ const protocolStyle = computed(() => {
 </script>
 
 <template>
+  <!-- 卡片容器 -->
   <div
     class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col h-full min-h-[180px] sm:min-h-[160px] shadow-sm hover:shadow-lg"
     :class="{
@@ -81,7 +87,7 @@ const protocolStyle = computed(() => {
     <div class="relative z-10 flex-1 flex flex-col p-5">
       <!-- 头部区域 -->
       <div class="flex items-start justify-between gap-3 mb-4">
-        <!-- 复选框（批量模式） -->
+        <!-- 批量模式复选框 -->
         <div v-if="isBatchMode" class="flex-shrink-0" @click.stop>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" :checked="isSelected" @change="emit('toggleSelect')"
@@ -89,8 +95,10 @@ const protocolStyle = computed(() => {
           </label>
         </div>
 
+        <!-- 节点信息 -->
         <div class="w-full truncate">
           <div class="flex items-center gap-3">
+            <!-- 图标 -->
             <div
               class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-all duration-300">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"
@@ -98,6 +106,7 @@ const protocolStyle = computed(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
+            <!-- 节点名称和协议 -->
             <div class="flex-1 min-w-0">
               <p class="font-bold text-lg text-gray-800 dark:text-gray-100 truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300"
                 :title="node.name || '未命名节点'">
@@ -111,6 +120,7 @@ const protocolStyle = computed(() => {
           </div>
         </div>
 
+        <!-- 操作按钮 -->
         <div
           class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
           <button @click.stop="emit('edit')"
@@ -134,7 +144,7 @@ const protocolStyle = computed(() => {
         </div>
       </div>
 
-      <!-- URL区域 -->
+      <!-- URL 显示区域 -->
       <div class="flex-grow flex flex-col justify-start space-y-3">
         <div class="relative">
           <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">节点链接</label>

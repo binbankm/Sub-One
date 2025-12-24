@@ -1,6 +1,24 @@
 /* ========================================
-   🎨 Sub-One Manager - Modern Design System
+   🎨 Sub-One Manager - 设计系统基础
+   ======================================== 
+   
+   本文件包含：
+   - CSS 变量定义（颜色、间距、圆角、阴影等）
+   - 基础动画和过渡效果
+   - 高级组件样式（Premium 系列：按钮、卡片、输入框）
+   - 通用工具类（毛玻璃、渐变文字、Shimmer 等）
+   - 全局过渡动画（slide-fade 系列）
+   - 自定义滚动条样式
+   - 响应式设计适配
+   - 可访问性支持
+   
+   应用级组件请参考：main.css
+   - 应用特定的按钮、输入框、模态框等
+   - Tailwind 扩展组件
+   - 应用背景和装饰
+   
    ======================================== */
+
 
 /* ==================== CSS Variables ==================== */
 :root {
@@ -593,3 +611,39 @@ html.dark .shimmer {
 html.dark *:focus-visible {
   outline: none;
 }
+
+/* ==================== Transition Effects (Shared) ==================== */
+/* 通用的过渡动画效果，供多个组件共享 */
+
+/* Slide Fade - 标准尺寸 */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+/* Slide Fade - 小尺寸（更快） */
+.slide-fade-sm-enter-active,
+.slide-fade-sm-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-fade-sm-enter-from {
+  transform: translateY(5px);
+  opacity: 0;
+}
+
+.slide-fade-sm-leave-to {
+  transform: translateY(-5px);
+  opacity: 0;
+}
+
