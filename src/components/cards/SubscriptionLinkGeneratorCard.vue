@@ -1,3 +1,8 @@
+<!--
+  订阅链接生成器卡片
+  功能：生成不同格式的订阅链接（Base64、Clash、Sing-Box等）
+-->
+
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
@@ -24,7 +29,7 @@ let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const formats = ['自适应', 'Base64', 'Clash', 'Sing-Box', 'Surge', 'Loon'];
 
-// 优化：预定义格式映射，避免每次计算时创建对象
+/** 格式映射表 */
 const FORMAT_MAPPING: Record<string, string> = {
   'Base64': 'base64',
   'Clash': 'clash',
@@ -33,45 +38,40 @@ const FORMAT_MAPPING: Record<string, string> = {
   'Loon': 'loon'
 };
 
-// 只显示已启用的订阅组
+/** 只显示已启用的订阅组 */
 const enabledProfiles = computed(() => {
   return props.profiles.filter(profile => profile.enabled);
 });
 
-
+/** 生成订阅链接 */
 const subLink = computed(() => {
   const baseUrl = window.location.origin;
   const format = selectedFormat.value;
 
-  // 修复：根据选择的订阅类型使用正确的token
-  // 默认订阅使用 mytoken，订阅组使用 profileToken
   let token = '';
   if (selectedId.value === 'default') {
     if (!props.config?.mytoken) return '';
     token = props.config.mytoken;
   } else {
-    // 订阅组需要使用 profileToken
     if (!props.config?.profileToken || props.config.profileToken === 'auto' || !props.config.profileToken.trim()) {
       return '';
     }
     token = props.config.profileToken;
   }
 
-  // 构建基础URL
   const url = selectedId.value === 'default'
     ? `${baseUrl}/${token}`
     : `${baseUrl}/${token}/${selectedId.value}`;
 
-  // 根据格式添加参数
   if (format === '自适应') {
     return url;
   }
 
-  // 使用简短格式，与原项目CF-Workers-SUB保持一致
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
   return `${url}?${formatParam}`;
 });
 
+/** 复制到剪贴板 */
 const copyToClipboard = async () => {
   if (!subLink.value) {
     showToast('链接无效，无法复制', 'error');
@@ -89,19 +89,22 @@ const copyToClipboard = async () => {
     showToast('复制失败，请手动复制', 'error');
   }
 };
+
 const showNodeDetails = ref(false);
 const previewSubscription = ref<{ name: string; url: string } | null>(null);
 
+/** 打开节点预览 */
 const openNodePreview = () => {
   if (!subLink.value) return;
 
-  // Force base64 for preview to ensure we get raw node list
-  const urlObj = new URL(subLink.value);
-  urlObj.searchParams.set('base64', '');
+  let previewUrl = subLink.value;
+  const urlObj = new URL(previewUrl);
+  urlObj.search = '';
+  previewUrl = `${urlObj.toString()}?base64`;
 
   previewSubscription.value = {
     name: '订阅预览',
-    url: urlObj.toString()
+    url: previewUrl
   };
   showNodeDetails.value = true;
 };
@@ -115,13 +118,9 @@ onUnmounted(() => {
   <div class="sticky top-24">
     <div
       class="bg-white/60 dark:bg-gray-800/75 rounded-2xl border border-gray-300/50 dark:border-gray-700/30 p-6 relative overflow-hidden hover:shadow-xl transition-all duration-300">
-      <!-- 装饰性背景 -->
-      <div
-        class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full -translate-y-12 translate-x-12">
-      </div>
 
       <div class="relative z-10">
-        <!-- 选择订阅内容 -->
+        <!-- 1. 选择订阅内容 -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
           <div class="relative">
@@ -134,7 +133,6 @@ onUnmounted(() => {
                 {{ profile.name }}
               </option>
             </select>
-            <!-- 自定义下拉箭头 -->
             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
               <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +142,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 选择格式 -->
+        <!-- 2. 选择格式 -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">2. 选择格式</label>
           <div class="grid grid-cols-2 gap-2">
@@ -160,7 +158,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 链接显示区域 -->
+        <!-- 3. 复制链接 -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3. 复制链接</label>
           <div class="relative">
@@ -212,12 +210,11 @@ onUnmounted(() => {
               </button>
             </div>
 
-            <!-- 节点详情模态框 -->
             <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
           </div>
         </div>
 
-        <!-- 提示信息 -->
+        <!-- Token提示 -->
         <div
           v-if="(selectedId === 'default' && config?.mytoken === 'auto') || (selectedId !== 'default' && (!config?.profileToken || config.profileToken === 'auto' || !config.profileToken.trim()))"
           class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 animate-pulse-breathing mb-4">
@@ -241,7 +238,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 格式使用提示 -->
+        <!-- 格式提示 -->
         <div v-if="selectedFormat !== '自适应'"
           class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
           <div class="flex items-start gap-3">

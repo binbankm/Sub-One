@@ -1,20 +1,55 @@
+/**
+ * ==================== Sub-One Manager - 应用级样式 ====================
+ * 
+ * 本文件包含：
+ * - Tailwind 扩展组件（按钮、输入框、模态框、Toast等）
+ * - 应用背景和装饰效果
+ * - Tailwind 自定义工具类
+ * - 应用特定的组件样式
+ * 
+ * 设计系统基础请参考：design-system.css
+ * - CSS 变量定义（颜色、间距、阴影等）
+ * - 动画和过渡效果
+ * - 高级组件（Premium 系列）
+ * 
+ * ====================================================================
+ */
+
 @import './design-system.css';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* ==================== Global Focus Ring Reset ==================== */
-/* Remove all default focus rings and outlines */
-input:focus,
-textarea:focus,
-select:focus,
-button:focus,
+/* ==================== Global Focus Management ==================== */
+/* 
+ * 可访问性改进：使用 :focus-visible 而不是完全禁用 outline
+ * - 鼠标点击时不显示焦点环
+ * - 键盘导航时显示自定义焦点样式
+ */
+
+/* 移除默认 focus 样式（鼠标点击） */
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 键盘导航时的自定义焦点样式 */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 button:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: 2px solid hsl(243, 75%, 59%);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+html.dark input:focus-visible,
+html.dark textarea:focus-visible,
+html.dark select:focus-visible,
+html.dark button:focus-visible {
+  outline-color: hsl(243, 87%, 70%);
 }
 
 /* Reset Tailwind's default focus ring */

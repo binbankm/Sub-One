@@ -4,6 +4,8 @@ import yaml from 'js-yaml';
 import { SubscriptionParser } from '../lib/shared/subscription-parser';
 import type { Node, ProcessOptions } from '../lib/shared/types';
 
+const subscriptionParser = new SubscriptionParser();
+
 const OLD_KV_KEY = 'sub_one_data_v1';
 const KV_KEY_SUBS = 'sub_one_subscriptions_v1';
 const KV_KEY_PROFILES = 'sub_one_profiles_v1';
@@ -748,7 +750,7 @@ async function handleApiRequest(request: Request, env: Env) {
 }
 
 
-const subscriptionParser = new SubscriptionParser();
+// 移除此行，已移动到顶部
 
 async function generateCombinedNodeList(context, config, userAgent, subs, prependedContent = '') {
     // 1. 处理手动节点
@@ -804,17 +806,8 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
         }
     }
 
-    // 4. 转换回字符串列表
-
-
-
-    let finalContent = uniqueNodes.map(n => n.url).join('\n');
-    if (finalContent.length > 0 && !finalContent.endsWith('\n')) finalContent += '\n';
-
-    if (prependedContent) {
-        return `${finalContent}${prependedContent}`;
-    }
-    return finalContent;
+    // 4. 返回节点对象数组，由上层决定如何序列化
+    return uniqueNodes;
 }
 
 // --- [核心修改] 订阅处理函数 ---
@@ -996,39 +989,55 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         }, 0);
         if (totalRemainingBytes > 0) {
             const formattedTraffic = formatBytes(totalRemainingBytes);
+            // 使用 encodeBase64 对名称进行编码，确保中文不乱码
             const fakeNodeName = `流量剩余 ≫ ${formattedTraffic}`;
-            prependedContentForSubconverter = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent(fakeNodeName)}`;
+            const encodedName = encodeURIComponent(fakeNodeName);
+            // 注意：这里我们构建一个虚拟的 trojan 节点用于显示流量
+            prependedContentForSubconverter = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443?allowInsecure=1#${encodedName}\n`;
         }
     }
 
-    // 使用固定的 User-Agent 请求上游订阅，避免因客户端 UA 导致被屏蔽或返回错误格式
-    // 使用 Clash.Meta UA 以获取更详细的 YAML 配置 (包含 TLS/SNI 等)
+    // 使用固定的 User-Agent 请求上游订阅
     const upstreamUserAgent = 'Clash.Meta/v1.16.0';
     console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
-    const combinedNodeList = await generateCombinedNodeList(context, config, upstreamUserAgent, targetSubs, prependedContentForSubconverter);
+
+    // 获取合并后的节点对象列表
+    const combinedNodes = await generateCombinedNodeList(context, config, upstreamUserAgent, targetSubs, prependedContentForSubconverter);
+
+    // 生成纯文本节点列表 (每行一个 URL)
+    let combinedContent = combinedNodes.map(n => n.url).join('\n');
+    if (combinedContent.length > 0 && !combinedContent.endsWith('\n')) combinedContent += '\n';
+
+    // 加上前置内容 (如流量提醒节点)
+    if (prependedContentForSubconverter) {
+        combinedContent = `${combinedContent}${prependedContentForSubconverter}`;
+    }
 
     if (targetFormat === 'base64') {
         let contentToEncode;
         if (isProfileExpired) {
-            contentToEncode = DEFAULT_EXPIRED_NODE + '\n'; // Return the expired node link for base64 clients
+            contentToEncode = DEFAULT_EXPIRED_NODE + '\n';
         } else {
-            contentToEncode = combinedNodeList;
+            contentToEncode = combinedContent;
         }
+
         const headers = {
             "Content-Type": "text/plain; charset=utf-8",
             'Cache-Control': 'no-store, no-cache',
             "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
         };
-        return new Response(btoa(unescape(encodeURIComponent(contentToEncode))), { headers });
+        // 使用 subscriptionParser.encodeBase64 替代旧的 unsafe 方法
+        return new Response(subscriptionParser.encodeBase64(contentToEncode), { headers });
     }
 
-    const base64Content = btoa(unescape(encodeURIComponent(combinedNodeList)));
+    // 为回调生成 Base64 (同样使用新方法)
+    const base64Content = subscriptionParser.encodeBase64(combinedContent);
 
     const callbackToken = await getCallbackToken(env);
     const callbackPath = profileIdentifier ? `/${token}/${profileIdentifier}` : `/${token}`;
     const callbackUrl = `${url.protocol}//${url.host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
 
-    // 保留 callback 逻辑以防万一，但主要使用 POST 方式
+    // 保留 callback 逻辑
     if (url.searchParams.get('callback_token') === callbackToken) {
         const headers = {
             "Content-Type": "text/plain; charset=utf-8",

@@ -1,3 +1,11 @@
+<!--
+  仪表盘首页 - 显示系统概览和快捷操作
+  - 励志语录轮播
+  - 订阅源、节点、订阅组统计
+  - 快捷添加按钮
+  - Bento Grid 布局
+-->
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Subscription, Profile, Node } from '../../types';
@@ -21,90 +29,29 @@ defineEmits<{
   (e: 'add-profile'): void;
 }>();
 
-// 励志语录数据
+/** 励志语录数据库 */
 const quotes = [
-  {
-    text: "成功不是终点，失败也不是终结，唯有勇气才是永恒。",
-    author: "温斯顿·丘吉尔",
-    category: "励志"
-  },
-  {
-    text: "代码如诗，每一行都是对完美的追求。",
-    author: "极客箴言",
-    category: "技术"
-  },
-  {
-    text: "今天的努力，是为了明天更好的自己。",
-    author: "佚名",
-    category: "励志"
-  },
-  {
-    text: "优秀的程序员不是写代码最多的，而是删代码最多的。",
-    author: "编程智慧",
-    category: "技术"
-  },
-  {
-    text: "保持简单，保持优雅，保持高效。",
-    author: "设计哲学",
-    category: "技术"
-  },
-  {
-    text: "每一次调试，都是与bug的一场较量。",
-    author: "程序员日常",
-    category: "幽默"
-  },
-  {
-    text: "不要害怕重构，害怕的应该是技术债。",
-    author: "代码整洁之道",
-    category: "技术"
-  },
-  {
-    text: "真正的智慧不在于知道所有答案，而在于提出正确的问题。",
-    author: "苏格拉底",
-    category: "励志"
-  },
-  {
-    text: "让代码自己说话，注释只是辅助。",
-    author: "Clean Code",
-    category: "技术"
-  },
-  {
-    text: "bug不会因为你忽视它而消失，只会在生产环境中惊艳亮相。",
-    author: "墨菲定律",
-    category: "幽默"
-  },
-  {
-    text: "持续学习，永不止步。今天比昨天更强大。",
-    author: "成长心态",
-    category: "励志"
-  },
-  {
-    text: "好的架构不是设计出来的，而是演化出来的。",
-    author: "架构之道",
-    category: "技术"
-  },
-  {
-    text: "测试不是负担，而是对代码的信心保障。",
-    author: "TDD实践",
-    category: "技术"
-  },
-  {
-    text: "编程不仅是科学，更是艺术。",
-    author: "Donald Knuth",
-    category: "技术"
-  },
-  {
-    text: "越简单的方案，越容易维护。",
-    author: "KISS原则",
-    category: "技术"
-  }
+  { text: "成功不是终点，失败也不是终结，唯有勇气才是永恒。", author: "温斯顿·丘吉尔", category: "励志" },
+  { text: "代码如诗，每一行都是对完美的追求。", author: "极客箴言", category: "技术" },
+  { text: "今天的努力，是为了明天更好的自己。", author: "佚名", category: "励志" },
+  { text: "优秀的程序员不是写代码最多的，而是删代码最多的。", author: "编程智慧", category: "技术" },
+  { text: "保持简单，保持优雅，保持高效。", author: "设计哲学", category: "技术" },
+  { text: "每一次调试，都是与bug的一场较量。", author: "程序员日常", category: "幽默" },
+  { text: "不要害怕重构，害怕的应该是技术债。", author: "代码整洁之道", category: "技术" },
+  { text: "真正的智慧不在于知道所有答案，而在于提出正确的问题。", author: "苏格拉底", category: "励志" },
+  { text: "让代码自己说话，注释只是辅助。", author: "Clean Code", category: "技术" },
+  { text: "bug不会因为你忽视它而消失，只会在生产环境中惊艳亮相。", author: "墨菲定律", category: "幽默" },
+  { text: "持续学习，永不止步。今天比昨天更强大。", author: "成长心态", category: "励志" },
+  { text: "好的架构不是设计出来的，而是演化出来的。", author: "架构之道", category: "技术" },
+  { text: "测试不是负担，而是对代码的信心保障。", author: "TDD实践", category: "技术" },
+  { text: "编程不仅是科学，更是艺术。", author: "Donald Knuth", category: "技术" },
+  { text: "越简单的方案，越容易维护。", author: "KISS原则", category: "技术" }
 ];
 
-// 当前语录
 const currentQuote = ref(quotes[0]);
 const isRefreshing = ref(false);
 
-// 获取随机语录
+/** 获取随机语录（避免重复） */
 const getRandomQuote = () => {
   let newQuote;
   do {
@@ -113,7 +60,7 @@ const getRandomQuote = () => {
   return newQuote;
 };
 
-// 刷新语录
+/** 刷新语录 */
 const refreshQuote = () => {
   isRefreshing.value = true;
   setTimeout(() => {
@@ -122,7 +69,6 @@ const refreshQuote = () => {
   }, 300);
 };
 
-// 初始化时随机选择一条语录
 onMounted(() => {
   currentQuote.value = getRandomQuote();
 });
@@ -131,11 +77,11 @@ onMounted(() => {
 <template>
   <div class="space-y-6">
 
-    <!-- 励志语录卡片 - 顶部 -->
+    <!-- 励志语录卡片 -->
     <div
       class="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-indigo-400/20 border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
 
-      <!-- 柔和背景装饰 -->
+      <!-- 背景装饰 -->
       <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50"></div>
       <div
         class="absolute top-0 right-0 w-64 h-64 bg-pink-300/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700">
@@ -145,10 +91,9 @@ onMounted(() => {
       </div>
 
       <div class="relative z-10">
-        <!-- 顶部标题栏 -->
+        <!-- 标题栏 -->
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
-            <!-- 图标装饰 -->
             <div
               class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-400/30 to-purple-400/30 backdrop-blur-md flex items-center justify-center border border-white/20">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none"
@@ -173,7 +118,6 @@ onMounted(() => {
               {{ currentQuote.category }}
             </span>
 
-            <!-- 刷新按钮 -->
             <button @click="refreshQuote" :disabled="isRefreshing"
               class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-white/20"
               title="换一条">
@@ -188,7 +132,6 @@ onMounted(() => {
 
         <!-- 语录内容 -->
         <div :key="currentQuote.text" class="quote-content animate-fadeIn">
-          <!-- 语录文本 -->
           <blockquote class="my-3">
             <p class="text-gray-800 dark:text-white text-lg md:text-xl font-semibold leading-relaxed mb-2">
               "{{ currentQuote.text }}"
@@ -205,10 +148,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Bento Grid 布局核心 -->
+    <!-- Bento Grid 布局 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
 
-      <!-- 1. 核心指标卡片 (占据 2 列) -->
+      <!-- 核心指标卡片 (占2列) -->
       <div
         class="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-indigo-500/30 to-purple-600/30 border border-indigo-300/20 rounded-3xl p-6 shadow-xl shadow-indigo-500/10 relative overflow-hidden group min-h-[220px]">
         <!-- 背景装饰 -->
@@ -255,7 +198,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 2. 智能更新卡片 (占据 1 列) -->
+      <!-- 智能更新卡片 -->
       <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
         class="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between h-full min-h-[220px]">
 
@@ -287,7 +230,7 @@ onMounted(() => {
         </div>
       </button>
 
-      <!-- 3. 数据指标行 (3个等宽卡片) -->
+      <!-- 数据指标卡片 (3个) -->
 
       <!-- 节点池 -->
       <div
@@ -359,7 +302,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 4. 快捷操作行 (3个横向卡片) -->
+      <!-- 快捷操作按钮 (3个) -->
       <button @click="$emit('add-subscription')"
         class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 min-h-[120px]">
         <div
@@ -432,13 +375,11 @@ onMounted(() => {
   animation: fadeIn 0.5s ease-out;
 }
 
-/* 语录卡片悬浮效果增强 */
 .quote-content:hover {
   transform: scale(1.01);
   transition: transform 0.3s ease;
 }
 
-/* 自定义脉动动画 */
 @keyframes pulse {
 
   0%,

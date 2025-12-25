@@ -79,7 +79,8 @@ const deleteSelected = () => {
 const selectedCount = computed(() => selectedProfileIds.value.size);
 
 const handleClickOutside = (event: Event) => {
-  if (showProfilesMoreMenu.value && profilesMoreMenuRef.value && !profilesMoreMenuRef.value.contains(event.target as Node)) {
+  // 使用 globalThis.Node 避免与自定义 Node 类型冲突，确保类型安全
+  if (showProfilesMoreMenu.value && profilesMoreMenuRef.value && !profilesMoreMenuRef.value.contains(event.target as globalThis.Node)) {
     showProfilesMoreMenu.value = false;
   }
 };
@@ -209,25 +210,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
-.slide-fade-sm-enter-active,
-.slide-fade-sm-leave-active {
-  transition: all 0.2s ease-out;
-}
-
-.slide-fade-sm-enter-from,
-.slide-fade-sm-leave-to {
-  transform: translateY(-10px);
-  opacity: 0;
-}
+/* 过渡动画已移至 design-system.css 全局定义 */
 </style>
+

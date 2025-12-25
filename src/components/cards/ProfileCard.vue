@@ -1,3 +1,8 @@
+<!--
+  订阅组卡片组件 - 显示订阅组信息
+  支持启用/禁用、编辑、删除、复制链接、查看节点等功能
+-->
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Profile, Subscription } from '../../types';
@@ -22,15 +27,12 @@ const emit = defineEmits<{
   (e: 'toggleSelect'): void;
 }>();
 
-// 计算实际的节点数量
+/** 计算总节点数（手动节点 + 已启用订阅的节点） */
 const totalNodeCount = computed(() => {
-  // 手动节点数量
   const manualNodeCount = props.profile.manualNodes.length;
-
-  // 订阅节点数量
+  
   const subscriptionNodeCount = props.profile.subscriptions.reduce((total, subId) => {
     const subscription = props.allSubscriptions.find(sub => sub.id === subId);
-    // 只有当订阅存在且已启用时，才计入节点数
     if (subscription && subscription.enabled) {
       return total + (subscription.nodeCount || 0);
     }
@@ -39,7 +41,6 @@ const totalNodeCount = computed(() => {
 
   return manualNodeCount + subscriptionNodeCount;
 });
-
 </script>
 
 <template>
@@ -52,7 +53,7 @@ const totalNodeCount = computed(() => {
     }" @click="isBatchMode ? emit('toggleSelect') : null">
 
     <div class="relative z-10 flex items-start justify-between gap-3">
-      <!-- 复选框（批量模式） -->
+      <!-- 批量模式复选框 -->
       <div v-if="isBatchMode" class="flex-shrink-0" @click.stop>
         <label class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" :checked="isSelected" @change="emit('toggleSelect')"
@@ -60,6 +61,7 @@ const totalNodeCount = computed(() => {
         </label>
       </div>
 
+      <!-- 订阅组信息 -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-2">
           <div
@@ -79,6 +81,7 @@ const totalNodeCount = computed(() => {
         </p>
       </div>
 
+      <!-- 操作按钮 -->
       <div class="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
         <button @click.stop="emit('edit')"
           class="p-1.5 rounded-lg hover:bg-indigo-500/10 text-gray-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200"
@@ -103,7 +106,9 @@ const totalNodeCount = computed(() => {
 
     <div class="flex-grow"></div>
 
+    <!-- 底部操作区 -->
     <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+      <!-- 启用/禁用开关 -->
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" :checked="profile.enabled"
           @change="$emit('change', { ...profile, enabled: ($event.target as HTMLInputElement).checked })"
@@ -115,6 +120,7 @@ const totalNodeCount = computed(() => {
           '已启用' : '已禁用' }}</span>
       </label>
 
+      <!-- 操作按钮组 -->
       <div class="flex items-center gap-2 flex-shrink-0">
         <button @click.stop="emit('showNodes')"
           class="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 whitespace-nowrap"

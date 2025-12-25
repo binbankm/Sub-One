@@ -1,18 +1,40 @@
+<!--
+  ==================== 节点过滤规则编辑器 ====================
+  
+  功能说明：
+  - 可视化编辑节点过滤规则
+  - 支持协议、地区、关键词三种过滤维度
+  - 排除模式（黑名单）和保留模式（白名单）
+  - 可视化模式和手动编辑模式切换
+  
+  规则格式：
+  - 排除: proto:ss,vmess 或 (HK|TW)
+  - 保留: keep:proto:ss 或 keep:(HK|TW)
+  
+  ==================================================
+-->
+
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
 import Modal from '../modals/BaseModal.vue';
 
+// ==================== Props 和 Emit ====================
+
 const props = withDefaults(defineProps<{
+    /** 绑定的过滤规则字符串 */
     modelValue?: string;
 }>(), {
     modelValue: ''
 });
 
 const emit = defineEmits<{
+    /** 更新过滤规则 */
     (e: 'update:modelValue', value: string): void;
 }>();
 
-// 预定义数据
+// ==================== 预定义数据 ====================
+
+/** 支持的协议列表 */
 const protocols = [
     { label: 'Shadowsocks', value: 'ss', icon: '🔒' },
     { label: 'VMess', value: 'vmess', icon: '⚡' },
@@ -25,6 +47,7 @@ const protocols = [
     { label: 'Reality', value: 'reality', icon: '🌐' }
 ];
 
+/** 常用地区列表（支持多种别名） */
 const regions = [
     { label: '香港', value: 'HK|Hong Kong|HongKong|香港|Hong K', flag: '🇭🇰' },
     { label: '台湾', value: 'TW|Taiwan|Tai Wan|台湾|臺灣|台北|Taipei', flag: '🇹🇼' },
@@ -43,6 +66,7 @@ const regions = [
     { label: '荷兰', value: 'NL|Netherlands|Holland|荷兰|阿姆斯特丹', flag: '🇳🇱' }
 ];
 
+/** 常用关键词快捷选择 */
 const commonKeywords = [
     { value: '高倍率', color: 'red' },
     { value: '低倍率', color: 'green' },
@@ -65,15 +89,32 @@ const commonKeywords = [
     { value: '测试', color: 'warmGray' }
 ];
 
-// 状态
+// ==================== 响应式状态 ====================
+
+/** 过滤模式：exclude(排除/黑名单) 或 keep(保留/白名单) */
 const mode = ref<'exclude' | 'keep'>('exclude');
+
+/** 已选协议列表 */
 const selectedProtocols = ref<string[]>([]);
+
+/** 已选地区列表 */
 const selectedRegions = ref<string[]>([]);
+
+/** 自定义关键词列表 */
 const customKeywords = ref<string[]>([]);
+
+/** 新关键词输入 */
 const newKeyword = ref('');
+
+/** 是否手动编辑模式 */
 const isManualMode = ref(false);
 
-// 计算统计信息
+/** 清空确认对话框 */
+const showClearConfirm = ref(false);
+
+// ==================== 计算属性 ====================
+
+/** 规则总数统计 */
 const ruleCount = computed(() => {
     let count = 0;
     if (selectedProtocols.value.length > 0) count++;
@@ -82,27 +123,37 @@ const ruleCount = computed(() => {
     return count;
 });
 
-// 解析逻辑
+// ==================== 解析和生成逻辑 ====================
+
+/**
+ * 解析规则字符串
+ * 将规则字符串解析为可视化选项
+ */
 const parseValue = (val: string) => {
     if (!val) return;
 
     const lines = val.split('\n').map(l => l.trim()).filter(l => l);
     if (lines.length === 0) return;
 
+    // 检测模式
     const hasKeep = lines.some(l => l.startsWith('keep:'));
     mode.value = hasKeep ? 'keep' : 'exclude';
 
+    // 移除 keep: 前缀
     const cleanLines = lines.map(l => l.replace(/^keep:/, ''));
 
     let foundProtocols: string[] = [];
     let foundRegions: string[] = [];
     let foundKeywords: string[] = [];
 
+    // 解析每一行
     cleanLines.forEach(line => {
         if (line.startsWith('proto:')) {
+            // 协议规则
             const protos = line.replace('proto:', '').split(',');
             foundProtocols.push(...protos);
         } else {
+            // 地区或关键词规则
             let matchedRegion = false;
             for (const r of regions) {
                 if (line === `(${r.value})` || line === r.value) {
@@ -113,6 +164,7 @@ const parseValue = (val: string) => {
             }
 
             if (!matchedRegion) {
+                // 作为关键词处理
                 const cleanKey = line.replace(/^\(/, '').replace(/\)$/, '');
                 const keys = cleanKey.split('|');
                 foundKeywords.push(...keys);
@@ -120,27 +172,34 @@ const parseValue = (val: string) => {
         }
     });
 
+    // 去重并赋值
     selectedProtocols.value = [...new Set(foundProtocols)];
     selectedRegions.value = [...new Set(foundRegions)];
     customKeywords.value = [...new Set(foundKeywords)];
 };
 
-// 生成规则字符串
+/**
+ * 生成规则字符串
+ * 将可视化选项转换为规则字符串
+ */
 const generateString = () => {
     if (isManualMode.value) return props.modelValue;
 
     const lines: string[] = [];
     const prefix = mode.value === 'keep' ? 'keep:' : '';
 
+    // 协议规则
     if (selectedProtocols.value.length > 0) {
         lines.push(`${prefix}proto:${selectedProtocols.value.join(',')}`);
     }
 
+    // 地区规则
     if (selectedRegions.value.length > 0) {
         const regionPattern = selectedRegions.value.join('|');
         lines.push(`${prefix}(${regionPattern})`);
     }
 
+    // 关键词规则
     if (customKeywords.value.length > 0) {
         const keywordPattern = customKeywords.value.join('|');
         lines.push(`${prefix}(${keywordPattern})`);
@@ -149,21 +208,25 @@ const generateString = () => {
     return lines.join('\n');
 };
 
-// 监听状态变化
+// ==================== 监听器 ====================
+
+/** 监听状态变化，自动生成规则 */
 watch([mode, selectedProtocols, selectedRegions, customKeywords], () => {
     if (!isManualMode.value) {
         emit('update:modelValue', generateString());
     }
 }, { deep: true });
 
-// 初始化
+/** 初始化时解析规则 */
 onMounted(() => {
     if (props.modelValue) {
         parseValue(props.modelValue);
     }
 });
 
-// 操作方法
+// ==================== 操作方法 ====================
+
+/** 添加自定义关键词 */
 const addKeyword = () => {
     const trimmed = newKeyword.value.trim();
     if (trimmed && !customKeywords.value.includes(trimmed)) {
@@ -172,10 +235,12 @@ const addKeyword = () => {
     }
 };
 
+/** 移除关键词 */
 const removeKeyword = (k: string) => {
     customKeywords.value = customKeywords.value.filter(item => item !== k);
 };
 
+/** 切换地区选择 */
 const toggleRegion = (rValue: string) => {
     const index = selectedRegions.value.indexOf(rValue);
     if (index === -1) {
@@ -185,6 +250,7 @@ const toggleRegion = (rValue: string) => {
     }
 };
 
+/** 切换协议选择 */
 const toggleProtocol = (pValue: string) => {
     const index = selectedProtocols.value.indexOf(pValue);
     if (index === -1) {
@@ -194,6 +260,7 @@ const toggleProtocol = (pValue: string) => {
     }
 };
 
+/** 切换关键词 */
 const toggleKeyword = (k: string) => {
     if (customKeywords.value.includes(k)) {
         removeKeyword(k);
@@ -202,13 +269,12 @@ const toggleKeyword = (k: string) => {
     }
 };
 
-// 确认清空对话框状态
-const showClearConfirm = ref(false);
-
+/** 显示清空确认对话框 */
 const clearAll = () => {
     showClearConfirm.value = true;
 };
 
+/** 确认清空所有规则 */
 const confirmClear = () => {
     selectedProtocols.value = [];
     selectedRegions.value = [];
@@ -218,13 +284,16 @@ const confirmClear = () => {
 </script>
 
 <template>
+    <!-- 编辑器容器 -->
     <div
         class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 space-y-5 shadow-lg">
 
         <!-- 顶部：模式切换和统计 -->
         <div class="flex items-center justify-between">
+            <!-- 模式切换按钮组 -->
             <div
                 class="flex bg-white dark:bg-gray-800 rounded-xl p-1.5 shadow-sm border border-gray-200 dark:border-gray-700">
+                <!-- 排除模式 (黑名单) -->
                 <button @click="mode = 'exclude'"
                     class="px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                     :class="mode === 'exclude'
@@ -234,6 +303,7 @@ const confirmClear = () => {
                     <span>排除模式</span>
                     <span v-if="mode === 'exclude'" class="text-xs opacity-75">(黑名单)</span>
                 </button>
+                <!-- 保留模式 (白名单) -->
                 <button @click="mode = 'keep'"
                     class="px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 flex items-center gap-2"
                     :class="mode === 'keep'
@@ -245,6 +315,7 @@ const confirmClear = () => {
                 </button>
             </div>
 
+            <!-- 统计和清空按钮 -->
             <div class="flex items-center gap-3">
                 <span v-if="ruleCount > 0"
                     class="text-xs px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full font-medium">
@@ -303,7 +374,7 @@ const confirmClear = () => {
             </div>
         </div>
 
-        <!-- 关键词 -->
+        <!-- 关键词过滤 -->
         <div class="space-y-3">
             <div class="flex items-center justify-between">
                 <label class="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">

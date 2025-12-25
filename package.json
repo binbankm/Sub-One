@@ -10,9 +10,11 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
     "js-yaml": "^4.1.0",
+    "lodash-es": "^4.17.22",
     "pinia": "^3.0.3",
     "vue": "^3.4.27",
     "vuedraggable": "^4.1.0"

@@ -2,25 +2,41 @@
 <html lang="zh-CN">
 
 <head>
+  <!-- 字符编码声明 - 使用 UTF-8 编码，支持中文和各种语言字符 -->
   <meta charset="UTF-8" />
+  
+  <!-- 网站图标 - 使用内联 SVG 格式的闪电图标 -->
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' d='M13 10V3L4 14h7v7l9-11h-7z' /%3e%3c/svg%3e">
+  
+  <!-- 视口配置 - 移动端适配设置 -->
+  <!-- viewport-fit=cover: 支持 iPhone X 等刘海屏设备 -->
+  <!-- user-scalable=no: 禁止用户缩放，保持界面稳定 -->
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- SEO 元数据 - 网站描述 -->
   <meta name="description" content="Sub-One Manager - 现代化订阅管理工具" />
+  
+  <!-- 主题颜色 - 设置浏览器地址栏颜色（移动端） -->
   <meta name="theme-color" content="#6366f1" />
 
-  <!-- Google Fonts - Inter for Premium Typography -->
+  <!-- Google Fonts - 引入 Inter 字体，提供高品质的现代排版 -->
+  <!-- Inter: 一款专为用户界面设计的开源字体，可读性强 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
 
+  <!-- 网页标题 -->
   <title>Sub-One Manager</title>
 </head>
 
 <body>
+  <!-- Vue 应用挂载点 - Vue 会将整个应用渲染到这个 div 中 -->
   <div id="app"></div>
+  
+  <!-- 主脚本入口 - Vite 会处理这个模块并注入编译后的代码 -->
   <script type="module" src="/src/main.ts"></script>
 </body>
 

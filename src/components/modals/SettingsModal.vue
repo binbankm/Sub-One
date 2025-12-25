@@ -262,13 +262,15 @@ const configPresets = [
 
               <!-- 预设选择 -->
               <select
-                class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all"
                 @change="(e) => settings.subConverter = (e.target as HTMLSelectElement).value">
-                <option value="" disabled :selected="!converterPresets.some(p => p.value === settings.subConverter)">
+                <option value="" disabled :selected="!converterPresets.some(p => p.value === settings.subConverter)"
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   选择预设或自定义
                 </option>
                 <option v-for="preset in converterPresets" :key="preset.value" :value="preset.value"
-                  :selected="preset.value === settings.subConverter">
+                  :selected="preset.value === settings.subConverter"
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   {{ preset.label }}
                 </option>
               </select>
@@ -287,13 +289,15 @@ const configPresets = [
 
               <!-- 预设选择 -->
               <select
-                class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all"
                 @change="(e) => settings.subConfig = (e.target as HTMLSelectElement).value">
-                <option value="" disabled :selected="!configPresets.some(p => p.value === settings.subConfig)">
+                <option value="" disabled :selected="!configPresets.some(p => p.value === settings.subConfig)"
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   选择预设或自定义
                 </option>
                 <option v-for="preset in configPresets" :key="preset.value" :value="preset.value"
-                  :selected="preset.value === settings.subConfig">
+                  :selected="preset.value === settings.subConfig"
+                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                   {{ preset.label }}
                 </option>
               </select>
