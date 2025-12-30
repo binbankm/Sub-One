@@ -14,19 +14,9 @@ export interface OriginalProxy {
     [key: string]: string | number | boolean | undefined | string[] | Record<string, unknown>;
 }
 
-export interface Node {
-    id: string;
-    name: string;
-    url: string;
-    protocol: string;
-    enabled: boolean;
-    type: string;
-    subscriptionName: string;
-    originalProxy?: OriginalProxy;
-    nodeCount?: number;
-    userInfo?: UserInfo;
-    exclude?: string;
-}
+// Node 类型已从 lib/shared/types.ts 导入，不在此处重复定义
+export { Node } from '../../lib/shared/types';
+
 
 export interface Subscription {
     id: string;

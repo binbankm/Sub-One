@@ -3,14 +3,21 @@
         "target": "es2020",
         "module": "commonjs",
         "outDir": "./dist",
-        "rootDir": "./backend",
+        "rootDir": "..",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": "..",
+        "paths": {
+            "@lib/*": [
+                "lib/*"
+            ]
+        }
     },
     "include": [
-        "backend/**/*"
+        "backend/**/*",
+        "../lib/**/*"
     ],
     "exclude": [
         "node_modules"

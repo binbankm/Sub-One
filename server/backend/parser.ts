@@ -811,12 +811,12 @@ export class SubscriptionParser {
 
         if (isWhitelist) {
             // 白名单模式：匹配任一条件即保留
-            if (protocols.has(node.protocol)) return true;
+            if (node.protocol && protocols.has(node.protocol)) return true;
             if (nameRegex && nameRegex.test(node.name)) return true;
             return false;
         } else {
             // 黑名单模式：匹配任一条件即排除
-            if (protocols.has(node.protocol)) return false;
+            if (node.protocol && protocols.has(node.protocol)) return false;
             if (nameRegex && nameRegex.test(node.name)) return false;
             return true;
         }

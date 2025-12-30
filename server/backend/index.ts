@@ -6,7 +6,9 @@ import { config } from './config';
 import apiRoutes from './routes';
 import { cronService } from './services';
 import { storage } from './storage';
+import { subscriptionParser } from './parser';
 import { Settings, Subscription, Profile } from './types';
+import { Node } from '../../lib/shared/types';
 import { sendTgNotification, formatBytes } from './utils';
 import {
     KV_KEY_SUBS,
@@ -15,6 +17,13 @@ import {
     DEFAULT_EXPIRED_NODE,
     defaultSettings
 } from './constants';
+import {
+    ClashGenerator,
+    SingBoxGenerator,
+    SurgeGenerator,
+    LoonGenerator,
+    QuantumultXGenerator
+} from './generators';
 // fetch is global in Node 20+
 
 const app = express();
@@ -53,11 +62,86 @@ app.get('/proxy-content', async (req, res) => {
     }
 });
 
-// Subscription Handler
+// ==================== 辅助函数：生成合并后的节点列表 ====================
+async function generateCombinedNodeList(
+    config: any,
+    userAgent: string,
+    subs: any[],
+    prependedTrafficNode = ''
+): Promise<Node[]> {
+    // 1. 处理手动节点
+    const manualNodes = subs.filter((sub: any) => !sub.url.toLowerCase().startsWith('http'));
+    const parsedManualNodes = subscriptionParser.parseNodeLines(
+        manualNodes.map((n: any) => n.url),
+        '手动节点'
+    );
+
+    const processedManualNodes = subscriptionParser.processNodes(
+        parsedManualNodes,
+        '手动节点',
+        { prependSubName: config.prependSubName }
+    );
+
+    // 2. 处理 HTTP 订阅
+    const httpSubs = subs.filter((sub: any) => sub.url.toLowerCase().startsWith('http'));
+    const subPromises = httpSubs.map(async (sub: any) => {
+        try {
+            const response = await Promise.race([
+                fetch(sub.url, {
+                    headers: { 'User-Agent': userAgent },
+                    redirect: "follow"
+                }),
+                new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+            ]);
+
+            if (!response.ok) return [];
+            const text = await response.text();
+
+            // parse 方法内部会调用 processNodes
+            return subscriptionParser.parse(text, sub.name, {
+                exclude: sub.exclude,
+                prependSubName: config.prependSubName
+            });
+        } catch (e) {
+            console.error(`Failed to fetch/parse sub ${sub.name}:`, e);
+            return [];
+        }
+    });
+
+    const processedSubResults = await Promise.all(subPromises);
+
+    // 3. 添加流量提示节点 (如果有)
+    let allNodes = [...processedManualNodes, ...processedSubResults.flat()];
+
+    if (prependedTrafficNode) {
+        // 解析流量提示节点并添加到开头
+        const trafficNode = subscriptionParser.parseNodeLine(prependedTrafficNode, '系统');
+        if (trafficNode) {
+            allNodes.unshift(trafficNode);
+        }
+    }
+
+    // 4. 去重 (基于 URL)
+    const uniqueNodes: Node[] = [];
+    const seenUrls = new Set();
+
+    for (const node of allNodes) {
+        if (!node || !node.url) continue;
+        if (!seenUrls.has(node.url)) {
+            seenUrls.add(node.url);
+            uniqueNodes.push(node);
+        }
+    }
+
+    return uniqueNodes;
+}
+
+// ==================== 订阅处理主函数 ====================
 const handleSubRequest = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const userAgentHeader = req.headers['user-agent'] || "Unknown";
     const { token, profile: profileIdentifier } = req.params;
 
+    // 1. 加载数据
     const [settingsData, subsData, profilesData] = await Promise.all([
         storage.get<Settings>(KV_KEY_SETTINGS),
         storage.get<Subscription[]>(KV_KEY_SUBS),
@@ -71,16 +155,17 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
 
     let targetSubs: Subscription[] = [];
     let subName = appConfig.FileName;
-    let effectiveSubConverter = appConfig.subConverter;
-    let effectiveSubConfig = appConfig.subConfig;
     let isProfileExpired = false;
 
+    // 2. 身份验证和筛选订阅
     if (profileIdentifier) {
+        // 订阅组模式
         if (!token || token !== appConfig.profileToken) {
             return next();
         }
         const profile = allProfiles.find(p => (p.customId && p.customId === profileIdentifier) || p.id === profileIdentifier);
         if (profile && profile.enabled) {
+            // 检查过期
             if (profile.expiresAt) {
                 const expiryDate = new Date(profile.expiresAt);
                 if (new Date() > expiryDate) {
@@ -102,28 +187,21 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
                     return item.enabled && belongsToProfile;
                 });
             }
-            effectiveSubConverter = profile.subConverter && profile.subConverter.trim() !== '' ? profile.subConverter : appConfig.subConverter;
-            effectiveSubConfig = profile.subConfig && profile.subConfig.trim() !== '' ? profile.subConfig : appConfig.subConfig;
         } else {
             return res.status(404).send('Profile not found or disabled');
         }
     } else {
+        // 普通模式
         if (!token || token !== appConfig.mytoken) {
             return next();
         }
         targetSubs = allSubs.filter(s => s.enabled);
     }
 
-    if (!effectiveSubConverter || effectiveSubConverter.trim() === '') {
-        effectiveSubConverter = defaultSettings.subConverter;
-    }
-    if (!effectiveSubConfig || effectiveSubConfig.trim() === '') {
-        effectiveSubConfig = defaultSettings.subConfig;
-    }
-
+    // 3. 确定输出格式
     let targetFormat = req.query.target as string;
     if (!targetFormat) {
-        const supportedFormats = ['clash', 'singbox', 'surge', 'loon', 'base64', 'v2ray', 'trojan'];
+        const supportedFormats = ['clash', 'singbox', 'surge', 'loon', 'quanx', 'base64', 'v2ray', 'trojan'];
         for (const format of supportedFormats) {
             if (req.query[format] !== undefined) {
                 targetFormat = (format === 'v2ray' || format === 'trojan') ? 'base64' : format;
@@ -132,6 +210,7 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
         }
     }
 
+    // User-Agent 自动识别
     if (!targetFormat) {
         const ua = userAgentHeader.toLowerCase();
         const uaMapping = [
@@ -149,14 +228,15 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
     }
     if (!targetFormat) targetFormat = 'base64';
 
-    // Notification (simplified)
+    // 4. Telegram 通知
     if (!req.query.callback_token) {
         const clientIp = req.ip || 'N/A';
         const message = `🛰️ *订阅被访问* 🛰️\n\n*域名:* \`${req.hostname}\`\n*客户端:* \`${userAgentHeader}\`\n*IP 地址:* \`${clientIp}\`\n*请求格式:* \`${targetFormat}\``;
         sendTgNotification(appConfig, message).catch(console.error);
     }
 
-    let prependedContentForSubconverter = '';
+    // 5. 生成流量提示节点
+    let prependedTrafficNode = '';
     if (!isProfileExpired) {
         const totalRemainingBytes = targetSubs.reduce((acc, sub) => {
             if (sub.enabled && sub.userInfo && sub.userInfo.total !== undefined && sub.userInfo.total > 0) {
@@ -168,164 +248,77 @@ const handleSubRequest = async (req: express.Request, res: express.Response, nex
         if (totalRemainingBytes > 0) {
             const formattedTraffic = formatBytes(totalRemainingBytes);
             const fakeNodeName = `流量剩余 ≫ ${formattedTraffic}`;
-            prependedContentForSubconverter = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent(fakeNodeName)}`;
+            prependedTrafficNode = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent(fakeNodeName)}`;
         }
     }
 
-    // --- Pass-through Mode Implementation ---
-
-    // 1. Collect all subscription URLs
-    const subscriptionUrls: string[] = [];
-    const manualNodes: string[] = [];
-
-    // Construct base URL for the proxy
-    // We use the request's host to ensure the Subconverter (external or internal) can reach us back
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-
-    targetSubs.forEach(sub => {
-        if (sub.url.startsWith('http')) {
-            // Use proxy to bypass WAF
-            let proxyUrl = `${baseUrl}/proxy-content?url=${encodeURIComponent(sub.url)}`;
-            if (sub.exclude && sub.exclude.trim() !== '') {
-                // Subconverter supports 'exclude' param for each URL, but it's tricky with pipe separation.
-                // Better approach: Subconverter's 'exclude' param applies globally or we need to handle it per sub.
-                // However, standard Subconverter usage with pipes (|) merges all nodes then applies filters.
-                // If we want per-subscription filtering, we might need to do it in the proxy or rely on Subconverter's regex.
-
-                // Actually, Subconverter applies 'exclude' to the FINAL list.
-                // If we want to filter BEFORE Subconverter (which we do if we want per-sub rules),
-                // we should probably handle it in the /proxy-content endpoint or use the internal parser.
-
-                // BUT, for now, let's pass it to the proxy endpoint so it can filter it?
-                // The current /proxy-content just fetches and returns. It doesn't parse.
-
-                // Wait, if we are using Subconverter, we usually pass 'exclude' to IT.
-                // But Subconverter's 'exclude' is global for the whole result.
-                // If user set exclude rules on a SPECIFIC subscription in the UI, they expect it to apply to THAT subscription.
-                // If we have multiple subs, global exclude might be okay if the rules are specific enough.
-
-                // Let's collect all exclude rules and pass them to Subconverter globally?
-                // Or, better: Implement filtering in /proxy-content?
-                // No, /proxy-content is just a stream proxy.
-
-                // Let's look at how we handle it in Internal Base64.
-                // In Internal Base64, we parse and filter per sub.
-
-                // For Subconverter path:
-                // We can't easily do per-sub filtering unless we download, filter, and re-host (which is what Internal Base64 does).
-                // If we just pass URLs to Subconverter, we rely on its global 'exclude' param.
-
-                // Let's try to append the exclude rule to the Subconverter URL parameters.
-                // We need to collect ALL exclude rules from all targetSubs.
-            }
-            subscriptionUrls.push(proxyUrl);
-        } else {
-            manualNodes.push(sub.url);
-        }
-    });
-
-    // 2. Handle manual nodes (convert to data URI)
-    // Also prepend traffic info or expired info if needed
-    if (prependedContentForSubconverter) {
-        manualNodes.unshift(prependedContentForSubconverter);
-    }
-
-    // If profile is expired, we ignore everything else and just show the expired node
-    if (isProfileExpired) {
-        // Clear previous collections
-        subscriptionUrls.length = 0;
-        manualNodes.length = 0;
-        manualNodes.push(DEFAULT_EXPIRED_NODE);
-    }
-
-    if (manualNodes.length > 0) {
-        const manualContent = manualNodes.join('\n');
-        const base64Manual = Buffer.from(manualContent).toString('base64');
-        // Subconverter supports data URI for raw content
-        subscriptionUrls.push(`data:text/plain;base64,${base64Manual}`);
-    }
-
-    // 3. Construct Subconverter URL
-    // Use configured address, but fallback to internal if empty
-    let cleanSubConverter = effectiveSubConverter.replace(/\/$/, '');
-    if (!cleanSubConverter) {
-        cleanSubConverter = 'api.v1.mk';
-    }
-    if (!cleanSubConverter.startsWith('http')) {
-        cleanSubConverter = `http://${cleanSubConverter}`;
-    }
-
-    const subconverterUrl = new URL(`${cleanSubConverter}/sub`);
-    subconverterUrl.searchParams.set('target', targetFormat === 'base64' ? 'mixed' : targetFormat);
-    subconverterUrl.searchParams.set('url', subscriptionUrls.join('|'));
-
-    if (targetFormat === 'clash') {
-        subconverterUrl.searchParams.set('ver', 'meta');
-    }
-
-    if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
-        subconverterUrl.searchParams.set('config', effectiveSubConfig);
-    }
-    subconverterUrl.searchParams.set('new_name', 'true');
-    subconverterUrl.searchParams.set('filename', subName); // Set filename for Content-Disposition
-
-    // Collect and apply exclude rules
-    const allExcludeRules = targetSubs
-        .filter(sub => sub.exclude !== undefined && sub.exclude.trim() !== '')
-        .map(sub => sub.exclude!.trim())
-        .join('\n'); // Join with newline for regex OR logic if needed, but Subconverter uses regex directly.
-    // Actually Subconverter 'exclude' param expects a regex string.
-    // If we have multiple rules from multiple subs, we should probably join them with '|'.
-    // But wait, the 'exclude' field in UI allows multiple lines (regexes).
-    // So we should join all lines from all subs with '|'.
-
-    if (allExcludeRules) {
-        // Split by newline to get individual rules, then join with |
-        const combinedRegex = allExcludeRules.split(/\r?\n/).map(r => r.trim()).filter(Boolean).join('|');
-        if (combinedRegex) {
-            subconverterUrl.searchParams.set('exclude', combinedRegex);
-        }
-    }
-
-    // 4. Proxy the request
     try {
-        // We use node-fetch to stream the response
-        const subResponse = await fetch(subconverterUrl.toString(), {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
+        // 6. 生成合并后的节点列表
+        const nodes = await generateCombinedNodeList(
+            appConfig,
+            userAgentHeader,
+            targetSubs,
+            prependedTrafficNode
+        );
 
-        if (!subResponse.ok) {
-            const errorText = await subResponse.text();
-            console.error(`Subconverter error ${subResponse.status}: ${errorText}`);
-            return res.status(502).send(`Error connecting to subconverter: ${subResponse.status} ${errorText}`);
+        // 7. 根据格式生成配置
+        let configContent: string;
+        let contentType: string;
+        let fileExtension: string;
+
+        switch (targetFormat) {
+            case 'clash':
+                configContent = ClashGenerator.generate(nodes, subName);
+                contentType = 'text/yaml; charset=utf-8';
+                fileExtension = 'yaml';
+                break;
+
+            case 'singbox':
+                configContent = SingBoxGenerator.generate(nodes, subName);
+                contentType = 'application/json; charset=utf-8';
+                fileExtension = 'json';
+                break;
+
+            case 'surge':
+                configContent = SurgeGenerator.generate(nodes, subName);
+                contentType = 'text/plain; charset=utf-8';
+                fileExtension = 'conf';
+                break;
+
+            case 'loon':
+                configContent = LoonGenerator.generate(nodes, subName);
+                contentType = 'text/plain; charset=utf-8';
+                fileExtension = 'conf';
+                break;
+
+            case 'quanx':
+                configContent = QuantumultXGenerator.generate(nodes, subName);
+                contentType = 'text/plain; charset=utf-8';
+                fileExtension = 'conf';
+                break;
+
+            case 'base64':
+            default:
+                // Base64 编码的节点列表
+                const nodeUrls = nodes.map(n => n.url).join('\n');
+                configContent = Buffer.from(nodeUrls).toString('base64');
+                contentType = 'text/plain; charset=utf-8';
+                fileExtension = 'txt';
+                break;
         }
 
-        // Forward headers
-        const contentType = subResponse.headers.get('content-type') || 'text/plain; charset=utf-8';
-        const contentDisposition = subResponse.headers.get('content-disposition');
-
+        // 8. 返回配置
         res.set({
             'Content-Type': contentType,
-            'Cache-Control': 'no-store, no-cache'
+            'Cache-Control': 'no-store, no-cache',
+            'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}.${fileExtension}`
         });
 
-        if (contentDisposition) {
-            res.set({
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Cache-Control': 'no-store, no-cache',
-                'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}`
-            });
-        } else {
-            res.set('Content-Disposition', `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
-        }
-
-        // Read body as text and send (safer than piping Web Streams)
-        const responseText = await subResponse.text();
-        res.send(responseText);
+        res.send(configContent);
 
     } catch (error: unknown) {
-        console.error(`Subconverter proxy error: ${error instanceof Error ? error.message : String(error)}`);
-        res.status(502).send(`Error connecting to subconverter: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`Configuration generation error: ${error instanceof Error ? error.message : String(error)}`);
+        res.status(500).send(`Error generating configuration: ${error instanceof Error ? error.message : String(error)}`);
     }
 };
 
