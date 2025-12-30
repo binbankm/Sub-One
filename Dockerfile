@@ -22,12 +22,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy Backend
+# Copy Backend (compiled files include full structure due to rootDir:  "..")
+# The server/dist folder contains: server/backend/*.js and lib/**/*.js
 COPY --from=builder /app/server/dist ./server/dist
-COPY --from=builder /app/server/package.json ./server/package.json
-# We install production dependencies only for the runtime
-WORKDIR /app/server
+
+# Install production dependencies at root level to ensure all modules can find them
+# This fixes the issue where lib/shared/generators/*.js cannot find modules installed in server/node_modules
+COPY --from=builder /app/server/package.json ./package.json
 RUN npm install --production
+
+# Move files to correct location (flattening the structure a bit if needed)
+# Currently server/dist contains "server" and "lib", we want them in /app
+RUN cp -r server/dist/* . && rm -rf server/dist
 
 # Copy Frontend Build
 WORKDIR /app
@@ -43,4 +49,4 @@ ENV DATA_DIR=/app/data
 
 EXPOSE 3055
 
-CMD ["node", "server/dist/index.js"]
+CMD ["node", "server/backend/index.js"]
