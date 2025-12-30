@@ -21,7 +21,7 @@ const emit = defineEmits<{
   (e: 'save-sort'): void;
   (e: 'toggle-sort'): void;
   (e: 'delete-all-subs'): void;
-  (e: 'drag-end', evt: any): void;
+  (e: 'drag-end', evt: unknown): void;
   (e: 'delete-sub', id: string): void;
   (e: 'toggle-sub', sub: Subscription): void;
   (e: 'update-sub', id: string): void;
@@ -99,7 +99,8 @@ const deleteSelected = () => {
 const selectedCount = computed(() => selectedSubIds.value.size);
 
 const handleClickOutside = (event: Event) => {
-  if (showSubsMoreMenu.value && subsMoreMenuRef.value && !subsMoreMenuRef.value.contains(event.target as Node)) {
+  // 使用 globalThis.Node 避免与自定义 Node 类型冲突，确保类型安全
+  if (showSubsMoreMenu.value && subsMoreMenuRef.value && !subsMoreMenuRef.value.contains(event.target as globalThis.Node)) {
     showSubsMoreMenu.value = false;
   }
 };
@@ -112,7 +113,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
-const handleDragEnd = (evt: any) => {
+const handleDragEnd = (evt: unknown) => {
   emit('drag-end', evt);
 };
 </script>
@@ -122,46 +123,49 @@ const handleDragEnd = (evt: any) => {
     class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
       <div class="flex-1"></div>
-      <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <button @click="$emit('add-subscription')"
-            class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
-          <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
-            class="btn-modern-enhanced btn-update text-sm font-semibold px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transform hover:scale-105 transition-all duration-300">
-            <svg v-if="isUpdatingAllSubs" class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none">
-              </circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            <span class="hidden sm:inline">{{ isUpdatingAllSubs ? '更新中...' : '一键更新' }}</span>
-            <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
-          </button>
-        </div>
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <button v-if="isSortingSubs && hasUnsavedSortChanges" @click="$emit('save-sort')"
-            class="btn-modern-enhanced btn-primary text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-            保存排序
-          </button>
-          <button @click="$emit('toggle-sort')"
-            :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-sm font-semibold px-5 py-2.5 flex items-center gap-2 transform hover:scale-105 transition-all duration-300'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
-            </svg>
-            <span class="hidden sm:inline">{{ isSortingSubs ? '排序中' : '手动排序' }}</span>
-            <span class="sm:hidden">{{ isSortingSubs ? '排序' : '排序' }}</span>
-          </button>
+        <div class="flex flex-wrap items-center gap-2 ml-auto">
+          <!-- 主要操作按钮 -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button @click="$emit('add-subscription')"
+              class="btn-modern-enhanced btn-add text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
+            
+            <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
+              class="btn-modern-enhanced btn-update text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300">
+              <svg v-if="isUpdatingAllSubs" class="animate-spin h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none">
+                </circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              <span class="hidden sm:inline">{{ isUpdatingAllSubs ? '更新中...' : '一键更新' }}</span>
+              <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
+            </button>
+
+            <button v-if="isSortingSubs && hasUnsavedSortChanges" @click="$emit('save-sort')"
+              class="btn-modern-enhanced btn-primary text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <span class="hidden sm:inline">保存排序</span>
+            </button>
+            <button @click="$emit('toggle-sort')"
+              :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+              </svg>
+              <span class="hidden sm:inline">{{ isSortingSubs ? '排序中' : '手动排序' }}</span>
+              <span class="sm:hidden">{{ isSortingSubs ? '排序' : '排序' }}</span>
+            </button>
+          </div>
+
           <div class="relative" ref="subsMoreMenuRef">
             <button @click="showSubsMoreMenu = !showSubsMoreMenu"
-              class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300"
+              class="p-2 sm:p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-300"
                 viewBox="0 0 20 20" fill="currentColor">
                 <path
                   d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -179,7 +183,6 @@ const handleDragEnd = (evt: any) => {
             </Transition>
           </div>
         </div>
-      </div>
     </div>
 
     <!-- 批量操作工具栏 -->
@@ -216,11 +219,11 @@ const handleDragEnd = (evt: any) => {
             <button @click="deleteSelected" :disabled="selectedCount === 0"
               class="btn-modern-enhanced btn-danger text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                  clip-rule="evenodd" />
-              </svg>
-              删除选中 ({{ selectedCount }})
+              <path fill-rule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd" />
+            </svg>
+            删除选中 ({{ selectedCount }})
             </button>
             <button @click="toggleBatchDeleteMode"
               class="btn-modern-enhanced btn-cancel text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transform hover:scale-105 transition-all duration-300">
@@ -235,7 +238,7 @@ const handleDragEnd = (evt: any) => {
     <div v-if="subscriptions.length > 0">
       <draggable v-if="isSortingSubs" tag="div"
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8" v-model="localSubscriptions"
-        :item-key="(item: any) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
+        :item-key="(item: Subscription) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
         @end="handleDragEnd">
         <template #item="{ element: subscription }">
           <div class="cursor-move">
@@ -284,29 +287,10 @@ const handleDragEnd = (evt: any) => {
 </template>
 
 <style scoped>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
-.slide-fade-sm-enter-active,
-.slide-fade-sm-leave-active {
-  transition: all 0.2s ease-out;
-}
-
-.slide-fade-sm-enter-from,
-.slide-fade-sm-leave-to {
-  transform: translateY(-10px);
-  opacity: 0;
-}
+/* 过渡动画已移至 design-system.css 全局定义 */
 
 .cursor-move {
   cursor: move;
 }
 </style>
+

@@ -1,3 +1,22 @@
+<!--
+  ==================== 系统设置模态框 ====================
+  
+  功能说明：
+  - 管理应用的全局配置
+  - 包括基础配置、订阅组、SubConverter、Telegram通知等设置
+  - 提供预设选项和自定义输入
+  - 自动加载和保存配置
+  - 输入验证（空格检测）
+  
+  配置项：
+  - 基础配置：订阅文件名、订阅Token
+  - 订阅组：分享Token、节点名前缀设置
+  - SubConverter：后端地址、配置文件URL
+  - Telegram：Bot Token、Chat ID
+  
+  ==================================================
+-->
+
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import Modal from './BaseModal.vue';
@@ -17,16 +36,22 @@ const { showToast } = useToastStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
 
-// 默认设置值
+// 默认设置值（与后端保持一致）
 const defaultSettings: AppConfig = {
+  // 基础配置
   FileName: 'Sub-One',
-  subConverter: 'api.v1.mk',
-  subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
-  prependSubName: true,
   mytoken: 'auto',
   profileToken: '', // 默认为空，用户需主动设置
+  
+  prependSubName: true,
+  
+  // Telegram 通知配置
   BotToken: '',
-  ChatID: ''
+  ChatID: '',
+  
+  // 通知阈值配置
+  NotifyThresholdDays: 3,        // 订阅到期提醒阈值（剩余天数）
+  NotifyThresholdPercent: 90     // 流量使用提醒阈值（使用百分比）
 };
 
 // 初始化时直接使用默认值，确保界面不会显示空白
@@ -37,8 +62,6 @@ const hasWhitespace = computed(() => {
     'FileName',
     'mytoken',
     'profileToken',
-    'subConverter',
-    'subConfig',
     'BotToken',
     'ChatID',
   ];
@@ -63,7 +86,7 @@ const loadSettings = async () => {
         // 只要后端返回了值（包括空字符串），就使用后端的值
         // 这样用户可以主动清空某些配置（如 profileToken）
         if (loaded[key as keyof AppConfig] !== undefined && loaded[key as keyof AppConfig] !== null) {
-          (settings.value as any)[key] = loaded[key as keyof AppConfig];
+          settings.value[key as keyof AppConfig] = loaded[key as keyof AppConfig];
         }
       }
     }
@@ -83,17 +106,7 @@ const handleSave = async () => {
 
   isSaving.value = true;
   try {
-    // 过滤空值：删除为空的字段，这样会使用默认值
-    const settingsToSave: any = {};
-    for (const key in settings.value) {
-      const value = settings.value[key as keyof AppConfig];
-      // 只保存非空值（空字符串、null、undefined 都视为空）
-      if (value !== '' && value !== null && value !== undefined) {
-        settingsToSave[key] = value;
-      }
-    }
-
-    const result = await saveSettings(settingsToSave);
+    const result = await saveSettings(settings.value);
     if (result.success) {
       // 弹出成功提示
       showToast('设置已保存，页面将自动刷新...', 'success');
@@ -105,8 +118,9 @@ const handleSave = async () => {
     } else {
       throw new Error(result.message || '保存失败');
     }
-  } catch (error: any) {
-    showToast(error.message, 'error');
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    showToast(msg, 'error');
     isSaving.value = false; // 只有失败时才需要重置保存状态
   }
 };
@@ -118,6 +132,8 @@ watch(() => props.show, (newValue) => {
     loadSettings();
   }
 }, { immediate: true });
+
+
 </script>
 
 <template>
@@ -216,106 +232,6 @@ watch(() => props.show, (newValue) => {
           </div>
         </section>
 
-        <!-- SubConverter设置 -->
-        <section>
-          <h4
-            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            SubConverter 服务
-          </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="group">
-              <label for="subConverter"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">后端地址</label>
-              <div class="relative">
-                <select v-model="settings.subConverter" id="subConverter"
-                  class="input-modern-enhanced w-full pr-10 appearance-none cursor-pointer"
-                  @change="(e) => { if ((e.target as HTMLSelectElement).value === 'custom') settings.subConverter = '' }">
-                  <option value="api.v1.mk">
-                    api.v1.mk（推荐）
-                  </option>
-                  <option value="sub.xeton.dev">
-                    sub.xeton.dev
-                  </option>
-                  <option value="api.dler.io">
-                    api.dler.io
-                  </option>
-                  <option value="sub.id9.cc">
-                    sub.id9.cc
-                  </option>
-                  <option value="api.wcc.best">
-                    api.wcc.best
-                  </option>
-                  <option value="sub.d1.mk">
-                    sub.d1.mk
-                  </option>
-                  <option value="custom">自定义地址...</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              <!-- 自定义输入框 -->
-              <input
-                v-if="!settings.subConverter || settings.subConverter === '' || (!['api.v1.mk', 'sub.xeton.dev', 'api.dler.io', 'sub.id9.cc', 'api.wcc.best', 'sub.d1.mk'].includes(settings.subConverter))"
-                type="text" v-model="settings.subConverter" class="input-modern-enhanced w-full mt-2"
-                placeholder="输入自定义后端地址...">
-            </div>
-            <div class="group">
-              <label for="subConfig"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">配置文件
-                URL</label>
-              <div class="relative">
-                <select v-model="settings.subConfig" id="subConfig"
-                  class="input-modern-enhanced w-full pr-10 appearance-none cursor-pointer"
-                  @change="(e) => { if ((e.target as HTMLSelectElement).value === 'custom') settings.subConfig = '' }">
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini">
-                    ACL4SSR 完整版（推荐）
-                  </option>
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online.ini">
-                    ACL4SSR 精简版
-                  </option>
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Mini.ini">
-                    ACL4SSR 极简版
-                  </option>
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_AdblockPlus.ini">
-                    ACL4SSR 去广告增强版
-                  </option>
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_NoReject.ini">
-                    ACL4SSR 无拦截版
-                  </option>
-                  <option
-                    value="https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_MultiCountry.ini">
-                    ACL4SSR 多国分组
-                  </option>
-                  <option value="custom">自定义 URL...</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              <!-- 自定义输入框 -->
-              <input
-                v-if="!settings.subConfig || !settings.subConfig.startsWith('https://raw.githubusercontent.com/cmliu/ACL4SSR')"
-                type="text" v-model="settings.subConfig" class="input-modern-enhanced w-full mt-2"
-                placeholder="输入自定义配置 URL...">
-            </div>
-          </div>
-        </section>
-
         <!-- Telegram设置 -->
         <section>
           <h4
@@ -344,7 +260,62 @@ watch(() => props.show, (newValue) => {
             </div>
           </div>
         </section>
+
+        <!-- 通知阈值设置 -->
+        <section>
+          <h4
+            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            通知阈值
+          </h4>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 到期提醒阈值 -->
+            <div class="group">
+              <label for="notifyThresholdDays"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                到期提醒阈值（天）
+              </label>
+              <input
+                type="number"
+                id="notifyThresholdDays"
+                v-model.number="settings.NotifyThresholdDays"
+                min="1"
+                max="30"
+                class="input-modern-enhanced w-full"
+                placeholder="例如：3"
+              >
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                当订阅剩余天数小于此值时发送提醒
+              </p>
+            </div>
+            
+            <!-- 流量提醒阈值 -->
+            <div class="group">
+              <label for="notifyThresholdPercent"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                流量提醒阈值（%）
+              </label>
+              <input
+                type="number"
+                id="notifyThresholdPercent"
+                v-model.number="settings.NotifyThresholdPercent"
+                min="50"
+                max="100"
+                class="input-modern-enhanced w-full"
+                placeholder="例如：90"
+              >
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                当流量使用超过此百分比时发送提醒
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     </template>
   </Modal>
 </template>
+```

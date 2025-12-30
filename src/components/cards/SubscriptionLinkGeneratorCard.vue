@@ -1,5 +1,10 @@
+<!--
+  订阅链接生成器卡片
+  功能：生成不同格式的订阅链接（Base64、Clash、Sing-Box等）
+-->
+
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import NodeDetailsModal from '../modals/NodeDetailsModal.vue';
 import QRCode from 'qrcode';
@@ -23,56 +28,53 @@ const showUrl = ref(false);
 const copied = ref(false);
 let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const formats = ['自适应', 'Base64', 'Clash', 'Sing-Box', 'Surge', 'Loon'];
+const formats = ['自适应', 'V2Ray', 'Clash', 'Sing-Box', 'Quantumult X', 'Surge', 'Loon', 'Shadowrocket'];
 
-// 优化：预定义格式映射，避免每次计算时创建对象
+/** 格式映射表 */
 const FORMAT_MAPPING: Record<string, string> = {
-  'Base64': 'base64',
+  'V2Ray': 'base64',
   'Clash': 'clash',
   'Sing-Box': 'singbox',
+  'Quantumult X': 'quanx',
   'Surge': 'surge',
-  'Loon': 'loon'
+  'Loon': 'loon',
+  'Shadowrocket': 'shadowrocket'
 };
 
-// 只显示已启用的订阅组
+/** 只显示已启用的订阅组 */
 const enabledProfiles = computed(() => {
   return props.profiles.filter(profile => profile.enabled);
 });
 
-
+/** 生成订阅链接 */
 const subLink = computed(() => {
   const baseUrl = window.location.origin;
   const format = selectedFormat.value;
 
-  // 修复：根据选择的订阅类型使用正确的token
-  // 默认订阅使用 mytoken，订阅组使用 profileToken
   let token = '';
   if (selectedId.value === 'default') {
     if (!props.config?.mytoken) return '';
     token = props.config.mytoken;
   } else {
-    // 订阅组需要使用 profileToken
     if (!props.config?.profileToken || props.config.profileToken === 'auto' || !props.config.profileToken.trim()) {
       return '';
     }
     token = props.config.profileToken;
   }
 
-  // 构建基础URL
   const url = selectedId.value === 'default'
     ? `${baseUrl}/${token}`
     : `${baseUrl}/${token}/${selectedId.value}`;
 
-  // 根据格式添加参数
   if (format === '自适应') {
     return url;
   }
 
-  // 优化：使用简洁的短格式参数（如 ?clash），与原版保持一致
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
   return `${url}?${formatParam}`;
 });
 
+/** 复制到剪贴板 */
 const copyToClipboard = async () => {
   if (!subLink.value) {
     showToast('链接无效，无法复制', 'error');
@@ -90,66 +92,42 @@ const copyToClipboard = async () => {
     showToast('复制失败，请手动复制', 'error');
   }
 };
-const showNodeDetails = ref(false);
-const previewSubscription = ref<{ name: string; url: string } | null>(null);
 
+const showNodeDetails = ref(false);
+const showQrcode = ref(false);
+const qrcodeUrl = ref('');
+
+const toggleQrcode = async () => {
+  if (!subLink.value) return;
+  if (!showQrcode.value) {
+    try {
+      qrcodeUrl.value = await QRCode.toDataURL(subLink.value, { width: 300, margin: 1 });
+    } catch (err) {
+      console.error('QR Gen Error:', err);
+    }
+  }
+  showQrcode.value = !showQrcode.value;
+};
+
+const previewSubscription = ref<Subscription | null>(null);
+
+/** 打开节点预览 */
 const openNodePreview = () => {
   if (!subLink.value) return;
 
-  // Force base64 for preview to ensure we get raw node list
-  const urlObj = new URL(subLink.value);
-  urlObj.searchParams.set('target', 'base64');
+  let previewUrl = subLink.value;
+  const urlObj = new URL(previewUrl);
+  urlObj.search = '';
+  previewUrl = `${urlObj.toString()}?base64`;
 
   previewSubscription.value = {
+    id: 'preview',
     name: '订阅预览',
-    url: urlObj.toString()
+    url: previewUrl,
+    enabled: true
   };
   showNodeDetails.value = true;
 };
-
-// QR Code functionality
-const showQRCode = ref(false);
-const qrCodeDataURL = ref('');
-
-const generateQRCode = async () => {
-  if (!subLink.value) {
-    showToast('链接无效，无法生成二维码', 'error');
-    return;
-  }
-
-  try {
-    const dataURL = await QRCode.toDataURL(subLink.value, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    });
-    qrCodeDataURL.value = dataURL;
-    showQRCode.value = true;
-  } catch (error) {
-    console.error('生成二维码失败:', error);
-    showToast('生成二维码失败', 'error');
-  }
-};
-
-const downloadQRCode = () => {
-  if (!qrCodeDataURL.value) return;
-
-  const link = document.createElement('a');
-  link.download = `subscription-qrcode-${selectedId.value}.png`;
-  link.href = qrCodeDataURL.value;
-  link.click();
-  showToast('二维码已下载', 'success');
-};
-
-// Watch for link changes and regenerate QR code if modal is open
-watch([subLink, selectedFormat], () => {
-  if (showQRCode.value && subLink.value) {
-    generateQRCode();
-  }
-});
 
 onUnmounted(() => {
   if (copyTimeout) clearTimeout(copyTimeout);
@@ -160,13 +138,9 @@ onUnmounted(() => {
   <div class="sticky top-24">
     <div
       class="bg-white/60 dark:bg-gray-800/75 rounded-2xl border border-gray-300/50 dark:border-gray-700/30 p-6 relative overflow-hidden hover:shadow-xl transition-all duration-300">
-      <!-- 装饰性背景 -->
-      <div
-        class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full -translate-y-12 translate-x-12">
-      </div>
 
       <div class="relative z-10">
-        <!-- 选择订阅内容 -->
+        <!-- 1. 选择订阅内容 -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
           <div class="relative">
@@ -179,7 +153,6 @@ onUnmounted(() => {
                 {{ profile.name }}
               </option>
             </select>
-            <!-- 自定义下拉箭头 -->
             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
               <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300" fill="none"
                 stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +162,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 选择格式 -->
+        <!-- 2. 选择格式 -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">2. 选择格式</label>
           <div class="grid grid-cols-2 gap-2">
@@ -205,7 +178,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 链接显示区域 -->
+        <!-- 3. 复制链接 -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3. 复制链接</label>
           <div class="relative">
@@ -255,71 +228,33 @@ onUnmounted(() => {
                 </svg>
                 <span class="text-sm">预览</span>
               </button>
-              <button v-if="showUrl" @click="generateQRCode"
-                class="flex-1 px-3 py-2 rounded-xl hover:bg-green-500/20 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 flex items-center justify-center gap-2"
+              <button v-if="showUrl" @click="toggleQrcode"
+                class="flex-1 px-3 py-2 rounded-xl hover:bg-gray-500/20 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-all duration-200 flex items-center justify-center gap-2"
+                :class="{ 'bg-gray-100 dark:bg-gray-700': showQrcode }"
                 title="生成二维码">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zm-6 0H6.414a1 1 0 00-.707.293L4 17.086v1.828l1.707 1.707a1 1 0 00.707.293H8v-4zM17 14h2v2h-2v-2zm-4-4h4m-4 4h2v2h-2v-2zm-10 6h2v2H3v-2zm6-10H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zm10 0h-4a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zM5 8h4v4H5V8zm10 0h4v4h-4V8z" />
                 </svg>
                 <span class="text-sm">二维码</span>
               </button>
             </div>
 
-            <!-- 节点详情模态框 -->
-            <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
-
-            <!-- 二维码模态框 -->
+            <!-- 二维码显示区域 -->
             <Transition name="fade">
-              <div v-if="showQRCode" @click="showQRCode = false"
-                class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                style="margin: 0;">
-                <div @click.stop
-                  class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform transition-all">
-                  <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">订阅二维码</h3>
-                    <button @click="showQRCode = false"
-                      class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <!-- 二维码图片 -->
-                  <div class="bg-white p-4 rounded-xl mb-4 flex items-center justify-center">
-                    <img :src="qrCodeDataURL" alt="QR Code" class="w-full max-w-xs" />
-                  </div>
-
-                  <!-- 提示文本 -->
-                  <p class="text-sm text-gray-600 dark:text-gray-300 text-center mb-4">
-                    使用手机扫描二维码即可导入订阅
-                  </p>
-
-                  <!-- 操作按钮 -->
-                  <div class="flex gap-3">
-                    <button @click="downloadQRCode"
-                      class="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-xl">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      下载二维码
-                    </button>
-                    <button @click="showQRCode = false"
-                      class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 font-medium">
-                      关闭
-                    </button>
-                  </div>
-                </div>
+              <div v-if="showQrcode && qrcodeUrl" class="mt-4 flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <img :src="qrcodeUrl" alt="订阅二维码" class="w-48 h-48 sm:w-64 sm:h-64 object-contain" />
+                <p class="mt-2 text-xs text-gray-500">请使用客户端扫描添加到订阅</p>
               </div>
             </Transition>
+
+
+            <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
           </div>
         </div>
 
-        <!-- 提示信息 -->
+        <!-- Token提示 -->
         <div
           v-if="(selectedId === 'default' && config?.mytoken === 'auto') || (selectedId !== 'default' && (!config?.profileToken || config.profileToken === 'auto' || !config.profileToken.trim()))"
           class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 animate-pulse-breathing mb-4">
@@ -343,29 +278,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 格式使用提示 -->
-        <div v-if="selectedFormat !== '自适应'"
-          class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
-          <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <p class="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">格式提示</p>
-              <p class="text-xs text-blue-600 dark:text-blue-400">
-                <span
-                  v-if="selectedFormat === 'Clash' || selectedFormat === 'Sing-Box' || selectedFormat === 'Surge' || selectedFormat === 'Loon'">
-                  当前选择的是 <strong>{{ selectedFormat }}</strong> 格式（YAML），生成的链接已优化，可直接导入对应的客户端使用。
-                </span>
-                <span v-else>
-                  当前选择的是 <strong>{{ selectedFormat }}</strong> 格式，生成的链接可直接导入对应的客户端使用。
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   </div>

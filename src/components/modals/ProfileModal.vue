@@ -1,7 +1,26 @@
+<!--
+  ==================== 订阅组编辑模态框 ====================
+  
+  功能说明：
+  - 创建或编辑订阅组（Profile）
+  - 选择包含的订阅和手动节点
+  - 支持搜索和智能筛选（国家/地区别名匹配）
+  - 配置订阅组属性（名称、ID、后端、配置、到期时间）
+  - 批量选择/取消选择功能
+  
+  配置项：
+  - 基本信息：订阅组名称、自定义ID
+  - 高级设置：自定义后端、自定义配置、到期时间
+  - 内容选择：订阅列表、手动节点列表
+  
+  ==================================================
+-->
+
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import Modal from './BaseModal.vue';
 import type { Profile, Subscription, Node } from '../../types';
+import { getCountryTerms } from '../../lib/constants';
 
 const props = withDefaults(defineProps<{
   show: boolean;
@@ -32,63 +51,6 @@ const localProfile = ref<Profile>({
 const subscriptionSearchTerm = ref('');
 const nodeSearchTerm = ref('');
 
-// 国家/地区代码到旗帜和中文名称的映射
-const countryCodeMap: Record<string, string[]> = {
-  'hk': ['🇭🇰', '香港'],
-  'tw': ['🇹🇼', '台湾', '臺灣'],
-  'sg': ['🇸🇬', '新加坡', '狮城'],
-  'jp': ['🇯🇵', '日本'],
-  'us': ['🇺🇸', '美国', '美國'],
-  'kr': ['🇰🇷', '韩国', '韓國'],
-  'gb': ['🇬🇧', '英国', '英國'],
-  'de': ['🇩🇪', '德国', '德國'],
-  'fr': ['🇫🇷', '法国', '法國'],
-  'ca': ['🇨🇦', '加拿大'],
-  'au': ['🇦🇺', '澳大利亚', '澳洲', '澳大利亞'],
-  'cn': ['🇨🇳', '中国', '大陸', '内地'],
-  'my': ['🇲🇾', '马来西亚', '馬來西亞'],
-  'th': ['🇹🇭', '泰国', '泰國'],
-  'vn': ['🇻🇳', '越南'],
-  'ph': ['🇵🇭', '菲律宾', '菲律賓'],
-  'id': ['🇮🇩', '印度尼西亚', '印尼'],
-  'in': ['🇮🇳', '印度'],
-  'pk': ['🇵🇰', '巴基斯坦'],
-  'bd': ['🇧🇩', '孟加拉国', '孟加拉國'],
-  'ae': ['🇦🇪', '阿联酋', '阿聯酋'],
-  'sa': ['🇸🇦', '沙特阿拉伯'],
-  'tr': ['🇹🇷', '土耳其'],
-  'ru': ['🇷🇺', '俄罗斯', '俄羅斯'],
-  'br': ['🇧🇷', '巴西'],
-  'mx': ['🇲🇽', '墨西哥'],
-  'ar': ['🇦🇷', '阿根廷'],
-  'cl': ['🇨🇱', '智利'],
-  'za': ['🇿🇦', '南非'],
-  'eg': ['🇪🇬', '埃及'],
-  'ng': ['🇳🇬', '尼日利亚', '尼日利亞'],
-  'ke': ['🇰🇪', '肯尼亚', '肯尼亞'],
-  'il': ['🇮🇱', '以色列'],
-  'ir': ['🇮🇷', '伊朗'],
-  'iq': ['🇮🇶', '伊拉克'],
-  'ua': ['🇺🇦', '乌克兰', '烏克蘭'],
-  'pl': ['🇵🇱', '波兰', '波蘭'],
-  'cz': ['🇨🇿', '捷克'],
-  'hu': ['🇭🇺', '匈牙利'],
-  'ro': ['🇷🇴', '罗马尼亚', '羅馬尼亞'],
-  'gr': ['🇬🇷', '希腊', '希臘'],
-  'pt': ['🇵🇹', '葡萄牙'],
-  'es': ['🇪🇸', '西班牙'],
-  'it': ['🇮🇹', '意大利'],
-  'nl': ['🇳🇱', '荷兰', '荷蘭'],
-  'be': ['🇧🇪', '比利时', '比利時'],
-  'se': ['🇸🇪', '瑞典'],
-  'no': ['🇳🇴', '挪威'],
-  'dk': ['🇩🇰', '丹麦', '丹麥'],
-  'fi': ['🇫🇮', '芬兰', '芬蘭'],
-  'ch': ['🇨🇭', '瑞士'],
-  'at': ['🇦🇹', '奥地利', '奧地利'],
-  'ie': ['🇮🇪', '爱尔兰', '愛爾蘭'],
-  'nz': ['🇳🇿', '新西兰', '紐西蘭'],
-};
 
 const filteredSubscriptions = computed(() => {
   // 基础过滤：保留已启用的，或者虽然已禁用但当前已被选中的
@@ -102,7 +64,8 @@ const filteredSubscriptions = computed(() => {
     return candidates;
   }
   const lowerCaseSearchTerm = subscriptionSearchTerm.value.toLowerCase();
-  const alternativeTerms = countryCodeMap[lowerCaseSearchTerm] || [];
+  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
+  const alternativeTerms = getCountryTerms(lowerCaseSearchTerm);
 
   return candidates.filter(sub => {
     const subNameLower = sub.name ? sub.name.toLowerCase() : '';
@@ -125,7 +88,8 @@ const filteredManualNodes = computed(() => {
     return props.allManualNodes;
   }
   const lowerCaseSearchTerm = nodeSearchTerm.value.toLowerCase();
-  const alternativeTerms = countryCodeMap[lowerCaseSearchTerm] || [];
+  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
+  const alternativeTerms = getCountryTerms(lowerCaseSearchTerm);
 
   return props.allManualNodes.filter(node => {
     const nodeNameLower = node.name ? node.name.toLowerCase() : '';
@@ -231,25 +195,7 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             <p class="text-xs text-gray-400 mt-1.5">设置后，订阅链接会更短，如 /token/home</p>
           </div>
 
-          <!-- 自定义后端 -->
-          <div>
-            <label for="profile-subconverter" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义后端 (可选)
-            </label>
-            <input type="text" id="profile-subconverter" v-model="localProfile.subConverter" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 SubConverter 后端地址。</p>
-          </div>
 
-          <!-- 自定义配置 -->
-          <div>
-            <label for="profile-subconfig" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义远程配置 (可选)
-            </label>
-            <input type="text" id="profile-subconfig" v-model="localProfile.subConfig" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 Subconverter 配置文件。</p>
-          </div>
 
           <!-- 到期时间 -->
           <div class="md:col-span-1">

@@ -1,3 +1,38 @@
+<!--
+  ==================== 帮助文档模态框 ====================
+  
+  功能说明：
+  - 展示应用的完整帮助文档
+  - 提供快速开始指南
+  - 介绍各项功能特性
+  - 常见问题解答（FAQ）
+  - 使用技巧和最佳实践
+  
+  内容结构：
+  - 快速开始：三步上手指南
+  - 功能说明：订阅管理、订阅组、手动节点、链接生成
+  - 常见问题：常见操作的问答
+  - 使用技巧：高效管理和性能优化建议
+  - 联系支持：获取帮助的途径
+  
+  ==================================================
+-->
+
+<script setup lang="ts">
+import Modal from './BaseModal.vue';
+
+// ==================== Props 和 Emit ====================
+
+defineProps<{
+  /** 显示状态 */
+  show: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void;
+}>();
+</script>
+
 <template>
   <Modal :show="show" @update:show="emit('update:show', $event)" @confirm="emit('update:show', false)" size="6xl">
     <template #title>
@@ -322,15 +357,3 @@
     </template>
   </Modal>
 </template>
-
-<script setup lang="ts">
-import Modal from './BaseModal.vue';
-
-defineProps<{
-  show: boolean;
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:show', value: boolean): void;
-}>();
-</script>

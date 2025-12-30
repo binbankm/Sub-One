@@ -25,7 +25,7 @@ const emit = defineEmits<{
   (e: 'auto-sort'): void;
   (e: 'deduplicate'): void;
   (e: 'delete-all-nodes'): void;
-  (e: 'drag-end', evt: any): void;
+  (e: 'drag-end', evt: unknown): void;
   (e: 'edit-node', id: string): void;
   (e: 'delete-node', id: string): void;
   (e: 'change-page', page: number): void;
@@ -117,7 +117,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
-const handleDragEnd = (evt: any) => {
+const handleDragEnd = (evt: unknown) => {
   emit('drag-end', evt);
 };
 </script>
@@ -171,7 +171,7 @@ const handleDragEnd = (evt: any) => {
           </div>
 
           <!-- 更多菜单 -->
-          <div class="relative">
+          <div class="relative" ref="nodesMoreMenuRef">
             <button @click="showNodesMoreMenu = !showNodesMoreMenu"
               class="p-2 sm:p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-300"
@@ -254,7 +254,7 @@ const handleDragEnd = (evt: any) => {
     <div v-if="manualNodes.length > 0">
       <draggable v-if="isSortingNodes" tag="div"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8" v-model="localManualNodes"
-        :item-key="(item: any) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
+        :item-key="(item: Node) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
         @end="handleDragEnd">
         <template #item="{ element: node }">
           <div class="cursor-move">
@@ -302,29 +302,10 @@ const handleDragEnd = (evt: any) => {
 </template>
 
 <style scoped>
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-20px);
-  opacity: 0;
-}
-
-.slide-fade-sm-enter-active,
-.slide-fade-sm-leave-active {
-  transition: all 0.2s ease-out;
-}
-
-.slide-fade-sm-enter-from,
-.slide-fade-sm-leave-to {
-  transform: translateY(-10px);
-  opacity: 0;
-}
+/* 过渡动画已移至 design-system.css 全局定义 */
 
 .cursor-move {
   cursor: move;
 }
 </style>
+
