@@ -1,9 +1,11 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { SubscriptionParser } from '../lib/shared/subscription-parser';
+import { SubscriptionConverter } from '../lib/shared/subscription-converter';
 import type { Node } from '../lib/shared/types';
 
 const subscriptionParser = new SubscriptionParser();
+const subscriptionConverter = new SubscriptionConverter();
 
 const OLD_KV_KEY = 'sub_one_data_v1';
 const KV_KEY_SUBS = 'sub_one_subscriptions_v1';
@@ -1032,72 +1034,103 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
         return new Response(subscriptionParser.encodeBase64(contentToEncode), { headers });
     }
 
-    // 为回调生成 Base64 (同样使用新方法)
-    const base64Content = subscriptionParser.encodeBase64(combinedContent);
-
-    const callbackToken = await getCallbackToken(env);
-    const callbackPath = profileIdentifier ? `/${token}/${profileIdentifier}` : `/${token}`;
-    const callbackUrl = `${url.protocol}//${url.host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
-
-    // 保留 callback 逻辑
-    if (url.searchParams.get('callback_token') === callbackToken) {
-        const headers = {
-            "Content-Type": "text/plain; charset=utf-8",
-            'Cache-Control': 'no-store, no-cache',
-            "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
-        };
-        return new Response(base64Content, { headers });
-    }
-
-    // 智能处理：如果用户填入了 http:// 或 https:// 前缀，自动去除，防止 URL 拼接错误
-    let cleanSubConverter = effectiveSubConverter.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const subconverterUrl = new URL(`https://${cleanSubConverter}/sub`);
-    subconverterUrl.searchParams.set('target', targetFormat);
-
-    // 针对 Clash 格式，始终添加 ver=meta 参数
-    // Meta 内核支持更多协议（VLESS Reality、Hysteria2 等），是 Clash 的超集
-    // 即使客户端是旧版 Clash，使用 Meta 配置也能向下兼容
-    if (targetFormat === 'clash') {
-        subconverterUrl.searchParams.set('ver', 'meta');
-    }
-    if (targetFormat === 'surge') {
-        subconverterUrl.searchParams.set('ver', '4');
-    }
-
-    subconverterUrl.searchParams.set('url', callbackUrl);
-    if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
-        subconverterUrl.searchParams.set('config', effectiveSubConfig);
-    }
-    subconverterUrl.searchParams.set('new_name', 'true');
-
+    // === [核心改进] 使用内置转换器,完全内部化处理 ===
     try {
-        const subconverterResponse = await fetch(subconverterUrl.toString(), {
-            method: 'GET',
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+        // 使用内置转换器生成配置
+        const convertedContent = subscriptionConverter.convert(
+            combinedNodes,
+            targetFormat,
+            {
+                filename: subName,
+                includeRules: true,
+                remoteConfig: effectiveSubConfig
+            }
+        );
+
+        const responseHeaders = new Headers({
+            'Content-Type': 'text/plain; charset=utf-8',
+            'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}`,
+            'Cache-Control': 'no-store, no-cache'
         });
 
-        if (!subconverterResponse.ok) {
-            const errorBody = await subconverterResponse.text();
-            throw new Error(`Subconverter service returned status: ${subconverterResponse.status}. Body: ${errorBody}`);
+        return new Response(convertedContent, {
+            status: 200,
+            headers: responseHeaders
+        });
+
+    } catch (conversionError: any) {
+        console.error('[Internal Converter Error]', conversionError);
+
+        // ===  回退方案: 如果内部转换失败,使用外部 SubConverter ===
+        console.log('内部转换失败,回退到外部 SubConverter...');
+
+        // 为回调生成 Base64 (同样使用新方法)
+        const base64Content = subscriptionParser.encodeBase64(combinedContent);
+
+        const callbackToken = await getCallbackToken(env);
+        const callbackPath = profileIdentifier ? `/${token}/${profileIdentifier}` : `/${token}`;
+        const callbackUrl = `${url.protocol}//${url.host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
+
+        // 保留 callback 逻辑
+        if (url.searchParams.get('callback_token') === callbackToken) {
+            const headers = {
+                "Content-Type": "text/plain; charset=utf-8",
+                'Cache-Control': 'no-store, no-cache',
+                "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
+            };
+            return new Response(base64Content, { headers });
         }
-        const responseText = await subconverterResponse.text();
-        const responseHeaders = new Headers(subconverterResponse.headers);
 
-        // 始终使用 inline 方式，允许浏览器预览
-        // 代理客户端依然可以通过右键保存或复制内容
-        responseHeaders.set("Content-Disposition", `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
+        // 智能处理：如果用户填入了 http:// 或 https:// 前缀，自动去除，防止 URL 拼接错误
+        let cleanSubConverter = effectiveSubConverter.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const subconverterUrl = new URL(`https://${cleanSubConverter}/sub`);
+        subconverterUrl.searchParams.set('target', targetFormat);
 
-        // 优化：统一使用 text/plain 以确保浏览器可以预览
-        // 大多数客户端（Clash, Surge 等）都能正确处理 text/plain 的配置文件
-        let contentType = 'text/plain; charset=utf-8';
+        // 针对 Clash 格式，始终添加 ver=meta 参数
+        // Meta 内核支持更多协议（VLESS Reality、Hysteria2 等），是 Clash 的超集
+        // 即使客户端是旧版 Clash，使用 Meta 配置也能向下兼容
+        if (targetFormat === 'clash') {
+            subconverterUrl.searchParams.set('ver', 'meta');
+        }
+        if (targetFormat === 'surge') {
+            subconverterUrl.searchParams.set('ver', '4');
+        }
 
-        responseHeaders.set('Content-Type', contentType);
-        responseHeaders.set('Cache-Control', 'no-store, no-cache');
+        subconverterUrl.searchParams.set('url', callbackUrl);
+        if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
+            subconverterUrl.searchParams.set('config', effectiveSubConfig);
+        }
+        subconverterUrl.searchParams.set('new_name', 'true');
 
-        return new Response(responseText, { status: subconverterResponse.status, statusText: subconverterResponse.statusText, headers: responseHeaders });
-    } catch (error: any) {
-        console.error(`[Sub-One Final Error] ${error.message}`);
-        return new Response(`Error connecting to subconverter: ${error.message}`, { status: 502 });
+        try {
+            const subconverterResponse = await fetch(subconverterUrl.toString(), {
+                method: 'GET',
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+            });
+
+            if (!subconverterResponse.ok) {
+                const errorBody = await subconverterResponse.text();
+                throw new Error(`Subconverter service returned status: ${subconverterResponse.status}. Body: ${errorBody}`);
+            }
+            const responseText = await subconverterResponse.text();
+            const responseHeaders = new Headers(subconverterResponse.headers);
+
+            // 始终使用 inline 方式，允许浏览器预览
+            // 代理客户端依然可以通过右键保存或复制内容
+            responseHeaders.set("Content-Disposition", `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
+
+            // 优化：统一使用 text/plain 以确保浏览器可以预览
+            // 大多数客户端（Clash, Surge 等）都能正确处理 text/plain 的配置文件
+            let contentType = 'text/plain; charset=utf-8';
+
+            responseHeaders.set('Content-Type', contentType);
+            responseHeaders.set('Cache-Control', 'no-store, no-cache');
+
+            return new Response(responseText, { status: subconverterResponse.status, statusText: subconverterResponse.statusText, headers: responseHeaders });
+        } catch (error: any) {
+            console.error(`[Sub-One Final Error] ${error.message}`);
+            return new Response(`Error connecting to subconverter: ${error.message}`, { status: 502 });
+        }
     }
 }
 
