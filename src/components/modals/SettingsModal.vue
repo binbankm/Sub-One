@@ -1,3 +1,22 @@
+<!--
+  ==================== 系统设置模态框 ====================
+  
+  功能说明：
+  - 管理应用的全局配置
+  - 包括基础配置、订阅组、SubConverter、Telegram通知等设置
+  - 提供预设选项和自定义输入
+  - 自动加载和保存配置
+  - 输入验证（空格检测）
+  
+  配置项：
+  - 基础配置：订阅文件名、订阅Token
+  - 订阅组：分享Token、节点名前缀设置
+  - SubConverter：后端地址、配置文件URL
+  - Telegram：Bot Token、Chat ID
+  
+  ==================================================
+-->
+
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import Modal from './BaseModal.vue';
@@ -17,16 +36,25 @@ const { showToast } = useToastStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
 
-// 默认设置值
+// 默认设置值（与后端保持一致）
 const defaultSettings: AppConfig = {
+  // 基础配置
   FileName: 'Sub-One',
+  mytoken: 'auto',
+  profileToken: '', // 默认为空，用户需主动设置
+  
+  // 订阅转换配置
   subConverter: 'url.v1.mk',
   subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
   prependSubName: true,
-  mytoken: 'auto',
-  profileToken: '', // 默认为空，用户需主动设置
+  
+  // Telegram 通知配置
   BotToken: '',
-  ChatID: ''
+  ChatID: '',
+  
+  // 通知阈值配置
+  NotifyThresholdDays: 3,        // 订阅到期提醒阈值（剩余天数）
+  NotifyThresholdPercent: 90     // 流量使用提醒阈值（使用百分比）
 };
 
 // 初始化时直接使用默认值，确保界面不会显示空白
@@ -63,7 +91,7 @@ const loadSettings = async () => {
         // 只要后端返回了值（包括空字符串），就使用后端的值
         // 这样用户可以主动清空某些配置（如 profileToken）
         if (loaded[key as keyof AppConfig] !== undefined && loaded[key as keyof AppConfig] !== null) {
-          (settings.value as any)[key] = loaded[key as keyof AppConfig];
+          settings.value[key as keyof AppConfig] = loaded[key as keyof AppConfig];
         }
       }
     }
@@ -95,8 +123,9 @@ const handleSave = async () => {
     } else {
       throw new Error(result.message || '保存失败');
     }
-  } catch (error: any) {
-    showToast(error.message, 'error');
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    showToast(msg, 'error');
     isSaving.value = false; // 只有失败时才需要重置保存状态
   }
 };
@@ -111,10 +140,10 @@ watch(() => props.show, (newValue) => {
 
 // 预设的后端地址选项
 const converterPresets = [
-  { label: 'api.v1.mk (推荐)', value: 'api.v1.mk' },
+  { label: 'api-sucmeta.0z.gs (推荐)', value: 'api-sucmeta.0z.gs' },
+  { label: 'api.v1.mk', value: 'api.v1.mk' },
   { label: 'url.v1.mk', value: 'url.v1.mk' },
-  { label: 'sub.xeton.dev', value: 'sub.xeton.dev' },
-  { label: 'api.dler.io', value: 'api.dler.io' },
+  { label: 'sub.xeton.dev', value: 'sub.xeton.dev' }, 
   { label: 'sub.id9.cc', value: 'sub.id9.cc' },
   { label: '自定义', value: '' }
 ];
@@ -122,24 +151,24 @@ const converterPresets = [
 // 预设的配置文件选项
 const configPresets = [
   {
-    label: 'ACL4SSR 在线完整版 (推荐)',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini'
+    label: 'ACL4SSR 默认版 (推荐)',
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online.ini'
+  },
+  {
+    label: 'ACL4SSR 完整版 (全分组)',
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full.ini'
+  },
+  {
+    label: 'ACL4SSR 多模式版 (含自动/负载均衡)',
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full_MultiMode.ini'
   },
   {
     label: 'ACL4SSR 精简版',
-    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini.ini'
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Mini.ini'
   },
   {
     label: 'ACL4SSR 去广告版',
-    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_AdblockPlus.ini'
-  },
-  {
-    label: 'ACL4SSR 无测速版',
-    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_NoAuto.ini'
-  },
-  {
-    label: 'ACL4SSR 极简版',
-    value: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini_NoAuto.ini'
+    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_AdblockPlus.ini'
   },
   { label: '自定义', value: '' }
 ];
@@ -337,7 +366,62 @@ const configPresets = [
             </div>
           </div>
         </section>
+
+        <!-- 通知阈值设置 -->
+        <section>
+          <h4
+            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            通知阈值
+          </h4>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 到期提醒阈值 -->
+            <div class="group">
+              <label for="notifyThresholdDays"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                到期提醒阈值（天）
+              </label>
+              <input
+                type="number"
+                id="notifyThresholdDays"
+                v-model.number="settings.NotifyThresholdDays"
+                min="1"
+                max="30"
+                class="input-modern-enhanced w-full"
+                placeholder="例如：3"
+              >
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                当订阅剩余天数小于此值时发送提醒
+              </p>
+            </div>
+            
+            <!-- 流量提醒阈值 -->
+            <div class="group">
+              <label for="notifyThresholdPercent"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                流量提醒阈值（%）
+              </label>
+              <input
+                type="number"
+                id="notifyThresholdPercent"
+                v-model.number="settings.NotifyThresholdPercent"
+                min="50"
+                max="100"
+                class="input-modern-enhanced w-full"
+                placeholder="例如：90"
+              >
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                当流量使用超过此百分比时发送提醒
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     </template>
   </Modal>
 </template>
+```

@@ -56,24 +56,20 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
    * - 确保每个订阅都有必需的字段和默认值
    * - 设置初始更新状态为 false
    * 
-   * @param {any[]} subsData - 原始订阅数据数组
+   * @param {Partial<Subscription>[]} subsData - 原始订阅数据数组
    */
-  function initializeSubscriptions(subsData: any[]) {
+  function initializeSubscriptions(subsData: Partial<Subscription>[]) {
     subscriptions.value = (subsData || []).map(sub => ({
-      ...sub,
-      // 确保有唯一 ID，如果没有则生成新的
       id: sub.id || crypto.randomUUID(),
-      // 默认启用
+      name: sub.name,
+      url: sub.url,
       enabled: sub.enabled ?? true,
-      // 节点数量（默认为 0）
       nodeCount: sub.nodeCount || 0,
-      // 初始不在更新中
       isUpdating: false,
-      // 用户信息（流量、到期时间等）
-      userInfo: sub.userInfo || null,
-      // 排除规则（节点过滤关键词）
+      userInfo: sub.userInfo || undefined,
       exclude: sub.exclude || '',
-    }));
+      ...sub
+    } as Subscription));
   }
 
   // ==================== 计算属性 ====================
@@ -147,7 +143,7 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
       subToUpdate.nodeCount = data.count || 0;
 
       // 更新用户信息（流量、到期时间等）
-      subToUpdate.userInfo = data.userInfo || null;
+      subToUpdate.userInfo = data.userInfo || undefined;
 
       return true;
     } catch (error) {
@@ -169,10 +165,10 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
    * - 自动更新节点数量
    * - 根据当前页面状态决定是否跳转到第一页
    * 
-   * @param {any} sub - 要添加的订阅对象
+   * @param {Subscription} sub - 要添加的订阅对象
    * @returns {Promise} 节点数量更新的 Promise
    */
-  function addSubscription(sub: any) {
+  function addSubscription(sub: Subscription) {
     // 添加到列表开头（unshift 添加到数组开头）
     subscriptions.value.unshift(sub);
 
@@ -195,9 +191,9 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
    * - 查找并更新对应的订阅
    * - 如果 URL 发生变化，重置节点数量并重新获取
    * 
-   * @param {any} updatedSub - 更新后的订阅对象
+   * @param {Subscription} updatedSub - 更新后的订阅对象
    */
-  function updateSubscription(updatedSub: any) {
+  function updateSubscription(updatedSub: Subscription) {
     // 查找订阅在数组中的位置
     const index = subscriptions.value.findIndex(s => s.id === updatedSub.id);
 
@@ -257,9 +253,9 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
    * - 如果批量更新失败，自动降级到逐个更新
    * - 过滤出有效的 HTTP/HTTPS 链接进行更新
    * 
-   * @param {any[]} subs - 要导入的订阅数组
+   * @param {Subscription[]} subs - 要导入的订阅数组
    */
-  async function addSubscriptionsFromBulk(subs: any[]) {
+  async function addSubscriptionsFromBulk(subs: Subscription[]) {
     // 批量添加到列表开头
     subscriptions.value.unshift(...subs);
 
@@ -287,7 +283,7 @@ export function useSubscriptions(initialSubsRef: Ref<Subscription[] | null>) {
           // 安全地获取结果数组，兼容不同的后端返回格式
           const results = Array.isArray(result.data)
             ? result.data
-            : (Array.isArray((result as any).results) ? (result as any).results : []);
+            : (Array.isArray(result.results) ? result.results : []);
 
           // 遍历更新结果，更新每个订阅的数据
           results.forEach((updateResult: any) => {

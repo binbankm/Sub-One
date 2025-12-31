@@ -9,10 +9,10 @@
  * ======================================================
  */
 
-import type { Subscription, Profile, AppConfig, ApiResponse } from '../types';
+import type { Subscription, Profile, AppConfig, ApiResponse, SubscriptionUserInfo } from '../types';
 
 // 导出 ApiResponse 类型供其他模块使用
-export { ApiResponse };
+export type { ApiResponse };
 
 // ==================== 数据获取 ====================
 
@@ -111,16 +111,18 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
 
         // 返回服务器响应的 JSON 数据
         return await response.json();
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('保存订阅数据失败:', error);
 
         // 根据错误类型返回更具体的错误信息
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
             return { success: false, message: '网络连接失败，请检查网络连接' };
-        } else if (error.name === 'SyntaxError') {
+        } else if (error instanceof SyntaxError) {
             return { success: false, message: '服务器响应格式错误' };
-        } else {
+        } else if (error instanceof Error) {
             return { success: false, message: `网络请求失败: ${error.message}` };
+        } else {
+            return { success: false, message: '网络请求失败: 未知错误' };
         }
     }
 }
@@ -137,7 +139,7 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
  * @param {string} subUrl - 订阅链接地址
  * @returns {Promise} 返回包含 count 和 userInfo 的对象
  */
-export async function fetchNodeCount(subUrl: string): Promise<{ count: number; userInfo: any }> {
+export async function fetchNodeCount(subUrl: string): Promise<{ count: number; userInfo: SubscriptionUserInfo | null }> {
     try {
         // 发送 POST 请求获取节点统计信息
         const res = await fetch('/api/node_count', {
@@ -210,16 +212,18 @@ export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
 
         // 返回服务器响应
         return await response.json();
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('保存配置失败:', error);
 
         // 根据错误类型返回更具体的错误信息
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
             return { success: false, message: '网络连接失败，请检查网络连接' };
-        } else if (error.name === 'SyntaxError') {
+        } else if (error instanceof SyntaxError) {
             return { success: false, message: '服务器响应格式错误' };
-        } else {
+        } else if (error instanceof Error) {
             return { success: false, message: `网络请求失败: ${error.message}` };
+        } else {
+            return { success: false, message: '网络请求失败: 未知错误' };
         }
     }
 }

@@ -35,6 +35,7 @@ import { onMounted, ref, computed, defineAsyncComponent } from 'vue';
 import { useSessionStore } from './stores/session';
 import { useThemeStore } from './stores/theme';
 import { useLayoutStore } from './stores/layout';
+import { useUIStore } from './stores/ui';
 import { storeToRefs } from 'pinia';
 
 // 类型定义
@@ -122,19 +123,22 @@ const layoutStore = useLayoutStore();
  */
 const activeTab = ref('dashboard');
 
-// ==================== 模态框状态管理 ====================
+// ==================== UI 状态管理 ====================
 
-/** 设置模态框显示状态 */
-const showSettingsModal = ref(false);
+/** UI Store - 管理全局 UI 组件状态 */
+const uiStore = useUIStore();
+
+// ==================== 模态框状态管理 ====================
 
 /** 帮助模态框显示状态 */
 const showHelpModal = ref(false);
 
 /**
  * 打开设置模态框
+ * 使用 uiStore 统一管理状态
  */
 const openSettings = () => {
-  showSettingsModal.value = true;
+  uiStore.show();
 };
 
 /**
@@ -353,8 +357,8 @@ onMounted(() => {
     <!-- 全局 Toast 提示组件 -->
     <Toast />
 
-    <!-- 设置模态框 - 按需显示（异步加载） -->
-    <SettingsModal v-if="showSettingsModal" v-model:show="showSettingsModal" />
+    <!-- 设置模态框 - 按需显示（异步加载，使用 uiStore 管理状态） -->
+    <SettingsModal v-model:show="uiStore.isSettingsModalVisible" />
 
     <!-- 帮助模态框 - 按需显示（异步加载） -->
     <HelpModal v-if="showHelpModal" v-model:show="showHelpModal" />

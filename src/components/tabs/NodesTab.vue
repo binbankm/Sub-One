@@ -25,7 +25,7 @@ const emit = defineEmits<{
   (e: 'auto-sort'): void;
   (e: 'deduplicate'): void;
   (e: 'delete-all-nodes'): void;
-  (e: 'drag-end', evt: any): void;
+  (e: 'drag-end', evt: unknown): void;
   (e: 'edit-node', id: string): void;
   (e: 'delete-node', id: string): void;
   (e: 'change-page', page: number): void;
@@ -117,7 +117,7 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
-const handleDragEnd = (evt: any) => {
+const handleDragEnd = (evt: unknown) => {
   emit('drag-end', evt);
 };
 </script>
@@ -254,7 +254,7 @@ const handleDragEnd = (evt: any) => {
     <div v-if="manualNodes.length > 0">
       <draggable v-if="isSortingNodes" tag="div"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8" v-model="localManualNodes"
-        :item-key="(item: any) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
+        :item-key="(item: Node) => item.id" animation="300" :delay="200" :delay-on-touch-only="true"
         @end="handleDragEnd">
         <template #item="{ element: node }">
           <div class="cursor-move">
