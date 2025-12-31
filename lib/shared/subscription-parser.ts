@@ -37,16 +37,28 @@ export class SubscriptionParser {
     }
 
     /**
-     * 安全解码 Base64（UTF-8 支持）
+     * 安全解码 Base64（UTF-8 支持，兼容 URL-safe）
      */
     decodeBase64(str: string): string {
+        // 清理空白字符
+        let cleaned = str.replace(/\s/g, '');
+
+        // 补全 padding
+        if (cleaned.length % 4 !== 0) {
+            cleaned += '='.repeat(4 - (cleaned.length % 4));
+        }
+
+        // 替换 URL-safe 字符
+        cleaned = cleaned.replace(/-/g, '+').replace(/_/g, '/');
+
         try {
-            const binaryString = atob(str);
+            const binaryString = atob(cleaned);
             const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
             return new TextDecoder('utf-8').decode(bytes);
         } catch (e) {
-            console.warn('Base64 decoding failed, using fallback:', e);
-            return atob(str);
+            console.warn('Base64 decoding failed:', e);
+            // 尝试直接返回（有时可能是明文？）
+            return str;
         }
     }
 
