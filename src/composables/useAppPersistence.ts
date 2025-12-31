@@ -188,7 +188,7 @@ export function useAppPersistence(
                 const errorMessage = result.message || result.error || '保存失败，请稍后重试';
                 throw new Error(errorMessage);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             // ==================== 错误处理 ====================
 
             console.error('保存数据时发生错误:', error);
@@ -203,10 +203,13 @@ export function useAppPersistence(
                 ['存储', '存储服务暂时不可用，请稍后重试']
             ]);
 
+            // 安全获取错误消息
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
             // 根据错误消息关键词匹配友好提示
-            let userMessage = error.message;
+            let userMessage = errorMessage;
             for (const [key, message] of errorMessageMap) {
-                if (error.message.includes(key)) {
+                if (errorMessage.includes(key)) {
                     userMessage = message;
                     break;
                 }

@@ -70,9 +70,10 @@ const handleSubmit = async () => {
   try {
     // 调用登录函数
     await props.login(password.value);
-  } catch (err: any) {
+  } catch (err: unknown) {
     // 捕获并显示错误信息
-    error.value = err.message || '登录失败，请重试';
+    const msg = err instanceof Error ? err.message : String(err);
+    error.value = msg || '登录失败，请重试';
   } finally {
     // 无论成功失败都重置加载状态
     isLoading.value = false;

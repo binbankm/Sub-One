@@ -130,10 +130,11 @@ const importSubscription = async () => {
       errorMessage.value = '未能从订阅链接中解析出任何节点。请检查链接内容。';
       // 失败时不关闭，让用户看到错误
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('导入订阅失败:', error);
-    errorMessage.value = `导入失败: ${error.message}`;
-    toastStore.showToast(`导入失败: ${error.message}`, 'error');
+    const msg = error instanceof Error ? error.message : String(error);
+    errorMessage.value = `导入失败: ${msg}`;
+    toastStore.showToast(`导入失败: ${msg}`, 'error');
     // 失败时不关闭，让用户看到错误
   } finally {
     isLoading.value = false;

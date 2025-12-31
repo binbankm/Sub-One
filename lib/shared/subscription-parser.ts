@@ -153,8 +153,9 @@ export class SubscriptionParser {
             }
 
             return nodes;
-        } catch (error: any) {
-            throw new Error(`SIP008 JSON 解析失败: ${error.message}`);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : String(error);
+            throw new Error(`SIP008 JSON 解析失败: ${msg}`);
         }
     }
 
@@ -208,8 +209,9 @@ export class SubscriptionParser {
             }
 
             return this.parseNodeLines(decodedLines, subscriptionName);
-        } catch (error: any) {
-            throw new Error(`Base64解码失败: ${error.message}`);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : String(error);
+            throw new Error(`Base64解码失败: ${msg}`);
         }
     }
 

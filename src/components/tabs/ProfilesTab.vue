@@ -98,28 +98,30 @@ onUnmounted(() => {
     class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
       <div class="flex-1"></div>
-      <div class="flex items-center gap-3 w-full sm:w-auto justify-end sm:justify-start">
-        <button @click="$emit('add-profile')"
-          class="btn-modern-enhanced btn-add text-sm font-semibold px-5 py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
-        <div class="relative" ref="profilesMoreMenuRef">
-          <button @click="showProfilesMoreMenu = !showProfilesMoreMenu"
-            class="p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20"
-              fill="currentColor">
-              <path
-                d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-            </svg>
-          </button>
-          <Transition name="slide-fade-sm">
-            <div v-if="showProfilesMoreMenu"
-              class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-              <button @click="toggleBatchDeleteMode"
-                class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
-              <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-              <button @click="$emit('delete-all-profiles'); showProfilesMoreMenu = false"
-                class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
-            </div>
-          </Transition>
+      <div class="flex flex-wrap items-center gap-2 ml-auto">
+        <div class="flex flex-wrap items-center gap-2">
+          <button @click="$emit('add-profile')"
+            class="btn-modern-enhanced btn-add text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
+          <div class="relative" ref="profilesMoreMenuRef">
+            <button @click="showProfilesMoreMenu = !showProfilesMoreMenu"
+              class="p-2 sm:p-4 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover-lift">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-300" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path
+                  d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+              </svg>
+            </button>
+            <Transition name="slide-fade-sm">
+              <div v-if="showProfilesMoreMenu"
+                class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
+                <button @click="toggleBatchDeleteMode"
+                  class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
+                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                <button @click="$emit('delete-all-profiles'); showProfilesMoreMenu = false"
+                  class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
     </div>

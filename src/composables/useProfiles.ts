@@ -82,22 +82,18 @@ export function useProfiles(config: Ref<AppConfig>) {
      * - 从服务器获取的数据初始化订阅组
      * - 确保每个订阅组都有必需的字段和默认值
      * 
-     * @param {any[]} profilesData - 原始订阅组数据数组
+     * @param {Partial<Profile>[]} profilesData - 原始订阅组数据数组
      */
-    function initializeProfiles(profilesData: any[]) {
+    function initializeProfiles(profilesData: Partial<Profile>[]) {
         profiles.value = (profilesData || []).map(p => ({
-            ...p,
-            // 确保有唯一 ID，如果没有则生成新的
             id: p.id || crypto.randomUUID(),
-            // 默认启用
+            name: p.name || `订阅组 ${Date.now()}`,
             enabled: p.enabled ?? true,
-            // 确保有订阅列表数组
             subscriptions: p.subscriptions || [],
-            // 确保有手动节点列表数组
             manualNodes: p.manualNodes || [],
-            // 确保有自定义 ID 字段（可能为空）
-            customId: p.customId || ''
-        }));
+            customId: p.customId || '',
+            ...p
+        } as Profile));
     }
 
     // ==================== 订阅组操作 ====================

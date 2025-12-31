@@ -14,6 +14,11 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 /**
+ * Toast 提示类型
+ */
+type ToastType = 'info' | 'success' | 'error' | 'warning';
+
+/**
  * Toast 提示接口定义
  */
 interface Toast {
@@ -21,8 +26,8 @@ interface Toast {
   id: string;
   /** 提示消息内容 */
   message: string;
-  /** 提示类型（info | success | error | warning） */
-  type: string;
+  /** 提示类型 */
+  type: ToastType;
 }
 
 /**
@@ -41,15 +46,15 @@ export const useToastStore = defineStore('toast', () => {
    * 显示 Toast 提示
    * 
    * @param {string} message - 提示消息内容
-   * @param {string} type - 提示类型（默认为 'info'）
+   * @param {ToastType} type - 提示类型（默认为 'info'）
    * @param {number} duration - 显示时长（毫秒），0 表示不自动关闭（默认 3000ms）
    */
-  function showToast(message: string, type = 'info', duration = 3000) {
+  function showToast(message: string, type: ToastType = 'info', duration = 3000) {
     // 生成唯一 ID（时间戳 + 随机字符串）
     const id = Date.now() + Math.random().toString(36).substr(2, 9);
 
     // 创建 Toast 对象
-    const toast = { id, message, type };
+    const toast: Toast = { id, message, type };
 
     // 添加到提示列表
     toasts.value.push(toast);

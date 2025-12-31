@@ -25,7 +25,7 @@ type SessionState = 'loading' | 'loggedIn' | 'loggedOut';
  * 使用 Setup 语法定义 Pinia Store
  */
 export const useSessionStore = defineStore('session', () => {
-  // =============== ===== 响应式状态 ====================
+  // ==================== 响应式状态 ====================
 
   /**
    * 会话状态

@@ -1,8 +1,27 @@
+<!--
+  ==================== 节点详情模态框 ====================
+  
+  功能说明：
+  - 查看订阅或订阅组的所有节点信息
+  - 支持搜索和筛选节点（含国家/地区别名智能匹配）
+  - 支持批量选择和复制节点
+  - 显示节点协议、名称、URL等详细信息
+  - 区分订阅组中的订阅节点和手动节点
+  
+  使用场景：
+  - 查看单个订阅的节点列表
+  - 查看订阅组聚合后的所有节点
+  - 复制选中的节点链接
+  
+  ==================================================
+-->
+
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import { subscriptionParser } from '@shared/subscription-parser';
 import type { Subscription, Profile, Node } from '../../types';
+import { getCountryTerms } from '../../lib/constants';
 
 const props = defineProps<{
   show: boolean;
@@ -51,14 +70,32 @@ watch(() => props.show, async (newVal) => {
   }
 });
 
-// 过滤后的节点列表
+// 过滤后的节点列表（支持国家/地区别名智能搜索）
 const filteredNodes = computed(() => {
   if (!searchTerm.value) return nodes.value;
   const term = searchTerm.value.toLowerCase();
-  return nodes.value.filter(node =>
-    node.name.toLowerCase().includes(term) ||
-    node.url.toLowerCase().includes(term)
-  );
+  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
+  const alternativeTerms = getCountryTerms(term);
+
+  return nodes.value.filter(node => {
+    const nodeName = node.name.toLowerCase();
+    const nodeUrl = node.url.toLowerCase();
+
+    // 基础匹配：节点名称或 URL 包含搜索词
+    if (nodeName.includes(term) || nodeUrl.includes(term)) {
+      return true;
+    }
+
+    // 高级匹配：节点名称或 URL 包含任一国家/地区相关词汇
+    for (const altTerm of alternativeTerms) {
+      const altTermLower = altTerm.toLowerCase();
+      if (nodeName.includes(altTermLower) || nodeUrl.includes(altTermLower)) {
+        return true;
+      }
+    }
+
+    return false;
+  });
 });
 
 // 获取单个订阅的节点信息
@@ -83,7 +120,7 @@ const fetchNodes = async () => {
     const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
     // Apply filtering and processing
     const processedNodes = subscriptionParser.processNodes(parsedNodes, props.subscription?.name || '', {
-      exclude: (props.subscription as any).exclude
+      exclude: props.subscription?.exclude
     });
 
     nodes.value = processedNodes.map(n => ({
@@ -94,9 +131,10 @@ const fetchNodes = async () => {
       enabled: true
     }));
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('获取节点信息失败:', error);
-    errorMessage.value = `获取节点信息失败: ${error.message}`;
+    const msg = error instanceof Error ? error.message : String(error);
+    errorMessage.value = `获取节点信息失败: ${msg}`;
     toastStore.showToast('获取节点信息失败', 'error');
   } finally {
     isLoading.value = false;
@@ -178,9 +216,10 @@ const fetchProfileNodes = async () => {
 
     nodes.value = profileNodes;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('获取订阅组节点信息失败:', error);
-    errorMessage.value = `获取节点信息失败: ${error.message}`;
+    const msg = error instanceof Error ? error.message : String(error);
+    errorMessage.value = `获取节点信息失败: ${msg}`;
     toastStore.showToast('获取节点信息失败', 'error');
   } finally {
     isLoading.value = false;
@@ -243,6 +282,15 @@ const copySelectedNodes = () => {
 
   navigator.clipboard.writeText(selectedNodeUrls.join('\n')).then(() => {
     toastStore.showToast(`已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
+  }).catch(() => {
+    toastStore.showToast('复制失败', 'error');
+  });
+};
+
+// 复制单个节点到剪贴板
+const copyToClipboard = (url: string) => {
+  navigator.clipboard.writeText(url).then(() => {
+    toastStore.showToast('已复制节点链接', 'success');
   }).catch(() => {
     toastStore.showToast('复制失败', 'error');
   });
@@ -351,40 +399,97 @@ const refreshNodes = async () => {
               </label>
             </div>
 
-            <!-- 节点卡片列表 -->
-            <div class="max-h-96 overflow-y-auto space-y-2">
+            <!-- 节点卡片列表 - 重新设计 -->
+            <div class="max-h-96 overflow-y-auto space-y-3">
               <div v-for="node in filteredNodes" :key="node.id"
-                class="flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                <input type="checkbox" :checked="selectedNodes.has(node.id)" @change="toggleNodeSelection(node.id)"
-                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 mr-3" />
-
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs px-2 py-1 rounded-full"
-                      :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color">
-                      {{ getProtocolInfo(node.protocol).icon }} {{ node.protocol.toUpperCase() }}
-                    </span>
-                    <!-- 仅在订阅组模式下显示来源标签 -->
-                    <template v-if="profile">
-                      <span v-if="node.type === 'subscription'"
-                        class="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-500">
-                        📡 {{ node.subscriptionName }}
-                      </span>
-                      <span v-else-if="node.type === 'manual'"
-                        class="text-xs px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-500">
-                        ✋ 手动
-                      </span>
-                    </template>
-                  </div>
-                  <p class="font-medium text-gray-900 dark:text-gray-100 truncate" :title="node.name">
-                    {{ node.name }}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-1" :title="node.url">
-                    {{ node.url }}
-                  </p>
+                class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden">
+                
+                <!-- 顶部彩色条 -->
+                <div class="h-1 bg-gradient-to-r"
+                  :class="getProtocolInfo(node.protocol).bg.includes('blue') ? 'from-blue-400 to-indigo-500' :
+                          getProtocolInfo(node.protocol).bg.includes('purple') ? 'from-purple-400 to-pink-500' :
+                          getProtocolInfo(node.protocol).bg.includes('green') ? 'from-green-400 to-emerald-500' :
+                          getProtocolInfo(node.protocol).bg.includes('red') ? 'from-red-400 to-rose-500' :
+                          'from-gray-400 to-gray-500'">
                 </div>
 
+                <div class="p-4">
+                  <!-- 头部：选择框 + 协议标签 + 来源标签 -->
+                  <div class="flex items-start gap-3 mb-3">
+                    <!-- 选择框 -->
+                    <input type="checkbox" 
+                      :checked="selectedNodes.has(node.id)" 
+                      @change="toggleNodeSelection(node.id)"
+                      class="mt-1 h-5 w-5 rounded-md border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all" />
 
+                    <!-- 标签组 -->
+                    <div class="flex-1 flex flex-wrap items-center gap-2">
+                      <!-- 协议标签 -->
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"
+                        :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color">
+                        <span class="text-base">{{ getProtocolInfo(node.protocol).icon }}</span>
+                        <span>{{ node.protocol.toUpperCase() }}</span>
+                      </span>
+
+                      <!-- 来源标签（订阅组模式） -->
+                      <template v-if="profile">
+                        <span v-if="node.type === 'subscription'"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                          </svg>
+                          <span>{{ node.subscriptionName }}</span>
+                        </span>
+                        <span v-else-if="node.type === 'manual'"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                          </svg>
+                          <span>手动添加</span>
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+
+                  <!-- 节点名称 -->
+                  <div class="mb-3">
+                    <h4 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                      {{ node.name }}
+                    </h4>
+                  </div>
+
+                  <!-- URL 展示区域 -->
+                  <div class="relative">
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <div class="flex items-start gap-2">
+                        <!-- URL 图标 -->
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        
+                        <!-- URL 文本 -->
+                        <div class="flex-1 min-w-0">
+                          <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed">
+                            {{ node.url }}
+                          </p>
+                        </div>
+
+                        <!-- 复制按钮 -->
+                        <button 
+                          @click="copyToClipboard(node.url)"
+                          class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group/copy"
+                          title="复制节点链接">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -32,9 +32,7 @@ import { ref, computed, onMounted, defineAsyncComponent, type PropType } from 'v
 
 // API 和工具函数
 import { batchUpdateNodes } from '../../lib/api';
-import { extractNodeName } from '../../lib/utils';
 import { useToastStore } from '../../stores/toast';
-import { useUIStore } from '../../stores/ui';
 
 // Composables（组合式函数）
 import { useSubscriptions } from '../../composables/useSubscriptions';
@@ -47,7 +45,7 @@ import { HTTP_REGEX } from '../../lib/constants';
 import { parseImportText, createSubscription, createNode } from '../../lib/importer';
 
 // 类型定义
-import type { Subscription, Profile, Node as AppNode, AppConfig, InitialData } from '../../types';
+import type { Subscription, Profile, Node as AppNode, AppConfig, InitialData, SubscriptionUserInfo } from '../../types';
 
 // 同步加载的组件（核心标签页）
 import DashboardHome from '../tabs/DashboardHome.vue';
@@ -55,15 +53,15 @@ import SubscriptionsTab from '../tabs/SubscriptionsTab.vue';
 import ProfilesTab from '../tabs/ProfilesTab.vue';
 import NodesTab from '../tabs/NodesTab.vue';
 import GeneratorTab from '../tabs/GeneratorTab.vue';
-import Modal from '../modals/BaseModal.vue';
 import SubscriptionImportModal from '../modals/SubscriptionImportModal.vue';
 import NodeDetailsModal from '../modals/NodeDetailsModal.vue';
-import NodeFilterEditor from '../editors/NodeFilterEditor.vue';
+import ConfirmModal from '../modals/ConfirmModal.vue';
 
 // 异步加载的组件（按需加载，优化性能）
-const SettingsModal = defineAsyncComponent(() => import('../modals/SettingsModal.vue'));
 const BulkImportModal = defineAsyncComponent(() => import('../modals/BulkImportModal.vue'));
 const ProfileModal = defineAsyncComponent(() => import('../modals/ProfileModal.vue'));
+const SubscriptionEditModal = defineAsyncComponent(() => import('../modals/SubscriptionEditModal.vue'));
+const NodeEditModal = defineAsyncComponent(() => import('../modals/NodeEditModal.vue'));
 
 // ==================== Props 定义 ====================
 
@@ -88,7 +86,6 @@ const emit = defineEmits(['update-data']);
 // ==================== Store 和工具 ====================
 
 const { showToast } = useToastStore();
-const uiStore = useUIStore();
 
 /** 加载状态 */
 const isLoading = ref(true);
@@ -359,18 +356,21 @@ const handleEditSubscription = (subId: string) => {
  * - 自动保存并触发数据更新
  * - 新建订阅时自动获取节点数量
  */
-const handleSaveSubscription = async () => {
+const handleSaveSubscription = async (updatedSub?: Subscription) => {
+  // 使用传入的参数，如果没有则使用 editingSubscription.value
+  const subToSave = updatedSub || editingSubscription.value;
+  
   // 验证订阅链接
-  if (!editingSubscription.value?.url) return showToast('订阅链接不能为空', 'error');
-  if (!HTTP_REGEX.test(editingSubscription.value.url)) return showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error');
+  if (!subToSave?.url) return showToast('订阅链接不能为空', 'error');
+  if (!HTTP_REGEX.test(subToSave.url)) return showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error');
 
   let updatePromise = null;
   if (isNewSubscription.value) {
     // 新建订阅
-    updatePromise = addSubscription({ ...editingSubscription.value, id: crypto.randomUUID() });
+    updatePromise = addSubscription({ ...subToSave, id: crypto.randomUUID() });
   } else {
-    // 更新订阅
-    updateSubscription(editingSubscription.value);
+    // 更新订阅 - 使用从模态框传递来的最新数据
+    updateSubscription(subToSave);
   }
 
   // 保存数据
@@ -480,15 +480,23 @@ const handleUpdateAllSubscriptions = async () => {
   try {
     const result = await batchUpdateNodes(enabledSubs.map(sub => sub.id));
     
+    // 定义更新结果接口
+    interface UpdateResult {
+      success: boolean;
+      id: string;
+      nodeCount?: number;
+      userInfo?: SubscriptionUserInfo;
+    }
+
     // 兼容 data 和 results 字段，处理后端可能返回的不同结构
-    const updateResults = Array.isArray(result.data) 
+    const updateResults = (Array.isArray(result.data) 
       ? result.data 
-      : (Array.isArray((result as any).results) ? (result as any).results : null);
+      : (Array.isArray((result as any).results) ? (result as any).results : null)) as UpdateResult[] | null;
 
     if (result.success && updateResults) {
        // 使用 Map 提升查找性能
        const subsMap = new Map(subscriptions.value.map(s => [s.id, s]));
-       updateResults.forEach((r: any) => {
+       updateResults.forEach((r) => {
          if (r.success) {
            const sub = subsMap.get(r.id);
            if (sub) {
@@ -497,7 +505,7 @@ const handleUpdateAllSubscriptions = async () => {
            }
          }
        });
-       const successCount = updateResults.filter((r: any) => r.success).length;
+       const successCount = updateResults.filter((r) => r.success).length;
        showToast(`成功更新了 ${successCount} 个订阅`, 'success');
        await handleDirectSave('订阅更新', false);
     } else {
@@ -533,22 +541,6 @@ const handleEditNode = (nodeId: string) => {
     isNewNode.value = false;
     editingNode.value = { ...node };
     showNodeModal.value = true;
-  }
-};
-
-/**
- * 节点 URL 输入处理
- * 自动从 URL 提取节点名称
- * 
- * @param {Event} event - 输入事件
- */
-const handleNodeUrlInput = (event: Event) => {
-  if (!editingNode.value) return;
-  const target = event.target as HTMLTextAreaElement;
-  const newUrl = target.value;
-  // 如果输入了 URL 但没有名称，自动提取名称
-  if (newUrl && !editingNode.value.name) {
-    editingNode.value.name = extractNodeName(newUrl);
   }
 };
 
@@ -902,64 +894,58 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
   <BulkImportModal v-model:show="showBulkImportModal" @import="handleBulkImport" />
   
   <!-- 删除所有订阅确认模态框 -->
-  <Modal v-model:show="showDeleteSubsModal" @confirm="handleDeleteAllSubscriptionsWithCleanup">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认清空订阅</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除所有**订阅**吗？此操作将标记为待保存，不会影响手动节点。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteSubsModal"
+    @confirm="handleDeleteAllSubscriptionsWithCleanup"
+    title="确认清空订阅"
+    message="您确定要删除所有<strong>订阅</strong>吗？此操作将标记为待保存，不会影响手动节点。"
+    type="danger"
+  />
   
   <!-- 删除所有节点确认模态框 -->
-  <Modal v-model:show="showDeleteNodesModal" @confirm="handleDeleteAllNodesWithCleanup">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认清空节点</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除所有**手动节点**吗？此操作将标记为待保存，不会影响订阅。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteNodesModal"
+    @confirm="handleDeleteAllNodesWithCleanup"
+    title="确认清空节点"
+    message="您确定要删除所有<strong>手动节点</strong>吗？此操作将标记为待保存，不会影响订阅。"
+    type="danger"
+  />
   
   <!-- 删除所有订阅组确认模态框 -->
-  <Modal v-model:show="showDeleteProfilesModal" @confirm="handleDeleteAllProfiles">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认清空订阅组</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除所有**订阅组**吗？此操作不可逆。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteProfilesModal"
+    @confirm="handleDeleteAllProfiles"
+    title="确认清空订阅组"
+    message="您确定要删除所有<strong>订阅组</strong>吗？此操作不可逆。"
+    type="danger"
+  />
 
   <!-- 单个订阅删除确认模态框 -->
-  <Modal v-model:show="showDeleteSingleSubModal" @confirm="handleConfirmDeleteSingleSub">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认删除订阅</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteSingleSubModal"
+    @confirm="handleConfirmDeleteSingleSub"
+    title="确认删除订阅"
+    message="您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。"
+    type="danger"
+  />
 
   <!-- 单个节点删除确认模态框 -->
-  <Modal v-model:show="showDeleteSingleNodeModal" @confirm="handleConfirmDeleteSingleNode">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认删除节点</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除此手动节点吗？此操作将标记为待保存，不会影响订阅。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteSingleNodeModal"
+    @confirm="handleConfirmDeleteSingleNode"
+    title="确认删除节点"
+    message="您确定要删除此手动节点吗？此操作将标记为待保存，不会影响订阅。"
+    type="danger"
+  />
 
   <!-- 单个订阅组删除确认模态框 -->
-  <Modal v-model:show="showDeleteSingleProfileModal" @confirm="handleConfirmDeleteSingleProfile">
-    <template #title>
-      <h3 class="text-xl font-bold text-red-500">确认删除订阅组</h3>
-    </template>
-    <template #body>
-      <p class="text-base text-gray-400">您确定要删除此订阅组吗？此操作不可逆。</p>
-    </template>
-  </Modal>
+  <ConfirmModal
+    v-model:show="showDeleteSingleProfileModal"
+    @confirm="handleConfirmDeleteSingleProfile"
+    title="确认删除订阅组"
+    message="您确定要删除此订阅组吗？此操作不可逆。"
+    type="danger"
+  />
 
   <!-- 订阅组编辑模态框（异步加载） -->
   <ProfileModal 
@@ -973,79 +959,25 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
     size="2xl" 
   />
 
-  <!-- 节点编辑模态框 -->
-  <Modal v-if="editingNode" v-model:show="showNodeModal" @confirm="handleSaveNode">
-    <template #title>
-      <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ isNewNode ? '新增手动节点' : '编辑手动节点' }}</h3>
-    </template>
-    <template #body>
-      <div class="space-y-4">
-        <!-- 节点名称输入 -->
-        <div>
-          <label for="node-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点名称</label>
-          <input 
-            type="text"
-            id="node-name" 
-            v-model="editingNode.name" 
-            placeholder="（可选）不填将自动获取"
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none text-base dark:text-white"
-          >
-        </div>
-        <!-- 节点 URL 输入 -->
-        <div>
-          <label for="node-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">节点链接</label>
-          <textarea 
-            id="node-url"
-            v-model="editingNode.url" 
-            @input="handleNodeUrlInput" 
-            rows="4"
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none text-base font-mono dark:text-white"
-          ></textarea>
-        </div>
-      </div>
-    </template>
-  </Modal>
+  <!-- 节点编辑模态框（异步加载） -->
+  <NodeEditModal
+    v-if="showNodeModal"
+    v-model:show="showNodeModal"
+    :node="editingNode"
+    :is-new="isNewNode"
+    @save="handleSaveNode"
+  />
 
-  <!-- 订阅编辑模态框 -->
-  <Modal v-if="editingSubscription" v-model:show="showSubModal" @confirm="handleSaveSubscription" size="2xl">
-    <template #title>
-      <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ isNewSubscription ? '新增订阅' : '编辑订阅' }}</h3>
-    </template>
-    <template #body>
-      <div class="space-y-4">
-        <!-- 订阅名称输入 -->
-        <div>
-          <label for="sub-edit-name" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅名称</label>
-          <input 
-            type="text"
-            id="sub-edit-name" 
-            v-model="editingSubscription.name" 
-            placeholder="（可选）不填将自动获取"
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none text-base dark:text-white"
-          >
-        </div>
-        <!-- 订阅 URL 输入 -->
-        <div>
-          <label for="sub-edit-url" class="block text-base font-medium text-gray-700 dark:text-gray-300">订阅链接</label>
-          <input 
-            type="text"
-            id="sub-edit-url" 
-            v-model="editingSubscription.url" 
-            placeholder="https://..."
-            class="mt-1 block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none text-base font-mono dark:text-white"
-          >
-        </div>
-        <!-- 节点过滤规则编辑器 -->
-        <div>
-          <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-2">节点过滤规则</label>
-          <NodeFilterEditor v-model="editingSubscription.exclude" />
-        </div>
-      </div>
-    </template>
-  </Modal>
+  <!-- 订阅编辑模态框（异步加载） -->
+  <SubscriptionEditModal
+    v-if="showSubModal"
+    v-model:show="showSubModal"
+    :subscription="editingSubscription"
+    :is-new="isNewSubscription"
+    @save="handleSaveSubscription"
+  />
 
-  <!-- 设置模态框（异步加载） -->
-  <SettingsModal v-model:show="uiStore.isSettingsModalVisible" />
+  <!-- 注意：SettingsModal 已移至 App.vue ，通过 uiStore 管理状态 -->
   
   <!-- 订阅导入模态框 -->
   <SubscriptionImportModal 
