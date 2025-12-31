@@ -49,7 +49,7 @@ export class SubscriptionConverter {
             'loon': () => this.toLoon(nodes, options),
         };
 
-        const handler = formatHandlers[format.toLowerCase()];
+        const handler = formatHandlers[format.trim().toLowerCase()];
         if (!handler) {
             throw new Error(`不支持的转换格式: ${format}`);
         }
@@ -186,11 +186,15 @@ export class SubscriptionConverter {
                 'vless': () => this.parseVlessToClash(url),
                 'trojan': () => this.parseTrojanToClash(url),
                 'ss': () => this.parseShadowsocksToClash(url),
-                'ssr': () => null, // SSR 不被 Clash  Meta 原生支持
+                'shadowsocks': () => this.parseShadowsocksToClash(url),
+                'ssr': () => null, // SSR 不被 Clash Meta 原生支持
                 'hysteria': () => this.parseHysteriaToClash(url),
                 'hysteria2': () => this.parseHysteria2ToClash(url),
                 'hy2': () => this.parseHysteria2ToClash(url),
                 'tuic': () => this.parseTuicToClash(url),
+                'snell': () => this.parseSnellToClash(url),
+                'wireguard': () => this.parseWireGuardToClash(url),
+                'wg': () => this.parseWireGuardToClash(url),
             };
 
             const handler = handlers[protocol || ''];
@@ -392,7 +396,7 @@ export class SubscriptionConverter {
         // 处理两种 SS URL 格式
         if (urlObj.username) {
             // ss://base64@server:port 格式
-            userInfo = this.decodeBase64(urlObj.username);
+            userInfo = this.decodeBase64(decodeURIComponent(urlObj.username));
             server = urlObj.hostname;
             port = Number(urlObj.port);
         } else {
@@ -538,6 +542,91 @@ export class SubscriptionConverter {
     }
 
     /**
+     * 解析 Snell URL 为 Clash 代理配置
+     */
+    private parseSnellToClash(url: string): any {
+        // Snell URL格式: snell://server:port?psk=xxx&version=4&obfs=http&obfs-host=xxx
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+        const name = decodeURIComponent(urlObj.hash.slice(1)) || 'Snell节点';
+
+        const proxy: any = {
+            name,
+            type: 'snell',
+            server: urlObj.hostname.replace(/^\[|\]$/g, ''),
+            port: Number(urlObj.port),
+            psk: params.get('psk') || params.get('password') || '',
+            version: Number(params.get('version') || '4'),
+            udp: true,
+        };
+
+        // Obfs 混淆
+        const obfs = params.get('obfs');
+        if (obfs) {
+            proxy['obfs-opts'] = {
+                mode: obfs, // http, tls
+            };
+            if (params.get('obfs-host')) {
+                proxy['obfs-opts'].host = params.get('obfs-host');
+            }
+        }
+
+        return proxy;
+    }
+
+    /**
+     * 解析 WireGuard URL 为 Clash 代理配置
+     */
+    private parseWireGuardToClash(url: string): any {
+        // WireGuard URL格式: wireguard://privatekey@server:port?publickey=xxx&ip=xxx
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+        const name = decodeURIComponent(urlObj.hash.slice(1)) || 'WireGuard节点';
+
+        const proxy: any = {
+            name,
+            type: 'wireguard',
+            server: urlObj.hostname.replace(/^\[|\]$/g, ''),
+            port: Number(urlObj.port || '51820'),
+            'private-key': decodeURIComponent(urlObj.username) || params.get('private-key') || '',
+            'public-key': params.get('public-key') || params.get('publickey') || '',
+            udp: true,
+        };
+
+        // IP 地址
+        const ip = params.get('ip') || params.get('address');
+        if (ip) {
+            proxy.ip = ip;
+        }
+
+        // IPv6
+        const ipv6 = params.get('ipv6');
+        if (ipv6) {
+            proxy.ipv6 = ipv6;
+        }
+
+        // Pre-shared key
+        const preshared = params.get('preshared-key') || params.get('psk');
+        if (preshared) {
+            proxy['preshared-key'] = preshared;
+        }
+
+        // MTU
+        const mtu = params.get('mtu');
+        if (mtu) {
+            proxy.mtu = Number(mtu);
+        }
+
+        // Reserved
+        const reserved = params.get('reserved');
+        if (reserved) {
+            proxy.reserved = reserved.split(',').map(n => Number(n));
+        }
+
+        return proxy;
+    }
+
+    /**
      * 转换为 Sing-Box JSON 配置
      */
     toSingBox(nodes: Node[], _options: ConverterOptions = {}): string {
@@ -666,6 +755,9 @@ export class SubscriptionConverter {
                 'shadowsocks': () => this.parseShadowsocksToSingBox(url, node.name),
                 'hysteria2': () => this.parseHysteria2ToSingBox(url, node.name),
                 'hy2': () => this.parseHysteria2ToSingBox(url, node.name),
+                'tuic': () => this.parseTuicToSingBox(url, node.name),
+                'wireguard': () => this.parseWireGuardToSingBox(url, node.name),
+                'wg': () => this.parseWireGuardToSingBox(url, node.name),
             };
 
             const handler = handlers[protocol || ''];
@@ -845,7 +937,7 @@ export class SubscriptionConverter {
         let port = 0;
 
         if (urlObj.username) {
-            const userInfo = this.decodeBase64(urlObj.username);
+            const userInfo = this.decodeBase64(decodeURIComponent(urlObj.username));
             [method, password] = userInfo.split(':');
             server = urlObj.hostname;
             port = Number(urlObj.port);
@@ -896,6 +988,14 @@ export class SubscriptionConverter {
             password: decodeURIComponent(urlObj.username),
         };
 
+        // Bandwidth
+        if (params.get('up') || params.get('upmbps')) {
+            outbound.up_mbps = Number(params.get('up') || params.get('upmbps'));
+        }
+        if (params.get('down') || params.get('downmbps')) {
+            outbound.down_mbps = Number(params.get('down') || params.get('downmbps'));
+        }
+
         // TLS
         outbound.tls = {
             enabled: true,
@@ -912,6 +1012,102 @@ export class SubscriptionConverter {
                 type: params.get('obfs'),
                 password: params.get('obfs-password') || '',
             };
+        }
+
+        return outbound;
+    }
+
+    /**
+     * TUIC to Sing-Box Outbound
+     */
+    private parseTuicToSingBox(url: string, name: string): any {
+        // TUIC URL格式: tuic://uuid:password@server:port?sni=xxx&alpn=h3&congestion_control=cubic
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const outbound: any = {
+            type: 'tuic',
+            tag: name,
+            server: urlObj.hostname.replace(/^\[|\]$/g, ''),
+            server_port: Number(urlObj.port),
+            uuid: urlObj.username,
+            password: decodeURIComponent(urlObj.password || ''),
+        };
+
+        // TLS
+        outbound.tls = {
+            enabled: true,
+            server_name: params.get('sni') || urlObj.hostname,
+            insecure: params.get('allowInsecure') === '1' || params.get('skip_cert_verify') === '1',
+        };
+
+        if (params.get('alpn')) {
+            outbound.tls.alpn = params.get('alpn')!.split(',');
+        }
+
+        // Congestion control
+        if (params.get('congestion_control') || params.get('cc')) {
+            outbound.congestion_control = params.get('congestion_control') || params.get('cc');
+        }
+
+        // UDP relay mode
+        if (params.get('udp_relay_mode')) {
+            outbound.udp_relay_mode = params.get('udp_relay_mode');
+        }
+
+        // Heartbeat
+        if (params.get('heartbeat')) {
+            outbound.heartbeat = params.get('heartbeat');
+        }
+
+        return outbound;
+    }
+
+    /**
+     * WireGuard to Sing-Box Outbound
+     */
+    private parseWireGuardToSingBox(url: string, name: string): any {
+        // WireGuard URL格式: wireguard://privatekey@server:port?publickey=xxx&ip=10.0.0.2
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const outbound: any = {
+            type: 'wireguard',
+            tag: name,
+            server: urlObj.hostname.replace(/^\[|\]$/g, ''),
+            server_port: Number(urlObj.port || '51820'),
+            private_key: decodeURIComponent(urlObj.username) || params.get('private-key') || params.get('private_key') || '',
+            peer_public_key: params.get('public-key') || params.get('publickey') || params.get('public_key') || '',
+            local_address: [],
+        };
+
+        // Local addresses (IP)
+        const ip = params.get('ip') || params.get('address');
+        if (ip) {
+            outbound.local_address.push(ip);
+        }
+
+        const ipv6 = params.get('ipv6');
+        if (ipv6) {
+            outbound.local_address.push(ipv6);
+        }
+
+        // Pre-shared key
+        const preshared = params.get('preshared-key') || params.get('preshared_key') || params.get('psk');
+        if (preshared) {
+            outbound.pre_shared_key = preshared;
+        }
+
+        // MTU
+        const mtu = params.get('mtu');
+        if (mtu) {
+            outbound.mtu = Number(mtu);
+        }
+
+        // Reserved
+        const reserved = params.get('reserved');
+        if (reserved) {
+            outbound.reserved = reserved.split(',').map(n => Number(n));
         }
 
         return outbound;
@@ -965,6 +1161,10 @@ export class SubscriptionConverter {
                 'shadowsocks': () => this.parseShadowsocksToSurge(url, node.name),
                 'hysteria2': () => this.parseHysteria2ToSurge(url, node.name),
                 'hy2': () => this.parseHysteria2ToSurge(url, node.name),
+                'snell': () => this.parseSnellToSurge(url, node.name),
+                'tuic': () => this.parseTuicToSurge(url, node.name),
+                'wireguard': () => this.parseWireGuardToSurge(url, node.name),
+                'wg': () => this.parseWireGuardToSurge(url, node.name),
             };
 
             const handler = handlers[protocol || ''];
@@ -984,7 +1184,6 @@ export class SubscriptionConverter {
         const config = JSON.parse(this.decodeBase64(base64Content));
 
         const parts = [
-            name,
             'vmess',
             config.add,
             config.port,
@@ -1006,7 +1205,7 @@ export class SubscriptionConverter {
             if (config.host) parts.push(`ws-headers=Host:${config.host}`);
         }
 
-        return parts.join(', ');
+        return `${name} = ${parts.join(', ')}`;
     }
 
     /**
@@ -1017,7 +1216,6 @@ export class SubscriptionConverter {
         const params = new URLSearchParams(urlObj.search);
 
         const parts = [
-            name,
             'trojan',
             urlObj.hostname.replace(/^\[|\]$/g, ''),
             urlObj.port,
@@ -1041,7 +1239,7 @@ export class SubscriptionConverter {
             if (params.get('host')) parts.push(`ws-headers=Host:${params.get('host')}`);
         }
 
-        return parts.join(', ');
+        return `${name} = ${parts.join(', ')}`;
     }
 
     /**
@@ -1055,7 +1253,7 @@ export class SubscriptionConverter {
         let port = 0;
 
         if (urlObj.username) {
-            const userInfo = this.decodeBase64(urlObj.username);
+            const userInfo = this.decodeBase64(decodeURIComponent(urlObj.username));
             [method, password] = userInfo.split(':');
             server = urlObj.hostname;
             port = Number(urlObj.port);
@@ -1068,7 +1266,6 @@ export class SubscriptionConverter {
         }
 
         const parts = [
-            name,
             'ss',
             server.replace(/^\[|\]$/g, ''),
             port,
@@ -1080,10 +1277,15 @@ export class SubscriptionConverter {
         const params = new URLSearchParams(urlObj.search);
         const plugin = params.get('plugin');
         if (plugin && plugin.includes('obfs')) {
-            parts.push('obfs=http'); // 简化处理
+            parts.push('obfs=http');
+            // Try to extract obfs-host from plugin string (obfs-local;obfs=http;obfs-host=xxx)
+            const hostMatch = plugin.match(/obfs-host=([^;]+)/);
+            if (hostMatch) {
+                parts.push(`obfs-host=${hostMatch[1]}`);
+            }
         }
 
-        return parts.join(', ');
+        return `${name} = ${parts.join(', ')}`;
     }
 
     /**
@@ -1094,12 +1296,16 @@ export class SubscriptionConverter {
         const params = new URLSearchParams(urlObj.search);
 
         const parts = [
-            name,
             'hysteria2',
             urlObj.hostname.replace(/^\[|\]$/g, ''),
             urlObj.port,
             `password=${decodeURIComponent(urlObj.username)}`,
         ];
+
+        // Bandwidth
+        if (params.get('down') || params.get('downmbps')) {
+            parts.push(`download-bandwidth=${params.get('down') || params.get('downmbps')}`);
+        }
 
         // SNI
         if (params.get('sni')) {
@@ -1111,7 +1317,82 @@ export class SubscriptionConverter {
             parts.push('skip-cert-verify=true');
         }
 
-        return parts.join(', ');
+        return `${name} = ${parts.join(', ')}`;
+    }
+
+    /**
+     * Snell to Surge配置行
+     */
+    private parseSnellToSurge(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'snell',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+            `psk=${params.get('psk') || params.get('password')}`,
+            `version=${params.get('version') || '4'}`,
+        ];
+
+        // Obfs
+        const obfs = params.get('obfs');
+        if (obfs) {
+            parts.push(`obfs=${obfs}`);
+            if (params.get('obfs-host')) {
+                parts.push(`obfs-host=${params.get('obfs-host')}`);
+            }
+        }
+
+        return `${name} = ${parts.join(', ')}`;
+    }
+
+    /**
+     * TUIC to Surge配置行
+     */
+    private parseTuicToSurge(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'tuic',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+            `uuid=${urlObj.username}`,
+            `token=${decodeURIComponent(urlObj.password || '')}`, // Changed from password to token for Surge
+        ];
+
+        // SNI
+        if (params.get('sni')) {
+            parts.push(`sni=${params.get('sni')}`);
+        }
+
+        // ALPN
+        if (params.get('alpn')) {
+            parts.push(`alpn=${params.get('alpn')}`);
+        }
+
+        // Skip cert verify
+        if (params.get('skip-cert-verify') === '1' || params.get('allowInsecure') === '1') {
+            parts.push('skip-cert-verify=true');
+        }
+
+        return `${name} = ${parts.join(', ')}`;
+    }
+
+    /**
+     * WireGuard to Surge配置行
+     */
+    private parseWireGuardToSurge(_url: string, name: string): string {
+        // Surge WireGuard uses a section-based configuration
+        // Format: name = wireguard, section-name = SectionName
+        const sectionName = name.replace(/[^a-zA-Z0-9]/g, '_');
+
+        return `${name} = wireguard, section-name = ${sectionName}`;
+
+        // Note: The actual WireGuard config goes in a [WireGuard SectionName] section
+        // which includes: private-key, self-ip, dns-server, mtu, peer settings
+        // This is typically done separately in the full configuration
     }
 
     /**
@@ -1153,9 +1434,18 @@ export class SubscriptionConverter {
         try {
             const handlers: Record<string, () => string | null> = {
                 'vmess': () => this.parseVmessToLoon(url, node.name),
+                'vless': () => this.parseVlessToLoon(url, node.name),
                 'trojan': () => this.parseTrojanToLoon(url, node.name),
                 'ss': () => this.parseShadowsocksToLoon(url, node.name),
                 'shadowsocks': () => this.parseShadowsocksToLoon(url, node.name),
+                'ssr': () => this.parseSSRToLoon(url, node.name),
+                'shadowsocksr': () => this.parseSSRToLoon(url, node.name),
+                'hysteria2': () => this.parseHysteria2ToLoon(url, node.name),
+                'hy2': () => this.parseHysteria2ToLoon(url, node.name),
+                'wireguard': () => this.parseWireGuardToLoon(url, node.name),
+                'wg': () => this.parseWireGuardToLoon(url, node.name),
+                'snell': () => this.parseSnellToLoon(url, node.name),
+                'tuic': () => this.parseTuicToLoon(url, node.name),
             };
 
             const handler = handlers[protocol || ''];
@@ -1175,7 +1465,6 @@ export class SubscriptionConverter {
         const config = JSON.parse(this.decodeBase64(base64Content));
 
         const parts = [
-            name,
             'VMess',
             config.add,
             config.port,
@@ -1195,7 +1484,92 @@ export class SubscriptionConverter {
             if (config.sni) parts.push(`tls-name:${config.sni}`);
         }
 
-        return parts.join(',');
+        return `${name} = ${parts.join(',')}`;
+    }
+
+    /**
+     * VLESS to Loon配置行
+     */
+    private parseVlessToLoon(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'VLESS',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+            decodeURIComponent(urlObj.username), // UUID
+        ];
+
+        // Flow
+        const flow = params.get('flow');
+        if (flow) {
+            parts.push(`flow:${flow}`);
+        }
+
+        // 安全层
+        const security = params.get('security');
+        if (security === 'tls') {
+            parts.push('over-tls:true');
+            if (params.get('sni')) {
+                parts.push(`tls-name:${params.get('sni')}`);
+            }
+            if (params.get('alpn')) {
+                parts.push(`alpn:${params.get('alpn')}`);
+            }
+            if (params.get('allowInsecure') === '1') {
+                parts.push('skip-cert-verify:true');
+            }
+        } else if (security === 'reality') {
+            // Loon的Reality支持: xtls-rprx-vision + reality
+            parts.push('over-tls:true');
+            parts.push('xtls-rprx-vision:true');
+
+            if (params.get('sni')) {
+                parts.push(`tls-name:${params.get('sni')}`);
+            }
+
+            // Reality参数
+            if (params.get('pbk')) {
+                parts.push(`public-key:${params.get('pbk')}`);
+            }
+            if (params.get('sid')) {
+                parts.push(`short-id:${params.get('sid')}`);
+            }
+            if (params.get('spx')) {
+                parts.push(`spider-x:${params.get('spx')}`);
+            }
+            if (params.get('fp')) {
+                parts.push(`fingerprint:${params.get('fp')}`);
+            }
+        }
+
+        // 传输协议
+        const network = params.get('type') || 'tcp';
+        if (network === 'ws') {
+            parts.push('transport:ws');
+            if (params.get('path')) {
+                parts.push(`path:${params.get('path')}`);
+            }
+            if (params.get('host')) {
+                parts.push(`host:${params.get('host')}`);
+            }
+        } else if (network === 'grpc') {
+            parts.push('transport:grpc');
+            if (params.get('serviceName')) {
+                parts.push(`serviceName:${params.get('serviceName')}`);
+            }
+        } else if (network === 'http' || network === 'h2') {
+            parts.push('transport:http');
+            if (params.get('path')) {
+                parts.push(`path:${params.get('path')}`);
+            }
+            if (params.get('host')) {
+                parts.push(`host:${params.get('host')}`);
+            }
+        }
+
+        return `${name} = ${parts.join(',')}`;
     }
 
     /**
@@ -1206,7 +1580,6 @@ export class SubscriptionConverter {
         const params = new URLSearchParams(urlObj.search);
 
         const parts = [
-            name,
             'Trojan',
             urlObj.hostname.replace(/^\[|\]$/g, ''),
             urlObj.port,
@@ -1227,7 +1600,7 @@ export class SubscriptionConverter {
             if (params.get('host')) parts.push(`host:${params.get('host')}`);
         }
 
-        return parts.join(',');
+        return `${name} = ${parts.join(',')}`;
     }
 
     /**
@@ -1241,7 +1614,7 @@ export class SubscriptionConverter {
         let port = 0;
 
         if (urlObj.username) {
-            const userInfo = this.decodeBase64(urlObj.username);
+            const userInfo = this.decodeBase64(decodeURIComponent(urlObj.username));
             [method, password] = userInfo.split(':');
             server = urlObj.hostname;
             port = Number(urlObj.port);
@@ -1254,7 +1627,6 @@ export class SubscriptionConverter {
         }
 
         const parts = [
-            name,
             'Shadowsocks',
             server.replace(/^\[|\]$/g, ''),
             port,
@@ -1262,12 +1634,175 @@ export class SubscriptionConverter {
             `"${password}"`,
         ];
 
-        return parts.join(',');
+        // Plugin (Obfs)
+        const params = new URLSearchParams(urlObj.search);
+        const plugin = params.get('plugin');
+        if (plugin && plugin.includes('obfs')) {
+            parts.push('obfs-name:http'); // Loon uses obfs-name for obfs type
+            const hostMatch = plugin.match(/obfs-host=([^;]+)/);
+            if (hostMatch) {
+                parts.push(`obfs-host:${hostMatch[1]}`);
+            }
+        }
+
+        return `${name} = ${parts.join(',')}`;
+    }
+
+    /**
+     * SSR to Loon配置行
+     */
+    private parseSSRToLoon(url: string, name: string): string {
+        const base64Part = url.replace('ssr://', '');
+        const decoded = this.decodeBase64(base64Part);
+
+        // SSR格式: server:port:protocol:method:obfs:password_base64/?params
+        const match = decoded.match(/^(.+?):(\d+):(.+?):(.+?):(.+?):(.+?)\/?\??(.*)$/);
+        if (!match) return '';
+
+        const [, server, port, protocol, method, obfs, passwordBase64] = match;
+        const password = this.decodeBase64(passwordBase64.replace(/_/g, '/').replace(/-/g, '+'));
+
+        return `${name} = ShadowsocksR,${server},${port},${method},"${password}",protocol:${protocol},obfs:${obfs}`;
+    }
+
+    /**
+     * Hysteria2 to Loon配置行
+     */
+    private parseHysteria2ToLoon(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'Hysteria2',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+            decodeURIComponent(urlObj.username), // password
+        ];
+
+        // Bandwidth
+        if (params.get('down') || params.get('downmbps')) {
+            parts.push(`download-bandwidth:${params.get('down') || params.get('downmbps')}`);
+        }
+
+        // SNI
+        if (params.get('sni')) {
+            parts.push(`sni:${params.get('sni')}`);
+        }
+
+        // Skip cert verify
+        if (params.get('insecure') === '1' || params.get('allowInsecure') === '1') {
+            parts.push('skip-cert-verify:true');
+        }
+
+        return `${name} = ${parts.join(',')}`;
+    }
+
+    /**
+     * WireGuard to Loon配置行
+     */
+    private parseWireGuardToLoon(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'WireGuard',
+        ];
+
+        // Loon WireGuard config - simplified format
+        // interface-ip
+        const ip = params.get('ip') || params.get('address');
+        if (ip) {
+            parts.push(`interface-ip:${ip}`);
+        }
+
+        // private-key
+        const privateKey = decodeURIComponent(urlObj.username) || params.get('private-key') || params.get('private_key');
+        if (privateKey) {
+            parts.push(`private-key:${privateKey}`);
+        }
+
+        // MTU
+        const mtu = params.get('mtu');
+        if (mtu) {
+            parts.push(`mtu:${mtu}`);
+        }
+
+        // Peer info
+        parts.push(`peer:(public-key:${params.get('public-key') || params.get('publickey')},endpoint:${urlObj.hostname}:${urlObj.port || '51820'})`);
+
+        return `${name} = ${parts.join(',')}`;
+    }
+
+    /**
+     * Snell to Loon配置行
+     */
+    private parseSnellToLoon(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'Snell',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+            `psk=${params.get('psk') || params.get('password')}`,
+            `version=${params.get('version') || '4'}`,
+        ];
+
+        if (params.get('obfs')) {
+            parts.push(`obfs=${params.get('obfs')}`);
+            if (params.get('obfs-host')) {
+                parts.push(`obfs-host=${params.get('obfs-host')}`);
+            }
+        }
+
+        return `${name} = ${parts.join(',')}`;
+    }
+
+    /**
+     * TUIC to Loon配置行
+     */
+    private parseTuicToLoon(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts = [
+            'TUIC',
+            urlObj.hostname.replace(/^\[|\]$/g, ''),
+            urlObj.port,
+        ];
+
+        // TUIC v5 uses uuid and password (token)
+        if (urlObj.username) {
+            parts.push(`uuid=${urlObj.username}`);
+        }
+        if (urlObj.password) {
+            parts.push(`password=${decodeURIComponent(urlObj.password)}`);
+        }
+
+        // SNI
+        if (params.get('sni')) {
+            parts.push(`sni=${params.get('sni')}`);
+        }
+
+        // ALPN
+        if (params.get('alpn')) {
+            parts.push(`alpn=${params.get('alpn')}`);
+        }
+
+        // Skip cert verify
+        if (params.get('skip-cert-verify') === '1' || params.get('allowInsecure') === '1') {
+            parts.push('skip-cert-verify=true');
+        }
+
+        return `${name} = ${parts.join(',')}`;
     }
 
     // ========== 工具方法 ==========
 
     private encodeBase64(str: string): string {
+        if (typeof Buffer !== 'undefined') {
+            return Buffer.from(str).toString('base64');
+        }
         try {
             const bytes = new TextEncoder().encode(str);
             const binaryString = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
@@ -1280,6 +1815,9 @@ export class SubscriptionConverter {
     }
 
     private decodeBase64(str: string): string {
+        if (typeof Buffer !== 'undefined') {
+            return Buffer.from(str, 'base64').toString('utf-8');
+        }
         try {
             const binaryString = atob(str);
             const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));

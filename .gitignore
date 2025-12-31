@@ -30,6 +30,7 @@ dist-ssr
 .gemini/
 /.agent/
 /docs
+/test
 # Test files
 test-*.yaml
 test-*.yml
