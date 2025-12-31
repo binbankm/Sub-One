@@ -195,15 +195,7 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             <p class="text-xs text-gray-400 mt-1.5">设置后，订阅链接会更短，如 /token/home</p>
           </div>
 
-          <!-- 自定义后端 -->
-          <div>
-            <label for="profile-subconverter" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义后端 (可选)
-            </label>
-            <input type="text" id="profile-subconverter" v-model="localProfile.subConverter" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 SubConverter 后端地址。</p>
-          </div>
+
 
           <!-- 自定义配置 -->
           <div>

@@ -43,8 +43,6 @@ const defaultSettings: AppConfig = {
   mytoken: 'auto',
   profileToken: '', // 默认为空，用户需主动设置
   
-  // 订阅转换配置
-  subConverter: 'url.v1.mk',
   subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
   prependSubName: true,
   
@@ -65,7 +63,6 @@ const hasWhitespace = computed(() => {
     'FileName',
     'mytoken',
     'profileToken',
-    'subConverter',
     'subConfig',
     'BotToken',
     'ChatID',
@@ -138,15 +135,7 @@ watch(() => props.show, (newValue) => {
   }
 }, { immediate: true });
 
-// 预设的后端地址选项
-const converterPresets = [
-  { label: 'api-sucmeta.0z.gs (推荐)', value: 'api-sucmeta.0z.gs' },
-  { label: 'api.v1.mk', value: 'api.v1.mk' },
-  { label: 'url.v1.mk', value: 'url.v1.mk' },
-  { label: 'sub.xeton.dev', value: 'sub.xeton.dev' }, 
-  { label: 'sub.id9.cc', value: 'sub.id9.cc' },
-  { label: '自定义', value: '' }
-];
+
 
 // 预设的配置文件选项
 const configPresets = [
@@ -282,35 +271,9 @@ const configPresets = [
             SubConverter 服务
           </h4>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- 后端地址 -->
-            <div class="group space-y-3">
-              <label for="subConverter"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                后端地址
-              </label>
-
-              <!-- 预设选择 -->
-              <select
-                class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all"
-                @change="(e) => settings.subConverter = (e.target as HTMLSelectElement).value">
-                <option value="" disabled :selected="!converterPresets.some(p => p.value === settings.subConverter)"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  选择预设或自定义
-                </option>
-                <option v-for="preset in converterPresets" :key="preset.value" :value="preset.value"
-                  :selected="preset.value === settings.subConverter"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  {{ preset.label }}
-                </option>
-              </select>
-
-              <!-- 输入框 -->
-              <input type="text" id="subConverter" v-model="settings.subConverter" class="input-modern-enhanced w-full"
-                placeholder="例如：api.v1.mk">
-            </div>
 
             <!-- 配置文件URL -->
-            <div class="group space-y-3">
+            <div class="group space-y-3 col-span-2">
               <label for="subConfig"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                 配置文件 URL

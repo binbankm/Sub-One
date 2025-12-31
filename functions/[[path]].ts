@@ -848,7 +848,6 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
     let targetSubs;
     let subName = config.FileName;
-    let effectiveSubConverter;
     let effectiveSubConfig;
     let isProfileExpired = false; // Moved declaration here
 
@@ -892,7 +891,6 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
                     return true;
                 });
             }
-            effectiveSubConverter = profile.subConverter && profile.subConverter.trim() !== '' ? profile.subConverter : config.subConverter;
             effectiveSubConfig = profile.subConfig && profile.subConfig.trim() !== '' ? profile.subConfig : config.subConfig;
         } else {
             return new Response('Profile not found or disabled', { status: 404 });
@@ -902,14 +900,9 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
             return new Response('Invalid Token', { status: 403 });
         }
         targetSubs = allSubs.filter(s => s.enabled);
-        effectiveSubConverter = config.subConverter;
         effectiveSubConfig = config.subConfig;
     }
 
-    // 如果 subConverter 为空或只有空白字符，使用默认值
-    if (!effectiveSubConverter || effectiveSubConverter.trim() === '') {
-        effectiveSubConverter = defaultSettings.subConverter;
-    }
     if (!effectiveSubConfig || effectiveSubConfig.trim() === '') {
         effectiveSubConfig = defaultSettings.subConfig;
     }
@@ -1060,87 +1053,8 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
     } catch (conversionError: any) {
         console.error('[Internal Converter Error]', conversionError);
-
-        // ===  回退方案: 如果内部转换失败,使用外部 SubConverter ===
-        console.log('内部转换失败,回退到外部 SubConverter...');
-
-        // 为回调生成 Base64 (同样使用新方法)
-        const base64Content = subscriptionParser.encodeBase64(combinedContent);
-
-        const callbackToken = await getCallbackToken(env);
-        const callbackPath = profileIdentifier ? `/${token}/${profileIdentifier}` : `/${token}`;
-        const callbackUrl = `${url.protocol}//${url.host}${callbackPath}?target=base64&callback_token=${callbackToken}`;
-
-        // 保留 callback 逻辑
-        if (url.searchParams.get('callback_token') === callbackToken) {
-            const headers = {
-                "Content-Type": "text/plain; charset=utf-8",
-                'Cache-Control': 'no-store, no-cache',
-                "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
-            };
-            return new Response(base64Content, { headers });
-        }
-
-        // 智能处理：如果用户填入了 http:// 或 https:// 前缀，自动去除，防止 URL 拼接错误
-        let cleanSubConverter = effectiveSubConverter.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        const subconverterUrl = new URL(`https://${cleanSubConverter}/sub`);
-        subconverterUrl.searchParams.set('target', targetFormat);
-
-        // 针对 Clash 格式，始终添加 ver=meta 参数
-        // Meta 内核支持更多协议（VLESS Reality、Hysteria2 等），是 Clash 的超集
-        // 即使客户端是旧版 Clash，使用 Meta 配置也能向下兼容
-        if (targetFormat === 'clash') {
-            subconverterUrl.searchParams.set('ver', 'meta');
-        }
-        if (targetFormat === 'surge') {
-            subconverterUrl.searchParams.set('ver', '4');
-        }
-
-        subconverterUrl.searchParams.set('url', callbackUrl);
-        if ((targetFormat === 'clash' || targetFormat === 'loon' || targetFormat === 'surge') && effectiveSubConfig && effectiveSubConfig.trim() !== '') {
-            subconverterUrl.searchParams.set('config', effectiveSubConfig);
-        }
-        subconverterUrl.searchParams.set('new_name', 'true');
-
-        try {
-            const subconverterResponse = await fetch(subconverterUrl.toString(), {
-                method: 'GET',
-                headers: { 'User-Agent': 'Mozilla/5.0' },
-            });
-
-            if (!subconverterResponse.ok) {
-                const errorBody = await subconverterResponse.text();
-                throw new Error(`Subconverter service returned status: ${subconverterResponse.status}. Body: ${errorBody}`);
-            }
-            const responseText = await subconverterResponse.text();
-            const responseHeaders = new Headers(subconverterResponse.headers);
-
-            // 始终使用 inline 方式，允许浏览器预览
-            // 代理客户端依然可以通过右键保存或复制内容
-            responseHeaders.set("Content-Disposition", `inline; filename*=utf-8''${encodeURIComponent(subName)}`);
-
-            // 优化：统一使用 text/plain 以确保浏览器可以预览
-            // 大多数客户端（Clash, Surge 等）都能正确处理 text/plain 的配置文件
-            let contentType = 'text/plain; charset=utf-8';
-
-            responseHeaders.set('Content-Type', contentType);
-            responseHeaders.set('Cache-Control', 'no-store, no-cache');
-
-            return new Response(responseText, { status: subconverterResponse.status, statusText: subconverterResponse.statusText, headers: responseHeaders });
-        } catch (error: any) {
-            console.error(`[Sub-One Final Error] ${error.message}`);
-            return new Response(`Error connecting to subconverter: ${error.message}`, { status: 502 });
-        }
+        return new Response(`Conversion Failed: ${conversionError.message}`, { status: 500 });
     }
-}
-
-async function getCallbackToken(env) {
-    const secret = env.ADMIN_PASSWORD || 'default-callback-secret';
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-    const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode('callback-static-data'));
-    return Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
 
