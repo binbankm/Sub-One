@@ -30,18 +30,35 @@ export type ProtocolType =
     | 'vless'
     | 'trojan'
     | 'ss'
+    | 'shadowsocks'
     | 'ssr'
+    | 'shadowsocksr'
     | 'hysteria'
     | 'hysteria2'
     | 'hy'
     | 'hy2'
     | 'tuic'
+    | 'juicity'
+    | 'wireguard'
+    | 'wg'
+    | 'snell'
     | 'anytls'
     | 'socks'
     | 'socks5'
     | 'http'
     | 'https'
     | string; // 允许扩展支持未来的协议
+
+/**
+ * 客户端配置格式
+ */
+export type ClientFormat =
+    | 'clash'
+    | 'singbox'
+    | 'surge'
+    | 'loon'
+    | 'quantumultx'
+    | 'base64';
 
 /**
  * 订阅用户信息
@@ -82,6 +99,16 @@ export interface Node {
     subscriptionName?: string;
     /** 原始代理配置对象（保留完整配置信息） */
     originalProxy?: Record<string, unknown>;
+
+    // --- 常用解析属性 (可选) ---
+    server?: string;
+    port?: number;
+    uuid?: string;
+    password?: string;
+    cipher?: string;
+    udp?: boolean;
+    tfo?: boolean;
+
     /** 动态扩展字段 */
     [key: string]: unknown;
 }
@@ -110,6 +137,10 @@ export interface Subscription {
     userInfo?: SubscriptionUserInfo;
     /** 排除规则（节点过滤关键词） */
     exclude?: string;
+    /** 创建时间 */
+    createdAt?: number;
+    /** 更新时间 */
+    updatedAt?: number;
     /** 动态扩展字段 */
     [key: string]: unknown;
 }
@@ -124,20 +155,30 @@ export interface Profile {
     id: string;
     /** 订阅组显示名称 */
     name: string;
+    /** 描述信息 */
+    description?: string;
     /** 订阅组启用状态（true=启用, false=禁用） */
     enabled: boolean;
     /** 包含的订阅ID列表 */
     subscriptions: string[];
+    /** 包含的订阅ID列表 (旧版兼容字段) */
+    subscriptionIds?: string[];
     /** 包含的手动节点ID列表 */
-    manualNodes: string[];
+    manualNodes?: string[];
     /** 自定义短链接 ID（用于生成友好的分享链接） */
     customId?: string;
+    /** 目标客户端格式 */
+    type?: ClientFormat;
     /** 订阅转换服务地址 */
     subConverter?: string;
     /** 订阅转换配置参数 */
     subConfig?: string;
     /** 订阅组过期时间（ISO 8601 格式） */
     expiresAt?: string;
+    /** 创建时间 */
+    createdAt?: number;
+    /** 更新时间 */
+    updatedAt?: number;
     /** 动态扩展字段 */
     [key: string]: unknown;
 }
@@ -182,6 +223,31 @@ export interface AppConfig {
     [key: string]: unknown;
 }
 
+// ==================== 转换选项接口 ====================
+/**
+ * 转换器选项 (ConverterOptions)
+ * 控制输出格式和内容的选项
+ */
+export interface ConverterOptions {
+    /** 配置文件名称 */
+    filename?: string;
+    /** 是否包含规则 */
+    includeRules?: boolean;
+    /** 远程规则配置 URL */
+    remoteConfig?: string;
+    /** 订阅用户信息 */
+    userInfo?: {
+        upload?: number;
+        download?: number;
+        total?: number;
+        expire?: number;
+    };
+    /** 目标客户端版本 */
+    clientVersion?: string;
+    /** 是否启用 UDP */
+    udp?: boolean;
+}
+
 // ==================== 初始数据接口 ====================
 /**
  * 初始数据（InitialData）接口定义
@@ -215,3 +281,4 @@ export interface ApiResponse<T = unknown> {
     /** 兼容某些 API 使用 results 字段返回数据 */
     results?: T;
 }
+

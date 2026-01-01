@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { SubscriptionParser } from '../lib/shared/subscription-parser';
-import { SubscriptionConverter } from '../lib/shared/subscription-converter';
+import { SubscriptionConverter } from '../lib/shared/converter';
 import type { Node } from '../lib/shared/types';
 
 const subscriptionParser = new SubscriptionParser();
