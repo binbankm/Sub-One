@@ -6,7 +6,7 @@ import type { Node } from './types';
  * 
  * 功能说明:
  * - 将节点数组转换为各种客户端格式
- * - 支持 Clash、Surge、Sing-Box、Loon、Base64 等格式
+ * - 支持 Clash、Surge、Sing-Box、Loon、QuantumultX、Base64 等格式
  * - 完全内置,无需依赖外部 SubConverter 服务
  * - 基于 Sub-Store 和 SubConverter 的转换逻辑
  * 
@@ -16,6 +16,7 @@ import type { Node } from './types';
  * - Surge: Surge 配置文件
  * - Sing-Box: Sing-Box JSON 配置
  * - Loon: Loon 配置文件
+ * - QuantumultX: QuantumultX 配置文件
  * 
  * ===================================================
  */
@@ -47,6 +48,7 @@ export class SubscriptionConverter {
             'singbox': () => this.toSingBox(nodes, options),
             'surge': () => this.toSurge(nodes, options),
             'loon': () => this.toLoon(nodes, options),
+            'quantumultx': () => this.toQuantumultX(nodes, options),
         };
 
         const handler = formatHandlers[format.trim().toLowerCase()];
@@ -1825,6 +1827,283 @@ export class SubscriptionConverter {
         } catch (e) {
             return atob(str);
         }
+    }
+
+    /**
+     * 转换为 QuantumultX 配置
+     */
+    toQuantumultX(nodes: Node[], _options: ConverterOptions = {}): string {
+        const lines: string[] = [];
+
+        lines.push('[general]');
+        lines.push('server_check_url=http://www.apple.com/generate_204');
+        lines.push('');
+        lines.push('[server_local]');
+
+        for (const node of nodes) {
+            const line = this.nodeToQuantumultXLine(node);
+            if (line) {
+                lines.push(line);
+            }
+        }
+
+        lines.push('');
+        lines.push('[filter_local]');
+        lines.push('host-suffix, local, direct');
+        lines.push('geoip, cn, direct');
+        lines.push('final, proxy');
+        lines.push('');
+        lines.push('[policy]');
+
+        return lines.join('\n');
+    }
+
+    /**
+     * 将 Node 转换为 QuantumultX 配置行
+     */
+    private nodeToQuantumultXLine(node: Node): string | null {
+        const protocol = node.protocol?.toLowerCase();
+        const url = node.url;
+
+        try {
+            const handlers: Record<string, () => string | null> = {
+                'vmess': () => this.parseVmessToQuantumultX(url, node.name),
+                'vless': () => this.parseVlessToQuantumultX(url, node.name),
+                'trojan': () => this.parseTrojanToQuantumultX(url, node.name),
+                'ss': () => this.parseShadowsocksToQuantumultX(url, node.name),
+                'shadowsocks': () => this.parseShadowsocksToQuantumultX(url, node.name),
+                'ssr': () => this.parseSSRToQuantumultX(url, node.name),
+                'shadowsocksr': () => this.parseSSRToQuantumultX(url, node.name),
+            };
+
+            const handler = handlers[protocol || ''];
+            return handler ? handler() : null;
+
+        } catch (error) {
+            console.warn(`QuantumultX 转换失败: ${node.name}`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Shadowsocks to QuantumultX 配置行
+     */
+    private parseShadowsocksToQuantumultX(url: string, name: string): string {
+        const urlObj = new URL(url);
+        let userInfo = '';
+        let server = '';
+        let port = 0;
+
+        // 处理两种 SS URL 格式
+        if (urlObj.username) {
+            userInfo = this.decodeBase64(decodeURIComponent(urlObj.username));
+            server = urlObj.hostname;
+            port = Number(urlObj.port);
+        } else {
+            const base64Part = url.replace('ss://', '').split('#')[0].split('?')[0];
+            const decoded = this.decodeBase64(base64Part);
+            const match = decoded.match(/^(.+?):(.+?)@(.+?):(\d+)$/);
+            if (!match) return '';
+
+            const [, method, password, host, portStr] = match;
+            userInfo = `${method}:${password}`;
+            server = host;
+            port = Number(portStr);
+        }
+
+        const [method, password] = userInfo.split(':');
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts: string[] = [];
+        parts.push(`shadowsocks=${server.replace(/^\[|\]$/g, '')}:${port}`);
+        parts.push(`method=${method}`);
+        parts.push(`password=${password}`);
+
+        // 插件支持
+        const plugin = params.get('plugin');
+        if (plugin) {
+            const [pluginName, ...opts] = plugin.split(';');
+            if (pluginName.includes('obfs')) {
+                opts.forEach(opt => {
+                    const [key, value] = opt.split('=');
+                    if (key === 'obfs') parts.push(`obfs=${value}`);
+                    if (key === 'obfs-host') parts.push(`obfs-host=${value}`);
+                    if (key === 'obfs-uri') parts.push(`obfs-uri=${value}`);
+                });
+            }
+        }
+
+        parts.push('fast-open=false');
+        parts.push('udp-relay=true');
+        parts.push(`tag=${name}`);
+
+        return parts.join(', ');
+    }
+
+    /**
+     * VMess to QuantumultX 配置行
+     */
+    private parseVmessToQuantumultX(url: string, name: string): string {
+        const base64Content = url.replace('vmess://', '');
+        const config = JSON.parse(this.decodeBase64(base64Content));
+
+        const parts: string[] = [];
+        parts.push(`vmess=${config.add}:${config.port}`);
+        parts.push(`method=${config.scy || 'none'}`);
+        parts.push(`password=${config.id}`);
+
+        const hasTLS = config.tls === 'tls';
+        const network = config.net || 'tcp';
+
+        // 传输协议 + TLS 组合
+        if (network === 'ws') {
+            // WebSocket
+            if (hasTLS) {
+                parts.push('obfs=wss'); // WebSocket + TLS
+            } else {
+                parts.push('obfs=ws'); // 纯 WebSocket
+            }
+            if (config.host) parts.push(`obfs-host=${config.host}`);
+            if (config.path) parts.push(`obfs-uri=${config.path}`);
+        } else if (network === 'tcp') {
+            // TCP
+            if (hasTLS) {
+                parts.push('obfs=over-tls'); // TCP + TLS
+                if (config.host || config.sni) {
+                    parts.push(`obfs-host=${config.sni || config.host || config.add}`);
+                }
+            }
+        }
+
+        parts.push('fast-open=false');
+        parts.push('udp-relay=true');
+        parts.push(`tag=${name}`);
+
+        return parts.join(', ');
+    }
+
+    /**
+     * VLESS to QuantumultX 配置行
+     */
+    private parseVlessToQuantumultX(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const uuid = urlObj.username;
+        const server = urlObj.hostname.replace(/^\[|\]$/g, '');
+        const port = Number(urlObj.port);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts: string[] = [];
+        parts.push(`vless=${server}:${port}`);
+        parts.push(`method=none`);
+        parts.push(`password=${uuid}`);
+
+        const security = params.get('security');
+        const hasTLS = security === 'tls' || security === 'reality';
+        const network = params.get('type') || 'tcp';
+
+        // 传输协议 + TLS 组合
+        if (network === 'ws') {
+            // WebSocket
+            if (hasTLS) {
+                parts.push('obfs=wss'); // WebSocket + TLS
+            } else {
+                parts.push('obfs=ws'); // 纯 WebSocket
+            }
+            if (params.get('host')) parts.push(`obfs-host=${params.get('host')}`);
+            if (params.get('path')) parts.push(`obfs-uri=${params.get('path')}`);
+        } else if (network === 'tcp') {
+            // TCP
+            if (hasTLS) {
+                parts.push('obfs=over-tls'); // TCP + TLS
+                const sni = params.get('sni') || server;
+                parts.push(`obfs-host=${sni}`);
+            }
+        }
+
+        // TLS 验证（仅在有 TLS 时添加）
+        if (hasTLS) {
+            if (params.get('allowInsecure') === '1' || params.get('skipCertVerify') === '1') {
+                parts.push('tls-verification=false');
+            }
+        }
+
+        parts.push('fast-open=false');
+        parts.push('udp-relay=false'); // VLESS 通常不支持 UDP
+        parts.push(`tag=${name}`);
+
+        return parts.join(', ');
+    }
+
+    /**
+     * Trojan to QuantumultX 配置行
+     */
+    private parseTrojanToQuantumultX(url: string, name: string): string {
+        const urlObj = new URL(url);
+        const password = decodeURIComponent(urlObj.username);
+        const server = urlObj.hostname.replace(/^\[|\]$/g, '');
+        const port = Number(urlObj.port);
+        const params = new URLSearchParams(urlObj.search);
+
+        const parts: string[] = [];
+        parts.push(`trojan=${server}:${port}`);
+        parts.push(`password=${password}`);
+
+        // Trojan 默认使用 TLS
+        parts.push('over-tls=true');
+
+        // SNI/TLS Host
+        const sni = params.get('sni') || server;
+        parts.push(`tls-host=${sni}`);
+
+        // 证书验证（默认为 true）
+        if (params.get('allowInsecure') === '1' || params.get('skipCertVerify') === '1') {
+            parts.push('tls-verification=false');
+        } else {
+            parts.push('tls-verification=true');
+        }
+
+        parts.push('fast-open=false');
+        parts.push('udp-relay=true');
+        parts.push(`tag=${name}`);
+
+        return parts.join(', ');
+    }
+
+    /**
+     * ShadowsocksR (SSR) to QuantumultX 配置行
+     */
+    private parseSSRToQuantumultX(url: string, name: string): string {
+        // SSR URL格式: ssr://base64encoded
+        const base64Part = url.replace('ssr://', '');
+        const decoded = this.decodeBase64(base64Part);
+
+        // SSR格式: server:port:protocol:method:obfs:password_base64/?params
+        const match = decoded.match(/^(.+?):(\d+?):(.+?):(.+?):(.+?):(.+?)\/?\??(.*)$/);
+        if (!match) {
+            console.warn(`无法解析 SSR URL: ${name}`);
+            return '';
+        }
+
+        const [, server, port, protocol, method, obfs, passwordBase64, paramsStr] = match;
+        const password = this.decodeBase64(passwordBase64.replace(/_/g, '/').replace(/-/g, '+'));
+
+        const params = new URLSearchParams(paramsStr);
+        const obfsParam = params.get('obfsparam') ? this.decodeBase64(params.get('obfsparam')!.replace(/_/g, '/').replace(/-/g, '+')) : '';
+        const protocolParam = params.get('protoparam') ? this.decodeBase64(params.get('protoparam')!.replace(/_/g, '/').replace(/-/g, '+')) : '';
+
+        const parts: string[] = [];
+        parts.push(`shadowsocks=${server}:${port}`);
+        parts.push(`method=${method}`);
+        parts.push(`password=${password}`);
+        parts.push(`ssr-protocol=${protocol}`);
+        if (protocolParam) parts.push(`ssr-protocol-param=${protocolParam}`);
+        parts.push(`obfs=${obfs}`);
+        if (obfsParam) parts.push(`obfs-host=${obfsParam}`);
+        parts.push('fast-open=false');
+        parts.push('udp-relay=true');
+        parts.push(`tag=${name}`);
+
+        return parts.join(', ');
     }
 }
 
