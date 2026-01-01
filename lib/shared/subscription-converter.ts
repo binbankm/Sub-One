@@ -1359,7 +1359,7 @@ export class SubscriptionConverter {
             urlObj.hostname.replace(/^\[|\]$/g, ''),
             urlObj.port,
             `uuid=${urlObj.username}`,
-            `token=${decodeURIComponent(urlObj.password || '')}`, // Changed from password to token for Surge
+            `password=${decodeURIComponent(urlObj.password || '')}`,
         ];
 
         // SNI
@@ -1523,7 +1523,7 @@ export class SubscriptionConverter {
         } else if (security === 'reality') {
             // Loon的Reality支持: xtls-rprx-vision + reality
             parts.push('over-tls:true');
-            parts.push('xtls-rprx-vision:true');
+
 
             if (params.get('sni')) {
                 parts.push(`tls-name:${params.get('sni')}`);
@@ -1583,7 +1583,7 @@ export class SubscriptionConverter {
             'Trojan',
             urlObj.hostname.replace(/^\[|\]$/g, ''),
             urlObj.port,
-            decodeURIComponent(urlObj.username),
+            `"${decodeURIComponent(urlObj.username)}"`,
         ];
 
         if (params.get('sni')) {
@@ -1600,7 +1600,7 @@ export class SubscriptionConverter {
             if (params.get('host')) parts.push(`host:${params.get('host')}`);
         }
 
-        return `${name} = ${parts.join(',')}`;
+        return `${name} = ${parts.join(', ')}`;
     }
 
     /**
