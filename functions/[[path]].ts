@@ -900,10 +900,14 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
     let targetFormat = url.searchParams.get('target');
     if (!targetFormat) {
-        const supportedFormats = ['clash', 'singbox', 'surge', 'loon', 'base64', 'v2ray'];
+        const supportedFormats = ['clash', 'singbox', 'surge', 'loon', 'base64', 'v2ray', 'quantumultx'];
         for (const format of supportedFormats) {
             if (url.searchParams.has(format)) {
-                if (format === 'v2ray') { targetFormat = 'base64'; } else { targetFormat = format; }
+                if (format === 'v2ray') {
+                    targetFormat = 'base64';
+                } else {
+                    targetFormat = format;
+                }
                 break;
             }
         }
@@ -928,7 +932,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
             ['v2rayng', 'base64'],
             ['surge', 'surge'],
             ['loon', 'loon'],
-            ['quantumult', 'quanx'],
+            ['quantumult', 'quantumultx'],
 
             // 最後才匹配通用的 clash，作為向下相容
             ['clash', 'clash']
