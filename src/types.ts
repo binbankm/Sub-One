@@ -169,10 +169,7 @@ export interface Profile {
     customId?: string;
     /** 目标客户端格式 */
     type?: ClientFormat;
-    /** 订阅转换服务地址 */
-    subConverter?: string;
-    /** 订阅转换配置参数 */
-    subConfig?: string;
+
     /** 订阅组过期时间（ISO 8601 格式） */
     expiresAt?: string;
     /** 创建时间 */
@@ -200,12 +197,6 @@ export interface AppConfig {
     profileToken?: string;
     /** 是否自动添加订阅名作为节点名前缀 */
     prependSubName?: boolean;
-
-    // ========== 订阅转换器配置 ==========
-    /** SubConverter 后端地址（如：api.v1.mk） */
-    subConverter?: string;
-    /** SubConverter 配置文件 URL */
-    subConfig?: string;
 
     // ========== Telegram 通知配置 ==========
     /** Telegram Bot Token（用于发送通知） */

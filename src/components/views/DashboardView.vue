@@ -663,7 +663,7 @@ const handleAddProfile = () => {
    isNewProfile.value = true;
    editingProfile.value = { 
      id: '', name: '', enabled: true, subscriptions: [], 
-     manualNodes: [], customId: '', subConverter: '', subConfig: '', expiresAt: '' 
+     manualNodes: [], customId: '', expiresAt: '' 
    };
    showProfileModal.value = true;
 };

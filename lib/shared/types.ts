@@ -170,10 +170,6 @@ export interface AppConfig {
     mytoken: string;
     /** 订阅配置路径 Token */
     profileToken: string;
-    /** 后端转换服务地址 (SubConverter) */
-    subConverter: string;
-    /** 外部配置模板地址 (用于 Clash 等) */
-    subConfig: string;
     /** 是否自动在节点名前添加订阅源名称 */
     prependSubName: boolean;
     /** 订阅过期提前提醒天数 */

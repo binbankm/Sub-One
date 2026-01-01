@@ -205,16 +205,6 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
 
 
 
-          <!-- 自定义配置 -->
-          <div>
-            <label for="profile-subconfig" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义远程配置 (可选)
-            </label>
-            <input type="text" id="profile-subconfig" v-model="localProfile.subConfig" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 Subconverter 配置文件。</p>
-          </div>
-
           <!-- 到期时间 -->
           <div class="md:col-span-1">
             <label for="profile-expires-at" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">

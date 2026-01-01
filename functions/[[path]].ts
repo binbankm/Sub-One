@@ -79,8 +79,6 @@ const defaultSettings = {
     FileName: 'Sub-One',
     mytoken: 'auto',
     profileToken: '',  // 默认为空，用户需主动设置
-    subConverter: 'url.v1.mk',  // 更可靠的后端，支持 Reality
-    subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
     prependSubName: true,
     NotifyThresholdDays: 3,
     NotifyThresholdPercent: 90
@@ -848,7 +846,6 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
 
     let targetSubs;
     let subName = config.FileName;
-    let effectiveSubConfig;
     let isProfileExpired = false; // Moved declaration here
 
     const DEFAULT_EXPIRED_NODE = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent('您的订阅已失效')}`;
@@ -891,7 +888,6 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
                     return true;
                 });
             }
-            effectiveSubConfig = profile.subConfig && profile.subConfig.trim() !== '' ? profile.subConfig : config.subConfig;
         } else {
             return new Response('Profile not found or disabled', { status: 404 });
         }
@@ -900,11 +896,6 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
             return new Response('Invalid Token', { status: 403 });
         }
         targetSubs = allSubs.filter(s => s.enabled);
-        effectiveSubConfig = config.subConfig;
-    }
-
-    if (!effectiveSubConfig || effectiveSubConfig.trim() === '') {
-        effectiveSubConfig = defaultSettings.subConfig;
     }
 
     let targetFormat = url.searchParams.get('target');
@@ -1035,8 +1026,7 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
             targetFormat,
             {
                 filename: subName,
-                includeRules: true,
-                remoteConfig: effectiveSubConfig
+                includeRules: true
             }
         );
 
