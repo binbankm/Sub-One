@@ -154,7 +154,7 @@ const fetchProfileNodes = async () => {
     // 1. 添加手动节点
     if (props.allManualNodes) {
       const selectedManualNodes = props.allManualNodes.filter(node =>
-        props.profile!.manualNodes.includes(node.id)
+        props.profile?.manualNodes?.includes(node.id) ?? false
       );
 
       for (const node of selectedManualNodes) {
@@ -172,7 +172,7 @@ const fetchProfileNodes = async () => {
     // 2. 添加订阅节点
     if (props.allSubscriptions) {
       const selectedSubscriptions = props.allSubscriptions.filter(sub =>
-        props.profile!.subscriptions.includes(sub.id) && sub.enabled
+        (props.profile?.subscriptions?.includes(sub.id) ?? false) && sub.enabled
       );
 
       // 并行获取所有订阅内容，提升速度
@@ -327,7 +327,7 @@ const refreshNodes = async () => {
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   <span v-if="subscription">{{ subscription.url }}</span>
-                  <span v-else-if="profile">包含 {{ profile.subscriptions.length }} 个订阅，{{ profile.manualNodes.length }}
+                  <span v-else-if="profile">包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ profile.manualNodes?.length ?? 0 }}
                     个手动节点</span>
                 </p>
               </div>

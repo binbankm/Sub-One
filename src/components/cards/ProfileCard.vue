@@ -29,15 +29,15 @@ const emit = defineEmits<{
 
 /** 计算总节点数（手动节点 + 已启用订阅的节点） */
 const totalNodeCount = computed(() => {
-  const manualNodeCount = props.profile.manualNodes.length;
+  const manualNodeCount = props.profile.manualNodes?.length ?? 0;
   
-  const subscriptionNodeCount = props.profile.subscriptions.reduce((total, subId) => {
+  const subscriptionNodeCount = props.profile.subscriptions?.reduce((total, subId) => {
     const subscription = props.allSubscriptions.find(sub => sub.id === subId);
     if (subscription && subscription.enabled) {
       return total + (subscription.nodeCount || 0);
     }
     return total;
-  }, 0);
+  }, 0) ?? 0;
 
   return manualNodeCount + subscriptionNodeCount;
 });
@@ -77,7 +77,7 @@ const totalNodeCount = computed(() => {
           </p>
         </div>
         <p class="text-sm text-gray-700 dark:text-gray-300 break-words leading-relaxed">
-          包含 {{ profile.subscriptions.length }} 个订阅，{{ totalNodeCount }} 个节点
+          包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ totalNodeCount }} 个节点
         </p>
       </div>
 

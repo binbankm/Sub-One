@@ -143,6 +143,10 @@ const handleConfirm = () => {
 };
 
 const toggleSelection = (listName: 'subscriptions' | 'manualNodes', id: string) => {
+  // 确保数组已经初始化
+  if (!localProfile.value[listName]) {
+    localProfile.value[listName] = [];
+  }
   const list = localProfile.value[listName];
   const index = list.indexOf(id);
   if (index > -1) {
@@ -160,6 +164,10 @@ const handleSelectAll = (listName: 'subscriptions' | 'manualNodes', sourceArray:
 
 const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArray: { id: string }[]) => {
   const sourceIds = sourceArray.map(item => item.id);
+  // 确保数组已经初始化
+  if (!localProfile.value[listName]) {
+    localProfile.value[listName] = [];
+  }
   localProfile.value[listName] = localProfile.value[listName].filter(id => !sourceIds.includes(id));
 };
 
