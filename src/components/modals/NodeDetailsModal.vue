@@ -361,18 +361,18 @@ onUnmounted(() => {
           <!-- 订阅/订阅组信息头部 -->
           <div v-if="subscription || profile"
             class="bg-gray-50/60 dark:bg-gray-800/75 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {{ subscription ? (subscription.name || '未命名订阅') : (profile?.name || '未命名订阅组') }}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 break-all">
                   <span v-if="subscription">{{ subscription.url }}</span>
                   <span v-else-if="profile">包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ profile.manualNodes?.length ?? 0 }}
                     个手动节点</span>
                 </p>
               </div>
-              <div class="text-right">
+              <div class="text-right flex-shrink-0">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                   共 {{ nodes.length }} 个节点
                 </p>

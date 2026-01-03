@@ -213,13 +213,6 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             </label>
             <div class="relative">
               <input type="date" id="profile-expires-at" v-model="localProfile.expiresAt" class="input-modern-enhanced">
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
             </div>
             <p class="text-xs text-gray-400 mt-1.5">设置此订阅组的到期时间，到期后将返回默认节点。</p>
           </div>
