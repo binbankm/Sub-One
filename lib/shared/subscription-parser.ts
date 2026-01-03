@@ -48,6 +48,7 @@ export class SubscriptionParser {
             try {
                 // 使用增强版 decodeBase64
                 const decoded = decodeBase64(trimmed);
+                console.log(`[Parser] Successfully decoded Base64 content (${decoded.length} bytes).`);
 
                 // 解码后，递归调用 parse 处理解码后的内容 (可能是 YAML 或 URL List)
                 return this.parse(decoded, subscriptionName, options);
@@ -64,7 +65,7 @@ export class SubscriptionParser {
                 if (yamlContent && typeof yamlContent === 'object') {
                     const proxies = yamlContent.proxies || yamlContent.Proxy;
                     if (Array.isArray(proxies)) {
-                        console.log(`[Parser] Detected Clash YAML with ${proxies.length} proxies.`);
+                        console.log(`[Parser] Detected format: Clash YAML - found ${proxies.length} proxies.`);
                         nodes = proxies
                             .map(p => parseClashProxy(p))
                             .filter((n): n is Node => n !== null);
@@ -97,10 +98,12 @@ export class SubscriptionParser {
 
             const node = parseNodeUrl(line);
             if (node) {
-                // 如果 URL hash 指定了名字，使用它；否则可以用 subscription name 前缀等
-                // 这里 node.name 已经在 parser 里解析了 (from hash)
                 nodes.push(node);
             }
+        }
+
+        if (nodes.length > 0) {
+            console.log(`[Parser] Detected format: URL List - parsed ${nodes.length} nodes successfully.`);
         }
 
         return this.processNodes(nodes, subscriptionName, options);
