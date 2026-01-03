@@ -126,22 +126,22 @@ export class SubscriptionParser {
 
         // 2. 去重 (Deduplicate) - 基于物理特征 (server + port + type)
         if (options.dedupe) {
-            const seen = new Map<string, Node>();
-            result = result.filter(n => {
-                // 生成节点的物理指纹
+            // 第一步：收集每个物理指纹对应的最佳节点（名称最短）
+            const bestNodes = new Map<string, Node>();
+
+            result.forEach(n => {
                 const fingerprint = `${n.type}://${n.server}:${n.port}`;
-                if (seen.has(fingerprint)) {
-                    // 已存在相同物理节点，保留名称更短或更早出现的
-                    const existing = seen.get(fingerprint)!;
-                    if (n.name.length < existing.name.length) {
-                        seen.set(fingerprint, n);
-                        return true;
-                    }
-                    return false;
+                const existing = bestNodes.get(fingerprint);
+
+                if (!existing || n.name.length < existing.name.length) {
+                    // 没有现存节点，或当前节点名称更短
+                    bestNodes.set(fingerprint, n);
                 }
-                seen.set(fingerprint, n);
-                return true;
             });
+
+            // 第二步：只保留最佳节点
+            const bestNodesSet = new Set(bestNodes.values());
+            result = result.filter(n => bestNodesSet.has(n));
         }
 
         // 3. 重命名 (Prepend Subscription Name)

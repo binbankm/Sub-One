@@ -803,20 +803,12 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
     const processedSubResults = await Promise.all(subPromises);
     const allNodes = [...processedManualNodes, ...processedSubResults.flat()];
 
-    // 3. 去重 (基于 URL)
-    const uniqueNodes: Node[] = [];
-    const seenUrls = new Set();
+    // 注意：去重逻辑已移至 SubscriptionParser.processNodes() 中
+    // 通过 config.dedupe 参数控制，支持基于物理特征的智能去重
+    // 旧的基于 URL 的去重已废弃，因为会导致重复去重和逻辑冲突
 
-    for (const node of allNodes) {
-        if (!node || !node.url) continue;
-        if (!seenUrls.has(node.url)) {
-            seenUrls.add(node.url);
-            uniqueNodes.push(node);
-        }
-    }
-
-    // 4. 返回节点对象数组，由上层决定如何序列化
-    return uniqueNodes;
+    // 返回节点对象数组，由上层决定如何序列化
+    return allNodes;
 }
 
 // --- [核心修改] 订阅处理函数 ---
