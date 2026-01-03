@@ -3,7 +3,14 @@
 import { SubscriptionParser } from '../lib/shared/subscription-parser';
 import { SubscriptionConverter } from '../lib/shared/converter';
 import { encodeBase64 } from '../lib/shared/converter/base64';
-import type { Node } from '../lib/shared/types';
+import type {
+    Node,
+    Subscription,
+    SubscriptionUserInfo,
+    Profile,
+    AppConfig,
+    SubConfig
+} from '../lib/shared/types';
 
 const subscriptionParser = new SubscriptionParser();
 const subscriptionConverter = new SubscriptionConverter();
@@ -21,6 +28,8 @@ interface Env {
     SUB_ONE_KV: KVNamespace;
     ADMIN_PASSWORD?: string;
 }
+
+// ==================== 后端专用类型 ====================
 
 /**
  * 计算数据的简单哈希值，用于检测变更
@@ -76,7 +85,7 @@ async function conditionalKVPut(env: Env, key: string, newData: any, oldData: an
 }
 
 // --- [新] 默认设置中增加通知阈值 ---
-const defaultSettings = {
+const defaultSettings: AppConfig = {
     FileName: 'Sub-One',
     mytoken: 'auto',
     profileToken: '',  // 默认为空，用户需主动设置
@@ -94,18 +103,18 @@ const formatBytes = (bytes: number, decimals = 2) => {
     // toFixed(dm) after dividing by pow(k, i) was producing large decimal numbers
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     if (i < 0) return '0 B'; // Handle log(0) case
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]} `;
 };
 
 // --- TG 通知函式 (无修改) ---
-async function sendTgNotification(settings: any, message: string) {
+async function sendTgNotification(settings: AppConfig, message: string): Promise<boolean> {
     if (!settings.BotToken || !settings.ChatID) {
         console.log("TG BotToken or ChatID not set, skipping notification.");
         return false;
     }
     // 为所有消息添加时间戳
     const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-    const fullMessage = `${message}\n\n*时间:* \`${now} (UTC+8)\``;
+    const fullMessage = `${message} \n\n * 时间:* \`${now} (UTC+8)\``;
 
     const url = `https://api.telegram.org/bot${settings.BotToken}/sendMessage`;
     const payload = {
@@ -135,11 +144,11 @@ async function sendTgNotification(settings: any, message: string) {
     }
 }
 
-async function handleCronTrigger(env: Env) {
+async function handleCronTrigger(env: Env): Promise<Response> {
     console.log("Cron trigger fired. Checking all subscriptions for traffic and node count...");
     const originalSubs = await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || [];
     const allSubs = JSON.parse(JSON.stringify(originalSubs)); // 深拷贝以便比较
-    const settings = await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings;
+    const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
 
     const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//gm;
     let changesMade = false;
@@ -185,7 +194,9 @@ async function handleCronTrigger(env: Env) {
 
                     // 使用统一的 SubscriptionParser 解析
                     try {
-                        const nodes = subscriptionParser.parse(text);
+                        const nodes = subscriptionParser.parse(text, sub.name, {
+                            dedupe: (settings as any).dedupe || false
+                        });
                         nodeCount = nodes.length;
                     } catch (e) {
                         console.error(`Cron: Parse failed for ${sub.name}:`, e);
@@ -215,7 +226,7 @@ async function handleCronTrigger(env: Env) {
 }
 
 // --- 认证与API处理的核心函数 (无修改) ---
-async function authMiddleware(request: Request, env: Env) {
+async function authMiddleware(request: Request, env: Env): Promise<boolean> {
     const cookie = request.headers.get('Cookie');
     const sessionCookie = cookie?.split(';').find(c => c.trim().startsWith(`${COOKIE_NAME}=`));
     if (!sessionCookie) return false;
@@ -232,7 +243,7 @@ async function authMiddleware(request: Request, env: Env) {
 // sub: 要检查的订阅对象
 // settings: 全局设置
 // env: Cloudflare 环境
-async function checkAndNotify(sub: any, settings: any, env: Env) {
+async function checkAndNotify(sub: Subscription, settings: AppConfig, env: Env): Promise<void> {
     if (!sub.userInfo) return; // 没有流量信息，无法检查
 
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -258,7 +269,7 @@ async function checkAndNotify(sub: any, settings: any, env: Env) {
 
     // 2. 检查流量使用
     const { upload, download, total } = sub.userInfo;
-    if (total > 0) {
+    if (total && total > 0 && upload !== undefined && download !== undefined) {
         const used = upload + download;
         const usagePercent = Math.round((used / total) * 100);
 
@@ -278,7 +289,7 @@ async function checkAndNotify(sub: any, settings: any, env: Env) {
 
 
 // --- 主要 API 請求處理 ---
-async function handleApiRequest(request: Request, env: Env) {
+async function handleApiRequest(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/api/, '');
     // [新增] 安全的、可重复执行的迁移接口
@@ -336,11 +347,12 @@ async function handleApiRequest(request: Request, env: Env) {
 
         case '/data': {
             try {
-                const [subs, profiles, settings] = await Promise.all([
-                    env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json').then(res => res || []),
-                    env.SUB_ONE_KV.get(KV_KEY_PROFILES, 'json').then(res => res || []),
-                    env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json').then(res => res || {} as any)
+                const [subs, profiles, settingsData]: [Subscription[], Profile[], Partial<AppConfig> | null] = await Promise.all([
+                    env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json').then(res => (res as Subscription[]) || []),
+                    env.SUB_ONE_KV.get(KV_KEY_PROFILES, 'json').then(res => (res as Profile[]) || []),
+                    env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json').then(res => res as Partial<AppConfig> | null)
                 ]);
+                const settings = { ...defaultSettings, ...(settingsData || {}) } as AppConfig;
                 const config = {
                     FileName: settings.FileName || 'SUB_ONE',
                     mytoken: settings.mytoken || 'auto',
@@ -490,7 +502,11 @@ async function handleApiRequest(request: Request, env: Env) {
                     // 使用统一的 SubscriptionParser 解析
                     let nodeCount = 0;
                     try {
-                        const nodes = subscriptionParser.parse(text);
+                        // 获取设置以应用去重配置
+                        const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
+                        const nodes = subscriptionParser.parse(text, '', {
+                            dedupe: Boolean(settings?.dedupe)
+                        });
                         nodeCount = nodes.length;
                     } catch (e) {
                         console.error(`Node count parse failed for ${subUrl}:`, e);
@@ -568,7 +584,7 @@ async function handleApiRequest(request: Request, env: Env) {
                     return new Response(JSON.stringify({ error: 'subscriptionIds must be an array' }), { status: 400 });
                 }
 
-                const allSubs = (await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || []) as any[];
+                const allSubs = (await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || []) as Subscription[];
                 const subsToUpdate = allSubs.filter(sub => subscriptionIds.includes(sub.id) && sub.url.startsWith('http'));
 
                 console.log(`[Batch Update] Starting batch update for ${subsToUpdate.length} subscriptions`);
@@ -591,12 +607,12 @@ async function handleApiRequest(request: Request, env: Env) {
                             // 更新流量信息
                             const userInfoHeader = response.headers.get('subscription-userinfo');
                             if (userInfoHeader) {
-                                const info = {};
+                                const info: Partial<SubscriptionUserInfo> = {};
                                 userInfoHeader.split(';').forEach(part => {
                                     const [key, value] = part.trim().split('=');
-                                    if (key && value) info[key] = /^\d+$/.test(value) ? Number(value) : value;
+                                    if (key && value) (info as any)[key] = /^\d+$/.test(value) ? Number(value) : value;
                                 });
-                                sub.userInfo = info;
+                                sub.userInfo = info as SubscriptionUserInfo;
                             }
 
                             // 更新节点数量
@@ -605,7 +621,11 @@ async function handleApiRequest(request: Request, env: Env) {
                             // 使用统一的 SubscriptionParser 解析
                             let nodeCount = 0;
                             try {
-                                const nodes = subscriptionParser.parse(text);
+                                // 获取设置以应用去重配置
+                                const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
+                                const nodes = subscriptionParser.parse(text, sub.name, {
+                                    dedupe: Boolean(settings?.dedupe)
+                                });
                                 nodeCount = nodes.length;
                             } catch (e) {
                                 console.error(`Batch update parse failed:`, e);
@@ -654,7 +674,7 @@ async function handleApiRequest(request: Request, env: Env) {
         case '/settings': {
             if (request.method === 'GET') {
                 try {
-                    const settings = await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {};
+                    const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {}) as Partial<AppConfig>;
                     return new Response(JSON.stringify({ ...defaultSettings, ...settings }), { headers: { 'Content-Type': 'application/json' } });
                 } catch (e) {
                     console.error('[API Error /settings GET]', 'Failed to read settings from KV:', e);
@@ -664,7 +684,7 @@ async function handleApiRequest(request: Request, env: Env) {
             if (request.method === 'POST') {
                 try {
                     const newSettings = await request.json();
-                    const oldSettings = await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {};
+                    const oldSettings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {}) as Partial<AppConfig>;
                     const finalSettings = { ...oldSettings as any, ...newSettings as any };
 
                     await env.SUB_ONE_KV.put(KV_KEY_SETTINGS, JSON.stringify(finalSettings));
@@ -760,7 +780,13 @@ async function handleApiRequest(request: Request, env: Env) {
 
 
 
-async function generateCombinedNodeList(context, config, userAgent, subs, prependedContent = '') {
+async function generateCombinedNodeList(
+    context: EventContext<Env, any, any>,
+    config: SubConfig,
+    userAgent: string,
+    subs: Subscription[],
+    prependedContent: string = ''
+): Promise<Node[]> {
     // 1. 处理手动节点
     const manualNodes = subs.filter(sub => !sub.url.toLowerCase().startsWith('http'));
     // 解析手动节点
@@ -801,7 +827,7 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
     });
 
     const processedSubResults = await Promise.all(subPromises);
-    const allNodes = [...processedManualNodes, ...processedSubResults.flat()];
+    const allNodes: Node[] = [...processedManualNodes, ...processedSubResults.flat()];
 
     // 注意：去重逻辑已移至 SubscriptionParser.processNodes() 中
     // 通过 config.dedupe 参数控制，支持基于物理特征的智能去重
@@ -813,7 +839,7 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
 
 // --- [核心修改] 订阅处理函数 ---
 // --- [最終修正版 - 變量名校對] 訂閱處理函數 ---
-async function handleSubRequest(context: EventContext<Env, any, any>) {
+async function handleSubRequest(context: EventContext<Env, any, any>): Promise<Response> {
     const { request, env } = context;
     const url = new URL(request.url);
     const userAgentHeader = request.headers.get('User-Agent') || "Unknown";

@@ -155,13 +155,22 @@ export function parseClashProxy(proxy: any): Node | null {
         }
 
         if (type === 'snell') {
+            // Snell 混淆配置
+            let obfs = undefined;
+            if (proxy.obfs) {
+                obfs = {
+                    type: proxy.obfs,
+                    host: proxy['obfs-opts']?.host
+                };
+            }
+
             return {
                 ...baseConfig,
                 id: generateId(),
                 type: 'snell',
                 password: proxy.psk || proxy.password,
-                obfs: proxy.obfs,
-                obfsParam: proxy['obfs-opts']
+                version: proxy.version,
+                obfs
             };
         }
 

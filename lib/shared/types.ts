@@ -253,6 +253,7 @@ export interface AppConfig {
     mytoken: string;
     profileToken: string;
     prependSubName: boolean;
+    dedupe: boolean;  // 节点去重开关
     NotifyThresholdDays: number;
     NotifyThresholdPercent: number;
     BotToken?: string;
@@ -280,4 +281,12 @@ export interface ProcessOptions {
     udpCheck?: boolean;
     userAgent?: string;
     dedupe?: boolean;
+}
+
+/**
+ * 订阅生成配置（后端专用）
+ * 继承 ProcessOptions 并添加文件名字段
+ */
+export interface SubConfig extends ProcessOptions {
+    FileName?: string;
 }

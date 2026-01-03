@@ -79,7 +79,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
    */
   function initializeManualNodes(nodesData: Partial<Node>[]) {
     manualNodes.value = (nodesData || []).map(node => {
-      let protocol = node.protocol || (node as any).type || 'unknown';
+      let protocol = node.protocol || node.type || 'unknown';
 
       // 如果协议仍然是 unknown，尝试从 URL 中提取
       if (protocol === 'unknown' && node.url) {
