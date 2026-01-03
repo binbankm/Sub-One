@@ -24,6 +24,8 @@ export function buildNodeUrl(node: Node): string {
                 return buildTuicUrl(node);
             case 'wireguard':
                 return buildWireGuardUrl(node);
+            case 'anytls':
+                return buildAnyTLSUrl(node);
             default:
                 // 如果是未知类型但有 originalUrl，则返回之
                 if ('originalUrl' in node && node.originalUrl) {
@@ -189,4 +191,17 @@ function buildWireGuardUrl(node: import('./types').WireGuardNode): string {
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
 
     return `wireguard://${encodeURIComponent(node.privateKey)}@${host}:${node.port}?${params.toString()}${hash}`;
+}
+
+function buildAnyTLSUrl(node: import('./types').AnyTLSNode): string {
+    const params = buildStandardQuery(undefined, node.tls);
+
+    if (node.clientFingerprint) params.set('fp', node.clientFingerprint);
+    if (node.idleTimeout) params.set('idle_timeout', String(node.idleTimeout));
+
+    const userInfo = node.password ? `${encodeURIComponent(node.password)}@` : '';
+    const host = node.server.includes(':') ? `[${node.server}]` : node.server;
+    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
+
+    return `anytls://${userInfo}${host}:${node.port}?${params.toString()}${hash}`;
 }

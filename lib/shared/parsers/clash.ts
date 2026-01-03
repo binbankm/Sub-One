@@ -120,6 +120,18 @@ export function parseClashProxy(proxy: any): Node | null {
             };
         }
 
+        if (type === 'anytls') {
+            return {
+                ...baseConfig,
+                id: generateId(),
+                type: 'anytls',
+                password: proxy.password,
+                tls,
+                clientFingerprint: proxy['client-fingerprint'] || proxy.fingerprint,
+                idleTimeout: Number(proxy['idle-timeout'] || 0) || undefined
+            };
+        }
+
         // TODO: Support more types if needed (Snell, WG...)
 
     } catch (e) {
