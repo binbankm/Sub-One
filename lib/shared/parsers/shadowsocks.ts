@@ -1,6 +1,7 @@
 import { ShadowsocksNode } from '../types';
 import { safeDecodeURIComponent } from './helper';
 
+import { decodeBase64 } from '../converter/base64';
 /**
  * 解析 Shadowsocks 链接
  * 支持 SIP002 (ss://user@host:port) 和 Legacy (ss://base64)
@@ -30,8 +31,8 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
             try {
                 // 如果解码后包含冒号且都是可打印字符，可能是 Base64
                 // 简单的 heuristic: 如果原串不像 base64 (包含特殊符号)，就不解
-                if (/^[A-Za-z0-9+/=]+$/.test(userInfo)) {
-                    const decoded = atob(userInfo);
+                if (/^[A-Za-z0-9+/=_]+$/.test(userInfo)) {
+                    const decoded = decodeBase64(userInfo);
                     if (decoded.includes(':')) {
                         userInfo = decoded;
                     }
@@ -50,7 +51,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
         else {
             const content = url.slice(5).split('#')[0].split('?')[0];
             try {
-                const decoded = atob(content);
+                const decoded = decodeBase64(content);
                 // method:password@host:port
                 const match = decoded.match(/^(.*?):(.*?)@(.*?):(\d+)$/);
                 if (match) {
