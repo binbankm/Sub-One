@@ -131,12 +131,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
       const nodeTypeLower = (node.type || '').toLowerCase();
       const nodeUrlLower = (node.url || '').toLowerCase();
 
-      // 1. 节点名称匹配 (模糊匹配)
-      if (nodeNameLower.includes(lowerCaseSearch)) {
-        return true;
-      }
-
-      // 2. 协议/类型匹配 (必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
+      // 1. 协议/类型匹配 (优先级最高，且必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
       // 例如：搜 ss 只匹配 ss, ssr，不会匹配 vmess
       if (nodeProtocolLower.startsWith(lowerCaseSearch) || nodeTypeLower.startsWith(lowerCaseSearch)) {
         // 排除掉搜 manual 匹配到所有节点的情况
@@ -145,21 +140,31 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
         }
       }
 
-      // 3. URL 匹配 (区分协议头和具体地址)
-      // 如果 URL 以搜索词开头 (如搜 ss:// 或直接搜协议名 ss)
+      // 2. URL 协议头匹配 (如搜 ss://)
       if (nodeUrlLower.startsWith(lowerCaseSearch)) {
         return true;
       }
 
-      // 否则，仅在 URL 的具体域名/路径部分进行搜索，避开协议头干扰
+      // 3. 准备名称和 URL 详情的搜索文本
+      // 鲁棒性优化：如果搜 ss，为了防止误匹配 vmess/vless，我们在搜索名称前先移除这两个干扰项
+      const isSSSearch = lowerCaseSearch === 'ss';
+      const nameToSearch = isSSSearch ? nodeNameLower.replace(/vmess|vless/g, '____') : nodeNameLower;
       const urlDetails = nodeUrlLower.split('://')[1] || '';
-      if (urlDetails.includes(lowerCaseSearch)) {
+      const urlToSearch = isSSSearch ? urlDetails.replace(/vmess|vless/g, '____') : urlDetails;
+
+      // 4. 节点名称匹配
+      if (nameToSearch.includes(lowerCaseSearch)) {
         return true;
       }
 
-      // 4. 检查节点名称是否包含任何国家/地区相关词汇
+      // 5. URL 详情匹配 (域名、IP、端口等)
+      if (urlToSearch.includes(lowerCaseSearch)) {
+        return true;
+      }
+
+      // 6. 检查节点名称是否包含任何国家/地区相关词汇
       for (const altTerm of alternativeTerms) {
-        if (nodeNameLower.includes(altTerm.toLowerCase())) {
+        if (nameToSearch.includes(altTerm.toLowerCase())) {
           return true;
         }
       }
