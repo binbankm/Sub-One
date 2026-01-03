@@ -8,6 +8,7 @@ import { parseHysteria2 } from './hysteria2';
 import { parseTuic } from './tuic';
 import { parseWireGuard } from './wireguard';
 import { parseAnyTLS } from './anytls';
+import { parseSSR } from './ssr';
 
 export { parseStandardParams } from './helper';
 
@@ -28,11 +29,8 @@ export function parseNodeUrl(url: string): Node | null {
     } else if (trimmedUrl.startsWith('trojan://')) {
         return parseTrojan(trimmedUrl);
     } else if (trimmedUrl.startsWith('ss://') || trimmedUrl.startsWith('ssr://')) {
-        // SSR 暂未完全重构，目前 ss parser 包含一定兼容，或者需要单独的 ssr parser
-        // 考虑到 SSR 格式较老，如果 url 是 ssr://，暂时返回 null 或者需要迁移旧逻辑
-        // 这里主要处理 SS
         if (trimmedUrl.startsWith('ss://')) return parseShadowsocks(trimmedUrl);
-        // SSR parser to be added if strictly needed, current focus: newer protocols
+        if (trimmedUrl.startsWith('ssr://')) return parseSSR(trimmedUrl);
         return null;
     } else if (trimmedUrl.startsWith('hysteria://') || trimmedUrl.startsWith('hy1://')) {
         return parseHysteria(trimmedUrl);

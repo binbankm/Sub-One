@@ -1,0 +1,37 @@
+Original SSR URL: ssr://MS4yLjMuNDo4Mzg4OmF1dGhfYWVzMTI4X21kNTphZXMtMTI4LWNmYjp0bHMxLjJfdGlja2V0X2F1dGg6ZEdWemRIQmhjM009Lz9yZW1hcmtzPVUxTlM1cldMNksrVjZJcUM1NEs1JnByb3RvcGFyYW09Y0dGeVlXMHgmb2Jmc3BhcmFtPWNHRnlZVzB5
+[Parser] Detected format: URL List - parsed 1 nodes successfully.
+
+Parsed Node: {
+  id: '2e08f9b2-c003-4442-8f4f-9d6030a041f6',
+  type: 'ssr',
+  name: 'SSR娴嬶拷z"锟斤拷锟?,
+  server: '1.2.3.4',
+  port: 8388,
+  protocol: 'auth_aes128_md5',
+  protocolParam: 'param1',
+  cipher: 'aes-128-cfb',
+  obfs: 'tls1.2_ticket_auth',
+  obfsParam: 'param2',
+  password: 'testpass',
+  udp: true,
+  url: 'ssr://MS4yLjMuNDo4Mzg4OmF1dGhfYWVzMTI4X21kNTphZXMtMTI4LWNmYjp0bHMxLjJfdGlja2V0X2F1dGg6ZEdWemRIQmhjM009Lz9yZW1hcmtzPVUxTlM1cldMNzclMkI5ZWlMdnY3M3Z2NzN2djcwJTNEJnByb3RvcGFyYW09Y0dGeVlXMHgmb2Jmc3BhcmFtPWNHRnlZVzB5'
+}
+
+Rebuilt SSR URL: ssr://MS4yLjMuNDo4Mzg4OmF1dGhfYWVzMTI4X21kNTphZXMtMTI4LWNmYjp0bHMxLjJfdGlja2V0X2F1dGg6ZEdWemRIQmhjM009Lz9yZW1hcmtzPVUxTlM1cldMNzclMkI5ZWlMdnY3M3Z2NzN2djcwJTNEJnByb3RvcGFyYW09Y0dGeVlXMHgmb2Jmc3BhcmFtPWNHRnlZVzB5
+[Parser] Detected format: URL List - parsed 1 nodes successfully.
+
+Re-parsed Node (should match): {
+  id: '44dd7a09-a8e9-4720-860d-614d055ea69d',
+  type: 'ssr',
+  name: 'SSR娴嬶拷z"锟斤拷锟?,
+  server: '1.2.3.4',
+  port: 8388,
+  protocol: 'auth_aes128_md5',
+  protocolParam: 'param1',
+  cipher: 'aes-128-cfb',
+  obfs: 'tls1.2_ticket_auth',
+  obfsParam: 'param2',
+  password: 'testpass',
+  udp: true,
+  url: 'ssr://MS4yLjMuNDo4Mzg4OmF1dGhfYWVzMTI4X21kNTphZXMtMTI4LWNmYjp0bHMxLjJfdGlja2V0X2F1dGg6ZEdWemRIQmhjM009Lz9yZW1hcmtzPVUxTlM1cldMNzclMkI5ZWlMdnY3M3Z2NzN2djcwJTNEJnByb3RvcGFyYW09Y0dGeVlXMHgmb2Jmc3BhcmFtPWNHRnlZVzB5'
+}

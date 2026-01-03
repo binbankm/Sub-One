@@ -132,7 +132,40 @@ export function parseClashProxy(proxy: any): Node | null {
             };
         }
 
-        // TODO: Support more types if needed (Snell, WG...)
+        if (type === 'socks5') {
+            return {
+                ...baseConfig,
+                id: generateId(),
+                type: 'socks5',
+                username: proxy.username,
+                password: proxy.password,
+                tls: tls.enabled ? tls : undefined
+            };
+        }
+
+        if (type === 'http') {
+            return {
+                ...baseConfig,
+                id: generateId(),
+                type: 'http',
+                username: proxy.username,
+                password: proxy.password,
+                tls: tls.enabled ? tls : undefined
+            };
+        }
+
+        if (type === 'snell') {
+            return {
+                ...baseConfig,
+                id: generateId(),
+                type: 'snell',
+                password: proxy.psk || proxy.password,
+                obfs: proxy.obfs,
+                obfsParam: proxy['obfs-opts']
+            };
+        }
+
+        // TODO: Support more types if needed (WireGuard...)
 
     } catch (e) {
         console.warn('Clash Proxy 转换失败:', proxy.name, e);

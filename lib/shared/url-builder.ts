@@ -16,6 +16,8 @@ export function buildNodeUrl(node: Node): string {
                 return buildTrojanUrl(node);
             case 'ss':
                 return buildShadowsocksUrl(node);
+            case 'ssr':
+                return buildSSRUrl(node);
             case 'hysteria':
                 return buildHysteriaUrl(node);
             case 'hysteria2':
@@ -205,4 +207,25 @@ function buildAnyTLSUrl(node: import('./types').AnyTLSNode): string {
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
 
     return `anytls://${userInfo}${host}:${node.port}?${params.toString()}${hash}`;
+}
+
+function buildSSRUrl(node: import('./types').ShadowsocksRNode): string {
+    const server = node.server;
+    const port = node.port;
+    const protocol = node.protocol || 'origin';
+    const method = node.cipher;
+    const obfs = node.obfs || 'plain';
+    const passwordBase64 = encodeBase64(node.password);
+
+    const mainPart = `${server}:${port}:${protocol}:${method}:${obfs}:${passwordBase64}`;
+
+    const params = new URLSearchParams();
+    if (node.name) params.set('remarks', encodeBase64(node.name));
+    if (node.protocolParam) params.set('protoparam', encodeBase64(node.protocolParam));
+    if (node.obfsParam) params.set('obfsparam', encodeBase64(node.obfsParam));
+
+    const queryStr = params.toString();
+    const fullContent = queryStr ? `${mainPart}/?${queryStr}` : mainPart;
+
+    return `ssr://${encodeBase64(fullContent)}`;
 }

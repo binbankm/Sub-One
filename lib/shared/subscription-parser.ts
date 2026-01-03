@@ -2,6 +2,7 @@ import yaml from 'js-yaml';
 import { Node, ProcessOptions } from './types';
 import { parseNodeUrl } from './parsers/index';
 import { parseClashProxy } from './parsers/clash';
+import { parseSIP008 } from './parsers/sip008';
 import { buildNodeUrl } from './url-builder';
 import { decodeBase64 } from './converter/base64';
 
@@ -31,10 +32,12 @@ export class SubscriptionParser {
         // 1. 尝试解析为 JSON (SIP008 / Shadowsocks JSON)
         if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
             try {
-                JSON.parse(trimmed);
-                // 可能是 SIP008 (servers array)
-                // TODO: 实现 SIP008 parser logic inside parsers/ ?
-                // 暂时简单处理：如果 JSON 失败则继续
+                const json = JSON.parse(trimmed);
+                nodes = parseSIP008(json);
+                if (nodes.length > 0) {
+                    console.log(`[Parser] Detected format: SIP008 JSON - found ${nodes.length} nodes.`);
+                    return this.processNodes(nodes, subscriptionName, options);
+                }
             } catch (e) {
                 // Ignore JSON parse error, treat as text
             }

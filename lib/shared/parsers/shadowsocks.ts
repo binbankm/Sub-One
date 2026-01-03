@@ -1,6 +1,7 @@
 import { ShadowsocksNode } from '../types';
 import { safeDecodeURIComponent, generateId } from './helper';
 import { decodeBase64 } from '../converter/base64';
+import { parseSIP008Server } from './sip008';
 
 /**
  * 解析 Shadowsocks 链接
@@ -28,27 +29,19 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
 
         // 3. 尝试解析为 JSON (某些工具会将 VMess-style JSON 放在 ss:// 后)
         try {
-            const potentialBase64 = mainPart.split('?')[0];
+            let potentialBase64 = mainPart.split('?')[0];
+            // 鲁棒性：移除可能的末尾省略号或其他非 Base64/JSON 字符
+            potentialBase64 = potentialBase64.replace(/[^\w+/=]/g, '').trim();
+
             const decoded = decodeBase64(potentialBase64);
-            if (decoded.trim().startsWith('{')) {
-                const data = JSON.parse(decoded);
-                server = data.add || data.server;
-                port = parseInt(data.port);
-                method = data.scy || data.method || 'aes-256-gcm';
-                password = data.id || data.password || data.key;
-                if (server && port && method && password) {
-                    return {
-                        type: 'ss',
-                        id: generateId(),
-                        name: data.ps || name,
-                        server,
-                        port,
-                        cipher: method,
-                        password,
-                        udp: true,
-                        plugin: data.plugin,
-                        pluginOpts: data.plugin_opts
-                    };
+            // 鲁棒性：处理 JSON 末尾可能存在的杂质
+            const jsonMatch = decoded.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const data = JSON.parse(jsonMatch[0]);
+                const node = parseSIP008Server(data);
+                if (node) {
+                    if (hash && !data.remarks && !data.ps) node.name = name;
+                    return node;
                 }
             }
         } catch { }
@@ -59,43 +52,46 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
             const userInfoPart = mainPart.slice(0, lastAt);
             const serverPart = mainPart.slice(lastAt + 1);
 
-            // serverPart 还是可能包含 ?params
-            const qIdx = serverPart.indexOf('?');
-            const hostPort = qIdx !== -1 ? serverPart.slice(0, qIdx) : serverPart;
-            const colonIdx = hostPort.lastIndexOf(':');
+            // 如果 serverPart 为空，说明格式错误或被截断，跳过此逻辑进入 Legacy 尝试
+            if (serverPart && serverPart !== '#' && !serverPart.startsWith('?')) {
+                // serverPart 还是可能包含 ?params
+                const qIdx = serverPart.indexOf('?');
+                const hostPort = qIdx !== -1 ? serverPart.slice(0, qIdx) : serverPart;
+                const colonIdx = hostPort.lastIndexOf(':');
 
-            if (colonIdx !== -1) {
-                server = hostPort.slice(0, colonIdx).replace(/^\[|\]$/g, '');
-                port = parseInt(hostPort.slice(colonIdx + 1));
-            } else {
-                server = hostPort.replace(/^\[|\]$/g, '');
-                port = 443;
-            }
-
-            // userinfo 可以是 Base64(method:pass) 或单纯的 method:pass
-            let decodedUserInfo = userInfoPart;
-            try {
-                if (/^[A-Za-z0-9+/=_]+$/.test(userInfoPart)) {
-                    const decoded = decodeBase64(userInfoPart);
-                    if (decoded.includes(':')) {
-                        decodedUserInfo = decoded;
-                    }
-                }
-            } catch { }
-
-            if (decodedUserInfo.includes(':')) {
-                const parts = decodedUserInfo.split(':');
-                if (parts.length >= 2 && parts[1]) {
-                    method = parts[0];
-                    password = parts.slice(1).join(':');
+                if (colonIdx !== -1) {
+                    server = hostPort.slice(0, colonIdx).replace(/^\[|\]$/g, '');
+                    port = parseInt(hostPort.slice(colonIdx + 1));
                 } else {
-                    // 容错：如果是 "method:" 这种，把 method 当 password，套用默认 cipher
-                    method = 'aes-256-gcm';
-                    password = parts[0];
+                    server = hostPort.replace(/^\[|\]$/g, '');
+                    port = 443;
                 }
-            } else {
-                method = 'aes-256-gcm';
-                password = decodedUserInfo;
+
+                // userinfo 可以是 Base64(method:pass) 或单纯的 method:pass
+                let decodedUserInfo = userInfoPart;
+                try {
+                    if (/^[A-Za-z0-9+/=_]+$/.test(userInfoPart)) {
+                        const decoded = decodeBase64(userInfoPart);
+                        if (decoded.includes(':')) {
+                            decodedUserInfo = decoded;
+                        }
+                    }
+                } catch { }
+
+                if (decodedUserInfo.includes(':')) {
+                    const parts = decodedUserInfo.split(':');
+                    if (parts.length >= 2 && parts[1]) {
+                        method = parts[0];
+                        password = parts.slice(1).join(':');
+                    } else {
+                        // 容错：如果是 "method:" 这种，把 method 当 password，套用默认 cipher
+                        method = 'aes-256-gcm';
+                        password = parts[0];
+                    }
+                } else {
+                    method = 'aes-256-gcm';
+                    password = decodedUserInfo;
+                }
             }
         }
 
