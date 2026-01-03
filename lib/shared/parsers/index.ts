@@ -16,7 +16,9 @@ export { parseStandardParams } from './helper';
  * 根据 URL 协议头自动分发到对应的解析器
  */
 export function parseNodeUrl(url: string): Node | null {
-    const trimmedUrl = url.trim();
+    let trimmedUrl = url.trim();
+    // Normalize HTML entities
+    trimmedUrl = trimmedUrl.replace(/&amp;/g, '&');
 
     // 协议分发映射
     if (trimmedUrl.startsWith('vmess://')) {

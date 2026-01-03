@@ -1,0 +1,20 @@
+Testing URL: anytls://uuid@server.com:443?sni=mysni.com&fp=chrome&idleTimeout=60&tls=1#AnyTLSTest
+Parsed successfully: {
+  "type": "anytls",
+  "id": "01f5267c-5e6a-47fb-9a94-d5f7f543a811",
+  "name": "AnyTLSTest",
+  "server": "server.com",
+  "port": 443,
+  "password": "uuid",
+  "udp": true,
+  "tls": {
+    "enabled": true,
+    "serverName": "mysni.com",
+    "fingerprint": "chrome"
+  },
+  "clientFingerprint": "chrome",
+  "idleTimeout": 60,
+  "originalUrl": "anytls://uuid@server.com:443?sni=mysni.com&fp=chrome&idleTimeout=60&tls=1#AnyTLSTest"
+}
+Rebuilt URL: anytls://uuid@server.com:443?sni=mysni.com&fp=chrome&idle_timeout=60&tls=1#AnyTLSTest
+MISMATCH! Rebuilt version is different.

@@ -6,28 +6,56 @@ import { safeDecodeURIComponent, parseStandardParams, generateId } from './helpe
  * 格式: trojan://password@host:port?params#name
  */
 export function parseTrojan(url: string): TrojanNode | null {
-    try {
-        const urlObj = new URL(url);
+    if (!url.startsWith('trojan://')) return null;
 
-        const password = safeDecodeURIComponent(urlObj.username);
-        const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-        const port = Number(urlObj.port);
-        const name = safeDecodeURIComponent(urlObj.hash.slice(1)) || 'Trojan节点';
+    try {
+        let password = '';
+        let server = '';
+        let port = 0;
+        let name = 'Trojan节点';
+        let search = '';
+
+        // 尝试使用标准 URL 解析
+        try {
+            const urlObj = new URL(url);
+            password = safeDecodeURIComponent(urlObj.username);
+            server = urlObj.hostname.replace(/^\[|\]$/g, '');
+            port = Number(urlObj.port);
+            name = safeDecodeURIComponent(urlObj.hash.slice(1)) || name;
+            search = urlObj.search;
+        } catch {
+            // URL 构造失败，手动解析
+            const hashIdx = url.indexOf('#');
+            name = hashIdx !== -1 ? safeDecodeURIComponent(url.slice(hashIdx + 1)) : name;
+
+            const main = hashIdx !== -1 ? url.slice(9, hashIdx) : url.slice(9);
+            const atIdx = main.lastIndexOf('@');
+            if (atIdx !== -1) {
+                password = safeDecodeURIComponent(main.slice(0, atIdx));
+                const serverPart = main.slice(atIdx + 1);
+                const qIdx = serverPart.indexOf('?');
+                search = qIdx !== -1 ? serverPart.slice(qIdx) : '';
+                const hostPort = qIdx !== -1 ? serverPart.slice(0, qIdx) : serverPart;
+                const colonIdx = hostPort.lastIndexOf(':');
+                if (colonIdx !== -1) {
+                    server = hostPort.slice(0, colonIdx).replace(/^\[|\]$/g, '');
+                    port = parseInt(hostPort.slice(colonIdx + 1));
+                } else {
+                    server = hostPort.replace(/^\[|\]$/g, '');
+                    port = 443;
+                }
+            }
+        }
 
         if (!server || !port || !password) return null;
 
-        const params = new URLSearchParams(urlObj.search);
-
-        // 利用 helper 解析 Transport (ws/grpc) 和 TLS (sni/alpn)
+        const params = new URLSearchParams(search);
         const { transport, tls } = parseStandardParams(params);
 
-        // Trojan 默认必须开启 TLS (除非 cleartext，但通常订阅链接里隐含 TLS)
-        // 不过有些实现支持 trojan-go 的 websocket 非 tls？
-        // 标准 Trojan 是 TLS 的。我们默认开启 TLS，除非用户显式关闭？
-        // 这里我们默认认为 Trojan 协议意味着 TLS。
+        // Trojan 默认启用 TLS
         tls.enabled = true;
 
-        const node: TrojanNode = {
+        return {
             type: 'trojan',
             id: generateId(),
             name,
@@ -39,10 +67,7 @@ export function parseTrojan(url: string): TrojanNode | null {
             tls
         };
 
-        return node;
-
     } catch (e) {
-        console.error('解析 Trojan 链接失败:', e);
         return null;
     }
 }

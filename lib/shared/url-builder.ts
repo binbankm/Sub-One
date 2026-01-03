@@ -198,6 +198,7 @@ function buildAnyTLSUrl(node: import('./types').AnyTLSNode): string {
 
     if (node.clientFingerprint) params.set('fp', node.clientFingerprint);
     if (node.idleTimeout) params.set('idle_timeout', String(node.idleTimeout));
+    if (node.tls?.enabled) params.set('tls', '1');
 
     const userInfo = node.password ? `${encodeURIComponent(node.password)}@` : '';
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;

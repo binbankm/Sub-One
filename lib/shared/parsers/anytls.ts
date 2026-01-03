@@ -14,12 +14,19 @@ export function parseAnyTLS(url: string): AnyTLSNode | null {
 
         // AnyTLS usually implies TLS enabled
         if (!tls.enabled) {
-            tls.enabled = true;
+            // Also check for tls=1 or tls=true
+            const tlsParam = u.searchParams.get('tls');
+            if (tlsParam === '1' || tlsParam === 'true') {
+                tls.enabled = true;
+            } else {
+                tls.enabled = true; // Default to true for anytls
+            }
         }
 
         // Parse specific params
         const clientFingerprint = u.searchParams.get('client-fingerprint') || u.searchParams.get('fp');
-        const idleTimeout = Number(u.searchParams.get('idle_timeout') || 0);
+        // Handle both snake_case and camelCase
+        const idleTimeout = Number(u.searchParams.get('idle_timeout') || u.searchParams.get('idleTimeout') || 0);
 
         return {
             type: 'anytls',
@@ -37,6 +44,6 @@ export function parseAnyTLS(url: string): AnyTLSNode | null {
 
     } catch (e) {
         console.warn('Failed to parse AnyTLS URL:', e);
-        return null;
+        return null; // Silent fail
     }
 }
