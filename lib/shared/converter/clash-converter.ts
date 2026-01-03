@@ -1,58 +1,16 @@
 import * as yaml from 'js-yaml';
-import type { Node, ConverterOptions } from '../types';
-import { decodeBase64 } from './base64';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode } from '../types';
 
 /**
  * 转换为 Clash Meta YAML 配置
+ * 纯粹的数据映射，不解析 URL
  */
 export function toClash(nodes: Node[], _options: ConverterOptions = {}): string {
-    const proxies: any[] = [];
-    let successCount = 0;
-    let failCount = 0;
+    const proxies = nodes
+        .map(node => nodeToClashProxy(node))
+        .filter(p => p !== null);
 
-    for (const node of nodes) {
-        try {
-            const proxy = nodeToClashProxy(node);
-            if (proxy) {
-                proxies.push(proxy);
-                successCount++;
-            } else {
-                failCount++;
-                console.warn(`[Clash] 跳过不支持的协议: ${node.protocol} (${node.name})`);
-            }
-        } catch (error) {
-            failCount++;
-            console.error(`[Clash] 转换失败: ${node.name}`, error);
-        }
-    }
-
-    // 如果没有任何有效节点,返回默认配置
-    if (proxies.length === 0) {
-        console.warn('[Clash] 警告: 没有有效节点,返回空配置');
-        return yaml.dump({
-            port: 7890,
-            'socks-port': 7891,
-            'allow-lan': false,
-            mode: 'Rule',
-            'log-level': 'info',
-            proxies: [],
-            'proxy-groups': [{
-                name: 'DIRECT',
-                type: 'select',
-                proxies: ['DIRECT']
-            }],
-            rules: ['MATCH,DIRECT']
-        }, {
-            indent: 2,
-            lineWidth: -1,
-            quotingType: '"',
-            forceQuotes: false
-        });
-    }
-
-    console.log(`[Clash] 转换完成: 成功 ${successCount}, 失败 ${failCount}`);
-
-    // 构建完整的 Clash 配置
+    // 构建配置结构
     const config: any = {
         port: 7890,
         'socks-port': 7891,
@@ -72,17 +30,13 @@ export function toClash(nodes: Node[], _options: ConverterOptions = {}): string 
                 type: 'url-test',
                 proxies: proxies.map(p => p.name),
                 url: 'http://www.gstatic.com/generate_204',
-                interval: 300
+                interval: 300,
+                tolerance: 50
             },
             {
                 name: '🎯 全球直连',
                 type: 'select',
                 proxies: ['DIRECT']
-            },
-            {
-                name: '🛑 全球拦截',
-                type: 'select',
-                proxies: ['REJECT', 'DIRECT']
             }
         ],
         rules: [
@@ -91,474 +45,199 @@ export function toClash(nodes: Node[], _options: ConverterOptions = {}): string 
         ]
     };
 
-    try {
-        return yaml.dump(config, {
-            indent: 2,
-            lineWidth: -1,
-            quotingType: '"',
-            forceQuotes: false
-        });
-    } catch (error) {
-        console.error('[Clash] YAML 序列化失败:', error);
-        throw new Error(`Clash YAML 生成失败: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    return yaml.dump(config, {
+        indent: 2,
+        lineWidth: -1,
+        noRefs: true // 禁止 YAML 引用
+    });
 }
 
-/**
- * 将 Node 转换为 Clash Proxy 对象
- */
-function nodeToClashProxy(node: Node): any | null {
-    const url = node.url;
-    const protocol = node.protocol?.toLowerCase();
-
+function nodeToClashProxy(node: Node): any {
     try {
-        // 如果已有 originalProxy (从 Clash 解析来的),直接使用
-        if (node.originalProxy) {
-            return node.originalProxy;
+        switch (node.type) {
+            case 'vmess': return buildVmess(node as VmessNode);
+            case 'vless': return buildVless(node as VlessNode);
+            case 'trojan': return buildTrojan(node as TrojanNode);
+            case 'ss': return buildShadowsocks(node as ShadowsocksNode);
+            case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
+            case 'tuic': return buildTuic(node as TuicNode);
+            // 兼容性
+            case 'http': return buildHttp(node as any);
+            case 'socks5': return buildSocks5(node as any);
+            default:
+                // 如果是未知类型但有 originalProxy (例如直接从 YAML 解析来的 Snell), 直接返回
+                if (node.originalProxy) return node.originalProxy;
+                console.warn(`[Clash] Unsupported node type: ${node.type}`);
+                return null;
         }
-
-        // 否则从 URL 解析
-        const handlers: Record<string, () => any> = {
-            'vmess': () => parseVmessToClash(url),
-            'vless': () => parseVlessToClash(url),
-            'trojan': () => parseTrojanToClash(url),
-            'ss': () => parseShadowsocksToClash(url),
-            'shadowsocks': () => parseShadowsocksToClash(url),
-            'ssr': () => null, // SSR 不被 Clash Meta 原生支持
-            'hysteria': () => parseHysteriaToClash(url),
-            'hysteria2': () => parseHysteria2ToClash(url),
-            'hy2': () => parseHysteria2ToClash(url),
-            'tuic': () => parseTuicToClash(url),
-            'snell': () => parseSnellToClash(url),
-            'wireguard': () => parseWireGuardToClash(url),
-            'wg': () => parseWireGuardToClash(url),
-        };
-
-        const handler = handlers[protocol || ''];
-        return handler ? handler() : null;
-
-    } catch (error) {
-        console.warn(`转换节点失败: ${node.name}`, error);
+    } catch (e) {
+        console.error(`[Clash] Failed to convert node ${node.name}:`, e);
         return null;
     }
 }
 
-/**
- * 解析 VMess URL 为 Clash 代理配置
- */
-function parseVmessToClash(url: string): any {
-    const base64Content = url.replace('vmess://', '');
-    const jsonStr = decodeBase64(base64Content);
-    const config = JSON.parse(jsonStr);
+// --- Specific Builders ---
 
-    const proxy: any = {
-        name: config.ps || 'VMess节点',
-        type: 'vmess',
-        server: config.add,
-        port: Number(config.port),
-        uuid: config.id,
-        alterId: Number(config.aid || 0),
-        cipher: config.scy || 'auto',
-        udp: true,
-        network: config.net || 'tcp',
+function buildCommon(node: Node) {
+    return {
+        name: node.name,
+        server: node.server,
+        port: node.port,
+        udp: node.udp
     };
-
-    // TLS
-    if (config.tls === 'tls') {
-        proxy.tls = true;
-        if (config.sni) proxy.servername = config.sni;
-        if (config.alpn) proxy.alpn = config.alpn.split(',');
-        if (config.fp) proxy['client-fingerprint'] = config.fp;
-        if (config['skip-cert-verify']) proxy['skip-cert-verify'] = true;
-    }
-
-    // 传输协议
-    switch (proxy.network) {
-        case 'ws':
-            proxy['ws-opts'] = {
-                path: config.path || '/',
-                headers: config.host ? { Host: config.host } : {}
-            };
-            break;
-        case 'h2':
-        case 'http':
-            proxy['h2-opts'] = {
-                path: config.path || '/',
-                host: config.host ? [config.host] : []
-            };
-            break;
-        case 'grpc':
-            proxy['grpc-opts'] = {
-                'grpc-service-name': config.path || ''
-            };
-            break;
-    }
-
-    return proxy;
 }
 
-/**
- * 解析 VLESS URL 为 Clash 代理配置
- */
-function parseVlessToClash(url: string): any {
-    const urlObj = new URL(url);
-    const uuid = urlObj.username;
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'VLESS节点';
+function assignTransport(proxy: any, node: { transport?: import('../types').TransportOptions }) {
+    const t = node.transport;
+    if (!t) return;
 
-    const proxy: any = {
-        name,
-        type: 'vless',
-        server,
-        port,
-        uuid,
-        udp: true,
-        network: params.get('type') || 'tcp',
-    };
+    proxy.network = t.type;
 
-    // Flow
-    if (params.get('flow')) {
-        proxy.flow = params.get('flow');
-    }
-
-    // 安全层
-    const security = params.get('security');
-    if (security === 'tls') {
-        proxy.tls = true;
-        if (params.get('sni')) proxy.servername = params.get('sni');
-        if (params.get('alpn')) proxy.alpn = params.get('alpn')!.split(',');
-        if (params.get('fp')) proxy['client-fingerprint'] = params.get('fp');
-        if (params.get('allowInsecure') === '1') proxy['skip-cert-verify'] = true;
-    } else if (security === 'reality') {
-        proxy.tls = true;
-        proxy.servername = params.get('sni') || '';
-        proxy['reality-opts'] = {
-            'public-key': params.get('pbk') || '',
-            'short-id': params.get('sid') || '',
-        };
-        if (params.get('spx')) {
-            proxy['reality-opts']['spider-x'] = params.get('spx');
-        }
-        if (params.get('fp')) {
-            proxy['client-fingerprint'] = params.get('fp');
-        }
-    }
-
-    // 传输协议
-    switch (proxy.network) {
-        case 'ws':
-            proxy['ws-opts'] = {
-                path: params.get('path') || '/',
-                headers: params.get('host') ? { Host: params.get('host') } : {}
-            };
-            break;
-        case 'grpc':
-            proxy['grpc-opts'] = {
-                'grpc-service-name': params.get('serviceName') || ''
-            };
-            break;
-        case 'h2':
-            proxy['h2-opts'] = {
-                path: params.get('path') || '/',
-                host: params.get('host') ? [params.get('host')] : []
-            };
-            break;
-    }
-
-    return proxy;
-}
-
-/**
- * 解析 Trojan URL 为 Clash 代理配置
- */
-function parseTrojanToClash(url: string): any {
-    const urlObj = new URL(url);
-    const password = decodeURIComponent(urlObj.username);
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'Trojan节点';
-
-    const proxy: any = {
-        name,
-        type: 'trojan',
-        server,
-        port,
-        password,
-        udp: true,
-        network: params.get('type') || 'tcp'
-    };
-
-    // SNI
-    if (params.get('sni')) {
-        proxy.sni = params.get('sni');
-    }
-
-    // ALPN
-    if (params.get('alpn')) {
-        proxy.alpn = params.get('alpn')!.split(',');
-    }
-
-    // 跳过证书验证
-    if (params.get('allowInsecure') === '1') {
-        proxy['skip-cert-verify'] = true;
-    }
-
-    // 传输协议
-    if (proxy.network === 'ws') {
+    if (t.type === 'ws') {
         proxy['ws-opts'] = {
-            path: params.get('path') || '/',
-            headers: params.get('host') ? { Host: params.get('host') } : {}
+            path: t.path || '/',
+            headers: t.headers
         };
-    } else if (proxy.network === 'grpc') {
+    } else if (t.type === 'grpc') {
         proxy['grpc-opts'] = {
-            'grpc-service-name': params.get('serviceName') || ''
+            'grpc-service-name': t.serviceName || ''
+        };
+        if (t.mode === 'multi') proxy['grpc-opts'].mode = 'multi';
+    } else if (t.type === 'h2' || t.type === 'http') {
+        proxy['h2-opts'] = {
+            path: t.path || '/',
+            host: t.host || []
         };
     }
+}
 
+function assignTls(proxy: any, node: { tls?: import('../types').TlsOptions }) {
+    const tls = node.tls;
+    if (!tls || !tls.enabled) return;
+
+    proxy.tls = true;
+    if (tls.serverName) proxy.servername = tls.serverName;
+    if (tls.alpn) proxy.alpn = tls.alpn;
+    if (tls.fingerprint) proxy['client-fingerprint'] = tls.fingerprint;
+    if (tls.insecure) proxy['skip-cert-verify'] = true;
+
+    // Reality
+    if (tls.reality?.enabled) {
+        // Clash Meta Reality syntax
+        delete proxy.tls; // Meta uses 'tls: true' but also 'reality-opts' logic usually implies stream security
+        // Wait, standard Clash Meta checks 'network' and 'tls' boolean
+        // For Reality, we usually set tls=true + network options
+        // But let's check standard Meta config:
+        proxy.tls = true;
+        proxy['reality-opts'] = {
+            'public-key': tls.reality.publicKey,
+            'short-id': tls.reality.shortId
+        };
+        if (tls.reality.spiderX) proxy['reality-opts']['spider-x'] = tls.reality.spiderX;
+    }
+}
+
+function buildVmess(node: VmessNode): any {
+    const proxy: any = {
+        ...buildCommon(node),
+        type: 'vmess',
+        uuid: node.uuid,
+        alterId: node.alterId,
+        cipher: node.cipher
+    };
+    assignTransport(proxy, node);
+    assignTls(proxy, node);
     return proxy;
 }
 
-/**
- * 解析 Shadowsocks URL 为 Clash 代理配置
- */
-function parseShadowsocksToClash(url: string): any {
-    const urlObj = new URL(url);
-    let userInfo = '';
-    let server = '';
-    let port = 0;
-
-    // 处理两种 SS URL 格式
-    if (urlObj.username) {
-        // ss://base64@server:port 格式
-        userInfo = decodeBase64(decodeURIComponent(urlObj.username));
-        server = urlObj.hostname;
-        port = Number(urlObj.port);
-    } else {
-        // ss://base64#name 格式
-        const base64Part = url.replace('ss://', '').split('#')[0].split('?')[0];
-        const decoded = decodeBase64(base64Part);
-        const match = decoded.match(/^(.+?):(.+?)@(.+?):(\d+)$/);
-        if (!match) return null;
-
-        const [, method, password, host, portStr] = match;
-        userInfo = `${method}:${password}`;
-        server = host;
-        port = Number(portStr);
-    }
-
-    const [method, password] = userInfo.split(':');
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'SS节点';
-
+function buildVless(node: VlessNode): any {
     const proxy: any = {
-        name,
+        ...buildCommon(node),
+        type: 'vless',
+        uuid: node.uuid,
+        flow: node.flow
+    };
+    assignTransport(proxy, node);
+    assignTls(proxy, node);
+    return proxy;
+}
+
+function buildTrojan(node: TrojanNode): any {
+    const proxy: any = {
+        ...buildCommon(node),
+        type: 'trojan',
+        password: node.password
+    };
+    assignTransport(proxy, node);
+    assignTls(proxy, node);
+    return proxy;
+}
+
+function buildShadowsocks(node: ShadowsocksNode): any {
+    const proxy: any = {
+        ...buildCommon(node),
         type: 'ss',
-        server: server.replace(/^\[|\]$/g, ''),
-        port,
-        cipher: method,
-        password,
-        udp: true
+        cipher: node.cipher,
+        password: node.password
     };
-
-    // 插件支持
-    const plugin = params.get('plugin');
-    if (plugin) {
-        const [pluginName, ...opts] = plugin.split(';');
-        proxy.plugin = pluginName;
-        const pluginOpts: any = {};
-
-        opts.forEach(opt => {
-            const [key, value] = opt.split('=');
-            if (key && value) {
-                pluginOpts[key] = value;
-            }
-        });
-
-        if (Object.keys(pluginOpts).length > 0) {
-            proxy['plugin-opts'] = pluginOpts;
-        }
+    if (node.plugin) {
+        proxy.plugin = node.plugin;
+        proxy['plugin-opts'] = node.pluginOpts;
     }
-
     return proxy;
 }
 
-/**
- * 解析 Hysteria2 URL 为 Clash 代理配置
- */
-function parseHysteria2ToClash(url: string): any {
-    const urlObj = new URL(url);
-    const password = decodeURIComponent(urlObj.username);
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'Hysteria2节点';
-
+function buildHysteria2(node: Hysteria2Node): any {
     const proxy: any = {
-        name,
+        ...buildCommon(node),
         type: 'hysteria2',
-        server,
-        port,
-        password,
-        udp: true,
+        password: node.password,
     };
-
-    if (params.get('sni')) proxy.sni = params.get('sni');
-    if (params.get('alpn')) proxy.alpn = params.get('alpn')!.split(',');
-    if (params.get('insecure') === '1') proxy['skip-cert-verify'] = true;
-    if (params.get('obfs')) {
-        proxy.obfs = params.get('obfs');
-        if (params.get('obfs-password')) {
-            proxy['obfs-password'] = params.get('obfs-password');
-        }
+    if (node.obfs) {
+        proxy.obfs = node.obfs.type;
+        proxy['obfs-password'] = node.obfs.password;
     }
-
+    // Hysteria2 隐含 TLS, 但 Meta 显式参数
+    if (node.tls) {
+        if (node.tls.serverName) proxy.sni = node.tls.serverName;
+        if (node.tls.insecure) proxy['skip-cert-verify'] = true;
+        if (node.tls.alpn) proxy.alpn = node.tls.alpn;
+        if (node.tls.fingerprint) proxy.fingerprint = node.tls.fingerprint;
+    }
     return proxy;
 }
 
-/**
- * 解析 Hysteria URL 为 Clash 代理配置
- */
-function parseHysteriaToClash(url: string): any {
-    const urlObj = new URL(url);
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'Hysteria节点';
-
+function buildTuic(node: TuicNode): any {
     const proxy: any = {
-        name,
-        type: 'hysteria',
-        server,
-        port,
-        udp: true,
-    };
-
-    if (params.get('auth')) proxy.auth = params.get('auth');
-    if (params.get('sni')) proxy.sni = params.get('sni');
-    if (params.get('alpn')) proxy.alpn = params.get('alpn')!.split(',');
-    if (params.get('insecure') === '1') proxy['skip-cert-verify'] = true;
-    if (params.get('obfs')) proxy.obfs = params.get('obfs');
-    if (params.get('protocol')) proxy.protocol = params.get('protocol');
-    if (params.get('upmbps')) proxy.up = Number(params.get('upmbps'));
-    if (params.get('downmbps')) proxy.down = Number(params.get('downmbps'));
-
-    return proxy;
-}
-
-/**
- * 解析 TUIC URL 为 Clash 代理配置
- */
-function parseTuicToClash(url: string): any {
-    const urlObj = new URL(url);
-    const [uuid, password] = urlObj.username.split(':');
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'TUIC节点';
-
-    const proxy: any = {
-        name,
+        ...buildCommon(node),
         type: 'tuic',
-        server,
-        port,
-        uuid,
-        password,
-        udp: true,
+        uuid: node.uuid,
+        password: node.password,
+        'congestion-controller': node.congestionControl,
+        'udp-relay-mode': node.udpRelayMode
     };
-
-    if (params.get('sni')) proxy.sni = params.get('sni');
-    if (params.get('alpn')) proxy.alpn = params.get('alpn')!.split(',');
-    if (params.get('allowInsecure') === '1') proxy['skip-cert-verify'] = true;
-    if (params.get('congestion_control')) proxy['congestion-controller'] = params.get('congestion_control');
-    if (params.get('udp_relay_mode')) proxy['udp-relay-mode'] = params.get('udp_relay_mode');
-
+    if (node.tls) {
+        if (node.tls.serverName) proxy.sni = node.tls.serverName;
+        if (node.tls.insecure) proxy['skip-cert-verify'] = true;
+        if (node.tls.alpn) proxy.alpn = node.tls.alpn;
+    }
     return proxy;
 }
 
-/**
- * 解析 Snell URL 为 Clash 代理配置
- */
-function parseSnellToClash(url: string): any {
-    // Snell URL格式: snell://server:port?psk=xxx&version=4&obfs=http&obfs-host=xxx
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'Snell节点';
-
-    const proxy: any = {
-        name,
-        type: 'snell',
-        server: urlObj.hostname.replace(/^\[|\]$/g, ''),
-        port: Number(urlObj.port),
-        psk: params.get('psk') || params.get('password') || '',
-        version: Number(params.get('version') || '4'),
-        udp: true,
+function buildHttp(node: any): any {
+    return {
+        ...buildCommon(node),
+        type: 'http',
+        username: node.username,
+        password: node.password
     };
-
-    // Obfs 混淆
-    const obfs = params.get('obfs');
-    if (obfs) {
-        proxy['obfs-opts'] = {
-            mode: obfs, // http, tls
-        };
-        if (params.get('obfs-host')) {
-            proxy['obfs-opts'].host = params.get('obfs-host');
-        }
-    }
-
-    return proxy;
 }
 
-/**
- * 解析 WireGuard URL 为 Clash 代理配置
- */
-function parseWireGuardToClash(url: string): any {
-    // WireGuard URL格式: wireguard://privatekey@server:port?publickey=xxx&ip=xxx
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-    const name = decodeURIComponent(urlObj.hash.slice(1)) || 'WireGuard节点';
-
-    const proxy: any = {
-        name,
-        type: 'wireguard',
-        server: urlObj.hostname.replace(/^\[|\]$/g, ''),
-        port: Number(urlObj.port || '51820'),
-        'private-key': decodeURIComponent(urlObj.username) || params.get('private-key') || '',
-        'public-key': params.get('public-key') || params.get('publickey') || '',
-        udp: true,
+function buildSocks5(node: any): any {
+    return {
+        ...buildCommon(node),
+        type: 'socks5',
+        username: node.username,
+        password: node.password
     };
-
-    // IP 地址
-    const ip = params.get('ip') || params.get('address');
-    if (ip) {
-        proxy.ip = ip;
-    }
-
-    // IPv6
-    const ipv6 = params.get('ipv6');
-    if (ipv6) {
-        proxy.ipv6 = ipv6;
-    }
-
-    // Pre-shared key
-    const preshared = params.get('preshared-key') || params.get('psk');
-    if (preshared) {
-        proxy['preshared-key'] = preshared;
-    }
-
-    // MTU
-    const mtu = params.get('mtu');
-    if (mtu) {
-        proxy.mtu = Number(mtu);
-    }
-
-    // Reserved
-    const reserved = params.get('reserved');
-    if (reserved) {
-        proxy.reserved = reserved.split(',').map(n => Number(n));
-    }
-
-    return proxy;
 }

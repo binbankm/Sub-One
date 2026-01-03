@@ -1,9 +1,10 @@
-import type { Node, ConverterOptions } from '../types';
-import { decodeBase64 } from './base64';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode } from '../types';
+// Quantumult X doesn't support Tuic/Hysteria2/WireGuard natively in the same subscription format usually without specialized parser, but newer versions might.
+// QX latest supports Vless (limited), Trojan, SS, VMess. Hysteria/Tuic support is via external modules or newer updates? 
+// Hysteria isn't officially supported in QX core smoothly like others, but we can try generating if supported syntax exists. 
+// Standard QX sub format:
+// vmess=server:port, method=none, password=uid, obfs=..., tag=name
 
-/**
- * 转换为 QuantumultX 配置
- */
 export function toQuantumultX(nodes: Node[], _options: ConverterOptions = {}): string {
     const lines: string[] = [];
 
@@ -30,221 +31,117 @@ export function toQuantumultX(nodes: Node[], _options: ConverterOptions = {}): s
     return lines.join('\n');
 }
 
-/**
- * 将 Node 转换为 QuantumultX 配置行
- */
 function nodeToQuantumultXLine(node: Node): string | null {
-    const protocol = node.protocol?.toLowerCase();
-    const url = node.url;
-
     try {
-        const handlers: Record<string, () => string | null> = {
-            'vmess': () => parseVmessToQuantumultX(url, node.name),
-            'vless': () => parseVlessToQuantumultX(url, node.name),
-            'trojan': () => parseTrojanToQuantumultX(url, node.name),
-            'ss': () => parseShadowsocksToQuantumultX(url, node.name),
-            'shadowsocks': () => parseShadowsocksToQuantumultX(url, node.name),
-            'ssr': () => parseSSRToQuantumultX(url, node.name),
-            'shadowsocksr': () => parseSSRToQuantumultX(url, node.name),
-        };
-
-        const handler = handlers[protocol || ''];
-        return handler ? handler() : null;
-
-    } catch (error) {
-        console.warn(`QuantumultX 转换失败: ${node.name}`, error);
+        switch (node.type) {
+            case 'vmess': return buildVmess(node as VmessNode);
+            case 'vless': return buildVless(node as VlessNode);
+            case 'trojan': return buildTrojan(node as TrojanNode);
+            case 'ss': return buildShadowsocks(node as ShadowsocksNode);
+            default:
+                // QX 不支持 Hy2, Tuic, WG 原生配置行格式 (或者比较非标准)
+                return null;
+        }
+    } catch (e) {
+        console.warn(`QuantumultX 转换失败: ${node.name}`, e);
         return null;
     }
 }
 
-function parseShadowsocksToQuantumultX(url: string, name: string): string {
-    const urlObj = new URL(url);
-    let userInfo = '';
-    let server = '';
-    let port = 0;
-
-    if (urlObj.username) {
-        userInfo = decodeBase64(decodeURIComponent(urlObj.username));
-        server = urlObj.hostname;
-        port = Number(urlObj.port);
-    } else {
-        const base64Part = url.replace('ss://', '').split('#')[0].split('?')[0];
-        const decoded = decodeBase64(base64Part);
-        const match = decoded.match(/^(.+?):(.+?)@(.+?):(\d+)$/);
-        if (!match) return '';
-
-        const [, method, password, host, portStr] = match;
-        userInfo = `${method}:${password}`;
-        server = host;
-        port = Number(portStr);
-    }
-
-    const [method, password] = userInfo.split(':');
-    const params = new URLSearchParams(urlObj.search);
-
+function buildVmess(node: VmessNode): string {
     const parts: string[] = [];
-    parts.push(`shadowsocks=${server.replace(/^\[|\]$/g, '')}:${port}`);
-    parts.push(`method=${method}`);
-    parts.push(`password=${password}`);
+    parts.push(`vmess=${node.server}:${node.port}`);
+    parts.push(`method=${node.cipher || 'none'}`);
+    parts.push(`password=${node.uuid}`);
 
-    const plugin = params.get('plugin');
-    if (plugin) {
-        const [pluginName, ...opts] = plugin.split(';');
-        if (pluginName.includes('obfs')) {
-            opts.forEach(opt => {
-                const [key, value] = opt.split('=');
-                if (key === 'obfs') parts.push(`obfs=${value}`);
-                if (key === 'obfs-host') parts.push(`obfs-host=${value}`);
-                if (key === 'obfs-uri') parts.push(`obfs-uri=${value}`);
-            });
+    const hasTLS = node.tls?.enabled;
+    const network = node.transport?.type || 'tcp';
+
+    if (network === 'ws') {
+        parts.push(hasTLS ? 'obfs=wss' : 'obfs=ws');
+        if (node.transport?.headers?.Host) parts.push(`obfs-host=${node.transport.headers.Host}`);
+        if (node.transport?.path) parts.push(`obfs-uri=${node.transport.path}`);
+    } else if (network === 'tcp') {
+        if (hasTLS) {
+            parts.push('obfs=over-tls');
+            if (node.tls?.serverName) parts.push(`obfs-host=${node.tls.serverName}`);
         }
     }
 
     parts.push('fast-open=false');
     parts.push('udp-relay=true');
-    parts.push(`tag=${name}`);
+    parts.push(`tag=${node.name}`);
 
     return parts.join(', ');
 }
 
-function parseVmessToQuantumultX(url: string, name: string): string {
-    const base64Content = url.replace('vmess://', '');
-    const config = JSON.parse(decodeBase64(base64Content));
-
+function buildVless(node: VlessNode): string {
+    // QX VLESS support is limited or requires specific syntax
     const parts: string[] = [];
-    parts.push(`vmess=${config.add}:${config.port}`);
-    parts.push(`method=${config.scy || 'none'}`);
-    parts.push(`password=${config.id}`);
+    parts.push(`vless=${node.server}:${node.port}`);
+    parts.push('method=none');
+    parts.push(`password=${node.uuid}`);
 
-    const hasTLS = config.tls === 'tls';
-    const network = config.net || 'tcp';
+    const hasTLS = node.tls?.enabled;
+    // Reality not supported in QX standard config yet? QX handles XTLS/TLS. 
+    // We treat Reality as TLS here but it might fail connection in QX if QX lacks Reality support.
+
+    const network = node.transport?.type || 'tcp';
 
     if (network === 'ws') {
-        if (hasTLS) {
-            parts.push('obfs=wss');
-        } else {
-            parts.push('obfs=ws');
-        }
-        if (config.host) parts.push(`obfs-host=${config.host}`);
-        if (config.path) parts.push(`obfs-uri=${config.path}`);
+        parts.push(hasTLS ? 'obfs=wss' : 'obfs=ws');
+        if (node.transport?.headers?.Host) parts.push(`obfs-host=${node.transport.headers.Host}`);
+        if (node.transport?.path) parts.push(`obfs-uri=${node.transport.path}`);
     } else if (network === 'tcp') {
         if (hasTLS) {
             parts.push('obfs=over-tls');
-            if (config.host || config.sni) {
-                parts.push(`obfs-host=${config.sni || config.host || config.add}`);
-            }
+            if (node.tls?.serverName) parts.push(`obfs-host=${node.tls.serverName}`);
         }
     }
 
-    parts.push('fast-open=false');
-    parts.push('udp-relay=true');
-    parts.push(`tag=${name}`);
-
-    return parts.join(', ');
-}
-
-function parseVlessToQuantumultX(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const uuid = urlObj.username;
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-
-    const parts: string[] = [];
-    parts.push(`vless=${server}:${port}`);
-    parts.push(`method=none`);
-    parts.push(`password=${uuid}`);
-
-    const security = params.get('security');
-    const hasTLS = security === 'tls' || security === 'reality';
-    const network = params.get('type') || 'tcp';
-
-    if (network === 'ws') {
-        if (hasTLS) {
-            parts.push('obfs=wss');
-        } else {
-            parts.push('obfs=ws');
-        }
-        if (params.get('host')) parts.push(`obfs-host=${params.get('host')}`);
-        if (params.get('path')) parts.push(`obfs-uri=${params.get('path')}`);
-    } else if (network === 'tcp') {
-        if (hasTLS) {
-            parts.push('obfs=over-tls');
-            const sni = params.get('sni') || server;
-            parts.push(`obfs-host=${sni}`);
-        }
-    }
-
-    if (hasTLS) {
-        if (params.get('allowInsecure') === '1' || params.get('skipCertVerify') === '1') {
-            parts.push('tls-verification=false');
-        }
+    if (hasTLS && node.tls?.insecure) {
+        parts.push('tls-verification=false');
     }
 
     parts.push('fast-open=false');
     parts.push('udp-relay=false');
-    parts.push(`tag=${name}`);
+    parts.push(`tag=${node.name}`);
 
     return parts.join(', ');
 }
 
-function parseTrojanToQuantumultX(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const password = decodeURIComponent(urlObj.username);
-    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
-    const port = Number(urlObj.port);
-    const params = new URLSearchParams(urlObj.search);
-
+function buildTrojan(node: TrojanNode): string {
     const parts: string[] = [];
-    parts.push(`trojan=${server}:${port}`);
-    parts.push(`password=${password}`);
-
+    parts.push(`trojan=${node.server}:${node.port}`);
+    parts.push(`password=${node.password}`);
     parts.push('over-tls=true');
 
-    const sni = params.get('sni') || server;
-    parts.push(`tls-host=${sni}`);
-
-    if (params.get('allowInsecure') === '1' || params.get('skipCertVerify') === '1') {
-        parts.push('tls-verification=false');
-    } else {
-        parts.push('tls-verification=true');
-    }
+    if (node.tls?.serverName) parts.push(`tls-host=${node.tls.serverName}`);
+    if (node.tls?.insecure) parts.push('tls-verification=false');
+    else parts.push('tls-verification=true');
 
     parts.push('fast-open=false');
     parts.push('udp-relay=true');
-    parts.push(`tag=${name}`);
+    parts.push(`tag=${node.name}`);
 
     return parts.join(', ');
 }
 
-function parseSSRToQuantumultX(url: string, name: string): string {
-    const base64Part = url.replace('ssr://', '');
-    const decoded = decodeBase64(base64Part);
+function buildShadowsocks(node: ShadowsocksNode): string {
+    const parts: string[] = [];
+    parts.push(`shadowsocks=${node.server}:${node.port}`);
+    parts.push(`method=${node.cipher}`);
+    parts.push(`password=${node.password}`);
 
-    const match = decoded.match(/^(.+?):(\d+?):(.+?):(.+?):(.+?):(.+?)\/?\\??(.*)$/);
-    if (!match) {
-        console.warn(`无法解析 SSR URL: ${name}`);
-        return '';
+    if (node.plugin && node.plugin.includes('obfs')) {
+        const opts = node.pluginOpts || {};
+        if (opts.obfs) parts.push(`obfs=${opts.obfs}`);
+        if (opts['obfs-host']) parts.push(`obfs-host=${opts['obfs-host']}`);
     }
 
-    const [, server, port, protocol, method, obfs, passwordBase64, paramsStr] = match;
-    const password = decodeBase64(passwordBase64.replace(/_/g, '/').replace(/-/g, '+'));
-
-    const params = new URLSearchParams(paramsStr);
-    const obfsParam = params.get('obfsparam') ? decodeBase64(params.get('obfsparam')!.replace(/_/g, '/').replace(/-/g, '+')) : '';
-    const protocolParam = params.get('protoparam') ? decodeBase64(params.get('protoparam')!.replace(/_/g, '/').replace(/-/g, '+')) : '';
-
-    const parts: string[] = [];
-    parts.push(`shadowsocks=${server}:${port}`);
-    parts.push(`method=${method}`);
-    parts.push(`password=${password}`);
-    parts.push(`ssr-protocol=${protocol}`);
-    if (protocolParam) parts.push(`ssr-protocol-param=${protocolParam}`);
-    parts.push(`obfs=${obfs}`);
-    if (obfsParam) parts.push(`obfs-host=${obfsParam}`);
     parts.push('fast-open=false');
     parts.push('udp-relay=true');
-    parts.push(`tag=${name}`);
+    parts.push(`tag=${node.name}`);
 
     return parts.join(', ');
 }

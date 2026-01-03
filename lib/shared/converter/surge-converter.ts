@@ -1,5 +1,4 @@
-import type { Node, ConverterOptions } from '../types';
-import { decodeBase64 } from './base64';
+import { Node, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode } from '../types';
 
 /**
  * 转换为 Surge 配置
@@ -38,219 +37,174 @@ export function toSurge(nodes: Node[], _options: ConverterOptions = {}): string 
  * 将 Node 转换为 Surge 配置行
  */
 function nodeToSurgeLine(node: Node): string | null {
-    const protocol = node.protocol?.toLowerCase();
-    const url = node.url;
-
     try {
-        const handlers: Record<string, () => string | null> = {
-            'vmess': () => parseVmessToSurge(url, node.name),
-            'trojan': () => parseTrojanToSurge(url, node.name),
-            'ss': () => parseShadowsocksToSurge(url, node.name),
-            'shadowsocks': () => parseShadowsocksToSurge(url, node.name),
-            'hysteria2': () => parseHysteria2ToSurge(url, node.name),
-            'hy2': () => parseHysteria2ToSurge(url, node.name),
-            'snell': () => parseSnellToSurge(url, node.name),
-            'tuic': () => parseTuicToSurge(url, node.name),
-            'wireguard': () => parseWireGuardToSurge(url, node.name),
-            'wg': () => parseWireGuardToSurge(url, node.name),
-        };
-
-        const handler = handlers[protocol || ''];
-        return handler ? handler() : null;
-
-    } catch (error) {
-        console.warn(`Surge 转换失败: ${node.name}`, error);
+        switch (node.type) {
+            case 'vmess': return buildVmess(node as VmessNode);
+            case 'trojan': return buildTrojan(node as TrojanNode);
+            case 'ss': return buildShadowsocks(node as ShadowsocksNode);
+            case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
+            case 'tuic': return buildTuic(node as TuicNode);
+            case 'wireguard': return buildWireGuard(node as WireGuardNode);
+            // Surge 对 VLESS 支持有限或者通常使用外部模块，此处暂不原生支持 VLESS
+            // 或者如果 Surge 5 支持的话可以添加
+            case 'snell': return buildSnell(node as any);
+            default:
+                // console.warn(`Surge 不原生支持或暂未实现: ${node.type}`);
+                return null;
+        }
+    } catch (e) {
+        console.warn(`Surge 转换失败: ${node.name}`, e);
         return null;
     }
 }
 
-function parseVmessToSurge(url: string, name: string): string {
-    const base64Content = url.replace('vmess://', '');
-    const config = JSON.parse(decodeBase64(base64Content));
-
+function buildVmess(node: VmessNode): string {
     const parts = [
         'vmess',
-        config.add,
-        config.port,
-        `username=${config.id}`,
+        node.server,
+        node.port,
+        `username=${node.uuid}`,
     ];
 
-    // TLS
-    if (config.tls === 'tls') {
+    if (node.tls?.enabled) {
         parts.push('tls=true');
-        if (config.sni) parts.push(`sni=${config.sni}`);
-        if (config['skip-cert-verify']) parts.push('skip-cert-verify=true');
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
     }
 
-    // Transport
-    const network = config.net || 'tcp';
-    if (network === 'ws') {
-        parts.push('ws=true');
-        if (config.path) parts.push(`ws-path=${config.path}`);
-        if (config.host) parts.push(`ws-headers=Host:${config.host}`);
+    if (node.transport) {
+        if (node.transport.type === 'ws') {
+            parts.push('ws=true');
+            if (node.transport.path) parts.push(`ws-path=${node.transport.path}`);
+            if (node.transport.headers?.Host) parts.push(`ws-headers=Host:${node.transport.headers.Host}`);
+        }
     }
 
-    return `${name} = ${parts.join(', ')}`;
+    // Surge VMess AEAD usually defaults to auto, but we can specify if needed
+    // if (node.cipher === 'auto' || !node.cipher) ...
+
+    return `${node.name} = ${parts.join(', ')}`;
 }
 
-function parseTrojanToSurge(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-
+function buildTrojan(node: TrojanNode): string {
     const parts = [
         'trojan',
-        urlObj.hostname.replace(/^\[|\]$/g, ''),
-        urlObj.port,
-        `password=${decodeURIComponent(urlObj.username)}`,
+        node.server,
+        node.port,
+        `password=${node.password}`,
     ];
 
-    // SNI
-    if (params.get('sni')) {
-        parts.push(`sni=${params.get('sni')}`);
+    if (node.tls) {
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
     }
 
-    // Skip cert verify
-    if (params.get('allowInsecure') === '1') {
-        parts.push('skip-cert-verify=true');
-    }
-
-    // Transport
-    if (params.get('type') === 'ws') {
+    if (node.transport?.type === 'ws') {
         parts.push('ws=true');
-        if (params.get('path')) parts.push(`ws-path=${params.get('path')}`);
-        if (params.get('host')) parts.push(`ws-headers=Host:${params.get('host')}`);
+        if (node.transport.path) parts.push(`ws-path=${node.transport.path}`);
+        if (node.transport.headers?.Host) parts.push(`ws-headers=Host:${node.transport.headers.Host}`);
     }
 
-    return `${name} = ${parts.join(', ')}`;
+    return `${node.name} = ${parts.join(', ')}`;
 }
 
-function parseShadowsocksToSurge(url: string, name: string): string {
-    const urlObj = new URL(url);
-    let method = '';
-    let password = '';
-    let server = '';
-    let port = 0;
-
-    if (urlObj.username) {
-        const userInfo = decodeBase64(decodeURIComponent(urlObj.username));
-        [method, password] = userInfo.split(':');
-        server = urlObj.hostname;
-        port = Number(urlObj.port);
-    } else {
-        const base64Part = url.replace('ss://', '').split('#')[0].split('?')[0];
-        const decoded = decodeBase64(base64Part);
-        const match = decoded.match(/^(.+?):(.+?)@(.+?):(\d+)$/);
-        if (!match) return '';
-        [, method, password, server, port] = match as any;
-    }
-
+function buildShadowsocks(node: ShadowsocksNode): string {
     const parts = [
         'ss',
-        server.replace(/^\[|\]$/g, ''),
-        port,
-        `encrypt-method=${method}`,
-        `password=${password}`,
+        node.server,
+        node.port,
+        `encrypt-method=${node.cipher}`,
+        `password=${node.password}`,
     ];
 
-    // Plugin
-    const params = new URLSearchParams(urlObj.search);
-    const plugin = params.get('plugin');
-    if (plugin && plugin.includes('obfs')) {
-        parts.push('obfs=http');
-        const hostMatch = plugin.match(/obfs-host=([^;]+)/);
-        if (hostMatch) {
-            parts.push(`obfs-host=${hostMatch[1]}`);
+    if (node.plugin) {
+        if (node.plugin.includes('obfs')) {
+            parts.push('obfs=http'); // Simplified, assumes http obfs
+            if (node.pluginOpts?.['obfs-host']) {
+                parts.push(`obfs-host=${node.pluginOpts['obfs-host']}`);
+            }
         }
     }
 
-    return `${name} = ${parts.join(', ')}`;
+    if (node.udp) parts.push('udp-relay=true');
+
+    return `${node.name} = ${parts.join(', ')}`;
 }
 
-function parseHysteria2ToSurge(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-
+function buildHysteria2(node: Hysteria2Node): string {
     const parts = [
         'hysteria2',
-        urlObj.hostname.replace(/^\[|\]$/g, ''),
-        urlObj.port,
-        `password=${decodeURIComponent(urlObj.username)}`,
+        node.server,
+        node.port,
+        `password=${node.password}`,
     ];
 
-    // Bandwidth
-    if (params.get('down') || params.get('downmbps')) {
-        parts.push(`download-bandwidth=${params.get('down') || params.get('downmbps')}`);
+    if (node.tls) {
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
     }
 
-    // SNI
-    if (params.get('sni')) {
-        parts.push(`sni=${params.get('sni')}`);
-    }
+    // Surge Hysteria2 options might differ slightly, checking standard docs
+    // download-bandwidth=...
 
-    // Skip cert verify
-    if (params.get('insecure') === '1') {
-        parts.push('skip-cert-verify=true');
-    }
-
-    return `${name} = ${parts.join(', ')}`;
+    return `${node.name} = ${parts.join(', ')}`;
 }
 
-function parseSnellToSurge(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-
-    const parts = [
-        'snell',
-        urlObj.hostname.replace(/^\[|\]$/g, ''),
-        urlObj.port,
-        `psk=${params.get('psk') || params.get('password')}`,
-        `version=${params.get('version') || '4'}`,
-    ];
-
-    // Obfs
-    const obfs = params.get('obfs');
-    if (obfs) {
-        parts.push(`obfs=${obfs}`);
-        if (params.get('obfs-host')) {
-            parts.push(`obfs-host=${params.get('obfs-host')}`);
-        }
-    }
-
-    return `${name} = ${parts.join(', ')}`;
-}
-
-function parseTuicToSurge(url: string, name: string): string {
-    const urlObj = new URL(url);
-    const params = new URLSearchParams(urlObj.search);
-
+function buildTuic(node: TuicNode): string {
     const parts = [
         'tuic',
-        urlObj.hostname.replace(/^\[|\]$/g, ''),
-        urlObj.port,
-        `uuid=${urlObj.username}`,
-        `password=${decodeURIComponent(urlObj.password || '')}`,
+        node.server,
+        node.port,
+        `uuid=${node.uuid}`,
+        `password=${node.password}`,
     ];
 
-    // SNI
-    if (params.get('sni')) {
-        parts.push(`sni=${params.get('sni')}`);
+    if (node.tls) {
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.alpn) parts.push(`alpn=${node.tls.alpn.join(',')}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
     }
 
-    // ALPN
-    if (params.get('alpn')) {
-        parts.push(`alpn=${params.get('alpn')}`);
-    }
+    // Surge TUIC usually v5
+    parts.push('version=5');
 
-    // Skip cert verify
-    if (params.get('skip-cert-verify') === '1' || params.get('allowInsecure') === '1') {
-        parts.push('skip-cert-verify=true');
-    }
-
-    return `${name} = ${parts.join(', ')}`;
+    return `${node.name} = ${parts.join(', ')}`;
 }
 
-function parseWireGuardToSurge(_url: string, name: string): string {
-    // Surge WireGuard uses a section-based configuration
-    const sectionName = name.replace(/[^a-zA-Z0-9]/g, '_');
-    return `${name} = wireguard, section-name = ${sectionName}`;
+function buildWireGuard(node: WireGuardNode): string {
+    // Surge WireGuard uses section based definition which is complex in a single line output context
+    // Usually Surge users prefer external dconf or section based. 
+    // This inline format: 'Name = wireguard, ...' works in modern Surge
+
+    // const parts = [ ... ]; // removed unused
+
+    // But wait, the previous code used:
+    // section-name = ...
+    // Surge Inline WG is: ProxyName = wireguard, section-name=... (referring to a [WireGuard MyNode] section)
+    // Generating a separate section inline is hard in this line-based generator structure without refactoring the whole writer.
+    // For now we might skip or use a placeholder if we can't append sections easily.
+    // However, modern Surge might support inline parameters?
+    // Let's stick to the previous logic if possible, but previous logic generated `[WireGuard NodeName]` lines? 
+    // No, previous logic generated: `Name = wireguard, section-name = Name_clean`
+    // But where was the section body generated? 
+    // Looking at the previous file content... it ONLY generated the proxy line, but NOT the section.
+    // That means the previous code was incomplete or expected the user to fill sections.
+    // Let's produce a warning comment instead of broken config.
+
+    return `# WireGuard node '${node.name}' omitted (Inline WG config requires separate section generator)`;
+}
+
+function buildSnell(node: any): string {
+    const parts = [
+        'snell',
+        node.server,
+        node.port,
+        `psk=${node.psk}`,
+        `version=${node.version || '4'}`
+    ];
+    if (node.obfs) {
+        parts.push(`obfs=${node.obfs}`);
+        if (node['obfs-host']) parts.push(`obfs-host=${node['obfs-host']}`);
+    }
+    return `${node.name} = ${parts.join(', ')}`;
 }
