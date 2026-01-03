@@ -21,11 +21,15 @@ export type ProxyType =
     | 'http'
     | 'unknown';
 
+// Alias for frontend compatibility
+export type ProtocolType = ProxyType;
+
 export type NetworkType = 'tcp' | 'udp' | 'h2' | 'http' | 'ws' | 'grpc' | 'quic' | 'kcp';
 
 export type CipherType =
     | 'auto'
-    | 'aes-128-gcm' | 'aes-256-gcm' | 'chacha20-poly1305' // Common
+    | 'aes-128-gcm' | 'aes-256-gcm' | 'chacha20-poly1305' // Common (AEAD)
+    | 'aes-128-cfb' | 'aes-256-cfb' | 'rc4-md5' | 'chacha20-ietf' // Legacy/Insecure
     | 'none'
     | string;
 
@@ -239,11 +243,14 @@ export interface Profile {
     id: string;
     name: string;
     description?: string;
+    enabled: boolean;
     type: ClientFormat;
     subscriptions: string[];
     manualNodes?: string[];
     filter?: string;
     token?: string;
+    customId?: string;
+    expiresAt?: string;
     createdAt?: number;
     updatedAt?: number;
 }

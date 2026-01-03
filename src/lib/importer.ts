@@ -86,7 +86,7 @@ export function createNode(url: string, name?: string): Node {
         type: 'unknown',
         // 默认启用该节点
         enabled: true
-    };
+    } as any;
 }
 
 // ==================== 文本解析函数 ====================

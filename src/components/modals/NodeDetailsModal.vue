@@ -184,8 +184,8 @@ const fetchProfileNodes = async () => {
         profileNodes.push({
           id: node.id,
           name: node.name || '未命名节点',
-          url: node.url,
-          protocol: getProtocolFromUrl(node.url),
+          url: node.url || '',
+          protocol: getProtocolFromUrl(node.url || ''),
           enabled: node.enabled,
           type: 'manual'
         });
@@ -223,7 +223,7 @@ const fetchProfileNodes = async () => {
                 protocol: getProtocolFromUrl(node.url || ''),
                 enabled: true,
                 type: 'subscription' as const,
-                subscriptionName: subscription.name
+                subscriptionName: subscription.name || ''
               }));
             }
           } catch (error) {

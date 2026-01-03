@@ -46,7 +46,8 @@ const localProfile = ref<Profile>({
   subscriptions: [],
   manualNodes: [],
   customId: '',
-  expiresAt: ''
+  expiresAt: '',
+  type: 'base64'
 });
 const subscriptionSearchTerm = ref('');
 const nodeSearchTerm = ref('');
@@ -121,7 +122,7 @@ watch(() => props.profile, (newProfile) => {
     }
     localProfile.value = profileCopy;
   } else {
-    localProfile.value = { id: '', name: '', enabled: true, subscriptions: [], manualNodes: [], customId: '', expiresAt: '' };
+    localProfile.value = { id: '', name: '', enabled: true, subscriptions: [], manualNodes: [], customId: '', expiresAt: '', type: 'base64' };
   }
 }, { deep: true, immediate: true });
 

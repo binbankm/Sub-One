@@ -92,6 +92,7 @@ export function useProfiles(config: Ref<AppConfig>) {
             subscriptions: p.subscriptions || [],
             manualNodes: p.manualNodes || [],
             customId: p.customId || '',
+            type: p.type || 'base64',
             ...p
         } as Profile));
     }

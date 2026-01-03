@@ -366,7 +366,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
     // 遍历所有节点
     for (const node of manualNodes.value) {
       // 使用智能函数生成唯一键
-      const uniqueKey = getUniqueKey(node.url);
+      const uniqueKey = getUniqueKey(node.url || '');
 
       // 如果这个唯一键还没见过
       if (!seenKeys.has(uniqueKey)) {
