@@ -79,19 +79,35 @@ const filteredNodes = computed(() => {
   const alternativeTerms = getCountryTerms(term);
 
   return nodes.value.filter(node => {
-    const nodeName = node.name.toLowerCase();
-    const nodeUrl = node.url.toLowerCase();
-    const nodeProtocol = (node.protocol || '').toLowerCase();
+    const nodeNameLower = (node.name || '').toLowerCase();
+    const nodeUrlLower = (node.url || '').toLowerCase();
+    const nodeProtocolLower = (node.protocol || '').toLowerCase();
 
-    // 1. 基础匹配：节点名称、URL 或协议包含搜索词
-    if (nodeName.includes(term) || nodeUrl.includes(term) || nodeProtocol.includes(term)) {
+    // 1. 节点名称匹配 (模糊匹配)
+    if (nodeNameLower.includes(term)) {
       return true;
     }
 
-    // 2. 高级匹配：节点名称、URL 或协议包含任一国家/地区相关词汇
+    // 2. 协议匹配 (必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
+    if (nodeProtocolLower.startsWith(term)) {
+      return true;
+    }
+
+    // 3. URL 匹配 (区分协议头和具体地址)
+    // 如果 URL 以搜索词开头
+    if (nodeUrlLower.startsWith(term)) {
+      return true;
+    }
+
+    // 否则，仅在 URL 的具体域名/路径部分进行搜索，避开协议头干扰
+    const urlDetails = nodeUrlLower.split('://')[1] || '';
+    if (urlDetails.includes(term)) {
+      return true;
+    }
+
+    // 4. 高级匹配：节点名称包含任一国家/地区相关词汇
     for (const altTerm of alternativeTerms) {
-      const altTermLower = altTerm.toLowerCase();
-      if (nodeName.includes(altTermLower) || nodeUrl.includes(altTermLower) || nodeProtocol.includes(altTermLower)) {
+      if (nodeNameLower.includes(altTerm.toLowerCase())) {
         return true;
       }
     }

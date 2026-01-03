@@ -122,7 +122,6 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
     const lowerCaseSearch = debouncedSearchTerm.value.toLowerCase();
 
     // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-    // 例如：输入 '美国' 可以匹配 ['🇺🇸', '美国', '美國', 'us']
     const alternativeTerms = getCountryTerms(lowerCaseSearch);
 
     // 过滤节点
@@ -130,21 +129,35 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
       const nodeNameLower = (node.name || '').toLowerCase();
       const nodeProtocolLower = (node.protocol || '').toLowerCase();
       const nodeTypeLower = (node.type || '').toLowerCase();
+      const nodeUrlLower = (node.url || '').toLowerCase();
 
-      // 1. 检查节点名称是否包含原始搜索词
+      // 1. 节点名称匹配 (模糊匹配)
       if (nodeNameLower.includes(lowerCaseSearch)) {
         return true;
       }
 
-      // 2. 检查协议、类型是否匹配（支持搜 ss, vmess 等）
-      if (nodeProtocolLower.includes(lowerCaseSearch) || nodeTypeLower.includes(lowerCaseSearch)) {
+      // 2. 协议/类型匹配 (必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
+      // 例如：搜 ss 只匹配 ss, ssr，不会匹配 vmess
+      if (nodeProtocolLower.startsWith(lowerCaseSearch) || nodeTypeLower.startsWith(lowerCaseSearch)) {
         // 排除掉搜 manual 匹配到所有节点的情况
         if (lowerCaseSearch !== 'manual') {
           return true;
         }
       }
 
-      // 3. 检查节点名称是否包含任何国家/地区相关词汇
+      // 3. URL 匹配 (区分协议头和具体地址)
+      // 如果 URL 以搜索词开头 (如搜 ss:// 或直接搜协议名 ss)
+      if (nodeUrlLower.startsWith(lowerCaseSearch)) {
+        return true;
+      }
+
+      // 否则，仅在 URL 的具体域名/路径部分进行搜索，避开协议头干扰
+      const urlDetails = nodeUrlLower.split('://')[1] || '';
+      if (urlDetails.includes(lowerCaseSearch)) {
+        return true;
+      }
+
+      // 4. 检查节点名称是否包含任何国家/地区相关词汇
       for (const altTerm of alternativeTerms) {
         if (nodeNameLower.includes(altTerm.toLowerCase())) {
           return true;
