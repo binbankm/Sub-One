@@ -2,6 +2,7 @@
 
 import { SubscriptionParser } from '../lib/shared/subscription-parser';
 import { SubscriptionConverter } from '../lib/shared/converter';
+import { encodeBase64 } from '../lib/shared/converter/base64';
 import type { Node } from '../lib/shared/types';
 
 const subscriptionParser = new SubscriptionParser();
@@ -522,16 +523,19 @@ async function handleApiRequest(request: Request, env: Env) {
 
         case '/fetch_external_url': { // New case
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-            // [安全修复] 添加鉴权，防止被恶意利用作为代理
             if (!await authMiddleware(request, env)) {
                 return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
             }
-            const { url: externalUrl } = await request.json() as any;
-            if (!externalUrl || typeof externalUrl !== 'string' || !/^https?:\/\//.test(externalUrl)) {
-                return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
-            }
 
+            let externalUrl = '';
             try {
+                const body = await request.json() as any;
+                externalUrl = body.url;
+
+                if (!externalUrl || typeof externalUrl !== 'string' || !/^https?:\/\//.test(externalUrl)) {
+                    return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
+                }
+
                 const response = await fetch(new Request(externalUrl, {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT }, // Unified UA
                     redirect: "follow",
@@ -1018,8 +1022,8 @@ async function handleSubRequest(context: EventContext<Env, any, any>) {
             'Cache-Control': 'no-store, no-cache',
             "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
         };
-        // 使用 subscriptionParser.encodeBase64 替代旧的 unsafe 方法
-        return new Response(subscriptionParser.encodeBase64(contentToEncode), { headers });
+        // 使用导出的 encodeBase64 函数
+        return new Response(encodeBase64(contentToEncode), { headers });
     }
 
     // === [核心改进] 使用内置转换器,完全内部化处理 ===

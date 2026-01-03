@@ -148,8 +148,12 @@ export function buildStandardQuery(transport?: TransportOptions, tls?: TlsOption
  * 生成唯一 ID (安全回退)
  */
 export function generateId(): string {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
+    try {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+    } catch (e) {
+        // Fallback if crypto exists but throws
     }
     return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
