@@ -17,7 +17,7 @@
 -->
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import { SubscriptionParser } from '@shared/subscription-parser';
 const subscriptionParser = new SubscriptionParser();
@@ -324,14 +324,32 @@ const refreshNodes = async () => {
   await fetchNodes();
   toastStore.showToast('节点信息已刷新', 'success');
 };
+
+// 键盘事件处理 - ESC 键关闭
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && props.show) {
+    emit('update:show', false);
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
-    @click="emit('update:show', false)">
-    <div
-      class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
-      @click.stop>
+  <Teleport to="body">
+    <Transition name="modal-fade">
+      <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
+        @click="emit('update:show', false)">
+        <Transition name="modal-inner">
+          <div v-if="show"
+            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
+            @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
         <h3 class="text-xl font-bold gradient-text">节点详情</h3>
@@ -540,10 +558,25 @@ const refreshNodes = async () => {
         </button>
       </div>
     </div>
-  </div>
+        </Transition>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
-/* 模态框过渡动画已在 BaseModal.vue 中定义 */
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-inner-enter-active, .modal-inner-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-inner-enter-from, .modal-inner-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+}
 </style>
 

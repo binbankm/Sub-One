@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   ==================== 节点过滤规则编辑器 ====================
   
   功能说明：
@@ -47,7 +47,7 @@ const protocols = [
     { label: 'AnyTLS', value: 'anytls', icon: '🎭' },
     { label: 'Socks5', value: 'socks5', icon: '🔌' },
     { label: 'HTTP', value: 'http', icon: '🌐' },
-    { label: 'WireGuard', value: 'wg|wireguard', icon: '�' },
+    { label: 'WireGuard', value: 'wg|wireguard', icon: '🚇' },
     { label: 'Snell', value: 'snell', icon: '🐌' },
     { label: 'Reality', value: 'reality', icon: '🕶️' }
 ];
