@@ -28,6 +28,8 @@ export function buildNodeUrl(node: Node): string {
                 return buildWireGuardUrl(node);
             case 'anytls':
                 return buildAnyTLSUrl(node);
+            case 'snell':
+                return buildSnellUrl(node);
             default:
                 // 如果是未知类型但有 originalUrl，则返回之
                 if ('originalUrl' in node && node.originalUrl) {
@@ -228,4 +230,21 @@ function buildSSRUrl(node: import('./types').ShadowsocksRNode): string {
     const fullContent = queryStr ? `${mainPart}/?${queryStr}` : mainPart;
 
     return `ssr://${encodeBase64(fullContent)}`;
+}
+
+function buildSnellUrl(node: import('./types').SnellNode): string {
+    const params = new URLSearchParams();
+    if (node.version) params.set('version', node.version);
+    if (node.obfs) {
+        params.set('obfs', node.obfs.type);
+        if (node.obfs.host) params.set('host', node.obfs.host);
+    }
+
+    // Some implementations prefer psk in query
+    params.set('psk', node.password);
+
+    const host = node.server.includes(':') ? `[${node.server}]` : node.server;
+    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
+
+    return `snell://${host}:${node.port}?${params.toString()}${hash}`;
 }

@@ -20,8 +20,8 @@ export function encodeBase64(str: string): string {
 export function decodeBase64(str: string): string {
     // 1. Remove whitespace
     str = str.trim();
-    // 2. Replace URL-safe chars
-    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    // 2. Replace URL-safe chars and handle spaces (which might be converted from + by URLSearchParams)
+    str = str.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '+');
     // 3. Add padding
     while (str.length % 4) {
         str += '=';

@@ -1,4 +1,4 @@
-import { Node, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode } from '../types';
+import { Node, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode } from '../types';
 
 /**
  * 转换为 Surge 配置
@@ -47,7 +47,7 @@ function nodeToSurgeLine(node: Node): string | null {
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
             // Surge 对 VLESS 支持有限或者通常使用外部模块，此处暂不原生支持 VLESS
             // 或者如果 Surge 5 支持的话可以添加
-            case 'snell': return buildSnell(node as any);
+            case 'snell': return buildSnell(node as SnellNode);
             default:
                 // console.warn(`Surge 不原生支持或暂未实现: ${node.type}`);
                 return null;
@@ -194,17 +194,17 @@ function buildWireGuard(node: WireGuardNode): string {
     return `# WireGuard node '${node.name}' omitted (Inline WG config requires separate section generator)`;
 }
 
-function buildSnell(node: any): string {
+function buildSnell(node: SnellNode): string {
     const parts = [
         'snell',
         node.server,
         node.port,
-        `psk=${node.psk}`,
+        `psk=${node.password}`,
         `version=${node.version || '4'}`
     ];
     if (node.obfs) {
-        parts.push(`obfs=${node.obfs}`);
-        if (node['obfs-host']) parts.push(`obfs-host=${node['obfs-host']}`);
+        parts.push(`obfs=${node.obfs.type}`);
+        if (node.obfs.host) parts.push(`obfs-host=${node.obfs.host}`);
     }
     return `${node.name} = ${parts.join(', ')}`;
 }

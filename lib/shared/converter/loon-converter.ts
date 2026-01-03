@@ -1,4 +1,4 @@
-import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode } from '../types';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode } from '../types';
 
 /**
  * 转换为 Loon 配置
@@ -39,6 +39,7 @@ function nodeToLoonLine(node: Node): string | null {
             case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
             case 'tuic': return buildTuic(node as TuicNode);
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
+            case 'snell': return buildSnell(node as SnellNode);
             default:
                 return null;
         }
@@ -208,5 +209,20 @@ function buildWireGuard(node: WireGuardNode): string {
     if (node.mtu) parts.push(`mtu:${node.mtu}`);
     parts.push(`peer:(public-key:${node.publicKey},endpoint:${node.server}:${node.port})`);
 
+    return `${node.name} = ${parts.join(',')}`;
+}
+
+function buildSnell(node: SnellNode): string {
+    const parts = [
+        'Snell',
+        node.server,
+        node.port,
+        `psk=${node.password}`,
+        `version=${node.version || '4'}`
+    ];
+    if (node.obfs) {
+        parts.push(`obfs-name:${node.obfs.type}`);
+        if (node.obfs.host) parts.push(`obfs-host:${node.obfs.host}`);
+    }
     return `${node.name} = ${parts.join(',')}`;
 }

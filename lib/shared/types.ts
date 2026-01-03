@@ -183,6 +183,16 @@ export interface AnyTLSNode extends BaseNode {
     tls?: TlsOptions;
 }
 
+export interface SnellNode extends BaseNode {
+    type: 'snell';
+    password: string;
+    version?: string;
+    obfs?: {
+        type: string;       // http
+        host?: string;
+    };
+}
+
 // 统一节点类型 (Discriminated Union)
 export type Node =
     | VmessNode
@@ -195,8 +205,9 @@ export type Node =
     | AnyTLSNode
     | TuicNode
     | WireGuardNode
+    | SnellNode
     // 兼容未知类型，防止解析器崩溃
-    | (BaseNode & { type: 'unknown' | 'socks5' | 'http' | 'snell';[key: string]: any });
+    | (BaseNode & { type: 'unknown' | 'socks5' | 'http';[key: string]: any });
 
 
 // ==================== 接口定义 (兼容旧代码) ====================

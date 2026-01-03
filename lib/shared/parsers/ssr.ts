@@ -25,7 +25,18 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
 
         // 密码及其之后的部分可能包含参数
         const rest = mainParts.slice(5).join(':');
-        const [passwordBase64, queryPart] = rest.split('/?');
+
+        // SSR 的参数部分通常由 /? 或 ? 开始
+        let passwordBase64 = '';
+        let queryPart = '';
+
+        if (rest.includes('/?')) {
+            [passwordBase64, queryPart] = rest.split('/?');
+        } else if (rest.includes('?')) {
+            [passwordBase64, queryPart] = rest.split('?');
+        } else {
+            passwordBase64 = rest;
+        }
 
         const password = decodeBase64(passwordBase64);
 

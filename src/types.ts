@@ -29,25 +29,17 @@ export type ProtocolType =
     | 'vmess'
     | 'vless'
     | 'trojan'
-    | 'ss'
-    | 'shadowsocks'
-    | 'ssr'
-    | 'shadowsocksr'
-    | 'hysteria'
-    | 'hysteria2'
-    | 'hy'
-    | 'hy2'
-    | 'tuic'
-    | 'juicity'
-    | 'wireguard'
-    | 'wg'
+    | 'ss' | 'shadowsocks'
+    | 'ssr' | 'shadowsocksr'
+    | 'hysteria' | 'hy'
+    | 'hysteria2' | 'hy2'
+    | 'tuic' | 'juicity'
+    | 'wireguard' | 'wg'
     | 'snell'
     | 'anytls'
-    | 'socks'
-    | 'socks5'
-    | 'http'
-    | 'https'
-    | string; // 允许扩展支持未来的协议
+    | 'socks' | 'socks5'
+    | 'http' | 'https'
+    | string;
 
 /**
  * 客户端配置格式
@@ -73,7 +65,7 @@ export interface SubscriptionUserInfo {
     total?: number;
     /** 到期时间戳 (秒或毫秒) */
     expire?: number;
-    /** 原始信息字符串 */
+    /** 原始元数据/描述信息字符串 (用于存储一些机场返回的额外信息) */
     info?: string;
 }
 
@@ -87,27 +79,32 @@ export interface Node {
     id: string;
     /** 节点显示名称 */
     name: string;
-    /** 节点链接地址（协议://配置信息） */
+    /** 节点重构后的链接地址 */
     url: string;
-    /** 协议类型 */
+    /** 原始链接 (用于回溯和详细展示) */
+    originalUrl?: string;
+    /** 核心协议类型 (对应 lib/shared 中的 type) */
+    type: ProtocolType;
+    /** 旧版协议类型字段 (兼容性保留) */
     protocol?: ProtocolType;
-    /** 节点启用状态（true=启用, false=禁用） */
+    /** 节点启用状态 */
     enabled: boolean;
-    /** 节点类型（可选扩展字段） */
-    type?: string;
     /** 所属订阅名称（用于区分来源） */
     subscriptionName?: string;
-    /** 原始代理配置对象（保留完整配置信息） */
+    /** 原始代理配置对象（保留完整配置信息，如从 Clash 解析来的全对象） */
     originalProxy?: Record<string, unknown>;
 
-    // --- 常用解析属性 (可选) ---
+    // --- 常用解析属性 (可选，便于前端过滤和展示) ---
     server?: string;
     port?: number;
     uuid?: string;
     password?: string;
     cipher?: string;
+    version?: string;        // Snell/TUIC 版本
     udp?: boolean;
     tfo?: boolean;
+    tls?: boolean;
+    sni?: string;
 
     /** 动态扩展字段 */
     [key: string]: unknown;
@@ -121,21 +118,21 @@ export interface Node {
 export interface Subscription {
     /** 订阅唯一标识符（UUID） */
     id: string;
-    /** 订阅显示名称（可选，默认从链接提取） */
+    /** 订阅显示名称 */
     name?: string;
-    /** 订阅链接地址（HTTP/HTTPS） */
+    /** 订阅链接地址 */
     url?: string;
-    /** 订阅启用状态（true=启用, false=禁用） */
+    /** 订阅启用状态 */
     enabled: boolean;
     /** 订阅状态（unchecked、checking、success、error） */
     status?: string;
     /** 订阅包含的节点数量 */
     nodeCount?: number;
-    /** 更新状态标识（true=正在更新） */
+    /** 更新状态标识 */
     isUpdating?: boolean;
     /** 订阅用户信息（流量、到期时间等） */
     userInfo?: SubscriptionUserInfo;
-    /** 排除规则（节点过滤关键词） */
+    /** 排除规则（节点过滤关键词正则） */
     exclude?: string;
     /** 创建时间 */
     createdAt?: number;
@@ -157,21 +154,21 @@ export interface Profile {
     name: string;
     /** 描述信息 */
     description?: string;
-    /** 订阅组启用状态（true=启用, false=禁用） */
+    /** 订阅组启用状态 */
     enabled: boolean;
     /** 包含的订阅ID列表 */
     subscriptions: string[];
-    /** 包含的订阅ID列表 (旧版兼容字段) */
-    subscriptionIds?: string[];
     /** 包含的手动节点ID列表 */
     manualNodes?: string[];
-    /** 自定义短链接 ID（用于生成友好的分享链接） */
-    customId?: string;
     /** 目标客户端格式 */
     type?: ClientFormat;
+    /** 节点过滤正则 */
+    filter?: string;
+    /** 订阅组私有令牌 (用于生成最终订阅链接鉴权) */
+    token?: string;
+    /** 自定义短链接 ID */
+    customId?: string;
 
-    /** 订阅组过期时间（ISO 8601 格式） */
-    expiresAt?: string;
     /** 创建时间 */
     createdAt?: number;
     /** 更新时间 */

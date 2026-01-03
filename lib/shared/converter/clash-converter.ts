@@ -1,5 +1,5 @@
 import * as yaml from 'js-yaml';
-import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode } from '../types';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode } from '../types';
 
 /**
  * 转换为 Clash Meta YAML 配置
@@ -62,6 +62,7 @@ function nodeToClashProxy(node: Node): any {
             case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
             case 'anytls': return buildAnyTLS(node as AnyTLSNode);
             case 'tuic': return buildTuic(node as TuicNode);
+            case 'snell': return buildSnell(node as SnellNode);
             // 兼容性
             case 'http': return buildHttp(node as any);
             case 'socks5': return buildSocks5(node as any);
@@ -261,4 +262,20 @@ function buildSocks5(node: any): any {
         username: node.username,
         password: node.password
     };
+}
+
+function buildSnell(node: SnellNode): any {
+    const proxy: any = {
+        ...buildCommon(node),
+        type: 'snell',
+        psk: node.password,
+        version: node.version || '4'
+    };
+    if (node.obfs) {
+        proxy['obfs-opts'] = {
+            mode: node.obfs.type,
+            host: node.obfs.host
+        };
+    }
+    return proxy;
 }

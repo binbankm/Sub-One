@@ -9,6 +9,7 @@ import { parseTuic } from './tuic';
 import { parseWireGuard } from './wireguard';
 import { parseAnyTLS } from './anytls';
 import { parseSSR } from './ssr';
+import { parseSnell } from './snell';
 
 export { parseStandardParams } from './helper';
 
@@ -43,6 +44,8 @@ export function parseNodeUrl(url: string): Node | null {
         return parseTuic(trimmedUrl);
     } else if (trimmedUrl.startsWith('wireguard://') || trimmedUrl.startsWith('wg://')) {
         return parseWireGuard(trimmedUrl);
+    } else if (trimmedUrl.startsWith('snell://')) {
+        return parseSnell(trimmedUrl);
     }
 
     return null;
