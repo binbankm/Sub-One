@@ -7,6 +7,7 @@ import { parseHysteria } from './hysteria';
 import { parseHysteria2 } from './hysteria2';
 import { parseTuic } from './tuic';
 import { parseWireGuard } from './wireguard';
+import { parseAnyTLS } from './anytls';
 
 export { parseStandardParams } from './helper';
 
@@ -36,6 +37,8 @@ export function parseNodeUrl(url: string): Node | null {
     } else if (trimmedUrl.startsWith('hysteria2://') || trimmedUrl.startsWith('hy2://')) {
         // normalize hy2 prefix inside the parser
         return parseHysteria2(trimmedUrl);
+    } else if (trimmedUrl.startsWith('anytls://')) {
+        return parseAnyTLS(trimmedUrl);
     } else if (trimmedUrl.startsWith('tuic://')) {
         return parseTuic(trimmedUrl);
     } else if (trimmedUrl.startsWith('wireguard://') || trimmedUrl.startsWith('wg://')) {

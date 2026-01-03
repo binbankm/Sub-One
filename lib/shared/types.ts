@@ -13,6 +13,7 @@ export type ProxyType =
     | 'ssr'     // shadowsocksr
     | 'hysteria'
     | 'hysteria2'
+    | 'anytls'
     | 'tuic'
     | 'wireguard'
     | 'snell'
@@ -174,6 +175,14 @@ export interface WireGuardNode extends BaseNode {
     reserved?: number[];   // [0, 0, 0]
 }
 
+export interface AnyTLSNode extends BaseNode {
+    type: 'anytls';
+    password?: string;
+    clientFingerprint?: string;
+    idleTimeout?: number;
+    tls?: TlsOptions;
+}
+
 // 统一节点类型 (Discriminated Union)
 export type Node =
     | VmessNode
@@ -183,6 +192,7 @@ export type Node =
     | ShadowsocksRNode
     | HysteriaNode
     | Hysteria2Node
+    | AnyTLSNode
     | TuicNode
     | WireGuardNode
     // 兼容未知类型，防止解析器崩溃

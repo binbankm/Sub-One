@@ -1,4 +1,4 @@
-import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode } from '../types';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode } from '../types';
 
 /**
  * 转换为 Sing-Box JSON 配置
@@ -72,6 +72,7 @@ function nodeToSingBoxOutbound(node: Node): any {
             case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
             case 'tuic': return buildTuic(node as TuicNode);
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
+            case 'anytls': return buildAnyTLS(node as AnyTLSNode);
             default:
                 console.warn(`[SingBox] Unsupported node type: ${node.type}`);
                 return null;
@@ -233,5 +234,21 @@ function buildWireGuard(node: WireGuardNode): any {
         mtu: node.mtu
     };
     if (node.preSharedKey) outbound.pre_shared_key = node.preSharedKey;
+    return outbound;
+}
+
+function buildAnyTLS(node: AnyTLSNode): any {
+    const outbound: any = {
+        type: 'anytls',
+        ...buildBase(node),
+        password: node.password,
+        idle_timeout: node.idleTimeout
+    };
+
+    if (node.clientFingerprint) {
+        outbound.client_fingerprint = node.clientFingerprint;
+    }
+
+    assignTls(outbound, node);
     return outbound;
 }

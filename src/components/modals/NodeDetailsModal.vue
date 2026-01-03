@@ -19,7 +19,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { subscriptionParser } from '@shared/subscription-parser';
+import { SubscriptionParser } from '@shared/subscription-parser';
+const subscriptionParser = new SubscriptionParser();
 import type { Subscription, Profile, Node } from '../../types';
 import { getCountryTerms } from '../../lib/constants';
 
@@ -126,8 +127,8 @@ const fetchNodes = async () => {
     nodes.value = processedNodes.map(n => ({
       id: n.id,
       name: n.name,
-      url: n.url,
-      protocol: getProtocolFromUrl(n.url),
+      url: n.url || '',
+      protocol: getProtocolFromUrl(n.url || ''),
       enabled: true
     }));
 
@@ -196,8 +197,8 @@ const fetchProfileNodes = async () => {
               return processedNodes.map(node => ({
                 id: node.id,
                 name: node.name,
-                url: node.url,
-                protocol: getProtocolFromUrl(node.url),
+                url: node.url || '',
+                protocol: getProtocolFromUrl(node.url || ''),
                 enabled: true,
                 type: 'subscription' as const,
                 subscriptionName: subscription.name

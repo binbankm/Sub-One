@@ -14,7 +14,8 @@
 import { ref, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import Modal from './BaseModal.vue';
-import { subscriptionParser } from '@shared/subscription-parser';
+import { SubscriptionParser } from '@shared/subscription-parser';
+const subscriptionParser = new SubscriptionParser();
 import type { Node } from '../../types';
 
 // ==================== Props 和 Emit ====================
@@ -72,8 +73,16 @@ const isValidUrl = (url: string) => {
  * 解析节点内容
  * 使用共享的订阅解析器
  */
-const parseNodes = (content: string) => {
-  return subscriptionParser.parse(content, '导入的订阅');
+const parseNodes = (content: string): Node[] => {
+  const parsed = subscriptionParser.parse(content, '导入的订阅');
+  return parsed.map(n => ({
+    ...n,
+    id: n.id,
+    name: n.name,
+    url: n.url || '',
+    protocol: n.type,
+    enabled: true
+  } as unknown as Node));
 };
 
 // ==================== 导入逻辑 ====================

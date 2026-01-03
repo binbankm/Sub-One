@@ -14,6 +14,7 @@ describe('New Parser & Converter Architecture', () => {
     const vmessBase64Url = 'vmess://eyJ2IjoiMiIsInBzIjoiVGVzdF9WTWVzcyIsImFkZCI6IjguOC44LjgiLCJwb3J0IjoiNDQzIiwiaWQiOiJ1dWlkLTU2NzgiLCJhaWQiOiIwIiwic2N5IjoiYXV0byIsIm5ldCI6IndzIiwidHlwZSI6Im5vbmUiLCJob3N0IjoiaG9zdC5jb20iLCJwYXRoIjoiL3BhdGgiLCJ0bHMiOiJ0bHMiLCJzbmkiOiJzbmkuY29tIn0=';
     const hysteria2Url = 'hysteria2://password@2.2.2.2:8443?insecure=1&obfs=salamander&obfs-password=obfspass&sni=hy2.com#Test_Hy2';
     const trojanUrl = 'trojan://password@3.3.3.3:443?security=tls&type=ws&path=%2Ftrojan&host=trojan.com&sni=trojan.com#Test_Trojan';
+    const anytlsUrl = 'anytls://mypass@1.1.1.1:443?sni=example.com&insecure=1&idle_timeout=30#Test_AnyTLS';
 
     describe('Parsers', () => {
         it('should parse VLESS Reality correctly', () => {
@@ -55,17 +56,28 @@ describe('New Parser & Converter Architecture', () => {
             expect(hy2.obfs?.type).toBe('salamander');
             expect(hy2.tls?.insecure).toBe(true);
         });
+
+        it('should parse AnyTLS correctly', () => {
+            const node = parseNodeUrl(anytlsUrl);
+            expect(node).not.toBeNull();
+            if (!node) return;
+            expect(node.type).toBe('anytls');
+            const anytls = node as any;
+            expect(anytls.password).toBe('mypass');
+            expect(anytls.tls?.serverName).toBe('example.com');
+            expect(anytls.idleTimeout).toBe(30);
+        });
     });
 
     describe('Converters', () => {
         let nodes: Node[] = [];
 
         // Parse all before testing conversion
-        const urls = [vlessRealityUrl, vmessBase64Url, hysteria2Url, trojanUrl];
+        const urls = [vlessRealityUrl, vmessBase64Url, hysteria2Url, trojanUrl, anytlsUrl];
 
         it('should prepare nodes', () => {
             nodes = urls.map(u => parseNodeUrl(u)).filter((n): n is Node => n !== null);
-            expect(nodes.length).toBe(4);
+            expect(nodes.length).toBe(5);
         });
 
         it('should convert to Clash Meta', () => {
@@ -77,10 +89,14 @@ describe('New Parser & Converter Architecture', () => {
             expect(config).toMatch(/public-key:\s*['"]?76543210['"]?/);
             expect(config).toMatch(/short-id:\s*['"]?1234['"]?/);
 
-            // Hy2 check
             expect(config).toMatch(/name:\s*"?Test_Hy2"?/);
             expect(config).toMatch(/type:\s*hysteria2/);
             expect(config).toMatch(/obfs:\s*salamander/);
+
+            // AnyTLS check
+            expect(config).toMatch(/name:\s*"?Test_AnyTLS"?/);
+            expect(config).toMatch(/type:\s*anytls/);
+            expect(config).toMatch(/idle-timeout:\s*30/);
         });
 
         it('should convert to Sing-Box', () => {
@@ -97,6 +113,11 @@ describe('New Parser & Converter Architecture', () => {
             const hy2Out = config.outbounds.find((o: any) => o.tag === 'Test_Hy2');
             expect(hy2Out).toBeDefined();
             expect(hy2Out.obfs?.type).toBe('salamander');
+
+            const anytlsOut = config.outbounds.find((o: any) => o.tag === 'Test_AnyTLS');
+            expect(anytlsOut).toBeDefined();
+            expect(anytlsOut.type).toBe('anytls');
+            expect(anytlsOut.idle_timeout).toBe(30);
         });
 
         it('should convert to Surge', () => {

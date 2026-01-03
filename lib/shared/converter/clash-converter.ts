@@ -1,5 +1,5 @@
 import * as yaml from 'js-yaml';
-import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode } from '../types';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode } from '../types';
 
 /**
  * 转换为 Clash Meta YAML 配置
@@ -60,6 +60,7 @@ function nodeToClashProxy(node: Node): any {
             case 'trojan': return buildTrojan(node as TrojanNode);
             case 'ss': return buildShadowsocks(node as ShadowsocksNode);
             case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
+            case 'anytls': return buildAnyTLS(node as AnyTLSNode);
             case 'tuic': return buildTuic(node as TuicNode);
             // 兼容性
             case 'http': return buildHttp(node as any);
@@ -204,6 +205,26 @@ function buildHysteria2(node: Hysteria2Node): any {
         if (node.tls.alpn) proxy.alpn = node.tls.alpn;
         if (node.tls.fingerprint) proxy.fingerprint = node.tls.fingerprint;
     }
+    return proxy;
+}
+
+
+function buildAnyTLS(node: AnyTLSNode) {
+    const proxy: any = {
+        ...buildCommon(node),
+        type: 'anytls',
+        password: node.password,
+        'client-fingerprint': node.clientFingerprint,
+        'idle-timeout': node.idleTimeout
+    };
+
+    if (node.tls) {
+        if (node.tls.serverName) proxy.sni = node.tls.serverName;
+        if (node.tls.insecure) proxy['skip-cert-verify'] = true;
+        if (node.tls.alpn) proxy.alpn = node.tls.alpn;
+        if (node.tls.fingerprint) proxy.fingerprint = node.tls.fingerprint;
+    }
+
     return proxy;
 }
 
