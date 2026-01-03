@@ -113,6 +113,37 @@ export class SubscriptionParser {
     }
 
     /**
+     * 生成节点指纹用于去重
+     * 指纹包括：类型、服务器、端口、凭证（UUID/Password）、传输路径
+     */
+    private getNodeFingerprint(n: Node): string {
+        let fp = `${n.type}://${n.server}:${n.port}`;
+
+        // 1. 凭证去重 (Credentials)
+        if ('uuid' in n && n.uuid) {
+            fp += `?uuid=${n.uuid}`;
+        } else if ('password' in n && n.password) {
+            fp += `?password=${n.password}`;
+        } else if ('auth' in n && n.auth) { // Hysteria 1
+            fp += `?auth=${n.auth}`;
+        } else if ('privateKey' in n && n.privateKey) { // WireGuard
+            fp += `?pk=${n.privateKey}`;
+        }
+
+        // 2. 传输层去重 (Transport Path/Service)
+        // 不同的 Path 意味着不同的接入点，不应合并
+        if (n.type === 'vmess' || n.type === 'vless' || n.type === 'trojan') {
+            if (n.transport) {
+                if (n.transport.path) fp += `&path=${n.transport.path}`;
+                if (n.transport.serviceName) fp += `&serviceName=${n.transport.serviceName}`;
+                if (n.transport.type) fp += `&net=${n.transport.type}`;
+            }
+        }
+
+        return fp;
+    }
+
+    /**
      * 后处理：过滤、重命名、去重
      */
     processNodes(nodes: Node[], subscriptionName: string, options: ProcessOptions): Node[] {
@@ -124,13 +155,13 @@ export class SubscriptionParser {
             result = result.filter(n => !regex.test(n.name));
         }
 
-        // 2. 去重 (Deduplicate) - 基于物理特征 (server + port + type)
+        // 2. 去重 (Deduplicate) - 基于物理特征 (server + port + type + credentials + path)
         if (options.dedupe) {
             // 第一步：收集每个物理指纹对应的最佳节点（名称最短）
             const bestNodes = new Map<string, Node>();
 
             result.forEach(n => {
-                const fingerprint = `${n.type}://${n.server}:${n.port}`;
+                const fingerprint = this.getNodeFingerprint(n);
                 const existing = bestNodes.get(fingerprint);
 
                 if (!existing || n.name.length < existing.name.length) {

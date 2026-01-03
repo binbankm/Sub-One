@@ -195,7 +195,7 @@ async function handleCronTrigger(env: Env): Promise<Response> {
                     // 使用统一的 SubscriptionParser 解析
                     try {
                         const nodes = subscriptionParser.parse(text, sub.name, {
-                            dedupe: (settings as any).dedupe || false
+                            dedupe: false
                         });
                         nodeCount = nodes.length;
                     } catch (e) {
@@ -502,10 +502,9 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
                     // 使用统一的 SubscriptionParser 解析
                     let nodeCount = 0;
                     try {
-                        // 获取设置以应用去重配置
-                        const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
+                        // 管理端需要显示全部节点，不进行去重
                         const nodes = subscriptionParser.parse(text, '', {
-                            dedupe: Boolean(settings?.dedupe)
+                            dedupe: false
                         });
                         nodeCount = nodes.length;
                     } catch (e) {
@@ -621,10 +620,9 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
                             // 使用统一的 SubscriptionParser 解析
                             let nodeCount = 0;
                             try {
-                                // 获取设置以应用去重配置
-                                const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
+                                // 管理端需要显示全部节点，不进行去重
                                 const nodes = subscriptionParser.parse(text, sub.name, {
-                                    dedupe: Boolean(settings?.dedupe)
+                                    dedupe: false
                                 });
                                 nodeCount = nodes.length;
                             } catch (e) {
