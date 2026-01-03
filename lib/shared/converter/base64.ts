@@ -18,14 +18,25 @@ export function encodeBase64(str: string): string {
 }
 
 export function decodeBase64(str: string): string {
+    // 1. Remove whitespace
+    str = str.trim();
+    // 2. Replace URL-safe chars
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    // 3. Add padding
+    while (str.length % 4) {
+        str += '=';
+    }
+
     if (typeof Buffer !== 'undefined') {
         return Buffer.from(str, 'base64').toString('utf-8');
     }
+
     try {
         const binaryString = atob(str);
         const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
         return new TextDecoder('utf-8').decode(bytes);
     } catch (e) {
-        return atob(str);
+        // Fallback or better error handling
+        throw new Error(`Invalid Base64 string: ${e}`);
     }
 }
