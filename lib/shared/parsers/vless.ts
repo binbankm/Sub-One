@@ -35,7 +35,7 @@ export function parseVless(url: string): VlessNode | null {
 
         const node: VlessNode = {
             type: 'vless',
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
             name,
             server,
             port,

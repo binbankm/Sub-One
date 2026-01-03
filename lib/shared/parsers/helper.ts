@@ -42,7 +42,7 @@ export function parseStandardParams(params: URLSearchParams): { transport: Trans
     } else if (transport.type === 'http' || transport.type === 'h2') {
         if (path) transport.path = path;
         if (host) transport.host = host.split(',');
-    } else if (transport.type === 'quic') {
+    } else if (transport.type === 'quic' || transport.type === 'kcp') {
         const key = params.get('key');
         const security = params.get('quicSecurity');
         const headerType = params.get('headerType');
@@ -69,7 +69,8 @@ export function parseStandardParams(params: URLSearchParams): { transport: Trans
     const fp = params.get('fp');
     if (fp) tls.fingerprint = fp;
 
-    const insecure = params.get('allowInsecure') === '1' || params.get('insecure') === '1';
+    const insecureVal = params.get('allowInsecure') || params.get('insecure');
+    const insecure = insecureVal === '1' || insecureVal === 'true';
     if (insecure) tls.insecure = true;
 
     // Reality
@@ -112,9 +113,13 @@ export function buildStandardQuery(transport?: TransportOptions, tls?: TlsOption
                 if (transport.host) params.set('host', transport.host.join(','));
                 break;
             case 'quic':
+            case 'kcp':
                 if (transport.quicSecurity) params.set('quicSecurity', transport.quicSecurity);
                 if (transport.quicKey) params.set('key', transport.quicKey);
-                if (transport.headerType) params.set('headerType', transport.headerType);
+                // 只有当不是默认值时才设置
+                if (transport.headerType && transport.headerType !== 'none') {
+                    params.set('headerType', transport.headerType);
+                }
                 break;
         }
     }

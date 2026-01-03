@@ -50,7 +50,13 @@ function buildVlessUrl(node: import('./types').VlessNode): string {
         params.set('security', 'none');
     }
 
+    // Explicitly avoid some defaults that might be added by mistake or by some platforms
+    if (params.get('type') === 'tcp') params.delete('type');
+    if (params.get('headerType') === 'none') params.delete('headerType');
+
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;
+    // 使用 decodeURIComponent(encodeURIComponent(node.name)) 保证即使有双重转义也能正确处理？不，
+    // 我们直接用 node.name. 
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
 
     return `vless://${node.uuid}@${host}:${node.port}?${params.toString()}${hash}`;
