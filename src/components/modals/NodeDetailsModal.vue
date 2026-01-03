@@ -81,16 +81,17 @@ const filteredNodes = computed(() => {
   return nodes.value.filter(node => {
     const nodeName = node.name.toLowerCase();
     const nodeUrl = node.url.toLowerCase();
+    const nodeProtocol = (node.protocol || '').toLowerCase();
 
-    // 基础匹配：节点名称或 URL 包含搜索词
-    if (nodeName.includes(term) || nodeUrl.includes(term)) {
+    // 1. 基础匹配：节点名称、URL 或协议包含搜索词
+    if (nodeName.includes(term) || nodeUrl.includes(term) || nodeProtocol.includes(term)) {
       return true;
     }
 
-    // 高级匹配：节点名称或 URL 包含任一国家/地区相关词汇
+    // 2. 高级匹配：节点名称、URL 或协议包含任一国家/地区相关词汇
     for (const altTerm of alternativeTerms) {
       const altTermLower = altTerm.toLowerCase();
-      if (nodeName.includes(altTermLower) || nodeUrl.includes(altTermLower)) {
+      if (nodeName.includes(altTermLower) || nodeUrl.includes(altTermLower) || nodeProtocol.includes(altTermLower)) {
         return true;
       }
     }

@@ -78,16 +78,28 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
    * @param {Partial<Node>[]} nodesData - 原始节点数据数组
    */
   function initializeManualNodes(nodesData: Partial<Node>[]) {
-    manualNodes.value = (nodesData || []).map(node => ({
-      id: node.id || crypto.randomUUID(),
-      name: node.name || '未命名节点',
-      url: node.url || '',
-      enabled: node.enabled ?? true,
-      protocol: node.protocol || 'unknown',
-      type: node.type || 'manual',
-      subscriptionName: node.subscriptionName || 'manual',
-      ...node
-    } as Node));
+    manualNodes.value = (nodesData || []).map(node => {
+      let protocol = node.protocol || (node as any).type || 'unknown';
+
+      // 如果协议仍然是 unknown，尝试从 URL 中提取
+      if (protocol === 'unknown' && node.url) {
+        const match = node.url.match(/^(\w+):\/\//);
+        if (match) {
+          protocol = match[1];
+        }
+      }
+
+      return {
+        id: node.id || crypto.randomUUID(),
+        name: node.name || '未命名节点',
+        url: node.url || '',
+        enabled: node.enabled ?? true,
+        protocol: protocol,
+        type: node.type || protocol || 'manual',
+        subscriptionName: node.subscriptionName || 'manual',
+        ...node
+      } as Node;
+    });
   }
 
   // ==================== 计算属性 ====================
@@ -97,7 +109,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
    * 
    * 说明：
    * - 根据防抖后的搜索词过滤节点
-   * - 支持智能国家/地区搜索（输入任何相关词汇都能匹配）
+   * - 支持协议、名称、国家/地区等全维度搜索
    * - 支持多种地区名称别名（中文、繁体、emoji、国家代码等）
    */
   const filteredManualNodes = computed(() => {
@@ -115,14 +127,24 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
     // 过滤节点
     return manualNodes.value.filter(node => {
-      const nodeNameLower = node.name ? node.name.toLowerCase() : '';
+      const nodeNameLower = (node.name || '').toLowerCase();
+      const nodeProtocolLower = (node.protocol || '').toLowerCase();
+      const nodeTypeLower = (node.type || '').toLowerCase();
 
-      // 检查节点名称是否包含原始搜索词
+      // 1. 检查节点名称是否包含原始搜索词
       if (nodeNameLower.includes(lowerCaseSearch)) {
         return true;
       }
 
-      // 检查节点名称是否包含任何国家/地区相关词汇
+      // 2. 检查协议、类型是否匹配（支持搜 ss, vmess 等）
+      if (nodeProtocolLower.includes(lowerCaseSearch) || nodeTypeLower.includes(lowerCaseSearch)) {
+        // 排除掉搜 manual 匹配到所有节点的情况
+        if (lowerCaseSearch !== 'manual') {
+          return true;
+        }
+      }
+
+      // 3. 检查节点名称是否包含任何国家/地区相关词汇
       for (const altTerm of alternativeTerms) {
         if (nodeNameLower.includes(altTerm.toLowerCase())) {
           return true;
