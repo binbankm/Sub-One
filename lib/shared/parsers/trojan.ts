@@ -1,5 +1,5 @@
 import { TrojanNode } from '../types';
-import { safeDecodeURIComponent, parseStandardParams } from './helper';
+import { safeDecodeURIComponent, parseStandardParams, generateId } from './helper';
 
 /**
  * 解析 Trojan 链接
@@ -29,7 +29,7 @@ export function parseTrojan(url: string): TrojanNode | null {
 
         const node: TrojanNode = {
             type: 'trojan',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name,
             server,
             port,

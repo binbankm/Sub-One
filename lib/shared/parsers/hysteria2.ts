@@ -1,5 +1,5 @@
 import { Hysteria2Node } from '../types';
-import { safeDecodeURIComponent, parseStandardParams } from './helper';
+import { safeDecodeURIComponent, parseStandardParams, generateId } from './helper';
 
 /**
  * 解析 Hysteria 2 链接
@@ -45,7 +45,7 @@ export function parseHysteria2(url: string): Hysteria2Node | null {
 
         const node: Hysteria2Node = {
             type: 'hysteria2',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name,
             server,
             port,

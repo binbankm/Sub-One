@@ -1,5 +1,5 @@
 import { VlessNode } from '../types';
-import { safeDecodeURIComponent, parseStandardParams } from './helper';
+import { safeDecodeURIComponent, parseStandardParams, generateId } from './helper';
 
 /**
  * 解析 VLESS 链接
@@ -35,7 +35,7 @@ export function parseVless(url: string): VlessNode | null {
 
         const node: VlessNode = {
             type: 'vless',
-            id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+            id: generateId(),
             name,
             server,
             port,

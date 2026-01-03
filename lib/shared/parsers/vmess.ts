@@ -1,5 +1,6 @@
 import { VmessNode, TransportOptions, TlsOptions, NetworkType } from '../types';
 import { decodeBase64 } from '../converter/base64';
+import { generateId } from './helper';
 
 /**
  * 解析 VMess 链接
@@ -72,7 +73,7 @@ function parseVmessJson(config: any, originalUrl: string): VmessNode | null {
 
     return {
         type: 'vmess',
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: config.ps || 'VMess节点',
         server: config.add,
         port: port,

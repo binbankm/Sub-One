@@ -1,5 +1,5 @@
 import { ShadowsocksNode } from '../types';
-import { safeDecodeURIComponent } from './helper';
+import { safeDecodeURIComponent, generateId } from './helper';
 
 import { decodeBase64 } from '../converter/base64';
 /**
@@ -19,18 +19,17 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
         let server = '';
         let port = 0;
 
-        // 格式 1: SIP002 (user info 在 username 部分)
-        // case A: ss://base64(method:password)@host:port
-        // case B: ss://method:password@host:port (非标准但常见)
-        if (urlObj.hostname) {
+        // 核心：判定是 SIP002 还是 Legacy
+        // SIP002 必须包含 '@' 或者 host:port 结构
+        const hasUserInfo = url.includes('@');
+
+        if (hasUserInfo && urlObj.hostname) {
+            // 格式 1: SIP002
             server = urlObj.hostname.replace(/^\[|\]$/g, '');
             port = Number(urlObj.port);
 
             let userInfo = safeDecodeURIComponent(urlObj.username);
-            // 尝试 Base64 解码 userInfo
             try {
-                // 如果解码后包含冒号且都是可打印字符，可能是 Base64
-                // 简单的 heuristic: 如果原串不像 base64 (包含特殊符号)，就不解
                 if (/^[A-Za-z0-9+/=_]+$/.test(userInfo)) {
                     const decoded = decodeBase64(userInfo);
                     if (decoded.includes(':')) {
@@ -41,14 +40,11 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
 
             if (userInfo.includes(':')) {
                 [method, password] = userInfo.split(':');
-            } else {
-                // 有些非常规链接可能把 info 放在 password 字段？通常不会，暂忽略
-                return null;
             }
         }
-        // 格式 2: Legacy (整个部分都是 Base64)
-        // ss://base64(method:password@host:port)
-        else {
+
+        // 如果 SIP002 解析失败（没有找到 method:password），尝试 Legacy
+        if (!method || !password) {
             const content = url.slice(5).split('#')[0].split('?')[0];
             try {
                 const decoded = decodeBase64(content);
@@ -59,12 +55,8 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
                     password = match[2];
                     server = match[3];
                     port = Number(match[4]);
-                } else {
-                    return null;
                 }
-            } catch {
-                return null;
-            }
+            } catch { }
         }
 
         if (!server || !port || !method || !password) return null;
@@ -75,7 +67,6 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
 
         const pluginParam = params.get('plugin');
         if (pluginParam) {
-            // obfs-local;obfs=http;obfs-host=google.com
             const parts = safeDecodeURIComponent(pluginParam).split(';');
             pluginName = parts[0];
             if (parts.length > 1) {
@@ -89,7 +80,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
 
         const node: ShadowsocksNode = {
             type: 'ss',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name,
             server,
             port,

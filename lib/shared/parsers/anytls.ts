@@ -1,5 +1,5 @@
 import { AnyTLSNode } from '../types';
-import { safeDecodeURIComponent, parseStandardParams } from './helper';
+import { safeDecodeURIComponent, parseStandardParams, generateId } from './helper';
 
 /**
  * 解析 AnyTLS 链接
@@ -23,7 +23,7 @@ export function parseAnyTLS(url: string): AnyTLSNode | null {
 
         return {
             type: 'anytls',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: safeDecodeURIComponent(u.hash.slice(1)) || 'AnyTLS Node',
             server: u.hostname,
             port: Number(u.port) || 443,

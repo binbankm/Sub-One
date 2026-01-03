@@ -1,5 +1,5 @@
 import { TuicNode } from '../types';
-import { safeDecodeURIComponent, parseStandardParams } from './helper';
+import { safeDecodeURIComponent, parseStandardParams, generateId } from './helper';
 
 /**
  * 解析 TUIC 链接
@@ -28,7 +28,7 @@ export function parseTuic(url: string): TuicNode | null {
 
         const node: TuicNode = {
             type: 'tuic',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name,
             server,
             port,

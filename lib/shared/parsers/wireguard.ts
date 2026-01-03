@@ -1,5 +1,5 @@
 import { WireGuardNode } from '../types';
-import { safeDecodeURIComponent } from './helper';
+import { safeDecodeURIComponent, generateId } from './helper';
 
 /**
  * 解析 WireGuard 链接
@@ -28,7 +28,7 @@ export function parseWireGuard(url: string): WireGuardNode | null {
 
         const node: WireGuardNode = {
             type: 'wireguard',
-            id: crypto.randomUUID(),
+            id: generateId(),
             name,
             server,
             port,

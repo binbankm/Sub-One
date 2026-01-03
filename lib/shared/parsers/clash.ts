@@ -1,4 +1,5 @@
 import { Node, TlsOptions, TransportOptions } from '../types';
+import { generateId } from './helper';
 
 /**
  * 将 Clash 代理对象转换为标准 Node
@@ -23,7 +24,7 @@ export function parseClashProxy(proxy: any): Node | null {
         if (type === 'vmess') {
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'vmess',
                 uuid: proxy.uuid || proxy.id,
                 alterId: Number(proxy.alterId || proxy.aid || 0),
@@ -50,7 +51,7 @@ export function parseClashProxy(proxy: any): Node | null {
 
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'vless',
                 uuid: proxy.uuid || proxy.id,
                 flow: proxy.flow, // xtls-rprx-vision
@@ -62,7 +63,7 @@ export function parseClashProxy(proxy: any): Node | null {
         if (type === 'trojan') {
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'trojan',
                 password: proxy.password,
                 tls,
@@ -77,7 +78,7 @@ export function parseClashProxy(proxy: any): Node | null {
 
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'ss',
                 cipher: proxy.cipher,
                 password: proxy.password,
@@ -98,7 +99,7 @@ export function parseClashProxy(proxy: any): Node | null {
 
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'hysteria2',
                 password: proxy.password || '',
                 obfs,
@@ -109,7 +110,7 @@ export function parseClashProxy(proxy: any): Node | null {
         if (type === 'tuic') {
             return {
                 ...baseConfig,
-                id: crypto.randomUUID(),
+                id: generateId(),
                 type: 'tuic',
                 uuid: proxy.uuid,
                 password: proxy.password,
