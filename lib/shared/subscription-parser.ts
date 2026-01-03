@@ -3,6 +3,7 @@ import { Node, ProcessOptions } from './types';
 import { parseNodeUrl } from './parsers/index';
 import { parseClashProxy } from './parsers/clash';
 import { buildNodeUrl } from './url-builder';
+import { decodeBase64 } from './converter/base64';
 
 /**
  * 下一代订阅解析器
@@ -39,11 +40,27 @@ export class SubscriptionParser {
             }
         }
 
-        // 2. 尝试解析为 YAML (Clash)
-        // 只有包含 proxies: 关键字时才尝试，避免误伤普通文本
-        if (trimmed.includes('proxies:') || trimmed.includes('Proxy:')) {
+
+        // 2. 尝试 Base64 解码
+        // 如果内容看起来像 Base64 (没有空格，字符集合合法)
+        // 很多机场的 Clash 订阅也是 Base64 编码的 YAML
+        if (!trimmed.includes(' ') && /^[a-zA-Z0-9+/=_-]+$/.test(trimmed)) {
             try {
-                const yamlContent: any = yaml.load(trimmed);
+                // 使用增强版 decodeBase64
+                const decoded = decodeBase64(trimmed);
+
+                // 解码后，递归调用 parse 处理解码后的内容 (可能是 YAML 或 URL List)
+                return this.parse(decoded, subscriptionName, options);
+            } catch (e) {
+                // Base64 解码失败，当作普通文本处理
+            }
+        }
+
+        // 3. 尝试解析为 YAML (Clash)
+        // 只有包含 proxies: 关键字时才尝试，避免误伤普通文本
+        if (content.includes('proxies:') || content.includes('Proxy:')) {
+            try {
+                const yamlContent: any = yaml.load(content);
                 if (yamlContent && typeof yamlContent === 'object') {
                     const proxies = yamlContent.proxies || yamlContent.Proxy;
                     if (Array.isArray(proxies)) {
@@ -59,21 +76,7 @@ export class SubscriptionParser {
                     }
                 }
             } catch (e) {
-                console.warn('[Parser] Failed to parse as YAML:', e);
-            }
-        }
-
-        // 3. 尝试 Base64 解码
-        // 如果内容看起来像 Base64 (没有空格，字符集合合法)
-        if (!trimmed.includes(' ') && /^[a-zA-Z0-9+/=]+$/.test(trimmed)) {
-            try {
-                const decoded = atob(trimmed);
-                // 解码成功，递归调用 parse 处理解码后的内容
-                // 防止无限递归：Base64 解码后通常是 换行分隔的 URL 或 YAML
-                // 我们调用专门的行处理逻辑
-                return this.parseLines(decoded, subscriptionName, options);
-            } catch (e) {
-                // Base64 解码失败，当作普通文本处理
+                // console.warn('[Parser] Failed to parse as YAML:', e);
             }
         }
 
