@@ -81,6 +81,7 @@ const defaultSettings = {
     mytoken: 'auto',
     profileToken: '',  // 默认为空，用户需主动设置
     prependSubName: true,
+    dedupe: false,  // 默认关闭去重
     NotifyThresholdDays: 3,
     NotifyThresholdPercent: 90
 };
@@ -768,7 +769,7 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
     const processedManualNodes = subscriptionParser.processNodes(
         parsedManualNodes,
         '手动节点',
-        { prependSubName: config.prependSubName }
+        { prependSubName: config.prependSubName, dedupe: config.dedupe }
     );
 
     // 2. 处理 HTTP 订阅
@@ -790,7 +791,8 @@ async function generateCombinedNodeList(context, config, userAgent, subs, prepen
             // parse 方法内部会调用 processNodes
             return subscriptionParser.parse(text, sub.name, {
                 exclude: sub.exclude,
-                prependSubName: config.prependSubName
+                prependSubName: config.prependSubName,
+                dedupe: config.dedupe
             });
         } catch (e) {
             console.error(`Failed to fetch/parse sub ${sub.name}:`, e);

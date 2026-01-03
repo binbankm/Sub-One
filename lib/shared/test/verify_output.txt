@@ -1,0 +1,107 @@
+
+========== CONVERTED CONFIG OUTPUT BEGIN ==========
+
+--- [Clash Meta] Output ---
+port: 7890
+socks-port: 7891
+allow-lan: false
+mode: Rule
+log-level: info
+external-controller: 127.0.0.1:9090
+proxies:
+  - name: Test_VLESS_Reality
+    server: example.com
+    port: 443
+    udp: true
+    type: vless
+    uuid: uuid-1234
+    flow: xtls-rprx-vision
+    network: tcp
+    servername: example.com
+    client-fingerprint: chrome
+    tls: true
+    reality-opts:
+      public-key: '76543210'
+      short-id: '1234'
+      spider-x: /
+  - name: Test_Hy2
+    server: 2.2.2.2
+    port: 8443
+    udp: true
+    type: hysteria2
+    password: password
+    obfs: salamander
+    obfs-password: obfspass
+    sni: hy2.com
+    skip-cert-verify: true
+proxy-groups:
+  - name: 🚀 节点选择
+    type: select
+    proxies:
+      - ♻️ 自动选择
+      - 🎯 全球直连
+      - Test_VLESS_Reality
+      - Test_Hy2
+  - name: ♻️ 自动选择
+    type: url-test
+    proxies:
+      - Test_VLESS_Reality
+      - Test_Hy2
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+  - name: 🎯 全球直连
+    type: select
+    proxies:
+      - DIRECT
+rules:
+  - GEOIP,CN,🎯 全球直连
+  - MATCH,🚀 节点选择
+
+--- [Sing-Box] Output ---
+[
+  {
+    "type": "vless",
+    "tag": "Test_VLESS_Reality",
+    "server": "example.com",
+    "server_port": 443,
+    "uuid": "uuid-1234",
+    "flow": "xtls-rprx-vision",
+    "tls": {
+      "enabled": true,
+      "server_name": "example.com",
+      "reality": {
+        "enabled": true,
+        "public_key": "76543210",
+        "short_id": "1234"
+      }
+    }
+  },
+  {
+    "type": "hysteria2",
+    "tag": "Test_Hy2",
+    "server": "2.2.2.2",
+    "server_port": 8443,
+    "password": "password",
+    "obfs": {
+      "type": "salamander",
+      "password": "obfspass"
+    },
+    "tls": {
+      "enabled": true,
+      "server_name": "hy2.com",
+      "insecure": true
+    }
+  }
+]
+
+--- [Surge] Output ---
+Test_Hy2 = hysteria2, 2.2.2.2, 8443, password=password, sni=hy2.com, skip-cert-verify=true
+
+--- [Loon] Output ---
+Test_VLESS_Reality = VLESS,example.com,443,uuid-1234,flow:xtls-rprx-vision,over-tls:true,tls-name:example.com,public-key:76543210,short-id:1234,spider-x:/,fingerprint:chrome
+Test_Hy2 = Hysteria2,2.2.2.2,8443,password,sni:hy2.com,skip-cert-verify:true
+
+--- [Quantumult X] Output ---
+vless=example.com:443, method=none, password=uuid-1234, obfs=over-tls, obfs-host=example.com, fast-open=false, udp-relay=false, tag=Test_VLESS_Reality
+========== CONVERTED CONFIG OUTPUT END ==========

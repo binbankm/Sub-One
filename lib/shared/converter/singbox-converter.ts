@@ -1,4 +1,4 @@
-import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode } from '../types';
+import { Node, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode } from '../types';
 
 /**
  * 转换为 Sing-Box JSON 配置
@@ -69,6 +69,7 @@ function nodeToSingBoxOutbound(node: Node): any {
             case 'vless': return buildVless(node as VlessNode);
             case 'trojan': return buildTrojan(node as TrojanNode);
             case 'ss': return buildShadowsocks(node as ShadowsocksNode);
+            case 'hysteria': return buildHysteria(node as HysteriaNode);
             case 'hysteria2': return buildHysteria2(node as Hysteria2Node);
             case 'tuic': return buildTuic(node as TuicNode);
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
@@ -190,6 +191,20 @@ function buildShadowsocks(node: ShadowsocksNode): any {
         outbound.plugin_opts = ""; // SingBox plugin options string format?
         // TODO: Map plugin opts object to string if needed
     }
+    return outbound;
+}
+
+function buildHysteria(node: HysteriaNode): any {
+    const outbound: any = {
+        type: 'hysteria',
+        ...buildBase(node),
+        auth_str: node.auth,
+        up_mbps: node.upMbps,
+        down_mbps: node.downMbps,
+        obfs: node.obfs,
+        protocol: node.protocol
+    };
+    assignTls(outbound, node);
     return outbound;
 }
 

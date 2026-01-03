@@ -124,7 +124,27 @@ export class SubscriptionParser {
             result = result.filter(n => !regex.test(n.name));
         }
 
-        // 2. 重命名 (Prepend Subscription Name)
+        // 2. 去重 (Deduplicate) - 基于物理特征 (server + port + type)
+        if (options.dedupe) {
+            const seen = new Map<string, Node>();
+            result = result.filter(n => {
+                // 生成节点的物理指纹
+                const fingerprint = `${n.type}://${n.server}:${n.port}`;
+                if (seen.has(fingerprint)) {
+                    // 已存在相同物理节点，保留名称更短或更早出现的
+                    const existing = seen.get(fingerprint)!;
+                    if (n.name.length < existing.name.length) {
+                        seen.set(fingerprint, n);
+                        return true;
+                    }
+                    return false;
+                }
+                seen.set(fingerprint, n);
+                return true;
+            });
+        }
+
+        // 3. 重命名 (Prepend Subscription Name)
         if (options.prependSubName && subscriptionName) {
             result.forEach(n => {
                 // 避免重复前缀
@@ -135,7 +155,7 @@ export class SubscriptionParser {
             });
         }
 
-        // 3. 填充 URL (Runtime Generate) if missing
+        // 4. 填充 URL (Runtime Generate) if missing
         result.forEach(n => {
             if (!n.url) {
                 // 确保有 URL，特别是重命名后需要更新 URL 中的 hash

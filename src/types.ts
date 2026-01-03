@@ -194,6 +194,8 @@ export interface AppConfig {
     profileToken?: string;
     /** 是否自动添加订阅名作为节点名前缀 */
     prependSubName?: boolean;
+    /** 是否启用节点去重（基于物理特征） */
+    dedupe?: boolean;
 
     // ========== Telegram 通知配置 ==========
     /** Telegram Bot Token（用于发送通知） */

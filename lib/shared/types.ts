@@ -279,4 +279,5 @@ export interface ProcessOptions {
     prependSubName?: boolean;
     udpCheck?: boolean;
     userAgent?: string;
+    dedupe?: boolean;
 }
