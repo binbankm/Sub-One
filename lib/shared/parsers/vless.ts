@@ -43,7 +43,8 @@ export function parseVless(url: string): VlessNode | null {
             udp: true, // VLESS 默认支持 UDP
             flow,
             transport,
-            tls
+            tls,
+            originalUrl: url // ⭐ 保存原始URL，避免重建时丢失参数
         };
 
         return node;

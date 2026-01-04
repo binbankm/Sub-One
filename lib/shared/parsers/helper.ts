@@ -132,7 +132,7 @@ export function buildStandardQuery(transport?: TransportOptions, tls?: TlsOption
         if (tls.serverName) params.set('sni', tls.serverName);
         if (tls.alpn && tls.alpn.length) params.set('alpn', tls.alpn.join(','));
         if (tls.fingerprint) params.set('fp', tls.fingerprint);
-        if (tls.insecure) params.set('allowInsecure', '1');
+        if (tls.insecure === true) params.set('allowInsecure', '1');
 
         if (tls.reality?.enabled) {
             if (tls.reality.publicKey) params.set('pbk', tls.reality.publicKey);

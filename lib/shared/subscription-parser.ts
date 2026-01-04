@@ -20,6 +20,13 @@ export class SubscriptionParser {
 
     /**
      * 主解析方法
+     * 
+     * 解析顺序（从高优先级到低优先级）：
+     * 1. JSON格式（最明确，100%确定性）
+     * 2. YAML格式（关键字明确，误判率低）
+     * 3. URL List格式（协议前缀明确）
+     * 4. Base64编码（需要解码，最后尝试）
+     * 5. 兜底方案（按行解析）
      */
     parse(content: string, subscriptionName: string = '', options: ProcessOptions = {}): Node[] {
         if (!content || typeof content !== 'string') {
@@ -29,63 +36,121 @@ export class SubscriptionParser {
         const trimmed = content.trim();
         let nodes: Node[] = [];
 
-        // 1. 尝试解析为 JSON (SIP008 / Shadowsocks JSON)
+        // ========== 1️⃣ JSON检测（最高优先级）==========
+        // 特征：以 { 或 [ 开头，100%确定性
         if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
             try {
                 const json = JSON.parse(trimmed);
                 nodes = parseSIP008(json);
                 if (nodes.length > 0) {
-                    console.log(`[Parser] Detected format: SIP008 JSON - found ${nodes.length} nodes.`);
+                    console.log(`[Parser] ✅ Detected format: SIP008 JSON - found ${nodes.length} nodes.`);
                     return this.processNodes(nodes, subscriptionName, options);
                 }
             } catch (e) {
-                // Ignore JSON parse error, treat as text
+                // JSON解析失败，继续尝试其他格式
+                console.log('[Parser] JSON parse failed, trying other formats...');
             }
         }
 
-
-        // 2. 尝试 Base64 解码
-        // 如果内容看起来像 Base64 (没有空格，字符集合合法)
-        // 很多机场的 Clash 订阅也是 Base64 编码的 YAML
-        if (!trimmed.includes(' ') && /^[a-zA-Z0-9+/=_-]+$/.test(trimmed)) {
-            try {
-                // 使用增强版 decodeBase64
-                const decoded = decodeBase64(trimmed);
-                console.log(`[Parser] Successfully decoded Base64 content (${decoded.length} bytes).`);
-
-                // 解码后，递归调用 parse 处理解码后的内容 (可能是 YAML 或 URL List)
-                return this.parse(decoded, subscriptionName, options);
-            } catch (e) {
-                // Base64 解码失败，当作普通文本处理
-            }
-        }
-
-        // 3. 尝试解析为 YAML (Clash)
-        // 只有包含 proxies: 关键字时才尝试，避免误伤普通文本
+        // ========== 2️⃣ YAML检测（第二优先级）==========
+        // 特征：包含 'proxies:' 或 'Proxy:' 关键字
+        // 优势：关键字明确，误判率低
         if (content.includes('proxies:') || content.includes('Proxy:')) {
             try {
                 const yamlContent: any = yaml.load(content);
                 if (yamlContent && typeof yamlContent === 'object') {
                     const proxies = yamlContent.proxies || yamlContent.Proxy;
                     if (Array.isArray(proxies)) {
-                        console.log(`[Parser] Detected format: Clash YAML - found ${proxies.length} proxies.`);
+                        console.log(`[Parser] ✅ Detected format: Clash YAML - found ${proxies.length} proxies.`);
                         nodes = proxies
                             .map(p => parseClashProxy(p))
                             .filter((n): n is Node => n !== null);
 
-                        // 如果成功提取了节点，直接返回处理结果
                         if (nodes.length > 0) {
                             return this.processNodes(nodes, subscriptionName, options);
                         }
                     }
                 }
             } catch (e) {
-                // console.warn('[Parser] Failed to parse as YAML:', e);
+                // YAML解析失败，继续尝试其他格式
+                console.log('[Parser] YAML parse failed, trying other formats...');
             }
         }
 
-        // 4. 按行解析 (文本/Base64解码结果)
-        return this.parseLines(trimmed, subscriptionName, options);
+        // ========== 3️⃣ URL List预检测（第三优先级）==========
+        // 特征：第一行以协议前缀开头（ss://, vmess://, trojan://等）
+        // 优势：快速判断，避免不必要的Base64解码
+        const firstLine = trimmed.split(/\r?\n/)[0]?.trim() || '';
+        const urlProtocolPattern = /^(ss|ssr|vmess|vless|trojan|hysteria|hysteria2|tuic|wireguard|snell):\/\//i;
+
+        if (urlProtocolPattern.test(firstLine)) {
+            console.log('[Parser] ✅ Detected format: URL List (by protocol prefix)');
+            return this.parseLines(trimmed, subscriptionName, options);
+        }
+
+        // ========== 4️⃣ Base64检测（第四优先级）==========
+        // 特征：无空格 + 仅包含Base64字符集 + 满足最小长度
+        // 优化：增加更严格的检测条件，减少误判
+        const looksLikeBase64 = (
+            !trimmed.includes(' ') &&                    // 无空格
+            !trimmed.includes('\n') &&                   // 单行（多行内容通常不是Base64编码的订阅）
+            trimmed.length > 50 &&                       // 最小长度（避免误判短URL）
+            /^[a-zA-Z0-9+/=_-]+$/.test(trimmed)         // 仅Base64字符集
+        );
+
+        if (looksLikeBase64) {
+            try {
+                const decoded = decodeBase64(trimmed);
+                console.log(`[Parser] ✅ Decoded Base64 content (${decoded.length} bytes), re-parsing...`);
+
+                // 解码后递归调用 parse（可能是YAML或URL List）
+                // 递归深度自然受限，因为解码后的内容会匹配更明确的格式
+                return this.parse(decoded, subscriptionName, options);
+            } catch (e) {
+                // Base64解码失败，继续走兜底逻辑
+                console.log('[Parser] Base64 decode failed, falling back to line parsing...');
+            }
+        }
+
+        // ========== 5️⃣ 兜底方案：智能兜底 ==========
+        // 首先尝试按行解析（parseLines内部会调用processNodes）
+        console.log('[Parser] ℹ️  Trying fallback: line-by-line URL parsing...');
+        const lineParseResult = this.parseLines(trimmed, subscriptionName, options);
+
+        // 如果按行解析成功（找到节点），直接返回
+        if (lineParseResult.length > 0) {
+            return lineParseResult;
+        }
+
+        // 如果按行解析失败，且内容看起来可能是Base64（包括短Base64）
+        // 这是最后的尝试，处理长度 < 50 的罕见Base64场景
+        const mightBeShortBase64 = (
+            !trimmed.includes(' ') &&                    // 无空格
+            !trimmed.includes('\n') &&                   // 单行
+            trimmed.length >= 20 &&                      // 最小合理长度（排除明显错误）
+            /^[a-zA-Z0-9+/=_-]+$/.test(trimmed)         // Base64字符集
+        );
+
+        if (mightBeShortBase64) {
+            try {
+                const decoded = decodeBase64(trimmed);
+                console.log(`[Parser] ⚠️  Last attempt: Decoding potential short Base64 (${trimmed.length} chars)...`);
+
+                // 递归解析解码后的内容
+                const result = this.parse(decoded, subscriptionName, options);
+                if (result.length > 0) {
+                    console.log(`[Parser] ✅ Short Base64 decode successful, found ${result.length} nodes.`);
+                    return result;
+                }
+            } catch (e) {
+                // Base64解码失败，返回空数组
+                console.log('[Parser] ❌ All parsing attempts failed, no valid nodes found.');
+            }
+        }
+
+        // 所有尝试都失败，返回空数组
+        console.log('[Parser] ℹ️  No valid nodes found in content.');
+        return [];
     }
 
     /**

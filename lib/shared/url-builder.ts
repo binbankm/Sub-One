@@ -7,6 +7,26 @@ import { encodeBase64 } from './converter/base64'; // We reuse the base64 util
  */
 export function buildNodeUrl(node: Node): string {
     try {
+        // ⭐ 优先使用原始URL，避免不必要的重建导致参数丢失
+        // 只有在以下情况才重建URL：
+        // 1. 没有原始URL
+        // 2. 节点名被修改过（需要更新hash）
+        if ('originalUrl' in node && node.originalUrl) {
+            // 检查节点名是否被修改（通过比较URL中的hash和当前name）
+            try {
+                const originalUrlObj = new URL(node.originalUrl);
+                const originalHash = decodeURIComponent(originalUrlObj.hash.slice(1));
+                // 如果节点名未改变，直接返回原始URL
+                if (originalHash === node.name) {
+                    return node.originalUrl as string;
+                }
+                // 节点名改变了，需要重建URL以更新hash
+            } catch (e) {
+                // URL解析失败，继续重建
+            }
+        }
+
+        // 根据协议类型重建URL
         switch (node.type) {
             case 'vless':
                 return buildVlessUrl(node);
