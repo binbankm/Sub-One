@@ -454,12 +454,16 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
 
         case '/node_count': {
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-            const { url: subUrl } = await request.json() as any;
+            const {
+                url: subUrl,
+                returnNodes = false,  // 可选：是否返回节点列表
+                exclude = ''          // 可选：过滤规则
+            } = await request.json() as any;
             if (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl)) {
                 return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
             }
 
-            const result: { count: number; userInfo: any } = { count: 0, userInfo: null };
+            const result: { count: number; userInfo: any; nodes?: Node[] } = { count: 0, userInfo: null };
 
             try {
                 const fetchOptions = {
@@ -501,17 +505,24 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
 
                     // 使用统一的 SubscriptionParser 解析
                     let nodeCount = 0;
+                    let parsedNodes: Node[] = [];
                     try {
-                        // 管理端需要显示全部节点，不进行去重
-                        const nodes = subscriptionParser.parse(text, '', {
-                            dedupe: false
+                        // 解析节点，应用过滤规则
+                        parsedNodes = subscriptionParser.parse(text, '', {
+                            dedupe: false,
+                            exclude: exclude  // 应用过滤规则
                         });
-                        nodeCount = nodes.length;
+                        nodeCount = parsedNodes.length;
                     } catch (e) {
                         console.error(`Node count parse failed for ${subUrl}:`, e);
                     }
 
                     result.count = nodeCount;
+
+                    // 如果请求要求返回节点列表
+                    if (returnNodes && parsedNodes.length > 0) {
+                        result.nodes = parsedNodes;
+                    }
                 } else if (responses[1].status === 'rejected') {
                     console.error(`Node count request for ${subUrl} rejected:`, responses[1].reason);
                 }
@@ -537,39 +548,6 @@ async function handleApiRequest(request: Request, env: Env): Promise<Response> {
             return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
         }
 
-        case '/fetch_external_url': { // New case
-            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-            if (!await authMiddleware(request, env)) {
-                return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-            }
-
-            let externalUrl = '';
-            try {
-                const body = await request.json() as any;
-                externalUrl = body.url;
-
-                if (!externalUrl || typeof externalUrl !== 'string' || !/^https?:\/\//.test(externalUrl)) {
-                    return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
-                }
-
-                const response = await fetch(new Request(externalUrl, {
-                    headers: { 'User-Agent': GLOBAL_USER_AGENT }, // Unified UA
-                    redirect: "follow",
-                    cf: { insecureSkipVerify: true } // Allow insecure SSL for flexibility
-                } as any));
-
-                if (!response.ok) {
-                    return new Response(JSON.stringify({ error: `Failed to fetch external URL: ${response.status} ${response.statusText}` }), { status: response.status });
-                }
-
-                const content = await response.text();
-                return new Response(content, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-
-            } catch (e: any) {
-                console.error(`[API Error /fetch_external_url] Failed to fetch ${externalUrl}:`, e);
-                return new Response(JSON.stringify({ error: `Failed to fetch external URL: ${e.message}` }), { status: 500 });
-            }
-        }
 
         case '/batch_update_nodes': {
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });

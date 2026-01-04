@@ -19,8 +19,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { SubscriptionParser } from '@shared/subscription-parser';
-const subscriptionParser = new SubscriptionParser();
 import type { Subscription, Profile, Node } from '../../types';
 import { getCountryTerms } from '../../lib/constants';
 
@@ -129,30 +127,35 @@ const fetchNodes = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await fetch('/api/fetch_external_url', {
+    // 使用 /api/node_count API 获取节点列表（后端已解析）
+    const response = await fetch('/api/node_count', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: props.subscription.url })
+      body: JSON.stringify({ 
+        url: props.subscription.url,
+        returnNodes: true,  // 请求返回节点列表
+        exclude: props.subscription?.exclude || ''  // 应用过滤规则
+      })
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const content = await response.text();
-    const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
-    // Apply filtering and processing
-    const processedNodes = subscriptionParser.processNodes(parsedNodes, props.subscription?.name || '', {
-      exclude: props.subscription?.exclude
-    });
-
-    nodes.value = processedNodes.map(n => ({
-      id: n.id,
-      name: n.name,
-      url: n.url || '',
-      protocol: getProtocolFromUrl(n.url || ''),
-      enabled: true
-    }));
+    const data = await response.json();
+    
+    // 后端已解析并过滤，直接使用返回的节点
+    if (data.nodes && data.nodes.length > 0) {
+      nodes.value = data.nodes.map((n: any) => ({
+        id: n.id,
+        name: n.name,
+        url: n.url || '',
+        protocol: getProtocolFromUrl(n.url || ''),
+        enabled: true
+      }));
+    } else {
+      nodes.value = [];
+    }
 
   } catch (error: unknown) {
     console.error('获取节点信息失败:', error);
@@ -202,29 +205,31 @@ const fetchProfileNodes = async () => {
       const promises = selectedSubscriptions.map(async (subscription) => {
         if (subscription.url && subscription.url.startsWith('http')) {
           try {
-            const response = await fetch('/api/fetch_external_url', {
+            // 使用 /api/node_count API 获取节点列表
+            const response = await fetch('/api/node_count', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: subscription.url })
+              body: JSON.stringify({ 
+                url: subscription.url,
+                returnNodes: true,  // 请求返回节点列表
+                exclude: subscription.exclude || ''  // 应用过滤规则
+              })
             });
 
             if (response.ok) {
-              const content = await response.text();
-              const parsedNodes = subscriptionParser.parse(content, subscription.name);
-              // 应用过滤规则 - 关键修复：确保订阅的exclude规则在订阅组中也生效
-              const processedNodes = subscriptionParser.processNodes(parsedNodes, subscription.name || '', {
-                exclude: subscription.exclude || ''
-              });
-              // 标记来源，方便显示
-              return processedNodes.map(node => ({
-                id: node.id,
-                name: node.name,
-                url: node.url || '',
-                protocol: getProtocolFromUrl(node.url || ''),
-                enabled: true,
-                type: 'subscription' as const,
-                subscriptionName: subscription.name || ''
-              }));
+              const data = await response.json();
+              // 后端已解析并过滤，直接使用返回的节点
+              if (data.nodes && data.nodes.length > 0) {
+                return data.nodes.map((node: any) => ({
+                  id: node.id,
+                  name: node.name,
+                  url: node.url || '',
+                  protocol: getProtocolFromUrl(node.url || ''),
+                  enabled: true,
+                  type: 'subscription' as const,
+                  subscriptionName: subscription.name || ''
+                }));
+              }
             }
           } catch (error) {
             console.error(`获取订阅 ${subscription.name} 节点失败:`, error);
