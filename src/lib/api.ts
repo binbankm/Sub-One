@@ -104,13 +104,13 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
         // 检查 HTTP 状态码
         if (!response.ok) {
             // 尝试解析错误响应
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await response.json().catch(() => ({})) as any;
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
         // 返回服务器响应的 JSON 数据
-        return await response.json();
+        return await response.json() as ApiResponse;
     } catch (error: unknown) {
         console.error('保存订阅数据失败:', error);
 
@@ -149,7 +149,7 @@ export async function fetchNodeCount(subUrl: string): Promise<{ count: number; u
         });
 
         // 解析响应数据
-        const data = await res.json();
+        const data = await res.json() as any;
         // 直接返回完整对象（包含 count 和 userInfo 字段）
         return data;
     } catch (e) {
@@ -205,13 +205,13 @@ export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
         // 检查 HTTP 状态码
         if (!response.ok) {
             // 尝试解析错误响应
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await response.json().catch(() => ({})) as any;
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
         // 返回服务器响应
-        return await response.json();
+        return await response.json() as ApiResponse;
     } catch (error: unknown) {
         console.error('保存配置失败:', error);
 
@@ -252,13 +252,13 @@ export async function batchUpdateNodes(subscriptionIds: string[]): Promise<ApiRe
         // 检查 HTTP 状态码
         if (!response.ok) {
             // 尝试解析错误响应
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await response.json().catch(() => ({})) as any;
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
         // 返回更新结果
-        const result = await response.json();
+        const result = await response.json() as ApiResponse;
         return result;
     } catch (error) {
         console.error("批量更新节点失败:", error);
@@ -290,7 +290,7 @@ export async function testLatency(url: string): Promise<{ success: boolean; late
         // 检查 HTTP 状态码
         if (!response.ok) {
             // 尝试解析错误响应
-            const errorData = await response.json().catch(() => ({}));
+            const errorData = await response.json().catch(() => ({})) as any;
             return {
                 success: false,
                 message: errorData.error || `HTTP ${response.status}`,

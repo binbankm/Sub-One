@@ -101,11 +101,11 @@ const importSubscription = async () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json() as any;
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
     
-    const data = await response.json();
+    const data = await response.json() as any;
     
     // 使用后端返回的节点列表
     const newNodes: Node[] = (data.nodes || []).map((n: any) => ({

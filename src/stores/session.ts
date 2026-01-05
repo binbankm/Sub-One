@@ -99,7 +99,7 @@ export const useSessionStore = defineStore('session', () => {
 
         if (response instanceof Response) {
           // 从响应中提取错误消息
-          const errorData = await response.json().catch(() => ({}));
+          const errorData = await response.json().catch(() => ({})) as any;
           errorMessage = errorData.message || errorData.error || errorMessage;
         } else {
           // 从自定义错误对象中提取错误消息

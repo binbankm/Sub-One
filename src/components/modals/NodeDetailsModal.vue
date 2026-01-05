@@ -142,7 +142,7 @@ const fetchNodes = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as any;
     
     // 后端已解析并过滤，直接使用返回的节点
     if (data.nodes && data.nodes.length > 0) {
@@ -217,7 +217,7 @@ const fetchProfileNodes = async () => {
             });
 
             if (response.ok) {
-              const data = await response.json();
+              const data = await response.json() as any;
               // 后端已解析并过滤，直接使用返回的节点
               if (data.nodes && data.nodes.length > 0) {
                 return data.nodes.map((node: any) => ({
@@ -239,7 +239,7 @@ const fetchProfileNodes = async () => {
       });
 
       const results = await Promise.all(promises);
-      results.forEach(subNodes => profileNodes.push(...subNodes));
+      results.forEach((subNodes: DisplayNode[]) => profileNodes.push(...subNodes));
     }
 
     nodes.value = profileNodes;
