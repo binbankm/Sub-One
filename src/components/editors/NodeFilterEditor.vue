@@ -1,4 +1,4 @@
-<!--
+﻿<!--
   ==================== 节点过滤规则编辑器 ====================
   
   功能说明：
@@ -37,37 +37,55 @@ const emit = defineEmits<{
 /** 支持的协议列表 */
 const protocols = [
     { label: 'Shadowsocks', value: 'ss', icon: '🔒' },
-    { label: 'VMess', value: 'vmess', icon: '⚡' },
+    { label: 'SSR', value: 'ssr', icon: '✈️' },
+    { label: 'VMess', value: 'vmess', icon: '🔷' },
     { label: 'VLESS', value: 'vless', icon: '🚀' },
     { label: 'Trojan', value: 'trojan', icon: '🛡️' },
-    { label: 'Hysteria2', value: 'hysteria2', icon: '⚡' },
-    { label: 'Tuic', value: 'tuic', icon: '🚀' },
+    { label: 'Hysteria2', value: 'hysteria2', icon: '☄️' },
+    { label: 'Hysteria', value: 'hysteria', icon: '🌩️' },
+    { label: 'Tuic', value: 'tuic', icon: '�' },
+    { label: 'AnyTLS', value: 'anytls', icon: '🎭' },
     { label: 'Socks5', value: 'socks5', icon: '🔌' },
-    { label: 'WireGuard', value: 'wg|wireguard', icon: '🔐' },
-    { label: 'Reality', value: 'reality', icon: '🌐' }
+    { label: 'HTTP', value: 'http', icon: '🌐' },
+    { label: 'WireGuard', value: 'wg|wireguard', icon: '🚇' },
+    { label: 'Snell', value: 'snell', icon: '🐌' },
+    { label: 'Reality', value: 'reality', icon: '🕶️' }
 ];
 
 /** 常用地区列表（支持多种别名） */
 const regions = [
-    { label: '香港', value: 'HK|Hong Kong|HongKong|香港|Hong K', flag: '🇭🇰' },
-    { label: '台湾', value: 'TW|Taiwan|Tai Wan|台湾|臺灣|台北|Taipei', flag: '🇹🇼' },
-    { label: '新加坡', value: 'SG|Singapore|Singpore|新加坡|狮城|SGP', flag: '🇸🇬' },
-    { label: '日本', value: 'JP|Japan|日本|东京|Tokyo|Osaka|大阪', flag: '🇯🇵' },
-    { label: '美国', value: 'US|United States|America|USA|美国|美國|洛杉矶|Los Angeles|San Jose|New York', flag: '🇺🇸' },
-    { label: '韩国', value: 'KR|Korea|South Korea|韩国|韓國|首尔|Seoul', flag: '🇰🇷' },
-    { label: '中国', value: 'CN|China|中国|回国|内地|江苏|北京|上海|广州|深圳|杭州', flag: '🇨🇳' },
-    { label: '英国', value: 'GB|UK|United Kingdom|Britain|英国|伦敦|London', flag: '🇬🇧' },
-    { label: '德国', value: 'DE|Germany|Deutschland|德国|法兰克福|Frankfurt', flag: '🇩🇪' },
-    { label: '澳洲', value: 'AU|Australia|澳洲|澳大利亚|悉尼|Sydney', flag: '🇦🇺' },
-    { label: '加拿大', value: 'CA|Canada|加拿大|多伦多|Toronto|Vancouver', flag: '🇨🇦' },
-    { label: '印度', value: 'IN|India|印度|孟买|Mumbai', flag: '🇮🇳' },
-    { label: '俄罗斯', value: 'RU|Russia|俄罗斯|莫斯科|Moscow', flag: '🇷🇺' },
-    { label: '法国', value: 'FR|France|法国|巴黎|Paris', flag: '🇫🇷' },
-    { label: '荷兰', value: 'NL|Netherlands|Holland|荷兰|阿姆斯特丹', flag: '🇳🇱' }
+    { label: '香港', value: 'HK|Hong Kong|HongKong|Hong K|HKG|Hong-Kong|香港|深港|沪港|呼港', flag: '🇭🇰' },
+    { label: '台湾', value: 'TW|Taiwan|Tai Wan|Tai-Wan|TWN|Taipei|Taichung|Kaohsiung|Hualien|Yilian|台湾|台灣|台北|台中|高雄|新北|彰化|花莲', flag: '🇹🇼' },
+    { label: '新加坡', value: 'SG|Singapore|Singpore|SGP|Singapura|新加坡|狮城|新国', flag: '🇸🇬' },
+    { label: '日本', value: 'JP|Japan|Nippon|JAPAN|Tokyo|Osaka|Saitama|Nagoya|Fukuoka|Kyoto|Hokkaido|日本|东京|大阪|埼玉|爱知|福冈|北海道', flag: '🇯🇵' },
+    { label: '美国', value: 'US|USA|United States|America|Los Angeles|San Jose|Santa Clara|New York|Chicago|Dallas|Miami|Seattle|Portland|Phoenix|Las Vegas|Atlanta|Houston|San Francisco|California|Ashburn|美国|美國|洛杉矶|圣何塞|纽约|芝加哥|西雅图|达拉斯|迈阿密|凤凰城|亚特兰大|硅谷', flag: '🇺🇸' },
+    { label: '韩国', value: 'KR|Korea|South Korea|KOR|Seoul|Incheon|Busan|Daegu|Gyeonggi|韩国|韓國|首尔|仁川|釜山|京畿道', flag: '🇰🇷' },
+    { label: '中国', value: 'CN|China|PRC|Shanghai|Beijing|Shenzhen|Guangzhou|Hangzhou|Jiangsu|Anhui|Sichuan|中国|回国|内地|江苏|北京|上海|广州|深圳|杭州|成都|安徽|四川', flag: '🇨🇳' },
+    { label: '英国', value: 'GB|UK|United Kingdom|Britain|Great Britain|London|Manchester|Southampton|英国|伦敦|曼彻斯特', flag: '🇬🇧' },
+    { label: '德国', value: 'DE|Germany|Deutschland|Frankfurt|Berlin|Munich|Nuremberg|Dusseldorf|德国|法兰克福|柏林|慕尼黑|纽伦堡', flag: '🇩🇪' },
+    { label: '法国', value: 'FR|France|Paris|Marseille|Roubaix|Strasbourg|法国|巴黎|马赛', flag: '🇫🇷' },
+    { label: '荷兰', value: 'NL|Netherlands|Holland|Amsterdam|Rotterdam|The Hague|荷兰|阿姆斯特丹|鹿特丹', flag: '🇳🇱' },
+    { label: '澳洲', value: 'AU|Australia|Sydney|Melbourne|Brisbane|Perth|Adelaide|澳洲|澳大利亚|悉尼|墨尔本', flag: '🇦🇺' },
+    { label: '加拿大', value: 'CA|Canada|Toronto|Vancouver|Montreal|Ottawa|加拿大|多伦多|温哥华|蒙特利尔', flag: '🇨🇦' },
+    { label: '印度', value: 'IN|India|Mumbai|New Delhi|Bangalore|Chennai|印度|孟买|新德里', flag: '🇮🇳' },
+    { label: '俄罗斯', value: 'RU|Russia|Moscow|Saint Petersburg|Novosibirsk|俄罗斯|莫斯科|圣彼得堡', flag: '🇷🇺' },
+    // 新增地区
+    { label: '土耳其', value: 'TR|Turkey|Istanbul|Ankara|土耳其|伊斯坦布尔|安卡拉', flag: '🇹🇷' },
+    { label: '阿根廷', value: 'AR|Argentina|Buenos Aires|阿根廷|布宜诺斯艾利斯', flag: '🇦🇷' },
+    { label: '泰国', value: 'TH|Thailand|Bangkok|Phuket|Chiang Mai|泰国|曼谷|普吉岛', flag: '🇹🇭' },
+    { label: '越南', value: 'VN|Vietnam|Ho Chi Minh|Hanoi|Danang|越南|胡志明|河内', flag: '🇻🇳' },
+    { label: '菲律宾', value: 'PH|Philippines|Manila|Cebu|菲律宾|马尼拉|宿务', flag: '🇵🇭' },
+    { label: '马来西亚', value: 'MY|Malaysia|Kuala Lumpur|Penang|Johor|马来西亚|吉隆坡|槟城', flag: '🇲🇾' },
+    { label: '意大利', value: 'IT|Italy|Milan|Rome|Florence|意大利|米兰|罗马', flag: '🇮🇹' },
+    { label: '瑞士', value: 'CH|Switzerland|Zurich|Geneva|Bern|瑞士|苏黎世|日内瓦', flag: '🇨🇭' },
+    { label: '瑞典', value: 'SE|Sweden|Stockholm|瑞典|斯德哥尔摩', flag: '🇸🇪' },
+    { label: '阿联酋', value: 'AE|UAE|Dubai|Abu Dhabi|迪拜|阿联酋|阿布扎比', flag: '🇦🇪' },
+    { label: '巴西', value: 'BR|Brazil|Sao Paulo|Rio|巴西|圣保罗|里约', flag: '🇧🇷' }
 ];
 
 /** 常用关键词快捷选择 */
 const commonKeywords = [
+    // 线路属性
     { value: '高倍率', color: 'red' },
     { value: '低倍率', color: 'green' },
     { value: '中转', color: 'indigo' },
@@ -78,15 +96,25 @@ const commonKeywords = [
     { value: 'IEPL', color: 'orange' },
     { value: 'IPv6', color: 'teal' },
     { value: 'UDP', color: 'lime' },
-    { value: '游戏', color: 'pink' },
-    { value: '流媒体', color: 'violet' },
-    { value: '解锁', color: 'rose' },
+    // 状态/类型
+    { value: '家宽', color: 'rose' },
+    { value: '原生', color: 'emerald' },
+    { value: '测试', color: 'warmGray' },
+    { value: '维护', color: 'stone' },
     { value: '过期', color: 'gray' },
-    { value: '官网', color: 'slate' },
     { value: '剩余流量', color: 'zinc' },
-    { value: '到期', color: 'neutral' },
-    { value: '重置', color: 'stone' },
-    { value: '测试', color: 'warmGray' }
+    { value: '官网', color: 'slate' },
+    // 流媒体/服务
+    { value: 'NF', color: 'red' },
+    { value: 'Netflix', color: 'red' },
+    { value: 'Disney', color: 'blue' },
+    { value: 'Dis+', color: 'sky' },
+    { value: 'ChatGPT', color: 'emerald' },
+    { value: 'OpenAI', color: 'teal' },
+    { value: 'YouTube', color: 'red' },
+    { value: 'Emby', color: 'violet' },
+    { value: 'TikTok', color: 'black' },
+    { value: 'TVB', color: 'green' }
 ];
 
 // ==================== 响应式状态 ====================

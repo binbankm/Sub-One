@@ -45,6 +45,7 @@ const getProtocol = (url?: string) => {
     if (lowerUrl.startsWith('vless://')) return 'vless';
     if (lowerUrl.startsWith('trojan://')) return 'trojan';
     if (lowerUrl.startsWith('socks5://')) return 'socks5';
+    if (lowerUrl.startsWith('snell://')) return 'snell';
     if (lowerUrl.startsWith('http')) return 'http';
   } catch {
     return 'unknown';
@@ -137,6 +138,14 @@ const protocolInfo = computed(() => {
         gradient: 'from-lime-400 to-green-500',
         bg: 'bg-lime-100 dark:bg-lime-900/30',
         color: 'text-lime-600 dark:text-lime-400'
+      };
+    case 'snell':
+      return {
+        text: 'SNELL',
+        icon: '🐚',
+        gradient: 'from-amber-400 to-yellow-500',
+        bg: 'bg-amber-100 dark:bg-amber-900/30',
+        color: 'text-amber-600 dark:text-amber-400'
       };
     case 'http':
       return {
@@ -248,7 +257,7 @@ const copyToClipboard = (url: string) => {
             </div>
 
             <!-- 复制按钮 -->
-            <button @click.stop="copyToClipboard(node.url)"
+            <button v-if="node.url" @click.stop="copyToClipboard(node.url)"
               class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
               title="复制节点链接">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

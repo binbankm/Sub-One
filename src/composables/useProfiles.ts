@@ -92,6 +92,7 @@ export function useProfiles(config: Ref<AppConfig>) {
             subscriptions: p.subscriptions || [],
             manualNodes: p.manualNodes || [],
             customId: p.customId || '',
+            type: p.type || 'base64',
             ...p
         } as Profile));
     }
@@ -292,6 +293,10 @@ export function useProfiles(config: Ref<AppConfig>) {
      */
     function removeIdFromProfiles(id: string, field: 'subscriptions' | 'manualNodes') {
         profiles.value.forEach(p => {
+            // 确保字段已初始化
+            if (!p[field]) {
+                p[field] = [];
+            }
             const index = p[field].indexOf(id);
             if (index !== -1) {
                 // 从数组中移除该 ID
@@ -310,8 +315,12 @@ export function useProfiles(config: Ref<AppConfig>) {
      */
     function clearProfilesField(field: 'subscriptions' | 'manualNodes') {
         profiles.value.forEach(p => {
-            // 清空数组（将长度设为 0）
-            p[field].length = 0;
+            // 确保字段已初始化，然后清空数组（将长度设为 0）
+            if (!p[field]) {
+                p[field] = [];
+            } else {
+                p[field].length = 0;
+            }
         });
     }
 

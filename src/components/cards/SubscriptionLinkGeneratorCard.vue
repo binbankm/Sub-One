@@ -28,16 +28,19 @@ const showUrl = ref(false);
 const copied = ref(false);
 let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const formats = ['自适应', 'Base64', 'Clash', 'Sing-Box', 'Surge', 'Loon'];
+const formats = ['自适应', 'V2Ray', 'Clash', 'Sing-Box', 'Quantumult X', 'Surge', 'Loon'];
 
 /** 格式映射表 */
 const FORMAT_MAPPING: Record<string, string> = {
-  'Base64': 'base64',
+  'V2Ray': 'base64',
   'Clash': 'clash',
   'Sing-Box': 'singbox',
+  'Quantumult X': 'quantumultx',
   'Surge': 'surge',
   'Loon': 'loon'
 };
+
+
 
 /** 只显示已启用的订阅组 */
 const enabledProfiles = computed(() => {
@@ -69,6 +72,7 @@ const subLink = computed(() => {
   }
 
   const formatParam = FORMAT_MAPPING[format] || format.toLowerCase();
+  
   return `${url}?${formatParam}`;
 });
 
@@ -175,6 +179,9 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
+
+        <!-- 2.1 选择规则策略 (动态显示) -->
+
 
         <!-- 3. 复制链接 -->
         <div class="mb-4">

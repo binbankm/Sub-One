@@ -17,9 +17,8 @@
 -->
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
-import { subscriptionParser } from '@shared/subscription-parser';
 import type { Subscription, Profile, Node } from '../../types';
 import { getCountryTerms } from '../../lib/constants';
 
@@ -78,18 +77,40 @@ const filteredNodes = computed(() => {
   const alternativeTerms = getCountryTerms(term);
 
   return nodes.value.filter(node => {
-    const nodeName = node.name.toLowerCase();
-    const nodeUrl = node.url.toLowerCase();
+    const nodeNameLower = (node.name || '').toLowerCase();
+    const nodeUrlLower = (node.url || '').toLowerCase();
+    const nodeProtocolLower = (node.protocol || '').toLowerCase();
 
-    // 基础匹配：节点名称或 URL 包含搜索词
-    if (nodeName.includes(term) || nodeUrl.includes(term)) {
+    // 1. 协议匹配 (优先级最高，且必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
+    if (nodeProtocolLower.startsWith(term)) {
       return true;
     }
 
-    // 高级匹配：节点名称或 URL 包含任一国家/地区相关词汇
+    // 2. URL 协议头匹配 (如搜 ss://)
+    if (nodeUrlLower.startsWith(term)) {
+      return true;
+    }
+
+    // 3. 准备名称和 URL 详情的搜索文本
+    // 鲁棒性优化：如果搜 ss，为了防止误匹配 vmess/vless，我们在搜索名称前先移除这两个干扰项
+    const isSSSearch = term === 'ss';
+    const nameToSearch = isSSSearch ? nodeNameLower.replace(/vmess|vless/g, '____') : nodeNameLower;
+    const urlDetails = nodeUrlLower.split('://')[1] || '';
+    const urlToSearch = isSSSearch ? urlDetails.replace(/vmess|vless/g, '____') : urlDetails;
+
+    // 4. 节点名称匹配
+    if (nameToSearch.includes(term)) {
+      return true;
+    }
+
+    // 5. URL 详情匹配 (域名、IP、端口等)
+    if (urlToSearch.includes(term)) {
+      return true;
+    }
+
+    // 6. 高级匹配：节点名称包含任一国家/地区相关词汇
     for (const altTerm of alternativeTerms) {
-      const altTermLower = altTerm.toLowerCase();
-      if (nodeName.includes(altTermLower) || nodeUrl.includes(altTermLower)) {
+      if (nameToSearch.includes(altTerm.toLowerCase())) {
         return true;
       }
     }
@@ -106,30 +127,35 @@ const fetchNodes = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await fetch('/api/fetch_external_url', {
+    // 使用 /api/node_count API 获取节点列表（后端已解析）
+    const response = await fetch('/api/node_count', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: props.subscription.url })
+      body: JSON.stringify({ 
+        url: props.subscription.url,
+        returnNodes: true,  // 请求返回节点列表
+        exclude: props.subscription?.exclude || ''  // 应用过滤规则
+      })
     });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const content = await response.text();
-    const parsedNodes = subscriptionParser.parse(content, props.subscription?.name || '');
-    // Apply filtering and processing
-    const processedNodes = subscriptionParser.processNodes(parsedNodes, props.subscription?.name || '', {
-      exclude: props.subscription?.exclude
-    });
-
-    nodes.value = processedNodes.map(n => ({
-      id: n.id,
-      name: n.name,
-      url: n.url,
-      protocol: getProtocolFromUrl(n.url),
-      enabled: true
-    }));
+    const data = await response.json();
+    
+    // 后端已解析并过滤，直接使用返回的节点
+    if (data.nodes && data.nodes.length > 0) {
+      nodes.value = data.nodes.map((n: any) => ({
+        id: n.id,
+        name: n.name,
+        url: n.url || '',
+        protocol: getProtocolFromUrl(n.url || ''),
+        enabled: true
+      }));
+    } else {
+      nodes.value = [];
+    }
 
   } catch (error: unknown) {
     console.error('获取节点信息失败:', error);
@@ -154,15 +180,15 @@ const fetchProfileNodes = async () => {
     // 1. 添加手动节点
     if (props.allManualNodes) {
       const selectedManualNodes = props.allManualNodes.filter(node =>
-        props.profile!.manualNodes.includes(node.id)
+        props.profile?.manualNodes?.includes(node.id) ?? false
       );
 
       for (const node of selectedManualNodes) {
         profileNodes.push({
           id: node.id,
           name: node.name || '未命名节点',
-          url: node.url,
-          protocol: getProtocolFromUrl(node.url),
+          url: node.url || '',
+          protocol: getProtocolFromUrl(node.url || ''),
           enabled: node.enabled,
           type: 'manual'
         });
@@ -172,36 +198,38 @@ const fetchProfileNodes = async () => {
     // 2. 添加订阅节点
     if (props.allSubscriptions) {
       const selectedSubscriptions = props.allSubscriptions.filter(sub =>
-        props.profile!.subscriptions.includes(sub.id) && sub.enabled
+        (props.profile?.subscriptions?.includes(sub.id) ?? false) && sub.enabled
       );
 
       // 并行获取所有订阅内容，提升速度
       const promises = selectedSubscriptions.map(async (subscription) => {
         if (subscription.url && subscription.url.startsWith('http')) {
           try {
-            const response = await fetch('/api/fetch_external_url', {
+            // 使用 /api/node_count API 获取节点列表
+            const response = await fetch('/api/node_count', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: subscription.url })
+              body: JSON.stringify({ 
+                url: subscription.url,
+                returnNodes: true,  // 请求返回节点列表
+                exclude: subscription.exclude || ''  // 应用过滤规则
+              })
             });
 
             if (response.ok) {
-              const content = await response.text();
-              const parsedNodes = subscriptionParser.parse(content, subscription.name);
-              // 应用过滤规则 - 关键修复：确保订阅的exclude规则在订阅组中也生效
-              const processedNodes = subscriptionParser.processNodes(parsedNodes, subscription.name || '', {
-                exclude: subscription.exclude || ''
-              });
-              // 标记来源，方便显示
-              return processedNodes.map(node => ({
-                id: node.id,
-                name: node.name,
-                url: node.url,
-                protocol: getProtocolFromUrl(node.url),
-                enabled: true,
-                type: 'subscription' as const,
-                subscriptionName: subscription.name
-              }));
+              const data = await response.json();
+              // 后端已解析并过滤，直接使用返回的节点
+              if (data.nodes && data.nodes.length > 0) {
+                return data.nodes.map((node: any) => ({
+                  id: node.id,
+                  name: node.name,
+                  url: node.url || '',
+                  protocol: getProtocolFromUrl(node.url || ''),
+                  enabled: true,
+                  type: 'subscription' as const,
+                  subscriptionName: subscription.name || ''
+                }));
+              }
             }
           } catch (error) {
             console.error(`获取订阅 ${subscription.name} 节点失败:`, error);
@@ -301,14 +329,32 @@ const refreshNodes = async () => {
   await fetchNodes();
   toastStore.showToast('节点信息已刷新', 'success');
 };
+
+// 键盘事件处理 - ESC 键关闭
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && props.show) {
+    emit('update:show', false);
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
-    @click="emit('update:show', false)">
-    <div
-      class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
-      @click.stop>
+  <Teleport to="body">
+    <Transition name="modal-fade">
+      <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
+        @click="emit('update:show', false)">
+        <Transition name="modal-inner">
+          <div v-if="show"
+            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
+            @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
         <h3 class="text-xl font-bold gradient-text">节点详情</h3>
@@ -320,18 +366,18 @@ const refreshNodes = async () => {
           <!-- 订阅/订阅组信息头部 -->
           <div v-if="subscription || profile"
             class="bg-gray-50/60 dark:bg-gray-800/75 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-semibold text-gray-900 dark:text-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {{ subscription ? (subscription.name || '未命名订阅') : (profile?.name || '未命名订阅组') }}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 break-all">
                   <span v-if="subscription">{{ subscription.url }}</span>
-                  <span v-else-if="profile">包含 {{ profile.subscriptions.length }} 个订阅，{{ profile.manualNodes.length }}
+                  <span v-else-if="profile">包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ profile.manualNodes?.length ?? 0 }}
                     个手动节点</span>
                 </p>
               </div>
-              <div class="text-right">
+              <div class="text-right flex-shrink-0">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                   共 {{ nodes.length }} 个节点
                 </p>
@@ -517,10 +563,25 @@ const refreshNodes = async () => {
         </button>
       </div>
     </div>
-  </div>
+        </Transition>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
-/* 模态框过渡动画已在 BaseModal.vue 中定义 */
+.modal-fade-enter-active, .modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-fade-enter-from, .modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-inner-enter-active, .modal-inner-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-inner-enter-from, .modal-inner-leave-to {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+}
 </style>
 

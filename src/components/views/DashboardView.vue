@@ -99,7 +99,7 @@ const initialSubs = ref<Subscription[]>([]);
 const initialNodes = ref<AppNode[]>([]);
 
 /** 应用配置 */
-const config = ref<AppConfig>({});
+const config = ref<AppConfig>({} as AppConfig);
 
 // ==================== Composables 初始化 ====================
 
@@ -301,7 +301,7 @@ const initializeState = () => {
     
     // 初始化订阅组
     initializeProfiles(props.data.profiles || []);
-    config.value = props.data.config || {};
+    config.value = props.data.config || {} as AppConfig;
   }
   isLoading.value = false;
   dirty.value = false;
@@ -663,7 +663,7 @@ const handleAddProfile = () => {
    isNewProfile.value = true;
    editingProfile.value = { 
      id: '', name: '', enabled: true, subscriptions: [], 
-     manualNodes: [], customId: '', subConverter: '', subConfig: '', expiresAt: '' 
+     manualNodes: [], customId: '', type: 'base64'
    };
    showProfileModal.value = true;
 };
@@ -679,7 +679,6 @@ const handleEditProfile = (profileId: string) => {
     isNewProfile.value = false;
     // 深拷贝避免修改原对象
     editingProfile.value = JSON.parse(JSON.stringify(profile));
-    if (editingProfile.value) editingProfile.value.expiresAt = profile.expiresAt || '';
     showProfileModal.value = true;
   }
 };

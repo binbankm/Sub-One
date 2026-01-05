@@ -14,7 +14,6 @@
 import { ref, watch } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import Modal from './BaseModal.vue';
-import { subscriptionParser } from '@shared/subscription-parser';
 import type { Node } from '../../types';
 
 // ==================== Props 和 Emit ====================
@@ -68,14 +67,6 @@ const isValidUrl = (url: string) => {
   }
 };
 
-/**
- * 解析节点内容
- * 使用共享的订阅解析器
- */
-const parseNodes = (content: string) => {
-  return subscriptionParser.parse(content, '导入的订阅');
-};
-
 // ==================== 导入逻辑 ====================
 
 /**
@@ -99,11 +90,14 @@ const importSubscription = async () => {
 
   isLoading.value = true;
   try {
-    // 通过代理 API 获取订阅内容
-    const response = await fetch('/api/fetch_external_url', {
+    // 使用 /api/node_count API 获取节点列表（后端已解析）
+    const response = await fetch('/api/node_count', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: subscriptionUrl.value })
+      body: JSON.stringify({ 
+        url: subscriptionUrl.value,
+        returnNodes: true  // 需要节点列表用于批量添加
+      })
     });
 
     if (!response.ok) {
@@ -111,8 +105,17 @@ const importSubscription = async () => {
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
     
-    const content = await response.text();
-    const newNodes = parseNodes(content);
+    const data = await response.json();
+    
+    // 使用后端返回的节点列表
+    const newNodes: Node[] = (data.nodes || []).map((n: any) => ({
+      ...n,
+      id: n.id,
+      name: n.name,
+      url: n.url || '',
+      protocol: n.type,
+      enabled: true
+    } as unknown as Node));
 
     if (newNodes.length > 0) {
       // 添加节点

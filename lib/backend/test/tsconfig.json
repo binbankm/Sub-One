@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": [
+            "ESNext"
+        ],
+        "types": [
+            "node",
+            "vitest/globals"
+        ],
+        "strict": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "../../../src/*"
+            ],
+            "@shared/*": [
+                "../../shared/*"
+            ]
+        }
+    },
+    "include": [
+        "**/*.ts"
+    ]
+}

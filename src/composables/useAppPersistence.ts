@@ -175,7 +175,7 @@ export function useAppPersistence(
 
             // ==================== 调用 API 保存 ====================
 
-            const result = await saveSubs(combinedSubs, profiles.value);
+            const result = await saveSubs(combinedSubs as any, profiles.value as any);
 
             // ==================== 处理保存结果 ====================
 

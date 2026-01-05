@@ -46,7 +46,8 @@ const localProfile = ref<Profile>({
   subscriptions: [],
   manualNodes: [],
   customId: '',
-  expiresAt: ''
+  expiresAt: '',
+  type: 'base64'
 });
 const subscriptionSearchTerm = ref('');
 const nodeSearchTerm = ref('');
@@ -121,7 +122,7 @@ watch(() => props.profile, (newProfile) => {
     }
     localProfile.value = profileCopy;
   } else {
-    localProfile.value = { id: '', name: '', enabled: true, subscriptions: [], manualNodes: [], customId: '', expiresAt: '' };
+    localProfile.value = { id: '', name: '', enabled: true, subscriptions: [], manualNodes: [], customId: '', expiresAt: '', type: 'base64' };
   }
 }, { deep: true, immediate: true });
 
@@ -143,6 +144,10 @@ const handleConfirm = () => {
 };
 
 const toggleSelection = (listName: 'subscriptions' | 'manualNodes', id: string) => {
+  // 确保数组已经初始化
+  if (!localProfile.value[listName]) {
+    localProfile.value[listName] = [];
+  }
   const list = localProfile.value[listName];
   const index = list.indexOf(id);
   if (index > -1) {
@@ -160,6 +165,10 @@ const handleSelectAll = (listName: 'subscriptions' | 'manualNodes', sourceArray:
 
 const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArray: { id: string }[]) => {
   const sourceIds = sourceArray.map(item => item.id);
+  // 确保数组已经初始化
+  if (!localProfile.value[listName]) {
+    localProfile.value[listName] = [];
+  }
   localProfile.value[listName] = localProfile.value[listName].filter(id => !sourceIds.includes(id));
 };
 
@@ -195,25 +204,7 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             <p class="text-xs text-gray-400 mt-1.5">设置后，订阅链接会更短，如 /token/home</p>
           </div>
 
-          <!-- 自定义后端 -->
-          <div>
-            <label for="profile-subconverter" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义后端 (可选)
-            </label>
-            <input type="text" id="profile-subconverter" v-model="localProfile.subConverter" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 SubConverter 后端地址。</p>
-          </div>
 
-          <!-- 自定义配置 -->
-          <div>
-            <label for="profile-subconfig" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-              自定义远程配置 (可选)
-            </label>
-            <input type="text" id="profile-subconfig" v-model="localProfile.subConfig" placeholder="留空则使用全局设置"
-              class="input-modern-enhanced">
-            <p class="text-xs text-gray-400 mt-1.5">为此订阅组指定一个独立的 Subconverter 配置文件。</p>
-          </div>
 
           <!-- 到期时间 -->
           <div class="md:col-span-1">
@@ -222,13 +213,6 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             </label>
             <div class="relative">
               <input type="date" id="profile-expires-at" v-model="localProfile.expiresAt" class="input-modern-enhanced">
-              <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
             </div>
             <p class="text-xs text-gray-400 mt-1.5">设置此订阅组的到期时间，到期后将返回默认节点。</p>
           </div>

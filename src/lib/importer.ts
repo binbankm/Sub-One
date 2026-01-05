@@ -82,9 +82,11 @@ export function createNode(url: string, name?: string): Node {
         name: name || extractNodeName(url) || '未命名',
         // 保存节点 URL
         url: url,
+        // 节点类型未知（需要后续解析才能确定具体协议）
+        type: 'unknown',
         // 默认启用该节点
         enabled: true
-    };
+    } as any;
 }
 
 // ==================== 文本解析函数 ====================

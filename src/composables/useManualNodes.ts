@@ -78,16 +78,28 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
    * @param {Partial<Node>[]} nodesData - 原始节点数据数组
    */
   function initializeManualNodes(nodesData: Partial<Node>[]) {
-    manualNodes.value = (nodesData || []).map(node => ({
-      id: node.id || crypto.randomUUID(),
-      name: node.name || '未命名节点',
-      url: node.url || '',
-      enabled: node.enabled ?? true,
-      protocol: node.protocol || 'unknown',
-      type: node.type || 'manual',
-      subscriptionName: node.subscriptionName || 'manual',
-      ...node
-    } as Node));
+    manualNodes.value = (nodesData || []).map(node => {
+      let protocol = node.protocol || node.type || 'unknown';
+
+      // 如果协议仍然是 unknown，尝试从 URL 中提取
+      if (protocol === 'unknown' && node.url) {
+        const match = node.url.match(/^(\w+):\/\//);
+        if (match) {
+          protocol = match[1];
+        }
+      }
+
+      return {
+        id: node.id || crypto.randomUUID(),
+        name: node.name || '未命名节点',
+        url: node.url || '',
+        enabled: node.enabled ?? true,
+        protocol: protocol,
+        type: node.type || protocol || 'manual',
+        subscriptionName: node.subscriptionName || 'manual',
+        ...node
+      } as Node;
+    });
   }
 
   // ==================== 计算属性 ====================
@@ -97,7 +109,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
    * 
    * 说明：
    * - 根据防抖后的搜索词过滤节点
-   * - 支持智能国家/地区搜索（输入任何相关词汇都能匹配）
+   * - 支持协议、名称、国家/地区等全维度搜索
    * - 支持多种地区名称别名（中文、繁体、emoji、国家代码等）
    */
   const filteredManualNodes = computed(() => {
@@ -110,21 +122,49 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
     const lowerCaseSearch = debouncedSearchTerm.value.toLowerCase();
 
     // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-    // 例如：输入 '美国' 可以匹配 ['🇺🇸', '美国', '美國', 'us']
     const alternativeTerms = getCountryTerms(lowerCaseSearch);
 
     // 过滤节点
     return manualNodes.value.filter(node => {
-      const nodeNameLower = node.name ? node.name.toLowerCase() : '';
+      const nodeNameLower = (node.name || '').toLowerCase();
+      const nodeProtocolLower = (node.protocol || '').toLowerCase();
+      const nodeTypeLower = (node.type || '').toLowerCase();
+      const nodeUrlLower = (node.url || '').toLowerCase();
 
-      // 检查节点名称是否包含原始搜索词
-      if (nodeNameLower.includes(lowerCaseSearch)) {
+      // 1. 协议/类型匹配 (优先级最高，且必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
+      // 例如：搜 ss 只匹配 ss, ssr，不会匹配 vmess
+      if (nodeProtocolLower.startsWith(lowerCaseSearch) || nodeTypeLower.startsWith(lowerCaseSearch)) {
+        // 排除掉搜 manual 匹配到所有节点的情况
+        if (lowerCaseSearch !== 'manual') {
+          return true;
+        }
+      }
+
+      // 2. URL 协议头匹配 (如搜 ss://)
+      if (nodeUrlLower.startsWith(lowerCaseSearch)) {
         return true;
       }
 
-      // 检查节点名称是否包含任何国家/地区相关词汇
+      // 3. 准备名称和 URL 详情的搜索文本
+      // 鲁棒性优化：如果搜 ss，为了防止误匹配 vmess/vless，我们在搜索名称前先移除这两个干扰项
+      const isSSSearch = lowerCaseSearch === 'ss';
+      const nameToSearch = isSSSearch ? nodeNameLower.replace(/vmess|vless/g, '____') : nodeNameLower;
+      const urlDetails = nodeUrlLower.split('://')[1] || '';
+      const urlToSearch = isSSSearch ? urlDetails.replace(/vmess|vless/g, '____') : urlDetails;
+
+      // 4. 节点名称匹配
+      if (nameToSearch.includes(lowerCaseSearch)) {
+        return true;
+      }
+
+      // 5. URL 详情匹配 (域名、IP、端口等)
+      if (urlToSearch.includes(lowerCaseSearch)) {
+        return true;
+      }
+
+      // 6. 检查节点名称是否包含任何国家/地区相关词汇
       for (const altTerm of alternativeTerms) {
-        if (nodeNameLower.includes(altTerm.toLowerCase())) {
+        if (nameToSearch.includes(altTerm.toLowerCase())) {
           return true;
         }
       }
@@ -326,7 +366,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
     // 遍历所有节点
     for (const node of manualNodes.value) {
       // 使用智能函数生成唯一键
-      const uniqueKey = getUniqueKey(node.url);
+      const uniqueKey = getUniqueKey(node.url || '');
 
       // 如果这个唯一键还没见过
       if (!seenKeys.has(uniqueKey)) {

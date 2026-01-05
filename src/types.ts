@@ -11,175 +11,112 @@
 
 // ==================== 基础类型定义 ====================
 
+// ==================== 统一类型引用 (Single Source of Truth) ====================
+// 核心数据结构直接复用 lib/shared/types
+import type {
+    ProxyNode as SharedProxyNode,
+    Subscription as SharedSubscription,
+    Profile as SharedProfile,
+    AppConfig as SharedAppConfig,
+    SubscriptionUserInfo as SharedUserInfo,
+    CipherType,
+    ProtocolType as SharedProtocolType,
+    ClientFormat
+} from '../lib/shared/types';
+
+// 重新导出核心类型，方便前端其他文件引用
+export type { CipherType, ClientFormat };
+
+// ==================== 基础类型扩展 ====================
+
 /** 
  * 支持的代理协议类型 
- * 包含所有常见协议，也允许字符串扩展
- * 
- * 协议说明：
- * - ss/ssr: Shadowsocks 系列
- * - vmess/vless: V2Ray 系列
- * - trojan: Trojan 协议
- * - hysteria/hysteria2/hy/hy2: Hysteria 系列（高性能UDP协议）
- * - tuic: TUIC 协议
- * - anytls: AnyTLS 协议
- * - socks/socks5: SOCKS 代理
- * - http/https: HTTP 代理
+ * 扩展共享定义，允许前端特定的宽泛字符串
  */
-export type ProtocolType =
-    | 'vmess'
-    | 'vless'
-    | 'trojan'
-    | 'ss'
-    | 'ssr'
-    | 'hysteria'
-    | 'hysteria2'
-    | 'hy'
-    | 'hy2'
-    | 'tuic'
-    | 'anytls'
-    | 'socks'
-    | 'socks5'
-    | 'http'
-    | 'https'
-    | string; // 允许扩展支持未来的协议
+export type ProtocolType = SharedProtocolType | string;
+
 
 /**
  * 订阅用户信息
- * 通常包含流量使用情况和过期时间
+ * 直接复用共享定义
  */
-export interface SubscriptionUserInfo {
-    /** 已用上传流量 (bytes) */
-    upload?: number;
-    /** 已用下载流量 (bytes) */
-    download?: number;
-    /** 总流量限制 (bytes) */
-    total?: number;
-    /** 到期时间戳 (秒或毫秒) */
-    expire?: number;
-    /** 原始信息字符串 */
-    info?: string;
-}
+export type SubscriptionUserInfo = SharedUserInfo;
 
-// ==================== 节点接口 ====================
+// ==================== 节点接口扩展 ====================
 /**
- * 节点（Node）接口定义
- * 表示单个代理节点的数据结构
+ * 节点（Node）接口定义 - 前端扩展版
+ * 继承自共享 ProxyNode 定义，并添加前端 UI 所需字段
  */
-export interface Node {
-    /** 节点唯一标识符（UUID） */
-    id: string;
-    /** 节点显示名称 */
-    name: string;
-    /** 节点链接地址（协议://配置信息） */
-    url: string;
-    /** 协议类型 */
+export type Node = SharedProxyNode & {
+    /** 旧版协议类型字段 (兼容性保留，指向 type) */
     protocol?: ProtocolType;
-    /** 节点启用状态（true=启用, false=禁用） */
+    /** 启用状态 (UI控制) */
     enabled: boolean;
-    /** 节点类型（可选扩展字段） */
-    type?: string;
-    /** 所属订阅名称（用于区分来源） */
-    subscriptionName?: string;
-    /** 原始代理配置对象（保留完整配置信息） */
+    /** 原始代理配置对象 (兼容旧逻辑) */
     originalProxy?: Record<string, unknown>;
+
+    // 前端可能用到但 SharedProxyNode 中可能是特定协议才有的字段，
+    // 在此声明为可选以方便 UI 统一访问 (如列表中展示 cipher)
+    cipher?: string;
+    uuid?: string;
+    password?: string;
+    udp?: boolean;
+    sni?: string;
+
+    /** 动态扩展字段 */
+    [key: string]: unknown;
+};
+
+// ==================== 订阅接口扩展 ====================
+/**
+ * 订阅（Subscription）接口定义 - 前端扩展版
+ */
+export type Subscription = SharedSubscription & {
+    /** 订阅状态（前端特有：unchecked、checking、success、error） */
+    status?: string;
+    /** 更新状态标识 */
+    isUpdating?: boolean;
+
     /** 动态扩展字段 */
     [key: string]: unknown;
 }
 
-// ==================== 订阅接口 ====================
-/**
- * 订阅（Subscription）接口定义
- * 表示一个机场订阅链接及其状态
- */
-export interface Subscription {
-    /** 订阅唯一标识符（UUID） */
-    id: string;
-    /** 订阅显示名称（可选，默认从链接提取） */
-    name?: string;
-    /** 订阅链接地址（HTTP/HTTPS） */
-    url?: string;
-    /** 订阅启用状态（true=启用, false=禁用） */
-    enabled: boolean;
-    /** 订阅状态（unchecked、checking、success、error） */
-    status?: string;
-    /** 订阅包含的节点数量 */
-    nodeCount?: number;
-    /** 更新状态标识（true=正在更新） */
-    isUpdating?: boolean;
-    /** 订阅用户信息（流量、到期时间等） */
-    userInfo?: SubscriptionUserInfo;
-    /** 排除规则（节点过滤关键词） */
-    exclude?: string;
-    /** 动态扩展字段 */
-    [key: string]: unknown;
-}
 
 // ==================== 订阅组接口 ====================
 /**
- * 订阅组（Profile）接口定义
- * 表示一组订阅和节点的组合配置
+ * 订阅组（Profile）接口定义 - 前端引用版
  */
-export interface Profile {
-    /** 订阅组唯一标识符（UUID） */
-    id: string;
-    /** 订阅组显示名称 */
-    name: string;
-    /** 订阅组启用状态（true=启用, false=禁用） */
-    enabled: boolean;
-    /** 包含的订阅ID列表 */
-    subscriptions: string[];
-    /** 包含的手动节点ID列表 */
-    manualNodes: string[];
-    /** 自定义短链接 ID（用于生成友好的分享链接） */
-    customId?: string;
-    /** 订阅转换服务地址 */
-    subConverter?: string;
-    /** 订阅转换配置参数 */
-    subConfig?: string;
-    /** 订阅组过期时间（ISO 8601 格式） */
-    expiresAt?: string;
-    /** 动态扩展字段 */
-    [key: string]: unknown;
-}
+export type Profile = SharedProfile;
 
 // ==================== 应用配置接口 ====================
 /**
- * 应用配置（AppConfig）接口定义
- * 存储应用全局设置
+ * 应用配置（AppConfig）接口定义 - 前端引用版
  */
-export interface AppConfig {
-    // ========== 基础配置 ==========
-    /** 自定义订阅文件名 */
-    FileName?: string;
-    /** 用户自定义 Token（用于访问订阅链接） */
-    mytoken?: string;
+export type AppConfig = SharedAppConfig;
 
-    // ========== 订阅组配置 ==========
-    /** 订阅组分享令牌（用于生成分享链接，必须与 mytoken 不同） */
-    profileToken?: string;
-    /** 是否自动添加订阅名作为节点名前缀 */
-    prependSubName?: boolean;
-
-    // ========== 订阅转换器配置 ==========
-    /** SubConverter 后端地址（如：api.v1.mk） */
-    subConverter?: string;
-    /** SubConverter 配置文件 URL */
-    subConfig?: string;
-
-    // ========== Telegram 通知配置 ==========
-    /** Telegram Bot Token（用于发送通知） */
-    BotToken?: string;
-    /** Telegram Chat ID（接收通知的聊天 ID） */
-    ChatID?: string;
-
-    // ========== 通知阈值配置 ==========
-    /** 订阅到期提醒阈值（剩余天数小于此值时提醒） */
-    NotifyThresholdDays?: number;
-    /** 流量使用提醒阈值（使用百分比大于此值时提醒） */
-    NotifyThresholdPercent?: number;
-
-    /** 动态扩展字段 */
-    [key: string]: unknown;
+// ==================== 转换选项接口 ====================
+/**
+ * 转换器选项 (ConverterOptions)
+ * 控制输出格式和内容的选项
+ */
+export interface ConverterOptions {
+    /** 配置文件名称 */
+    filename?: string;
+    /** 是否包含规则 */
+    includeRules?: boolean;
+    /** 远程规则配置 URL */
+    remoteConfig?: string;
+    /** 订阅用户信息 */
+    userInfo?: {
+        upload?: number;
+        download?: number;
+        total?: number;
+        expire?: number;
+    };
+    /** 目标客户端版本 */
+    clientVersion?: string;
+    /** 是否启用 UDP */
+    udp?: boolean;
 }
 
 // ==================== 初始数据接口 ====================
@@ -215,3 +152,4 @@ export interface ApiResponse<T = unknown> {
     /** 兼容某些 API 使用 results 字段返回数据 */
     results?: T;
 }
+

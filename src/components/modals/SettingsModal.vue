@@ -3,16 +3,15 @@
   
   功能说明：
   - 管理应用的全局配置
-  - 包括基础配置、订阅组、SubConverter、Telegram通知等设置
+  - 包括基础配置、订阅组、转换配置、Telegram通知等设置
   - 提供预设选项和自定义输入
   - 自动加载和保存配置
   - 输入验证（空格检测）
   
   配置项：
   - 基础配置：订阅文件名、订阅Token
-  - 订阅组：分享Token、节点名前缀设置
-  - SubConverter：后端地址、配置文件URL
-  - Telegram：Bot Token、Chat ID
+  - 订阅组：分享Token、节点名前缀设置、配置文件URL
+  - Telegram：Bot Token、Chat ID、通知阈值
   
   ==================================================
 -->
@@ -43,10 +42,8 @@ const defaultSettings: AppConfig = {
   mytoken: 'auto',
   profileToken: '', // 默认为空，用户需主动设置
   
-  // 订阅转换配置
-  subConverter: 'url.v1.mk',
-  subConfig: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/refs/heads/main/Clash/config/ACL4SSR_Online_Full.ini',
   prependSubName: true,
+  dedupe: false,  // 默认关闭去重，保留所有节点
   
   // Telegram 通知配置
   BotToken: '',
@@ -65,8 +62,6 @@ const hasWhitespace = computed(() => {
     'FileName',
     'mytoken',
     'profileToken',
-    'subConverter',
-    'subConfig',
     'BotToken',
     'ChatID',
   ];
@@ -138,40 +133,7 @@ watch(() => props.show, (newValue) => {
   }
 }, { immediate: true });
 
-// 预设的后端地址选项
-const converterPresets = [
-  { label: 'api-sucmeta.0z.gs (推荐)', value: 'api-sucmeta.0z.gs' },
-  { label: 'api.v1.mk', value: 'api.v1.mk' },
-  { label: 'url.v1.mk', value: 'url.v1.mk' },
-  { label: 'sub.xeton.dev', value: 'sub.xeton.dev' }, 
-  { label: 'sub.id9.cc', value: 'sub.id9.cc' },
-  { label: '自定义', value: '' }
-];
 
-// 预设的配置文件选项
-const configPresets = [
-  {
-    label: 'ACL4SSR 默认版 (推荐)',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online.ini'
-  },
-  {
-    label: 'ACL4SSR 完整版 (全分组)',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full.ini'
-  },
-  {
-    label: 'ACL4SSR 多模式版 (含自动/负载均衡)',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Full_MultiMode.ini'
-  },
-  {
-    label: 'ACL4SSR 精简版',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_Mini.ini'
-  },
-  {
-    label: 'ACL4SSR 去广告版',
-    value: 'https://raw.githubusercontent.com/cmliu/ACL4SSR/main/Clash/config/ACL4SSR_Online_AdblockPlus.ini'
-  },
-  { label: '自定义', value: '' }
-];
 </script>
 
 <template>
@@ -209,7 +171,7 @@ const configPresets = [
             </svg>
             基础配置
           </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="group">
               <label for="fileName"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">自定义订阅文件名</label>
@@ -221,6 +183,28 @@ const configPresets = [
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">自定义订阅Token</label>
               <input type="text" id="myToken" v-model="settings.mytoken" class="input-modern-enhanced w-full"
                 placeholder="用于访问订阅链接的Token">
+            </div>
+            
+            <!-- 全局默认规则模板 (全宽) -->
+            <div class="md:col-span-2">
+                <label for="defaultRuleTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">全局默认规则模板</label>
+                <div class="relative">
+                    <select id="defaultRuleTemplate" v-model="settings.defaultRuleTemplate" class="input-modern-enhanced w-full appearance-none pr-10 cursor-pointer">
+                        <option value="none">仅节点 (None) - 只导出节点，不包含规则</option>
+                        <option value="minimal">极简版 (Minimal) - 仅区分黑白名单</option>
+                        <option value="standard">标准版 (Standard) - 包含常用流媒体/AI分流</option>
+                        <option value="acl4ssr">ACL4SSR版 - 经典全量规则</option>
+                        <option value="advanced">高级全能版 (Advanced) - 推荐，细分策略组</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    当订阅链接未指定 &template= 参数时使用的默认模板。
+                </p>
             </div>
           </div>
         </section>
@@ -236,8 +220,9 @@ const configPresets = [
             </svg>
             订阅组与节点
           </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="group">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 分享Token (全宽) -->
+            <div class="md:col-span-2 group">
               <label for="profileToken"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">订阅组分享Token</label>
               <input type="text" id="profileToken" v-model="settings.profileToken" class="input-modern-enhanced w-full"
@@ -248,18 +233,20 @@ const configPresets = [
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.732 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span>重要：此Token必须与"自定义订阅Token"不同，否则会导致访问冲突。留空则无法使用订阅组分享功能。</span>
+                <span>重要：此Token必须与"自定义订阅Token"不同。留空则无法使用订阅组分享。</span>
               </p>
             </div>
+            
+            <!-- 开关组：自动前缀 -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">节点名前缀</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">自动添加前缀</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">将订阅名作为节点名前缀，便于区分</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">将订阅名作为节点名前缀</p>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                   <input type="checkbox" v-model="settings.prependSubName" class="sr-only peer">
                   <div
                     class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
@@ -267,73 +254,23 @@ const configPresets = [
                 </label>
               </div>
             </div>
-          </div>
-        </section>
-
-        <!-- SubConverter设置 -->
-        <section>
-          <h4
-            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-            SubConverter 服务
-          </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- 后端地址 -->
-            <div class="group space-y-3">
-              <label for="subConverter"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                后端地址
-              </label>
-
-              <!-- 预设选择 -->
-              <select
-                class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all"
-                @change="(e) => settings.subConverter = (e.target as HTMLSelectElement).value">
-                <option value="" disabled :selected="!converterPresets.some(p => p.value === settings.subConverter)"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  选择预设或自定义
-                </option>
-                <option v-for="preset in converterPresets" :key="preset.value" :value="preset.value"
-                  :selected="preset.value === settings.subConverter"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  {{ preset.label }}
-                </option>
-              </select>
-
-              <!-- 输入框 -->
-              <input type="text" id="subConverter" v-model="settings.subConverter" class="input-modern-enhanced w-full"
-                placeholder="例如：api.v1.mk">
-            </div>
-
-            <!-- 配置文件URL -->
-            <div class="group space-y-3">
-              <label for="subConfig"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                配置文件 URL
-              </label>
-
-              <!-- 预设选择 -->
-              <select
-                class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none transition-all"
-                @change="(e) => settings.subConfig = (e.target as HTMLSelectElement).value">
-                <option value="" disabled :selected="!configPresets.some(p => p.value === settings.subConfig)"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  选择预设或自定义
-                </option>
-                <option v-for="preset in configPresets" :key="preset.value" :value="preset.value"
-                  :selected="preset.value === settings.subConfig"
-                  class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                  {{ preset.label }}
-                </option>
-              </select>
-
-              <!-- 输入框 -->
-              <input type="text" id="subConfig" v-model="settings.subConfig" class="input-modern-enhanced w-full"
-                placeholder="https://raw.githubusercontent.com/.../config.ini">
+            
+            <!-- 开关组：自动去重 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">节点去重</label>
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200">自动去重</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">去除相同节点(IP+Port)</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" v-model="settings.dedupe" class="sr-only peer">
+                  <div
+                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
         </section>
@@ -349,7 +286,7 @@ const configPresets = [
             </svg>
             Telegram 通知
           </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="group">
               <label for="tgBotToken"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Bot
@@ -378,7 +315,7 @@ const configPresets = [
             </svg>
             通知阈值
           </h4>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- 到期提醒阈值 -->
             <div class="group">
               <label for="notifyThresholdDays"
