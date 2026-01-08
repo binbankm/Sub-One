@@ -129,17 +129,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
 <template>
   <!-- 登录页面容器 -->
   <div class="login-wrapper">
-    
-    <!-- ==================== 动画背景元素 ==================== -->
-    <!-- 背景光球 - 增加视觉趣味性 -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <!-- 光球 1 - 左上角蓝紫色 -->
-      <div class="login-orb login-orb-1"></div>
-      <!-- 光球 2 - 右下角紫粉色 -->
-      <div class="login-orb login-orb-2"></div>
-      <!-- 光球 3 - 中心青色 -->
-      <div class="login-orb login-orb-3"></div>
-    </div>
+
 
     <!-- ==================== 登录卡片 ==================== -->
     <div class="login-card">
@@ -369,63 +359,6 @@ const handleKeyPress = (e: KeyboardEvent) => {
   position: relative;
 }
 
-/* ==================== 动画背景光球 ==================== */
-
-/* 光球基础样式 */
-.login-orb {
-  position: absolute;
-  border-radius: 50%; /* 圆形 */
-  filter: blur(80px); /* 强模糊效果 */
-  opacity: 0.3; /* 半透明 */
-  pointer-events: none; /* 不响应鼠标事件 */
-}
-
-/* 光球 1 - 左上角蓝紫色 */
-.login-orb-1 {
-  top: 10%;
-  left: 10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, hsl(243, 75%, 59%) 0%, transparent 70%);
-  animation: float 15s ease-in-out infinite; /* 浮动动画 */
-}
-
-/* 光球 2 - 右下角紫粉色（反向动画） */
-.login-orb-2 {
-  bottom: 10%;
-  right: 10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, hsl(280, 72%, 54%) 0%, transparent 70%);
-  animation: float 20s ease-in-out infinite reverse;
-}
-
-/* 光球 3 - 中心青色 */
-.login-orb-3 {
-  top: 50%;
-  left: 50%;
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, hsl(189, 94%, 43%) 0%, transparent 70%);
-  animation: float 12s ease-in-out infinite;
-  transform: translate(-50%, -50%); /* 居中 */
-}
-
-/* 浮动动画关键帧 */
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(30px, -30px) scale(1.1); /* 右上移动并放大 */
-  }
-
-  66% {
-    transform: translate(-20px, 20px) scale(0.9); /* 左下移动并缩小 */
-  }
-}
 
 /* ==================== 登录卡片 ==================== */
 

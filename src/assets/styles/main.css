@@ -102,43 +102,6 @@ html.dark body {
   }
 }
 
-/* Background Decorative Elements */
-body::before,
-body::after {
-  content: '';
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 0;
-}
-
-body::before {
-  top: -10%;
-  left: -10%;
-  width: 50%;
-  height: 50%;
-  background: radial-gradient(circle, hsl(243, 75%, 59%) 0%, transparent 70%);
-  animation: float 15s ease-in-out infinite;
-}
-
-body::after {
-  bottom: -10%;
-  right: -10%;
-  width: 50%;
-  height: 50%;
-  background: radial-gradient(circle, hsl(280, 72%, 54%) 0%, transparent 70%);
-  animation: float 15s ease-in-out infinite reverse;
-}
-
-html.dark body::before {
-  background: radial-gradient(circle, hsl(243, 75%, 30%) 0%, transparent 70%);
-}
-
-html.dark body::after {
-  background: radial-gradient(circle, hsl(280, 72%, 30%) 0%, transparent 70%);
-}
 
 @keyframes float {
   0%, 100% {
