@@ -242,7 +242,7 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             </div>
 
             <div
-              class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-2 custom-scrollbar">
+              class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-2 custom-scrollbar">
               <div v-if="filteredSubscriptions.length > 0" class="space-y-1">
                 <div v-for="sub in filteredSubscriptions" :key="sub.id">
                   <label
@@ -293,7 +293,7 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
             </div>
 
             <div
-              class="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-2 custom-scrollbar">
+              class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-2 custom-scrollbar">
               <div v-if="filteredManualNodes.length > 0" class="space-y-1">
                 <div v-for="node in filteredManualNodes" :key="node.id">
                   <label
