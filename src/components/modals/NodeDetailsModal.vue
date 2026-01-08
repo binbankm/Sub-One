@@ -448,7 +448,9 @@ onUnmounted(() => {
             <!-- 节点卡片列表 - 重新设计 -->
             <div class="max-h-96 overflow-y-auto space-y-3">
               <div v-for="node in filteredNodes" :key="node.id"
-                class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden">
+                @click="toggleNodeSelection(node.id)"
+                class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden cursor-pointer"
+                :class="{ 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20': selectedNodes.has(node.id) }">
                 
                 <!-- 顶部彩色条 -->
                 <div class="h-1 bg-gradient-to-r"
@@ -465,6 +467,7 @@ onUnmounted(() => {
                     <!-- 选择框 -->
                     <input type="checkbox" 
                       :checked="selectedNodes.has(node.id)" 
+                      @click.stop
                       @change="toggleNodeSelection(node.id)"
                       class="mt-1 h-5 w-5 rounded-md border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all" />
 
@@ -524,7 +527,7 @@ onUnmounted(() => {
 
                         <!-- 复制按钮 -->
                         <button 
-                          @click="copyToClipboard(node.url)"
+                          @click.stop="copyToClipboard(node.url)"
                           class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group/copy"
                           title="复制节点链接">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
