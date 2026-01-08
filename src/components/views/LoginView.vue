@@ -626,21 +626,69 @@ html.dark .security-badge {
 
 @media (max-width: 640px) {
   .login-card {
-    padding: 2rem 1.5rem; /* 减小内边距 */
+    padding: 1.5rem 1.25rem; /* 大幅减小内边距 */
+    max-width: 100%; /* 占满宽度 */
   }
 
   .login-title {
-    font-size: 1.75rem; /* 缩小标题 */
+    font-size: 1.5rem; /* 缩小标题 */
+    margin-bottom: 0.25rem; /* 减小底部边距 */
+  }
+  
+  .login-subtitle {
+    font-size: 0.8125rem; /* 缩小副标题 */
+  }
+
+  .logo-container {
+    margin-bottom: 1rem; /* 减小Logo底部间距 */
   }
 
   .logo-gradient {
-    width: 70px;
-    height: 70px;
+    width: 60px; /* 缩小Logo */
+    height: 60px;
   }
 
   .logo-icon {
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .login-form {
+    margin-top: 1.25rem; /* 减小表单顶部间距 */
+  }
+  
+  .form-group {
+    margin-bottom: 1rem; /* 减小表单组间距 */
+  }
+  
+  .form-label {
+    font-size: 0.8125rem; /* 缩小标签字体 */
+    margin-bottom: 0.375rem; /* 减小标签底部间距 */
+  }
+  
+  .form-input {
+    padding: 0.75rem 2.5rem 0.75rem 0.875rem; /* 减小输入框内边距 */
+    font-size: 0.875rem; /* 缩小输入框字体 */
+  }
+  
+  .login-button {
+    padding: 0.875rem; /* 减小按钮内边距 */
+    font-size: 0.9375rem; /* 缩小按钮字体 */
+  }
+  
+  .login-footer {
+    margin-top: 1rem; /* 减小页脚顶部间距 */
+  }
+  
+  .security-badge {
+    padding: 0.375rem 0.75rem; /* 缩小徽章内边距 */
+    font-size: 0.6875rem; /* 缩小徽章字体 */
+  }
+  
+  .error-message {
+    padding: 0.375rem 0.625rem; /* 缩小错误消息内边距 */
+    font-size: 0.75rem; /* 缩小错误消息字体 */
+    margin-top: 0.375rem; /* 减小顶部间距 */
   }
 }
 
