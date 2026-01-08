@@ -119,8 +119,7 @@ const handleDragEnd = (evt: unknown) => {
 </script>
 
 <template>
-  <div
-    class="bg-white/60 dark:bg-gray-800/75 rounded-2xl p-4 sm:p-8 lg:p-10 border border-gray-300/50 dark:border-gray-700/30 shadow-lg hover:shadow-xl transition-all duration-300">
+  <div class="w-full">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-6">
       <div class="flex-1"></div>
         <div class="flex flex-wrap items-center gap-2 ml-auto">

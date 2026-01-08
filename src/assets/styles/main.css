@@ -235,6 +235,13 @@ html.dark body::after {
     @apply transition-all duration-300;
   }
 
+  /* Universal Glass Card */
+  .card-glass {
+    @apply bg-white/40 dark:bg-gray-800/30 backdrop-blur-xl border border-white/60 dark:border-white/10;
+    @apply shadow-xl hover:shadow-2xl hover:bg-white/50 dark:hover:bg-gray-800/40;
+    @apply transition-all duration-300;
+  }
+
   /* Modern Input - Base version with standard styling */
   .input-modern {
     @apply w-full px-4 py-3 rounded-xl;

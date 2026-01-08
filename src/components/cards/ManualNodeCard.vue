@@ -179,7 +179,7 @@ const copyToClipboard = (url: string) => {
 <template>
   <!-- 卡片容器 -->
   <div
-    class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg"
+    class="card-glass rounded-xl border-2 hover:border-indigo-300 dark:hover:border-indigo-600 group relative overflow-hidden h-full flex flex-col"
     :class="{
       'opacity-60': !node.enabled,
       'ring-2 ring-emerald-500 dark:ring-emerald-400 border-emerald-500': isBatchMode && isSelected,

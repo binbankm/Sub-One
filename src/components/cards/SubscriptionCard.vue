@@ -143,7 +143,7 @@ const handleTestLatency = async () => {
 
 <template>
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 group relative overflow-hidden transition-all duration-500 hover:scale-[1.02] flex flex-col h-full min-h-[280px] sm:min-h-[240px] shadow-sm hover:shadow-lg"
+    class="card-glass rounded-2xl group relative overflow-hidden flex flex-col h-full min-h-[280px] sm:min-h-[240px] hover:scale-[1.02]"
     :class="{
       'opacity-50': !sub.enabled,
       'ring-2 ring-indigo-500/50': sub.isNew,

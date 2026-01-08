@@ -139,7 +139,7 @@ onUnmounted(() => {
 <template>
   <div class="sticky top-24">
     <div
-      class="bg-white/60 dark:bg-gray-800/75 rounded-2xl border border-gray-300/50 dark:border-gray-700/30 p-6 relative overflow-hidden hover:shadow-xl transition-all duration-300">
+      class="card-glass rounded-2xl p-6 relative overflow-hidden">
 
       <div class="relative z-10">
         <!-- 1. 选择订阅内容 -->

@@ -45,7 +45,7 @@ const totalNodeCount = computed(() => {
 
 <template>
   <div
-    class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 p-4 group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col shadow-sm hover:shadow-lg min-h-[140px]"
+    class="card-glass rounded-2xl p-4 group relative overflow-hidden flex flex-col min-h-[140px] hover:scale-[1.02]"
     :class="{
       'opacity-50': !profile.enabled,
       'ring-2 ring-purple-600 dark:ring-purple-400': isBatchMode && isSelected,
