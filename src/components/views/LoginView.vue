@@ -30,11 +30,14 @@ import { ref } from 'vue';
  * 组件属性定义
  */
 const props = defineProps<{
-  /** 登录函数 - 接收密码并返回 Promise */
-  login: (password: string) => Promise<any>
+  /** 登录函数 - 接收用户名和密码并返回 Promise */
+  login: (username: string, password: string) => Promise<any>
 }>();
 
 // ==================== 响应式状态 ====================
+
+/** 用户名输入值 */
+const username = ref('');
 
 /** 密码输入值 */
 const password = ref('');
@@ -51,11 +54,17 @@ const error = ref('');
  * 处理登录提交
  * 
  * 说明：
- * - 验证密码不为空
+ * - 验证用户名和密码不为空
  * - 调用父组件传入的 login 函数
  * - 处理登录错误并显示提示
  */
 const handleSubmit = async () => {
+  // 验证用户名不为空
+  if (!username.value.trim()) {
+    error.value = '请输入用户名';
+    return;
+  }
+
   // 验证密码不为空
   if (!password.value.trim()) {
     error.value = '请输入密码';
@@ -69,7 +78,7 @@ const handleSubmit = async () => {
 
   try {
     // 调用登录函数
-    await props.login(password.value);
+    await props.login(username.value, password.value);
   } catch (err: unknown) {
     // 捕获并显示错误信息
     const msg = err instanceof Error ? err.message : String(err);
@@ -140,6 +149,47 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
       <!-- ==================== 登录表单 ==================== -->
       <div class="login-form animate-fade-in-up">
+        <!-- 用户名输入 -->
+        <div class="form-group">
+          <label for="username" class="form-label">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>用户名</span>
+          </label>
+
+          <div class="input-wrapper">
+            <input 
+              id="username" 
+              v-model="username" 
+              type="text" 
+              class="form-input" 
+              :class="{ 'input-error': error && !username }"
+              placeholder="请输入您的用户名" 
+              autocomplete="username" 
+              :disabled="isLoading" 
+              @keypress="handleKeyPress" 
+            />
+
+            <div class="input-icon">
+              <svg v-if="!username" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-indigo-500" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- 密码输入 -->
         <div class="form-group">
           
           <!-- 表单标签 - 带锁图标 -->
@@ -149,7 +199,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            <span>管理员密码</span>
+            <span>密码</span>
           </label>
 
           <!-- 输入框包装器 -->
@@ -203,7 +253,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
         <button 
           type="button" 
           class="login-button" 
-          :disabled="isLoading || !password" 
+          :disabled="isLoading || !username || !password" 
           @click="handleSubmit"
         >
           <!-- 正常状态 - 显示登录图标和文字 -->

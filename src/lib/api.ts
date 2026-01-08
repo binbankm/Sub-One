@@ -50,19 +50,20 @@ export async function fetchInitialData(): Promise<{ subs: Subscription[]; profil
  * 用户登录
  * 
  * 说明：
- * - 向服务器提交密码进行身份验证
+ * - 向服务器提交用户名和密码进行身份验证
  * - 成功后服务器会设置会话凭证
  * 
+ * @param {string} username - 用户名
  * @param {string} password - 用户密码
  * @returns {Promise} 返回 HTTP Response 对象或错误对象
  */
-export async function login(password: string): Promise<Response | { ok: boolean; error: string }> {
+export async function login(username: string, password: string): Promise<Response | { ok: boolean; error: string }> {
     try {
         // 发送 POST 请求提交登录信息
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
+            body: JSON.stringify({ username, password })
         });
 
         return response;

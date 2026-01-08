@@ -78,17 +78,18 @@ export const useSessionStore = defineStore('session', () => {
    * 用户登录
    * 
    * 说明：
-   * - 向服务器提交密码进行身份验证
+   * - 向服务器提交用户名和密码进行身份验证
    * - 登录成功后自动检查会话并获取数据
-   * - 登录失败时抛出错误
+ * - 登录失败时抛出错误
    * 
+   * @param {string} username - 用户名
    * @param {string} password - 用户密码
    * @throws {Error} 登录失败时抛出错误
    */
-  async function login(password: string) {
+  async function login(username: string, password: string) {
     try {
       // 调用 API 登录
-      const response = await apiLogin(password);
+      const response = await apiLogin(username, password);
 
       if (response.ok) {
         // 登录成功，处理后续流程

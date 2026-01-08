@@ -6,6 +6,7 @@ import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
 import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { SubscriptionParser } from '../subscription-parser';
 import { Subscription, Profile, AppConfig, Node, SubscriptionUserInfo } from '../../shared/types';
+import { authenticateUser, hasUsers, createUser } from '../services/users';
 
 const subscriptionParser = new SubscriptionParser();
 
@@ -16,9 +17,60 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/api/, '');
 
+    // [新增] 系统初始化/设置接口（仅在无用户时可用）
+    if (path === '/system/setup') {
+        if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+        try {
+            // 检查是否已有用户
+            if (await hasUsers(env)) {
+                return new Response(JSON.stringify({ error: '系统已初始化' }), { status: 403 });
+            }
+
+            const { username, password } = await request.json() as { username?: string; password?: string };
+
+            if (!username || !password) {
+                return new Response(JSON.stringify({ error: '用户名和密码不能为空' }), { status: 400 });
+            }
+
+            if (password.length < 6) {
+                return new Response(JSON.stringify({ error: '密码长度至少为6位' }), { status: 400 });
+            }
+
+            // 创建第一个管理员用户
+            const user = await createUser(env, username, password, 'admin');
+            const token = await generateSecureToken(env, user.id, user.username);
+
+            const headers = new Headers({ 'Content-Type': 'application/json' });
+            headers.append('Set-Cookie', `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_DURATION / 1000}`);
+
+            return new Response(JSON.stringify({
+                success: true,
+                message: '系统初始化成功',
+                user: { id: user.id, username: user.username, role: user.role }
+            }), { headers });
+        } catch (e: any) {
+            console.error('[API Error /system/setup]', e);
+            return new Response(JSON.stringify({ error: e.message || '初始化失败' }), { status: 500 });
+        }
+    }
+
+    // 检查系统是否需要初始化
+    if (path === '/system/status') {
+        try {
+            const needsSetup = !(await hasUsers(env));
+            return new Response(JSON.stringify({ needsSetup }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e) {
+            console.error('[API Error /system/status]', e);
+            return new Response(JSON.stringify({ error: '获取系统状态失败' }), { status: 500 });
+        }
+    }
+
     // [新增] 安全的、可重复执行的迁移接口
     if (path === '/migrate') {
-        if (!await authMiddleware(request, env)) { return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }); }
+        const authResult = await authMiddleware(request, env);
+        if (!authResult.valid) { return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }); }
         try {
             const oldData = await env.SUB_ONE_KV.get(OLD_KV_KEY, 'json');
             const newDataExists = await env.SUB_ONE_KV.get(KV_KEY_SUBS) !== null;
@@ -46,20 +98,35 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     if (path === '/login') {
         if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
         try {
-            const { password } = await request.json() as { password?: string };
-            if (password === env.ADMIN_PASSWORD) {
-                const token = await generateSecureToken(env);
+            const { username, password } = await request.json() as { username?: string; password?: string };
+
+            if (!username || !password) {
+                return new Response(JSON.stringify({ error: '用户名和密码不能为空' }), { status: 400 });
+            }
+
+            // 使用用户服务进行认证
+            const user = await authenticateUser(env, username, password);
+
+            if (user) {
+                const token = await generateSecureToken(env, user.id, user.username);
                 const headers = new Headers({ 'Content-Type': 'application/json' });
                 headers.append('Set-Cookie', `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_DURATION / 1000}`);
-                return new Response(JSON.stringify({ success: true }), { headers });
+                return new Response(JSON.stringify({
+                    success: true,
+                    user: { id: user.id, username: user.username, role: user.role }
+                }), { headers });
             }
-            return new Response(JSON.stringify({ error: '密码错误' }), { status: 401 });
+
+            return new Response(JSON.stringify({ error: '用户名或密码错误' }), { status: 401 });
         } catch (e: any) {
             console.error('[API Error /login]', e);
-            return new Response(JSON.stringify({ error: '请求体解析失败' }), { status: 400 });
+            return new Response(JSON.stringify({ error: '登录失败' }), { status: 500 });
         }
     }
-    if (!await authMiddleware(request, env)) {
+
+    // 所有其他接口都需要认证
+    const authResult = await authMiddleware(request, env);
+    if (!authResult.valid) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
@@ -282,9 +349,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
         case '/batch_update_nodes': {
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-            if (!await authMiddleware(request, env)) {
-                return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-            }
 
             try {
                 const { subscriptionIds } = await request.json() as { subscriptionIds?: string[] };

@@ -423,6 +423,19 @@ export interface AppConfig {
     [key: string]: unknown;
 }
 
+// ==================== 用户管理相关类型 ====================
+
+export type UserRole = 'admin' | 'user';
+
+export interface User {
+    id: string;
+    username: string;
+    passwordHash: string;
+    role: UserRole;
+    createdAt: number;
+    updatedAt: number;
+}
+
 export interface ConverterOptions {
     filename?: string;
     includeRules?: boolean;
