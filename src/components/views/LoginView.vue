@@ -31,7 +31,9 @@ import { ref } from 'vue';
  */
 const props = defineProps<{
   /** 登录函数 - 接收用户名和密码并返回 Promise */
-  login: (username: string, password: string) => Promise<any>
+  login: (username: string, password: string) => Promise<any>,
+  /** 是否为初始化设置模式 */
+  isSetup?: boolean
 }>();
 
 // ==================== 响应式状态 ====================
@@ -41,6 +43,9 @@ const username = ref('');
 
 /** 密码输入值 */
 const password = ref('');
+
+/** 确认密码输入值（仅设置模式） */
+const confirmPassword = ref('');
 
 /** 登录加载状态 */
 const isLoading = ref(false);
@@ -69,6 +74,22 @@ const handleSubmit = async () => {
   if (!password.value.trim()) {
     error.value = '请输入密码';
     return;
+  }
+
+  // 如果是设置模式，验证确认密码
+  if (props.isSetup) {
+    if (!confirmPassword.value.trim()) {
+      error.value = '请确认密码';
+      return;
+    }
+    if (password.value !== confirmPassword.value) {
+      error.value = '两次输入的密码不一致';
+      return;
+    }
+    if (password.value.length < 6) {
+      error.value = '密码长度至少为6位';
+      return;
+    }
   }
 
   // 清空之前的错误信息
@@ -143,7 +164,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
         <!-- 副标题 -->
         <p class="login-subtitle">
-          现代化订阅管理平台
+          {{ isSetup ? '首次使用，请创建管理员账号' : '现代化订阅管理平台' }}
         </p>
       </div>
 
@@ -249,11 +270,57 @@ const handleKeyPress = (e: KeyboardEvent) => {
           </transition>
         </div>
 
+        <!-- 确认密码输入（仅设置模式） -->
+        <div v-if="isSetup" class="form-group">
+          <label for="confirmPassword" class="form-label">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m5.818-4.818A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span>确认密码</span>
+          </label>
+
+          <div class="input-wrapper">
+            <input 
+              id="confirmPassword" 
+              v-model="confirmPassword" 
+              type="password" 
+              class="form-input" 
+              :class="{ 'input-error': error }"
+              placeholder="请再次输入密码" 
+              autocomplete="new-password" 
+              :disabled="isLoading" 
+              @keypress="handleKeyPress" 
+            />
+
+            <div class="input-icon">
+              <svg v-if="!confirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+
+              <svg v-else-if="password === confirmPassword && confirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <!-- ==================== 提交按钮 ==================== -->
         <button 
           type="button" 
           class="login-button" 
-          :disabled="isLoading || !username || !password" 
+          :disabled="isLoading || !username || !password || (isSetup && !confirmPassword)" 
           @click="handleSubmit"
         >
           <!-- 正常状态 - 显示登录图标和文字 -->
@@ -261,15 +328,15 @@ const handleKeyPress = (e: KeyboardEvent) => {
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                :d="isSetup ? 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z' : 'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1'" />
             </svg>
-            立即登录
+            {{ isSetup ? '创建管理员账号' : '立即登录' }}
           </span>
 
           <!-- 加载状态 - 显示加载动画 -->
           <span v-else class="flex items-center justify-center gap-2">
             <div class="spinner"></div>
-            登录中...
+            {{ isSetup ? '创建中...' : '登录中...' }}
           </span>
         </button>
 

@@ -72,8 +72,9 @@ const { sessionState, initialData } = storeToRefs(sessionStore);
  * - checkSession: 检查会话有效性
  * - login: 用户登录
  * - logout: 用户登出
+ * - initializeSystem: 初始化系统
  */
-const { checkSession, login, logout } = sessionStore;
+const { checkSession, login, logout, initializeSystem } = sessionStore;
 
 /**
  * 更新初始数据的方法
@@ -283,6 +284,12 @@ onMounted(() => {
         </div>
         <!-- 加载提示文本 -->
         <p class="loading-text">正在加载...</p>
+      </div>
+
+      <!-- 系统初始化 - 首次使用时显示 -->
+      <div v-else-if="sessionState === 'needsSetup'" class="login-form-container">
+        <!-- Login 组件也用于初始化 - 传入 initializeSystem 方法和 isSetup 标志 -->
+        <Login :login="initializeSystem" :is-setup="true" />
       </div>
 
       <!-- 登录表单 - 会话检查完成后显示 -->

@@ -44,6 +44,49 @@ export async function fetchInitialData(): Promise<{ subs: Subscription[]; profil
     }
 }
 
+/**
+ * 检查系统是否需要初始化
+ * 
+ * 说明：
+ * - 检查系统是否已有用户
+ * - 如果没有用户，返回 needsSetup: true
+ * 
+ * @returns {Promise} 返回 { needsSetup: boolean }
+ */
+export async function checkSystemStatus(): Promise<{ needsSetup: boolean }> {
+    try {
+        const response = await fetch('/api/system/status');
+        if (!response.ok) {
+            return { needsSetup: false };
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("检查系统状态失败:", error);
+        return { needsSetup: false };
+    }
+}
+
+/**
+ * 初始化系统（创建第一个管理员）
+ * 
+ * @param {string} username - 管理员用户名
+ * @param {string} password - 管理员密码
+ * @returns {Promise} 返回响应对象
+ */
+export async function initializeSystem(username: string, password: string): Promise<Response | { ok: boolean; error: string }> {
+    try {
+        const response = await fetch('/api/system/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        return response;
+    } catch (error) {
+        console.error("系统初始化失败:", error);
+        return { ok: false, error: '网络请求失败' };
+    }
+}
+
 // ==================== 用户认证 ====================
 
 /**
