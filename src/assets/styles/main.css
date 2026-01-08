@@ -233,7 +233,7 @@ html.dark body {
     @apply w-full pl-11 pr-4 py-2.5;
     @apply bg-white dark:bg-gray-800;
     @apply border border-gray-200 dark:border-gray-700;
-    @apply rounded-full;
+    @apply rounded-xl;
     @apply text-sm text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-400 dark:placeholder-gray-500;
     @apply focus:outline-none;
