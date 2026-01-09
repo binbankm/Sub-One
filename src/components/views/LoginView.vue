@@ -131,51 +131,51 @@ const handleKeyPress = (e: KeyboardEvent) => {
   <div class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative">
     
     <!-- ==================== 登录卡片 ==================== -->
-    <div class="relative w-full max-w-full p-6 sm:max-w-[460px] sm:p-12 md:p-20 bg-white dark:bg-gray-900 rounded-3xl sm:rounded-4xl border border-white/30 dark:border-white/10 animate-scale-in isolate
+    <div class="relative w-full max-w-full p-6 sm:max-w-[520px] sm:p-16 bg-white dark:bg-gray-900 rounded-3xl sm:rounded-[2.5rem] border border-white/30 dark:border-white/10 animate-scale-in isolate
       shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)]
       dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]
-      backdrop-blur-xl mx-auto">
+      backdrop-blur-xl mx-auto transition-all duration-300">
     
       <!-- Logo 区域 -->
-      <div class="text-center mb-6 sm:mb-8 animate-fade-in-down">
+      <div class="text-center mb-6 sm:mb-10 animate-fade-in-down">
         <!-- Logo 图标容器 -->
-        <div class="flex justify-center mb-4 sm:mb-6">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl sm:rounded-3xl shadow-glow-primary animate-bounce">
+        <div class="flex justify-center mb-4 sm:mb-8">
+          <div class="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl sm:rounded-[1.75rem] shadow-glow-primary animate-bounce">
             <!-- 闪电图标 SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-12 sm:h-12 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
         </div>
 
         <!-- 标题 - 渐变动画文字 -->
-        <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-50 mb-1 sm:mb-2 tracking-tight">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-gray-50 mb-1 sm:mb-3 tracking-tight">
           <span class="gradient-text-animated">Sub-One</span> Manager
         </h1>
 
         <!-- 副标题 -->
-        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+        <p class="text-xs sm:text-base text-gray-600 dark:text-gray-400 font-medium tracking-wide">
           {{ isSetup ? '首次使用，请创建管理员账号' : '现代化订阅管理平台' }}
         </p>
       </div>
 
       <!-- ==================== 登录表单 ==================== -->
-      <div class="mt-6 sm:mt-8 animate-fade-in-up">
+      <div class="mt-6 sm:mt-10 animate-fade-in-up">
         <!-- 用户名输入 -->
         <div class="mb-4 sm:mb-6">
-          <label for="username" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <label for="username" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2.5 sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <span>用户名</span>
           </label>
 
-          <div class="relative">
+          <div class="relative group">
             <input 
               id="username" 
               v-model="username" 
               type="text" 
-              class="form-input-login py-3 text-sm sm:text-base sm:py-3.5" 
+              class="form-input-login py-3 text-sm sm:text-base sm:py-4 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 transition-colors" 
               :class="{ 'input-error': error && !username }"
               placeholder="请输入您的用户名" 
               autocomplete="username" 
@@ -184,7 +184,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
-              <svg v-if="!username" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-if="!username" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
 
@@ -197,22 +197,19 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
         <!-- 密码输入 -->
         <div class="mb-4 sm:mb-6">
-          <!-- 表单标签 - 带锁图标 -->
-          <label for="password" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <label for="password" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2.5 sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <span>密码</span>
           </label>
 
-          <!-- 输入框包装器 -->
-          <div class="relative">
-            <!-- 密码输入框 -->
+          <div class="relative group">
             <input 
               id="password" 
               v-model="password" 
               type="password" 
-              class="form-input-login py-3 text-sm sm:text-base sm:py-3.5" 
+              class="form-input-login py-3 text-sm sm:text-base sm:py-4 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 transition-colors" 
               :class="{ 'input-error': error }"
               placeholder="请输入您的密码" 
               autocomplete="current-password" 
@@ -223,7 +220,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
             <!-- 输入框右侧图标 - 根据状态显示不同图标 -->
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
               <!-- 空密码时显示钥匙图标 -->
-              <svg v-if="!password" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-if="!password" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
 
@@ -236,7 +233,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
           <!-- 错误消息 - 带抖动动画 -->
           <transition name="shake">
-            <p v-if="error" class="flex items-center gap-1.5 mt-1.5 sm:mt-2 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-[0.8125rem] font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-600 rounded-lg animate-fade-in-down">
+            <p v-if="error" class="flex items-center gap-1.5 mt-1.5 sm:mt-2.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-600 rounded-lg animate-fade-in-down">
               <!-- 警告图标 -->
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -248,19 +245,19 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
         <!-- 确认密码输入（仅设置模式） -->
         <div v-if="isSetup" class="mb-4 sm:mb-6">
-          <label for="confirmPassword" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <label for="confirmPassword" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2.5 sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.818-4.818A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <span>确认密码</span>
           </label>
 
-          <div class="relative">
+          <div class="relative group">
             <input 
               id="confirmPassword" 
               v-model="confirmPassword" 
               type="password" 
-              class="form-input-login py-3 text-sm sm:text-base sm:py-3.5" 
+              class="form-input-login py-3 text-sm sm:text-base sm:py-4 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 transition-colors" 
               :class="{ 'input-error': error }"
               placeholder="请再次输入密码" 
               autocomplete="new-password" 
@@ -269,7 +266,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
-              <svg v-if="!confirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg v-if="!confirmPassword" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
 
@@ -287,7 +284,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
         <!-- ==================== 提交按钮 ==================== -->
         <button 
           type="button" 
-          class="login-button py-3 text-sm sm:text-base sm:py-4" 
+          class="login-button py-3 text-sm sm:text-base sm:py-5 hover:shadow-glow-primary hover:scale-[1.01]" 
           :disabled="isLoading || !username || !password || (isSetup && !confirmPassword)" 
           @click="handleSubmit"
         >
@@ -307,9 +304,9 @@ const handleKeyPress = (e: KeyboardEvent) => {
         </button>
 
         <!-- ==================== 页脚信息 ==================== -->
-        <div class="mt-4 sm:mt-6 text-center">
+        <div class="mt-4 sm:mt-8 text-center">
           <!-- 安全徽章 -->
-          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.6875rem] font-semibold text-green-700 dark:text-green-400 bg-green-50/80 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-full sm:px-4 sm:py-2 sm:text-xs">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[0.6875rem] font-semibold text-green-700 dark:text-green-400 bg-green-50/80 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-full sm:px-4 sm:py-2 sm:text-xs hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-default">
             <!-- 盾牌图标 -->
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
