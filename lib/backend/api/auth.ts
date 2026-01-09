@@ -2,7 +2,7 @@
 import { Env } from '../types';
 
 export const COOKIE_NAME = 'auth_session';
-export const SESSION_DURATION = 8 * 60 * 60 * 1000;
+export const SESSION_DURATION = 60 * 60 * 1000;
 
 /**
  * 生成安全的会话Token（带HMAC签名）

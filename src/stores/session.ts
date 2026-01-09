@@ -12,7 +12,7 @@
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { fetchInitialData, login as apiLogin, checkSystemStatus, initializeSystem as apiInitializeSystem } from '../lib/api';
+import { fetchInitialData, login as apiLogin, logout as apiLogout, checkSystemStatus, initializeSystem as apiInitializeSystem } from '../lib/api';
 import type { InitialData } from '../types';
 
 /**
@@ -151,9 +151,15 @@ export const useSessionStore = defineStore('session', () => {
    * 说明：
    * - 清除会话状态
    * - 清空初始数据
-   * - 注意：这里只是前端状态清理，实际的服务器端登出由后端处理
+   * - 调用后端清除 Cookie
    */
   async function logout() {
+    try {
+      await apiLogout();
+    } catch (e) {
+      console.error('Logout API call failed', e);
+    }
+
     // 设置为未登录状态
     sessionState.value = 'loggedOut';
 

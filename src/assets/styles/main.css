@@ -53,6 +53,11 @@
     @apply outline-none;
   }
 
+  /* 显式继承字体，防止某些浏览器默认样式覆盖 */
+  button, input, textarea, select {
+    font-family: inherit;
+  }
+
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible,

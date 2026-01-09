@@ -117,6 +117,27 @@ export async function login(username: string, password: string): Promise<Respons
     }
 }
 
+/**
+ * 用户登出
+ * 
+ * 说明：
+ * - 调用后端接口清除 Cookies
+ * 
+ * @returns {Promise<boolean>} 是否成功
+ */
+export async function logout(): Promise<boolean> {
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return response.ok;
+    } catch (error) {
+        console.error("登出请求失败:", error);
+        return false;
+    }
+}
+
 // ==================== 数据保存 ====================
 
 /**
