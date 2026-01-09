@@ -222,7 +222,7 @@ const handleCancel = () => {
             {{ urlError }}
           </p>
           <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            支持 VMess、VLESS、Trojan、Shadowsocks、Hysteria 等协议
+            支持 VMess、VLESS、Trojan、SS/SSR、Hysteria、TUIC、Socks5、WireGuard、Snell 等协议
           </p>
         </div>
 
