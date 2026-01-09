@@ -211,7 +211,8 @@ const fetchProfileNodes = async () => {
 
 // 从URL获取协议类型 (辅助函数)
 const getProtocolFromUrl = (url: string) => {
-  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5):\/\//;
+  // 与后端 parser/index.ts 保持一致的协议支持
+  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy[1-2]?|tuic|anytls|socks5|snell|wireguard|wg):\/\//;
   const match = url.match(nodeRegex);
   return match ? match[1] : 'unknown';
 };

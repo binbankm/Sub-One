@@ -10,6 +10,7 @@ import { parseWireGuard } from './wireguard';
 import { parseAnyTLS } from './anytls';
 import { parseSSR } from './ssr';
 import { parseSnell } from './snell';
+import { parseSocks5 } from './socks5';
 
 export { parseStandardParams } from './helper';
 
@@ -46,6 +47,8 @@ export function parseNodeUrl(url: string): ProxyNode | null {
         return parseWireGuard(trimmedUrl);
     } else if (trimmedUrl.startsWith('snell://')) {
         return parseSnell(trimmedUrl);
+    } else if (trimmedUrl.startsWith('socks5://')) {
+        return parseSocks5(trimmedUrl);
     }
 
     return null;

@@ -120,6 +120,31 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
                 bg: 'bg-lime-100 dark:bg-lime-900/30',
                 color: 'text-lime-600 dark:text-lime-400'
             };
+        case 'socks5':
+            return {
+                text: 'SOCKS5',
+                icon: '🔌',
+                gradient: 'from-orange-400 to-red-500',
+                bg: 'bg-orange-100 dark:bg-orange-900/30',
+                color: 'text-orange-600 dark:text-orange-400'
+            };
+        case 'wireguard':
+        case 'wg':
+            return {
+                text: 'WireGuard',
+                icon: '🛡️',
+                gradient: 'from-red-700 to-rose-800',
+                bg: 'bg-red-100 dark:bg-red-900/30',
+                color: 'text-red-700 dark:text-red-300'
+            };
+        case 'snell':
+            return {
+                text: 'Snell',
+                icon: '⚡',
+                gradient: 'from-blue-600 to-indigo-700',
+                bg: 'bg-blue-100 dark:bg-blue-900/30',
+                color: 'text-blue-700 dark:text-blue-300'
+            };
         default:
             return {
                 text: 'Unknown',
