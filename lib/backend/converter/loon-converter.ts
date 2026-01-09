@@ -264,6 +264,11 @@ function buildHysteria2(node: Hysteria2Node): string {
         if (node.tls.insecure) parts.push('skip-cert-verify:true');
     }
 
+    if (node.obfs) {
+        parts.push(`obfs:${node.obfs.type}`);
+        if (node.obfs.password) parts.push(`obfs-pwd:${node.obfs.password}`);
+    }
+
     return `${node.name} = ${parts.join(',')}`;
 }
 
