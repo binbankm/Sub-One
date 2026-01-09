@@ -215,9 +215,11 @@
     @apply border-2 border-gray-300 dark:border-gray-700;
   }
 
-  .form-input-login:focus {
+  .form-input-login:focus,
+  .form-input-login:focus-visible {
     @apply border-primary-500 bg-white dark:bg-gray-800;
-    box-shadow: 0 0 0 4px hsla(243, 75%, 59%, 0.1);
+    @apply outline-none shadow-none !important;
+    box-shadow: none !important;
   }
 
   .form-input-login::placeholder {

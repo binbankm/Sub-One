@@ -131,11 +131,11 @@ const handleKeyPress = (e: KeyboardEvent) => {
   <div class="min-h-screen flex items-center justify-center p-6 relative">
     
     <!-- ==================== 登录卡片 ==================== -->
-    <div class="relative w-full max-w-[450px] p-12 bg-white dark:bg-gray-900 rounded-4xl border border-white/30 dark:border-white/10 animate-scale-in isolate
+    <div class="relative w-full max-w-full p-6 sm:max-w-[460px] sm:p-20 bg-white dark:bg-gray-900 rounded-4xl border border-white/30 dark:border-white/10 animate-scale-in isolate
       shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)]
       dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]
-      backdrop-blur-xl sm:p-6 sm:max-w-full sm:mx-auto">
-      
+      backdrop-blur-xl sm:mx-auto">
+    
       <!-- Logo 区域 -->
       <div class="text-center mb-8 animate-fade-in-down sm:mb-4">
         <!-- Logo 图标容器 -->
