@@ -179,7 +179,6 @@ const selectTab = (tabId: string) => {
   // 处理特殊项目（帮助和设置）
   if (tabId === 'help') {
     emit('help');
-    // 在移动端选择后关闭菜单
     if (window.innerWidth <= 1024) {
       isMobileMenuOpen.value = false;
     }
@@ -187,7 +186,6 @@ const selectTab = (tabId: string) => {
   }
   if (tabId === 'settings') {
     emit('settings');
-    // 在移动端选择后关闭菜单
     if (window.innerWidth <= 1024) {
       isMobileMenuOpen.value = false;
     }
@@ -196,7 +194,6 @@ const selectTab = (tabId: string) => {
   
   // 普通标签页切换
   emit('update:modelValue', tabId);
-  // 在移动端选择后关闭菜单
   if (window.innerWidth <= 1024) {
     isMobileMenuOpen.value = false;
   }
@@ -257,17 +254,16 @@ onUnmounted(() => {
 <template>
   <!-- ==================== 移动端遮罩层 ==================== -->
   <Transition name="fade-overlay">
-    <div v-if="isMobileMenuOpen" class="mobile-overlay" @click="closeMobileMenu"></div>
+    <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[39] lg:hidden" @click="closeMobileMenu"></div>
   </Transition>
 
   <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
   <button 
-    class="mobile-menu-button" 
+    class="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-800 dark:text-gray-200 cursor-pointer transition-all duration-300 backdrop-blur-md shadow-lg hover:bg-white dark:hover:bg-gray-900 hover:scale-105 hover:shadow-xl lg:hidden" 
     @click="toggleMobileMenu" 
     :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
   >
     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <!-- 汉堡图标 / 关闭图标切换 -->
       <path 
         v-if="!isMobileMenuOpen" 
         stroke-linecap="round" 
@@ -287,18 +283,22 @@ onUnmounted(() => {
 
   <!-- ==================== 侧边栏主容器 ==================== -->
   <aside 
-    class="sidebar" 
-    :class="{ 'sidebar-collapsed': isCollapsed, 'sidebar-mobile-open': isMobileMenuOpen }"
+    class="fixed left-0 top-0 bottom-0 flex flex-col bg-transparent backdrop-blur-xl shadow-none transition-all duration-300 z-40 overflow-hidden
+      lg:translate-x-0"
+    :class="[
+      isCollapsed ? 'w-20' : 'w-[280px]',
+      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+    ]"
   >
     <!-- ==================== 侧边栏头部 ==================== -->
-    <div class="sidebar-header">
+    <div class="p-6 border-b border-black/5 dark:border-white/5">
       <!-- Logo 区域 -->
-      <div class="sidebar-logo">
+      <div class="flex items-center gap-4 mb-4">
         <!-- Logo 图标 -->
-        <div class="logo-icon-wrapper">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl shadow-lg shadow-primary-500/40 animate-pulse">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
-            class="logo-icon" 
+            class="w-6 h-6 text-white" 
             fill="none" 
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -309,15 +309,15 @@ onUnmounted(() => {
 
         <!-- Logo 文字（折叠时隐藏） -->
         <transition name="fade">
-          <div v-if="!isCollapsed" class="logo-text">
-            <h1 class="logo-title gradient-text-animated">Sub-One</h1>
-            <p class="logo-subtitle">Manager</p>
+          <div v-if="!isCollapsed" class="flex-1 min-w-0">
+            <h1 class="text-xl font-extrabold leading-tight tracking-tight gradient-text-animated">Sub-One</h1>
+            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-0.5">Manager</p>
           </div>
         </transition>
       </div>
 
       <!-- 头部操作区域 - 主题切换按钮 -->
-      <div class="header-actions">
+      <div class="flex justify-center">
         <button 
           class="icon-btn" 
           :title="themeStore.theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'"
@@ -361,27 +361,33 @@ onUnmounted(() => {
     </div>
 
     <!-- ==================== 导航菜单 ==================== -->
-    <nav class="sidebar-nav">
+    <nav class="flex-1 p-4 overflow-y-auto overflow-x-hidden">
       
       <!-- 主要功能导航 -->
-      <div class="nav-section">
-        <p v-if="!isCollapsed" class="nav-section-title">主要功能</p>
+      <div class="mb-8">
+        <p v-if="!isCollapsed" class="text-[0.6875rem] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-3 px-3">主要功能</p>
 
-        <div class="nav-items">
+        <div class="flex flex-col gap-2">
           <!-- 循环渲染导航项 -->
           <button 
             v-for="item in navigationItems" 
             :key="item.id" 
-            class="nav-item" 
+            class="sidebar-nav-item group"
             :class="[
-              { 'nav-item-active': modelValue === item.id },
-              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : ''
+              isCollapsed ? 'justify-center p-4' : 'p-3',
+              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : 'hover:translate-x-1 lg:group-hover:translate-x-1 lg:group-hover:scale-105'
             ]" 
             :title="isCollapsed ? item.label : ''" 
             @click="selectTab(item.id)"
           >
             <!-- 图标 -->
-            <div class="nav-item-icon" :class="`bg-gradient-to-br ${item.gradient}`">
+            <div 
+              class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+              :class="[
+                `bg-gradient-to-br ${item.gradient}`,
+                modelValue === item.id ? 'bg-white/20 shadow-inner' : ''
+              ]"
+            >
               <!-- Dashboard 图标 -->
               <svg 
                 v-if="item.icon === 'dashboard'" 
@@ -465,13 +471,22 @@ onUnmounted(() => {
 
             <!-- 标签和数量徽章（折叠时隐藏） -->
             <transition name="fade">
-              <div v-if="!isCollapsed" class="nav-item-content">
-                <div class="nav-item-text">
-                  <span class="nav-item-label">{{ item.label }}</span>
+              <div v-if="!isCollapsed" class="flex-1 flex items-center justify-between gap-3 min-w-0">
+                <div class="flex-1 min-w-0">
+                  <span 
+                    class="block text-sm font-semibold transition-colors duration-300"
+                    :class="modelValue === item.id ? 'text-white' : 'text-gray-900 dark:text-gray-100'"
+                  >{{ item.label }}</span>
                 </div>
 
                 <!-- 数量徽章（有数量时显示） -->
-                <div v-if="item.count && item.count > 0" class="nav-item-badge">
+                <div 
+                  v-if="item.count && item.count > 0" 
+                  class="flex-shrink-0 flex items-center justify-center min-w-[24px] h-6 px-2 text-[0.6875rem] font-bold rounded-full transition-all duration-300"
+                  :class="modelValue === item.id 
+                    ? 'bg-white/25 text-white' 
+                    : 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'"
+                >
                   {{ item.count }}
                 </div>
               </div>
@@ -481,24 +496,27 @@ onUnmounted(() => {
       </div>
 
       <!-- 其他功能区（帮助和设置） -->
-      <div class="nav-section">
-        <p v-if="!isCollapsed" class="nav-section-title">其他</p>
+      <div class="mb-8">
+        <p v-if="!isCollapsed" class="text-[0.6875rem] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-3 px-3">其他</p>
 
-        <div class="nav-items">
+        <div class="flex flex-col gap-2">
           <!-- 循环渲染功能项 -->
           <button 
             v-for="item in utilityItems" 
             :key="item.id" 
-            class="nav-item" 
+            class="sidebar-nav-item group"
             :class="[
-              { 'nav-item-active': modelValue === item.id },
-              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : ''
+              isCollapsed ? 'justify-center p-4' : 'p-3',
+              modelValue === item.id ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white` : 'hover:translate-x-1 lg:group-hover:scale-105'
             ]" 
             :title="isCollapsed ? item.label : ''" 
             @click="selectTab(item.id)"
           >
             <!-- 图标 -->
-            <div class="nav-item-icon" :class="`bg-gradient-to-br ${item.gradient}`">
+            <div 
+              class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+              :class="`bg-gradient-to-br ${item.gradient}`"
+            >
               <!-- Help 图标 -->
               <svg 
                 v-if="item.icon === 'help'" 
@@ -538,9 +556,12 @@ onUnmounted(() => {
 
             <!-- 标签（折叠时隐藏） -->
             <transition name="fade">
-              <div v-if="!isCollapsed" class="nav-item-content">
-                <div class="nav-item-text">
-                  <span class="nav-item-label">{{ item.label }}</span>
+              <div v-if="!isCollapsed" class="flex-1 flex items-center justify-between gap-3 min-w-0">
+                <div class="flex-1 min-w-0">
+                  <span 
+                    class="block text-sm font-semibold transition-colors duration-300"
+                    :class="modelValue === item.id ? 'text-white' : 'text-gray-900 dark:text-gray-100'"
+                  >{{ item.label }}</span>
                 </div>
               </div>
             </transition>
@@ -550,10 +571,13 @@ onUnmounted(() => {
     </nav>
 
     <!-- ==================== 侧边栏页脚 ==================== -->
-    <div class="sidebar-footer">
+    <div 
+      class="p-4 border-t border-black/5 dark:border-white/5 flex gap-2"
+      :class="isCollapsed ? 'flex-col' : ''"
+    >
       <!-- 折叠按钮 -->
       <button 
-        class="collapse-btn" 
+        class="flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold border-none rounded-xl cursor-pointer transition-all duration-300 bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500/20 hover:-translate-y-0.5" 
         :title="isCollapsed ? '展开侧边栏' : '收起侧边栏'" 
         @click="toggleCollapse"
       >
@@ -571,7 +595,11 @@ onUnmounted(() => {
       </button>
 
       <!-- 登出按钮 -->
-      <button class="logout-btn" :title="isCollapsed ? '退出登录' : ''" @click="handleLogout">
+      <button 
+        class="flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold border-none rounded-xl cursor-pointer transition-all duration-300 bg-red-500/10 text-red-600 dark:bg-red-500/15 dark:text-red-400 hover:bg-red-500/20 hover:-translate-y-0.5" 
+        :title="isCollapsed ? '退出登录' : ''" 
+        @click="handleLogout"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path 
             stroke-linecap="round" 
@@ -587,325 +615,9 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* ==================== 侧边栏容器 ==================== */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 280px; /* 展开宽度 */
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  backdrop-filter: blur(20px); /* 毛玻璃效果 */
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 40;
-  overflow: hidden;
-}
+/* ==================== Vue 过渡动画 ==================== */
 
-html.dark .sidebar {
-  background: transparent;
-  box-shadow: none;
-}
-
-/* 折叠状态 */
-.sidebar-collapsed {
-  width: 80px;
-}
-
-/* ==================== 头部 ==================== */
-.sidebar-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-html.dark .sidebar-header {
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Logo 区域 */
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.logo-icon-wrapper {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
-  border-radius: 1rem;
-  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
-  animation: pulse 3s ease-in-out infinite;
-}
-
-.logo-icon {
-  width: 24px;
-  height: 24px;
-  color: white;
-}
-
-.logo-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.logo-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.logo-subtitle {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: hsl(243, 20%, 50%);
-  margin-top: 0.125rem;
-}
-
-html.dark .logo-subtitle {
-  color: hsl(243, 30%, 70%);
-}
-
-.header-actions {
-  display: flex;
-  justify-content: center;
-}
-
-/* ==================== 导航区域 ==================== */
-.sidebar-nav {
-  flex: 1;
-  padding: 1rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.nav-section {
-  margin-bottom: 2rem;
-}
-
-.nav-section-title {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: hsl(243, 20%, 50%);
-  margin-bottom: 0.75rem;
-  padding: 0 0.75rem;
-}
-
-html.dark .nav-section-title {
-  color: hsl(243, 30%, 60%);
-}
-
-.nav-items {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-/* 导航项 */
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background-color: transparent;
-  border: none;
-  border-radius: 1rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  text-align: left;
-}
-
-.sidebar-collapsed .nav-item {
-  justify-content: center;
-  padding: 1rem;
-}
-
-/* 导航项悬停效果 */
-.nav-item::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.nav-item:hover::before {
-  opacity: 1;
-}
-
-.nav-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar-collapsed .nav-item:hover {
-  transform: translateX(0) scale(1.05);
-}
-
-.nav-item-active::before {
-  display: none;
-}
-
-.nav-item-active:hover {
-  transform: translateX(4px) scale(1.02);
-}
-
-/* 导航项图标 */
-.nav-item-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.75rem;
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.nav-item-active .nav-item-icon {
-  background: rgba(255, 255, 255, 0.2) !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 导航项内容 */
-.nav-item-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.nav-item-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.nav-item-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: hsl(243, 47%, 24%);
-  transition: color 0.3s ease;
-}
-
-html.dark .nav-item-label {
-  color: hsl(243, 100%, 97%);
-}
-
-.nav-item-active .nav-item-label {
-  color: white;
-}
-
-/* 数量徽章 */
-.nav-item-badge {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 0.5rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  background: hsl(243, 75%, 95%);
-  color: hsl(243, 75%, 50%);
-  border-radius: 9999px;
-  transition: all 0.3s ease;
-}
-
-html.dark .nav-item-badge {
-  background: hsl(243, 75%, 20%);
-  color: hsl(243, 75%, 70%);
-}
-
-.nav-item-active .nav-item-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-}
-
-/* ==================== 页脚 ==================== */
-.sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  display: flex;
-  gap: 0.5rem;
-}
-
-html.dark .sidebar-footer {
-  border-top-color: rgba(255, 255, 255, 0.06);
-}
-
-.sidebar-collapsed .sidebar-footer {
-  flex-direction: column;
-}
-
-/* 折叠按钮和登出按钮 */
-.collapse-btn,
-.logout-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.collapse-btn {
-  background: rgba(99, 102, 241, 0.1);
-  color: hsl(243, 75%, 50%);
-}
-
-.collapse-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
-  transform: translateY(-2px);
-}
-
-html.dark .collapse-btn {
-  background: rgba(99, 102, 241, 0.15);
-  color: hsl(243, 87%, 70%);
-}
-
-.logout-btn {
-  background: rgba(239, 68, 68, 0.1);
-  color: hsl(0, 84%, 50%);
-}
-
-.logout-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  transform: translateY(-2px);
-}
-
-html.dark .logout-btn {
-  background: rgba(239, 68, 68, 0.15);
-  color: hsl(0, 84%, 70%);
-}
-
-/* ==================== 过渡效果 ==================== */
+/* 淡入淡出过渡 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -917,57 +629,6 @@ html.dark .logout-btn {
   transform: translateX(-10px);
 }
 
-/* ==================== 移动端样式 ==================== */
-
-/* 移动端汉堡菜单按钮 */
-.mobile-menu-button {
-  display: none;
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 50;
-  width: 48px;
-  height: 48px;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
-  color: hsl(243, 47%, 40%);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-menu-button:hover {
-  background: white;
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-html.dark .mobile-menu-button {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: hsl(243, 87%, 70%);
-}
-
-html.dark .mobile-menu-button:hover {
-  background: rgba(15, 23, 42, 1);
-}
-
-/* 移动端遮罩层 */
-.mobile-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 39;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
 /* 遮罩层过渡 */
 .fade-overlay-enter-active,
 .fade-overlay-leave-active {
@@ -977,31 +638,5 @@ html.dark .mobile-menu-button:hover {
 .fade-overlay-enter-from,
 .fade-overlay-leave-to {
   opacity: 0;
-}
-
-/* ==================== 响应式设计 ==================== */
-
-/* 平板和手机 (≤1024px) */
-@media (max-width: 1024px) {
-  .mobile-menu-button {
-    display: flex;
-  }
-
-  .mobile-overlay {
-    display: block;
-  }
-
-  .sidebar {
-    transform: translateX(-100%); /* 默认隐藏 */
-  }
-
-  .sidebar-mobile-open {
-    transform: translateX(0); /* 打开时显示 */
-  }
-
-  /* 移动端强制全宽侧边栏 */
-  .sidebar-collapsed {
-    width: 280px;
-  }
 }
 </style>

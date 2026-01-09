@@ -36,7 +36,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full border-3 border-transparent;
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full border-[3px] border-transparent;
     background-clip: padding-box;
     @apply transition-all duration-300;
   }
@@ -238,7 +238,7 @@
 
   .login-button::before {
     content: '';
-    @apply absolute inset-0 -translate-x-full transition-transform duration-600;
+    @apply absolute inset-0 -translate-x-full transition-transform duration-[600ms];
     background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
   }
 
@@ -264,6 +264,29 @@
     .login-button {
       @apply py-3.5 text-[0.9375rem];
     }
+  }
+
+  /* ===== AppSidebar 特定样式 ===== */
+  
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 w-full text-left;
+    @apply bg-transparent border-none rounded-2xl cursor-pointer;
+    @apply transition-all duration-300;
+    @apply relative overflow-hidden;
+  }
+
+  .sidebar-nav-item::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  }
+
+  .sidebar-nav-item:not(:has(+ .bg-gradient-to-br)):hover::before {
+    @apply opacity-100;
+  }
+
+  .sidebar-nav-item:hover {
+    @apply shadow-md;
   }
 }
 
