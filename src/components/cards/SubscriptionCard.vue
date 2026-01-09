@@ -7,6 +7,7 @@
 import { computed, ref } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import { testLatency } from '../../lib/api';
+import { formatBytes, formatExpiry, getTrafficColorClass } from '../../utils/format';
 import type { Subscription } from '../../types';
 
 const props = defineProps<{
@@ -66,16 +67,6 @@ const handleMouseDown = (event: MouseEvent) => {
   document.addEventListener('mouseup', handleMouseUp);
 };
 
-/** 字节格式化 */
-const formatBytes = (bytes: number, decimals = 2) => {
-  if (!+bytes) return '0 B';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-};
-
 /** 流量信息 */
 const trafficInfo = computed(() => {
   const info = props.sub.userInfo;
@@ -91,31 +82,12 @@ const trafficInfo = computed(() => {
 });
 
 /** 过期信息 */
-const expiryInfo = computed(() => {
-  const expireTimestamp = props.sub.userInfo?.expire;
-  if (!expireTimestamp) return null;
-  const expiryDate = new Date(expireTimestamp * 1000);
-  const now = new Date();
-  expiryDate.setHours(0, 0, 0, 0);
-  now.setHours(0, 0, 0, 0);
-  const diffDays = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  let style = 'text-gray-500 dark:text-gray-400';
-  if (diffDays < 0) style = 'text-red-500 font-bold';
-  else if (diffDays <= 7) style = 'text-yellow-500 font-semibold';
-  return {
-    date: expiryDate.toLocaleDateString(),
-    daysRemaining: diffDays < 0 ? '已过期' : (diffDays === 0 ? '今天到期' : `${diffDays} 天后`),
-    style: style
-  };
-});
+const expiryInfo = computed(() => formatExpiry(props.sub.userInfo?.expire));
 
 /** 流量颜色 */
 const trafficColorClass = computed(() => {
   if (!trafficInfo.value) return '';
-  const p = trafficInfo.value.percentage;
-  if (p >= 90) return 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30';
-  if (p >= 75) return 'bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30';
-  return 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-blue-500/30';
+  return getTrafficColorClass(trafficInfo.value.percentage);
 });
 
 /** 延迟测试 */
@@ -336,20 +308,4 @@ const handleTestLatency = async () => {
   </div>
 </template>
 
-<style scoped>
-@keyframes pulse-slow {
 
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.75;
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
-}
-</style>

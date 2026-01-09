@@ -15,6 +15,7 @@
 import { computed } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import type { Node } from '../../types';
+import { getProtocol, getProtocolInfo } from '../../utils/protocols';
 
 const props = defineProps<{
   node: Node;
@@ -30,141 +31,12 @@ const emit = defineEmits<{
 
 const toastStore = useToastStore();
 
-/** 从 URL 提取协议类型 */
-const getProtocol = (url?: string) => {
-  try {
-    if (!url) return 'unknown';
-    const lowerUrl = url.toLowerCase();
-    if (lowerUrl.startsWith('anytls://')) return 'anytls';
-    if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://')) return 'hysteria2';
-    if (lowerUrl.startsWith('hysteria://') || lowerUrl.startsWith('hy://')) return 'hysteria';
-    if (lowerUrl.startsWith('ssr://')) return 'ssr';
-    if (lowerUrl.startsWith('tuic://')) return 'tuic';
-    if (lowerUrl.startsWith('ss://')) return 'ss';
-    if (lowerUrl.startsWith('vmess://')) return 'vmess';
-    if (lowerUrl.startsWith('vless://')) return 'vless';
-    if (lowerUrl.startsWith('trojan://')) return 'trojan';
-    if (lowerUrl.startsWith('socks5://')) return 'socks5';
-    if (lowerUrl.startsWith('snell://')) return 'snell';
-    if (lowerUrl.startsWith('http')) return 'http';
-  } catch {
-    return 'unknown';
-  }
-  return 'unknown';
-};
-
 const protocol = computed(() => getProtocol(props.node.url));
 
 /** 协议样式配置 - 不同协议使用不同的渐变色和图标 */
-const protocolInfo = computed(() => {
-  const p = protocol.value;
-  switch (p) {
-    case 'anytls':
-      return {
-        text: 'AnyTLS',
-        icon: '🌐',
-        gradient: 'from-slate-400 to-gray-500',
-        bg: 'bg-slate-100 dark:bg-slate-900/30',
-        color: 'text-slate-600 dark:text-slate-400'
-      };
-    case 'vless':
-      return {
-        text: 'VLESS',
-        icon: '🚀',
-        gradient: 'from-blue-400 to-indigo-500',
-        bg: 'bg-blue-100 dark:bg-blue-900/30',
-        color: 'text-blue-600 dark:text-blue-400'
-      };
-    case 'hysteria2':
-      return {
-        text: 'HY2',
-        icon: '⚡',
-        gradient: 'from-purple-400 to-violet-500',
-        bg: 'bg-purple-100 dark:bg-purple-900/30',
-        color: 'text-purple-600 dark:text-purple-400'
-      };
-    case 'hysteria':
-      return {
-        text: 'Hysteria',
-        icon: '⚡',
-        gradient: 'from-fuchsia-400 to-pink-500',
-        bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/30',
-        color: 'text-fuchsia-600 dark:text-fuchsia-400'
-      };
-    case 'tuic':
-      return {
-        text: 'TUIC',
-        icon: '🚀',
-        gradient: 'from-cyan-400 to-blue-500',
-        bg: 'bg-cyan-100 dark:bg-cyan-900/30',
-        color: 'text-cyan-600 dark:text-cyan-400'
-      };
-    case 'trojan':
-      return {
-        text: 'TROJAN',
-        icon: '🛡️',
-        gradient: 'from-red-400 to-rose-500',
-        bg: 'bg-red-100 dark:bg-red-900/30',
-        color: 'text-red-600 dark:text-red-400'
-      };
-    case 'ssr':
-      return {
-        text: 'SSR',
-        icon: '🛡️',
-        gradient: 'from-rose-400 to-red-500',
-        bg: 'bg-rose-100 dark:bg-rose-900/30',
-        color: 'text-rose-600 dark:text-rose-400'
-      };
-    case 'ss':
-      return {
-        text: 'SS',
-        icon: '🔒',
-        gradient: 'from-orange-400 to-red-500',
-        bg: 'bg-orange-100 dark:bg-orange-900/30',
-        color: 'text-orange-600 dark:text-orange-400'
-      };
-    case 'vmess':
-      return {
-        text: 'VMESS',
-        icon: '⚡',
-        gradient: 'from-teal-400 to-cyan-500',
-        bg: 'bg-teal-100 dark:bg-teal-900/30',
-        color: 'text-teal-600 dark:text-teal-400'
-      };
-    case 'socks5':
-      return {
-        text: 'SOCKS5',
-        icon: '🔌',
-        gradient: 'from-lime-400 to-green-500',
-        bg: 'bg-lime-100 dark:bg-lime-900/30',
-        color: 'text-lime-600 dark:text-lime-400'
-      };
-    case 'snell':
-      return {
-        text: 'SNELL',
-        icon: '🐚',
-        gradient: 'from-amber-400 to-yellow-500',
-        bg: 'bg-amber-100 dark:bg-amber-900/30',
-        color: 'text-amber-600 dark:text-amber-400'
-      };
-    case 'http':
-      return {
-        text: 'HTTP',
-        icon: '🔓',
-        gradient: 'from-green-400 to-emerald-500',
-        bg: 'bg-green-100 dark:bg-green-900/30',
-        color: 'text-green-600 dark:text-green-400'
-      };
-    default:
-      return {
-        text: 'LINK',
-        icon: '🔗',
-        gradient: 'from-gray-400 to-slate-500',
-        bg: 'bg-gray-100 dark:bg-gray-900/30',
-        color: 'text-gray-600 dark:text-gray-400'
-      };
-  }
-});
+const protocolInfo = computed(() => getProtocolInfo(protocol.value));
+
+
 
 /** 复制节点链接到剪贴板 */
 const copyToClipboard = (url: string) => {

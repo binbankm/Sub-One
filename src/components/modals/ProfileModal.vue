@@ -20,7 +20,6 @@
 import { ref, watch, computed } from 'vue';
 import Modal from './BaseModal.vue';
 import type { Profile, Subscription, Node } from '../../types';
-import { getCountryTerms } from '../../lib/constants';
 
 const props = withDefaults(defineProps<{
   show: boolean;
@@ -53,6 +52,8 @@ const subscriptionSearchTerm = ref('');
 const nodeSearchTerm = ref('');
 
 
+import { filterNodes } from '../../utils/search';
+
 const filteredSubscriptions = computed(() => {
   // 基础过滤：保留已启用的，或者虽然已禁用但当前已被选中的
   let candidates = props.allSubscriptions.filter(sub => {
@@ -61,51 +62,11 @@ const filteredSubscriptions = computed(() => {
     return isEnabled || isSelected;
   });
 
-  if (!subscriptionSearchTerm.value) {
-    return candidates;
-  }
-  const lowerCaseSearchTerm = subscriptionSearchTerm.value.toLowerCase();
-  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-  const alternativeTerms = getCountryTerms(lowerCaseSearchTerm);
-
-  return candidates.filter(sub => {
-    const subNameLower = sub.name ? sub.name.toLowerCase() : '';
-
-    if (subNameLower.includes(lowerCaseSearchTerm)) {
-      return true;
-    }
-
-    for (const altTerm of alternativeTerms) {
-      if (subNameLower.includes(altTerm.toLowerCase())) {
-        return true;
-      }
-    }
-    return false;
-  });
+  return filterNodes(candidates, subscriptionSearchTerm.value);
 });
 
 const filteredManualNodes = computed(() => {
-  if (!nodeSearchTerm.value) {
-    return props.allManualNodes;
-  }
-  const lowerCaseSearchTerm = nodeSearchTerm.value.toLowerCase();
-  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-  const alternativeTerms = getCountryTerms(lowerCaseSearchTerm);
-
-  return props.allManualNodes.filter(node => {
-    const nodeNameLower = node.name ? node.name.toLowerCase() : '';
-
-    if (nodeNameLower.includes(lowerCaseSearchTerm)) {
-      return true;
-    }
-
-    for (const altTerm of alternativeTerms) {
-      if (nodeNameLower.includes(altTerm.toLowerCase())) {
-        return true;
-      }
-    }
-    return false;
-  });
+  return filterNodes(props.allManualNodes, nodeSearchTerm.value);
 });
 
 watch(() => props.profile, (newProfile) => {
@@ -325,21 +286,4 @@ const handleDeselectAll = (listName: 'subscriptions' | 'manualNodes', sourceArra
   </Modal>
 </template>
 
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.3);
-  border-radius: 20px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.5);
-}
-</style>

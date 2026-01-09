@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import draggable from 'vuedraggable';
 import { useBatchSelection } from '../../composables/useBatchSelection';
 import Card from '../cards/SubscriptionCard.vue';
+import Pagination from '../common/Pagination.vue';
+import EmptyState from '../common/EmptyState.vue';
 import type { Subscription } from '../../types';
 
 const props = defineProps<{
@@ -227,32 +229,27 @@ const handleDragEnd = (evt: unknown) => {
             @showNodes="$emit('show-nodes', subscription)" @toggleSelect="toggleSelection(subscription.id)" />
         </div>
       </div>
-      <div v-if="subsTotalPages > 1 && !isSortingSubs"
-        class="flex justify-center items-center gap-2 sm:gap-4 mt-10 text-base font-medium">
-        <button @click="$emit('change-page', subsCurrentPage - 1)" :disabled="subsCurrentPage === 1"
-          class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center">&laquo;
-          <span class="hidden xs:inline ml-1">上一页</span></button>
-        <span
-          class="min-w-[80px] sm:min-w-[100px] text-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">第{{
-            subsCurrentPage }}/{{ subsTotalPages }}页</span>
-        <button @click="$emit('change-page', subsCurrentPage + 1)" :disabled="subsCurrentPage === subsTotalPages"
-          class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center"><span
-            class="hidden xs:inline mr-1">下一页</span> &raquo;</button>
-      </div>
+      <Pagination
+        :current-page="subsCurrentPage"
+        :total-pages="subsTotalPages"
+        @change-page="(page) => $emit('change-page', page)"
+        v-if="!isSortingSubs"
+      />
     </div>
-    <div v-else
-      class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
-      <div
-        class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+    <EmptyState v-else
+      title="没有订阅"
+      description="从添加你的第一个订阅开始。"
+      bg-gradient-class="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+      icon-color-class="text-indigo-500"
+    >
+      <template #icon>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24"
           stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
         </svg>
-      </div>
-      <h3 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced mb-3">没有订阅</h3>
-      <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">从添加你的第一个订阅开始。</p>
-    </div>
+      </template>
+    </EmptyState>
   </div>
 </template>
 

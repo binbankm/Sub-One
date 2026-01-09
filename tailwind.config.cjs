@@ -78,7 +78,9 @@ module.exports = {
         'fade-in-down': 'fadeInDown 0.3s ease-out',
         'scale-in': 'scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         'slide-up': 'slideUp 0.3s ease-out',
+        'slide-up': 'slideUp 0.3s ease-out',
         'shimmer': 'shimmer 2s infinite',
+        'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
       },
 
       keyframes: {
@@ -105,6 +107,10 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-1000px 0' },
           '100%': { backgroundPosition: '1000px 0' }
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.75' },
         },
       },
 

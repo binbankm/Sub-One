@@ -15,7 +15,10 @@
 import { ref, computed, watch, type Ref } from 'vue';
 import { debounce } from 'lodash-es';
 import { useToastStore } from '../stores/toast';
-import { getCountryTerms, REGION_KEYWORDS, REGION_ORDER } from '../lib/constants';
+import { REGION_KEYWORDS, REGION_ORDER } from '../lib/constants';
+import { getProtocol } from '../utils/protocols';
+import { filterNodes } from '../utils/search';
+import { getUniqueKey } from '../utils/node';
 import type { Node } from '../types';
 
 /**
@@ -49,11 +52,6 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
   /**
    * 防抖更新搜索关键词
-   * 
-   * 说明：
-   * - 延迟 300ms 更新搜索关键词
-   * - 避免用户输入时频繁触发搜索计算
-   * - 提升性能和用户体验
    */
   const updateSearchTerm = debounce((newVal: string) => {
     debouncedSearchTerm.value = newVal;
@@ -70,12 +68,6 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
   /**
    * 初始化手动节点列表
-   * 
-   * 说明：
-   * - 从服务器获取的数据初始化节点
-   * - 确保每个节点都有必需的字段和默认值
-   * 
-   * @param {Partial<Node>[]} nodesData - 原始节点数据数组
    */
   function initializeManualNodes(nodesData: Partial<Node>[]) {
     manualNodes.value = (nodesData || []).map(node => {
@@ -83,9 +75,13 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
       // 如果协议仍然是 unknown，尝试从 URL 中提取
       if (protocol === 'unknown' && node.url) {
-        const match = node.url.match(/^(\w+):\/\//);
-        if (match) {
-          protocol = match[1];
+        const extracted = getProtocol(node.url);
+        if (extracted !== 'unknown') {
+          protocol = extracted;
+        } else {
+          // 兼容旧逻辑的 match (虽然 getProtocol 应该覆盖了)
+          const match = node.url.match(/^(\w+):\/\//);
+          if (match) protocol = match[1];
         }
       }
 
@@ -106,71 +102,10 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
   /**
    * 过滤后的节点列表
-   * 
-   * 说明：
-   * - 根据防抖后的搜索词过滤节点
-   * - 支持协议、名称、国家/地区等全维度搜索
-   * - 支持多种地区名称别名（中文、繁体、emoji、国家代码等）
+   * 使用通用 filterNodes 函数
    */
   const filteredManualNodes = computed(() => {
-    // 如果没有搜索词，返回所有节点
-    if (!debouncedSearchTerm.value) {
-      return manualNodes.value;
-    }
-
-    // 转换为小写进行不区分大小写的搜索
-    const lowerCaseSearch = debouncedSearchTerm.value.toLowerCase();
-
-    // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-    const alternativeTerms = getCountryTerms(lowerCaseSearch);
-
-    // 过滤节点
-    return manualNodes.value.filter(node => {
-      const nodeNameLower = (node.name || '').toLowerCase();
-      const nodeProtocolLower = (node.protocol || '').toLowerCase();
-      const nodeTypeLower = (node.type || '').toLowerCase();
-      const nodeUrlLower = (node.url || '').toLowerCase();
-
-      // 1. 协议/类型匹配 (优先级最高，且必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
-      // 例如：搜 ss 只匹配 ss, ssr，不会匹配 vmess
-      if (nodeProtocolLower.startsWith(lowerCaseSearch) || nodeTypeLower.startsWith(lowerCaseSearch)) {
-        // 排除掉搜 manual 匹配到所有节点的情况
-        if (lowerCaseSearch !== 'manual') {
-          return true;
-        }
-      }
-
-      // 2. URL 协议头匹配 (如搜 ss://)
-      if (nodeUrlLower.startsWith(lowerCaseSearch)) {
-        return true;
-      }
-
-      // 3. 准备名称和 URL 详情的搜索文本
-      // 鲁棒性优化：如果搜 ss，为了防止误匹配 vmess/vless，我们在搜索名称前先移除这两个干扰项
-      const isSSSearch = lowerCaseSearch === 'ss';
-      const nameToSearch = isSSSearch ? nodeNameLower.replace(/vmess|vless/g, '____') : nodeNameLower;
-      const urlDetails = nodeUrlLower.split('://')[1] || '';
-      const urlToSearch = isSSSearch ? urlDetails.replace(/vmess|vless/g, '____') : urlDetails;
-
-      // 4. 节点名称匹配
-      if (nameToSearch.includes(lowerCaseSearch)) {
-        return true;
-      }
-
-      // 5. URL 详情匹配 (域名、IP、端口等)
-      if (urlToSearch.includes(lowerCaseSearch)) {
-        return true;
-      }
-
-      // 6. 检查节点名称是否包含任何国家/地区相关词汇
-      for (const altTerm of alternativeTerms) {
-        if (nameToSearch.includes(altTerm.toLowerCase())) {
-          return true;
-        }
-      }
-
-      return false;
-    });
+    return filterNodes(manualNodes.value, debouncedSearchTerm.value);
   });
 
   /**
@@ -291,59 +226,7 @@ export function useManualNodes(initialNodesRef: Ref<Node[] | null>) {
 
   // ==================== 节点去重 ====================
 
-  /**
-   * 生成节点的唯一标识键
-   * 
-   * 说明：
-   * - 用于节点去重，判断两个节点是否相同
-   * - 针对不同协议采用不同的处理策略
-   * - VMess 协议：解析 JSON 配置，移除名称字段后生成唯一键
-   * - 其他协议：移除 # 后面的部分（节点名称）
-   * 
-   * @param {string} url - 节点 URL
-   * @returns {string} 唯一标识键
-   */
-  const getUniqueKey = (url: string) => {
-    try {
-      // ==================== VMess 协议特殊处理 ====================
-      if (url.startsWith('vmess://')) {
-        // 提取 Base64 编码部分
-        const base64Part = url.substring('vmess://'.length);
 
-        // 关键步骤：解码后，移除所有空白字符，解决格式不一致问题
-        const decodedString = atob(base64Part);
-        const cleanedString = decodedString.replace(/\s/g, ''); // 移除所有空格、换行等
-
-        // 解析 JSON 配置
-        const nodeConfig = JSON.parse(cleanedString);
-
-        // 删除名称相关字段（这些字段不影响节点的实际配置）
-        delete nodeConfig.ps;     // 节点名称
-        delete nodeConfig.remark; // 备注
-
-        // 重新序列化对象，并以此作为唯一键
-        // 通过排序键来确保即使字段顺序不同也能得到相同的结果
-        return 'vmess://' + JSON.stringify(
-          Object.keys(nodeConfig).sort().reduce(
-            (obj: Record<string, unknown>, key) => {
-              obj[key] = nodeConfig[key];
-              return obj;
-            },
-            {}
-          )
-        );
-      }
-
-      // ==================== 其他协议通用处理 ====================
-      // 简单地移除 # 后面的部分（节点名称）
-      const hashIndex = url.indexOf('#');
-      return hashIndex !== -1 ? url.substring(0, hashIndex) : url;
-    } catch (e) {
-      console.error('生成节点唯一键失败，将使用原始URL:', url, e);
-      // 如果解析失败，回退到使用原始 URL，避免程序崩溃
-      return url;
-    }
-  };
 
   /**
    * 节点去重

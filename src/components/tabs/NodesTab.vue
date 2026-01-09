@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import draggable from 'vuedraggable';
 import { useBatchSelection } from '../../composables/useBatchSelection';
 import ManualNodeCard from '../cards/ManualNodeCard.vue';
+import Pagination from '../common/Pagination.vue';
+import EmptyState from '../common/EmptyState.vue';
 import type { Node } from '../../types';
 
 const props = defineProps<{
@@ -241,32 +243,26 @@ const handleDragEnd = (evt: unknown) => {
         </div>
       </div>
 
-      <div v-if="manualNodesTotalPages > 1 && !isSortingNodes"
-        class="flex justify-center items-center gap-2 sm:gap-4 mt-10 text-base font-medium">
-        <button @click="$emit('change-page', manualNodesCurrentPage - 1)" :disabled="manualNodesCurrentPage === 1"
-          class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center">&laquo;
-          <span class="hidden xs:inline ml-1">上一页</span></button>
-        <span
-          class="min-w-[80px] sm:min-w-[100px] text-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">第{{
-            manualNodesCurrentPage }}/{{ manualNodesTotalPages }}页</span>
-        <button @click="$emit('change-page', manualNodesCurrentPage + 1)"
-          :disabled="manualNodesCurrentPage === manualNodesTotalPages"
-          class="min-w-[70px] sm:min-w-[100px] px-3 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl disabled:opacity-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hover-lift font-medium text-sm sm:text-base flex items-center justify-center"><span
-            class="hidden xs:inline mr-1">下一页</span> &raquo;</button>
-      </div>
+      <Pagination
+        :current-page="manualNodesCurrentPage"
+        :total-pages="manualNodesTotalPages"
+        @change-page="(page) => $emit('change-page', page)"
+        v-if="!isSortingNodes"
+      />
     </div>
-    <div v-else
-      class="text-center py-20 lg:py-24 text-gray-500 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
-      <div
-        class="w-24 h-24 mx-auto mb-8 rounded-3xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center">
+    <EmptyState v-else
+      title="没有手动节点"
+      description="添加分享链接或单个节点。"
+      bg-gradient-class="bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+      icon-color-class="text-green-500"
+    >
+      <template #icon>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500" fill="none" viewBox="0 0 24 24"
           stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" />
         </svg>
-      </div>
-      <h3 class="text-2xl lg:text-3xl font-bold gradient-text-enhanced mb-3">没有手动节点</h3>
-      <p class="text-base lg:text-lg text-gray-500 dark:text-gray-400">添加分享链接或单个节点。</p>
-    </div>
+      </template>
+    </EmptyState>
   </div>
 </template>
 

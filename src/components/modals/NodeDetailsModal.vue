@@ -20,7 +20,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import type { Subscription, Profile, Node } from '../../types';
-import { getCountryTerms } from '../../lib/constants';
+import { filterNodes } from '../../utils/search';
 
 const props = defineProps<{
   show: boolean;
@@ -71,52 +71,7 @@ watch(() => props.show, async (newVal) => {
 
 // 过滤后的节点列表（支持国家/地区别名智能搜索）
 const filteredNodes = computed(() => {
-  if (!searchTerm.value) return nodes.value;
-  const term = searchTerm.value.toLowerCase();
-  // 使用 getCountryTerms 获取所有相关的国家/地区词汇
-  const alternativeTerms = getCountryTerms(term);
-
-  return nodes.value.filter(node => {
-    const nodeNameLower = (node.name || '').toLowerCase();
-    const nodeUrlLower = (node.url || '').toLowerCase();
-    const nodeProtocolLower = (node.protocol || '').toLowerCase();
-
-    // 1. 协议匹配 (优先级最高，且必须以搜索词开头，防止 ss 匹配 vmess/vless/socks5)
-    if (nodeProtocolLower.startsWith(term)) {
-      return true;
-    }
-
-    // 2. URL 协议头匹配 (如搜 ss://)
-    if (nodeUrlLower.startsWith(term)) {
-      return true;
-    }
-
-    // 3. 准备名称和 URL 详情的搜索文本
-    // 鲁棒性优化：如果搜 ss，为了防止误匹配 vmess/vless，我们在搜索名称前先移除这两个干扰项
-    const isSSSearch = term === 'ss';
-    const nameToSearch = isSSSearch ? nodeNameLower.replace(/vmess|vless/g, '____') : nodeNameLower;
-    const urlDetails = nodeUrlLower.split('://')[1] || '';
-    const urlToSearch = isSSSearch ? urlDetails.replace(/vmess|vless/g, '____') : urlDetails;
-
-    // 4. 节点名称匹配
-    if (nameToSearch.includes(term)) {
-      return true;
-    }
-
-    // 5. URL 详情匹配 (域名、IP、端口等)
-    if (urlToSearch.includes(term)) {
-      return true;
-    }
-
-    // 6. 高级匹配：节点名称包含任一国家/地区相关词汇
-    for (const altTerm of alternativeTerms) {
-      if (nameToSearch.includes(altTerm.toLowerCase())) {
-        return true;
-      }
-    }
-
-    return false;
-  });
+  return filterNodes(nodes.value, searchTerm.value);
 });
 
 // 获取单个订阅的节点信息
