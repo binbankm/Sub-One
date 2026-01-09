@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import draggable from 'vuedraggable';
+import { useBatchSelection } from '../../composables/useBatchSelection';
 import ManualNodeCard from '../cards/ManualNodeCard.vue';
 import type { Node } from '../../types';
 
@@ -34,8 +35,20 @@ const emit = defineEmits<{
 
 const showNodesMoreMenu = ref(false);
 const nodesMoreMenuRef = ref<HTMLElement | null>(null);
-const isBatchDeleteMode = ref(false);
-const selectedNodeIds = ref(new Set<string>());
+
+const {
+  isBatchDeleteMode,
+  selectedCount,
+  toggleBatchDeleteMode,
+  isSelected,
+  toggleSelection,
+  selectAll,
+  deselectAll,
+  invertSelection,
+  getSelectedIds
+} = useBatchSelection(
+  computed(() => props.isSortingNodes ? props.manualNodes : props.paginatedManualNodes)
+);
 
 const localManualNodes = computed({
   get: () => props.manualNodes,
@@ -47,62 +60,19 @@ const localSearchTerm = computed({
   set: (value) => emit('update:searchTerm', value)
 });
 
-// 批量删除模式相关方法
-const toggleBatchDeleteMode = () => {
-  isBatchDeleteMode.value = !isBatchDeleteMode.value;
-  if (!isBatchDeleteMode.value) {
-    selectedNodeIds.value.clear();
-  }
+// Override toggle to also close menu
+const handleToggleBatchDeleteMode = () => {
+  toggleBatchDeleteMode();
   showNodesMoreMenu.value = false;
 };
 
-const isSelected = (id: string) => {
-  return selectedNodeIds.value.has(id);
-};
-
-const toggleSelection = (id: string) => {
-  if (selectedNodeIds.value.has(id)) {
-    selectedNodeIds.value.delete(id);
-  } else {
-    selectedNodeIds.value.add(id);
-  }
-};
-
-const selectAll = () => {
-  const currentPageIds = props.isSortingNodes
-    ? props.manualNodes.map(n => n.id)
-    : props.paginatedManualNodes.map(n => n.id);
-  currentPageIds.forEach(id => selectedNodeIds.value.add(id));
-};
-
-const deselectAll = () => {
-  selectedNodeIds.value.clear();
-};
-
-const invertSelection = () => {
-  const currentPageIds = props.isSortingNodes
-    ? props.manualNodes.map(n => n.id)
-    : props.paginatedManualNodes.map(n => n.id);
-
-  currentPageIds.forEach(id => {
-    if (selectedNodeIds.value.has(id)) {
-      selectedNodeIds.value.delete(id);
-    } else {
-      selectedNodeIds.value.add(id);
-    }
-  });
-};
-
+// Override deleteSelected to emit event
 const deleteSelected = () => {
-  if (selectedNodeIds.value.size === 0) return;
-
-  const idsToDelete = Array.from(selectedNodeIds.value);
+  if (selectedCount.value === 0) return;
+  const idsToDelete = getSelectedIds();
   emit('batch-delete-nodes', idsToDelete);
-  selectedNodeIds.value.clear();
-  isBatchDeleteMode.value = false;
+  toggleBatchDeleteMode(true);
 };
-
-const selectedCount = computed(() => selectedNodeIds.value.size);
 
 const handleClickOutside = (event: Event) => {
   if (showNodesMoreMenu.value && nodesMoreMenuRef.value && !nodesMoreMenuRef.value.contains(event.target as globalThis.Node)) {
@@ -188,7 +158,7 @@ const handleDragEnd = (evt: unknown) => {
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
                 <button @click="$emit('deduplicate'); showNodesMoreMenu = false"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键去重</button>
-                <button @click="toggleBatchDeleteMode"
+                <button @click="() => toggleBatchDeleteMode()"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="$emit('delete-all-nodes'); showNodesMoreMenu = false"
@@ -240,7 +210,7 @@ const handleDragEnd = (evt: unknown) => {
               </svg>
               删除选中 ({{ selectedCount }})
             </button>
-            <button @click="toggleBatchDeleteMode"
+            <button @click="handleToggleBatchDeleteMode"
               class="btn-modern-enhanced btn-cancel text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transform hover:scale-105 transition-all duration-300">
               取消
             </button>
@@ -300,11 +270,5 @@ const handleDragEnd = (evt: unknown) => {
   </div>
 </template>
 
-<style scoped>
-/* 过渡动画已移至 main.css 全局定义 */
 
-.cursor-move {
-  cursor: move;
-}
-</style>
 

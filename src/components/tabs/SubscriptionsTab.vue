@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import draggable from 'vuedraggable';
+import { useBatchSelection } from '../../composables/useBatchSelection';
 import Card from '../cards/SubscriptionCard.vue';
 import type { Subscription } from '../../types';
 
@@ -33,70 +34,40 @@ const emit = defineEmits<{
 
 const showSubsMoreMenu = ref(false);
 const subsMoreMenuRef = ref<HTMLElement | null>(null);
-const isBatchDeleteMode = ref(false);
-const selectedSubIds = ref(new Set<string>());
+
+const {
+  isBatchDeleteMode,
+  // selectedIds can be used directly or aliased if needed
+  selectedCount,
+  toggleBatchDeleteMode,
+  isSelected,
+  toggleSelection,
+  selectAll,
+  deselectAll,
+  invertSelection,
+  getSelectedIds
+} = useBatchSelection(
+  computed(() => props.isSortingSubs ? props.subscriptions : props.paginatedSubscriptions)
+);
 
 const localSubscriptions = computed({
   get: () => props.subscriptions,
   set: (value) => emit('update:subscriptions', value)
 });
 
-// 批量删除模式相关方法
-const toggleBatchDeleteMode = () => {
-  isBatchDeleteMode.value = !isBatchDeleteMode.value;
-  if (!isBatchDeleteMode.value) {
-    selectedSubIds.value.clear();
-  }
+// Override toggle to also close menu
+const handleToggleBatchDeleteMode = () => {
+  toggleBatchDeleteMode();
   showSubsMoreMenu.value = false;
 };
 
-const isSelected = (id: string) => {
-  return selectedSubIds.value.has(id);
-};
-
-const toggleSelection = (id: string) => {
-  if (selectedSubIds.value.has(id)) {
-    selectedSubIds.value.delete(id);
-  } else {
-    selectedSubIds.value.add(id);
-  }
-};
-
-const selectAll = () => {
-  const currentPageIds = props.isSortingSubs
-    ? props.subscriptions.map(s => s.id)
-    : props.paginatedSubscriptions.map(s => s.id);
-  currentPageIds.forEach(id => selectedSubIds.value.add(id));
-};
-
-const deselectAll = () => {
-  selectedSubIds.value.clear();
-};
-
-const invertSelection = () => {
-  const currentPageIds = props.isSortingSubs
-    ? props.subscriptions.map(s => s.id)
-    : props.paginatedSubscriptions.map(s => s.id);
-
-  currentPageIds.forEach(id => {
-    if (selectedSubIds.value.has(id)) {
-      selectedSubIds.value.delete(id);
-    } else {
-      selectedSubIds.value.add(id);
-    }
-  });
-};
-
+// Override deleteSelected to emit event
 const deleteSelected = () => {
-  if (selectedSubIds.value.size === 0) return;
-
-  const idsToDelete = Array.from(selectedSubIds.value);
+  if (selectedCount.value === 0) return;
+  const idsToDelete = getSelectedIds();
   emit('batch-delete-subs', idsToDelete);
-  selectedSubIds.value.clear();
-  isBatchDeleteMode.value = false;
+  toggleBatchDeleteMode(true); // reset and exit mode
 };
-
-const selectedCount = computed(() => selectedSubIds.value.size);
 
 const handleClickOutside = (event: Event) => {
   // 使用 globalThis.Node 避免与自定义 Node 类型冲突，确保类型安全
@@ -173,7 +144,7 @@ const handleDragEnd = (evt: unknown) => {
             <Transition name="slide-fade-sm">
               <div v-if="showSubsMoreMenu"
                 class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="toggleBatchDeleteMode"
+                <button @click="() => toggleBatchDeleteMode()"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="$emit('delete-all-subs'); showSubsMoreMenu = false"
@@ -224,7 +195,7 @@ const handleDragEnd = (evt: unknown) => {
             </svg>
             删除选中 ({{ selectedCount }})
             </button>
-            <button @click="toggleBatchDeleteMode"
+            <button @click="handleToggleBatchDeleteMode"
               class="btn-modern-enhanced btn-cancel text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transform hover:scale-105 transition-all duration-300">
               取消
             </button>
@@ -285,11 +256,5 @@ const handleDragEnd = (evt: unknown) => {
   </div>
 </template>
 
-<style scoped>
-/* 过渡动画已移至 main.css 全局定义 */
 
-.cursor-move {
-  cursor: move;
-}
-</style>
 

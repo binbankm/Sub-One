@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useBatchSelection } from '../../composables/useBatchSelection';
 import ProfileCard from '../cards/ProfileCard.vue';
 import type { Profile, Subscription } from '../../types';
 
@@ -25,58 +26,34 @@ const emit = defineEmits<{
 
 const showProfilesMoreMenu = ref(false);
 const profilesMoreMenuRef = ref<HTMLElement | null>(null);
-const isBatchDeleteMode = ref(false);
-const selectedProfileIds = ref(new Set<string>());
 
-// 批量删除模式相关方法
-const toggleBatchDeleteMode = () => {
-  isBatchDeleteMode.value = !isBatchDeleteMode.value;
-  if (!isBatchDeleteMode.value) {
-    selectedProfileIds.value.clear();
-  }
+const {
+  isBatchDeleteMode,
+  selectedCount,
+  toggleBatchDeleteMode,
+  isSelected,
+  toggleSelection,
+  selectAll,
+  deselectAll,
+  invertSelection,
+  getSelectedIds
+} = useBatchSelection(
+  computed(() => props.paginatedProfiles)
+);
+
+// Override toggle to also close menu
+const handleToggleBatchDeleteMode = () => {
+  toggleBatchDeleteMode();
   showProfilesMoreMenu.value = false;
 };
 
-const isSelected = (id: string) => {
-  return selectedProfileIds.value.has(id);
-};
-
-const toggleSelection = (id: string) => {
-  if (selectedProfileIds.value.has(id)) {
-    selectedProfileIds.value.delete(id);
-  } else {
-    selectedProfileIds.value.add(id);
-  }
-};
-
-const selectAll = () => {
-  props.paginatedProfiles.forEach(profile => selectedProfileIds.value.add(profile.id));
-};
-
-const deselectAll = () => {
-  selectedProfileIds.value.clear();
-};
-
-const invertSelection = () => {
-  props.paginatedProfiles.forEach(profile => {
-    if (selectedProfileIds.value.has(profile.id)) {
-      selectedProfileIds.value.delete(profile.id);
-    } else {
-      selectedProfileIds.value.add(profile.id);
-    }
-  });
-};
-
+// Override deleteSelected to emit event
 const deleteSelected = () => {
-  if (selectedProfileIds.value.size === 0) return;
-
-  const idsToDelete = Array.from(selectedProfileIds.value);
+  if (selectedCount.value === 0) return;
+  const idsToDelete = getSelectedIds();
   emit('batch-delete-profiles', idsToDelete);
-  selectedProfileIds.value.clear();
-  isBatchDeleteMode.value = false;
+  toggleBatchDeleteMode(true);
 };
-
-const selectedCount = computed(() => selectedProfileIds.value.size);
 
 const handleClickOutside = (event: Event) => {
   // 使用 globalThis.Node 避免与自定义 Node 类型冲突，确保类型安全
@@ -113,7 +90,7 @@ onUnmounted(() => {
             <Transition name="slide-fade-sm">
               <div v-if="showProfilesMoreMenu"
                 class="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="toggleBatchDeleteMode"
+                <button @click="() => toggleBatchDeleteMode()"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="$emit('delete-all-profiles'); showProfilesMoreMenu = false"
@@ -165,7 +142,7 @@ onUnmounted(() => {
               </svg>
               删除选中 ({{ selectedCount }})
             </button>
-            <button @click="toggleBatchDeleteMode"
+            <button @click="handleToggleBatchDeleteMode"
               class="btn-modern-enhanced btn-cancel text-xs sm:text-sm font-semibold px-3 sm:px-4 py-1.5 sm:py-2 transform hover:scale-105 transition-all duration-300">
               取消
             </button>
@@ -210,7 +187,5 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style scoped>
-/* 过渡动画已移至 main.css 全局定义 */
-</style>
+
 
