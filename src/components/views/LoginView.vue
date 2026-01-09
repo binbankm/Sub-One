@@ -128,21 +128,21 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
 <template>
   <!-- 登录页面容器 -->
-  <div class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative">
+  <div class="min-h-screen flex items-center justify-center p-3 sm:p-6 relative overflow-hidden">
     
     <!-- ==================== 登录卡片 ==================== -->
-    <div class="relative w-full max-w-full p-6 sm:max-w-[520px] sm:p-16 bg-white dark:bg-gray-900 rounded-3xl sm:rounded-[2.5rem] border border-white/30 dark:border-white/10 animate-scale-in isolate
+    <div class="relative w-full max-w-full p-4 sm:max-w-[520px] sm:p-16 bg-white dark:bg-gray-900 rounded-3xl sm:rounded-[2.5rem] border border-white/30 dark:border-white/10 animate-scale-in isolate
       shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)]
       dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]
       backdrop-blur-xl mx-auto transition-all duration-300">
     
       <!-- Logo 区域 -->
-      <div class="text-center mb-6 sm:mb-10 animate-fade-in-down">
+      <div class="text-center mb-4 sm:mb-10 animate-fade-in-down">
         <!-- Logo 图标容器 -->
-        <div class="flex justify-center mb-4 sm:mb-8">
-          <div class="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl sm:rounded-[1.75rem] shadow-glow-primary animate-bounce">
+        <div class="flex justify-center mb-3 sm:mb-8">
+          <div class="w-14 h-14 sm:w-24 sm:h-24 flex items-center justify-center bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl sm:rounded-[1.75rem] shadow-glow-primary animate-bounce">
             <!-- 闪电图标 SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-12 sm:h-12 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 sm:w-12 sm:h-12 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
@@ -160,7 +160,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
       </div>
 
       <!-- ==================== 登录表单 ==================== -->
-      <div class="mt-6 sm:mt-10 animate-fade-in-up">
+      <div class="mt-4 sm:mt-10 animate-fade-in-up">
         <!-- 用户名输入 -->
         <div class="mb-4 sm:mb-6">
           <label for="username" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2.5 sm:text-base">

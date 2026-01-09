@@ -388,6 +388,7 @@ onMounted(() => {
   align-items: center; /* 垂直居中 */
   justify-content: center; /* 水平居中 */
   padding: 1.5rem;
+  overflow: hidden; /* 隐藏滚动条 */
 }
 
 /* 加载状态容器 - 垂直排列加载动画和文字 */
