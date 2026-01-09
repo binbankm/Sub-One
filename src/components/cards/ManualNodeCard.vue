@@ -124,7 +124,7 @@ const copyToClipboard = (url: string) => {
             <div class="flex-1 min-w-0">
               <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed line-clamp-2"
                 :title="node.url">
-                {{ node.url }}
+                {{ node.url ? node.url.trim() : '' }}
               </p>
             </div>
 

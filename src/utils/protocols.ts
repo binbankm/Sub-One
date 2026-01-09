@@ -6,7 +6,7 @@
 export const getProtocol = (url?: string): string => {
     try {
         if (!url) return 'unknown';
-        const lowerUrl = url.toLowerCase();
+        const lowerUrl = url.trim().toLowerCase();
         if (lowerUrl.startsWith('anytls://')) return 'anytls';
         if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://')) return 'hysteria2';
         if (lowerUrl.startsWith('hysteria://') || lowerUrl.startsWith('hy://')) return 'hysteria';
