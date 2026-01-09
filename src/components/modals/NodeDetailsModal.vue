@@ -477,7 +477,7 @@ onUnmounted(() => {
                         <!-- URL 文本 -->
                         <div class="flex-1 min-w-0">
                           <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed">
-                            {{ node.url }}
+                            {{ node.url ? node.url.trim() : '' }}
                           </p>
                         </div>
 

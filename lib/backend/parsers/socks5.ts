@@ -92,7 +92,8 @@ export function parseSocks5(url: string): Socks5Node | null {
             name,
             server,
             port,
-            udp: true // SOCKS5 协议通常支持 UDP
+            udp: true, // SOCKS5 协议通常支持 UDP
+            url: trimmedUrl // 保留原始链接用于前端展示
         };
 
         if (username) node.username = safeDecodeURIComponent(username);
