@@ -28,15 +28,14 @@
 -->
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 
 // ==================== Props 定义 ====================
 
 withDefaults(defineProps<{
   /** 显示状态 */
   show: boolean;
-  /** 确认关键词（需要输入才能确认） */
-  confirmKeyword?: string;
+
   /** 尺寸大小 */
   size?: 'sm' | '2xl' | '4xl' | '6xl' | '7xl';
   /** 禁用确认按钮 */
@@ -67,8 +66,7 @@ defineSlots<{
 
 // ==================== 本地状态 ====================
 
-/** 确认输入值（用于关键词确认） */
-const confirmInput = ref('');
+
 
 // ==================== 事件处理 ====================
 
@@ -151,7 +149,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
               <!-- 确认按钮 -->
               <button 
                 @click="handleConfirm"
-                :disabled="confirmDisabled || !!(confirmKeyword && confirmInput !== confirmKeyword)"
+                :disabled="confirmDisabled"
                 :title="confirmDisabled ? confirmButtonTitle : '确认'"
                 class="btn-modern px-6 py-2.5 text-sm font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
               >

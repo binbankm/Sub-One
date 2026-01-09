@@ -92,6 +92,10 @@
     @apply active:scale-95;
   }
 
+
+
+
+
   .btn-add {
     @apply bg-gradient-to-r from-blue-500 to-indigo-600 text-white;
     @apply hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg hover:-translate-y-0.5;
@@ -130,11 +134,13 @@
     @apply bg-gradient-to-r from-red-500 to-pink-600 text-white;
     @apply hover:from-red-600 hover:to-pink-700 hover:shadow-lg hover:-translate-y-0.5;
   }
-
+  
   .btn-cancel {
     @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200;
     @apply hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md;
   }
+
+
   
   /* ===== 表单组件 ===== */
   

@@ -533,54 +533,7 @@ html.dark .page-description {
   color: hsl(243, 30%, 70%);
 }
 
-/* 头部操作按钮区域 */
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-}
 
-/* 快速操作按钮 - 毛玻璃效果 */
-.quick-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.8); /* 半透明白色 */
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  color: hsl(243, 47%, 40%);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(16px); /* 毛玻璃效果 */
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* 快速操作按钮悬停效果 */
-.quick-action-btn:hover {
-  background: white; /* 不透明白色 */
-  border-color: rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px); /* 上移 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 阴影 */
-}
-
-/* 暗黑模式下的快速操作按钮 */
-html.dark .quick-action-btn {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: hsl(243, 87%, 70%);
-}
-
-/* 暗黑模式下的按钮悬停效果 */
-html.dark .quick-action-btn:hover {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* 头部进度条区域 */
-.header-progress {
-  width: 100%;
-}
 
 /* ==================== 仪表盘内容样式 ==================== */
 

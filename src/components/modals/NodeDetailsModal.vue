@@ -527,8 +527,5 @@ onUnmounted(() => {
   </Teleport>
 </template>
 
-<style scoped>
 
-
-</style>
 

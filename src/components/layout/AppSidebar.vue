@@ -44,14 +44,11 @@ const props = withDefaults(defineProps<{
   manualNodesCount?: number;
   /** 生成器数量 */
   generatorCount?: number;
-  /** 是否已登录 */
-  isLoggedIn?: boolean;
 }>(), {
   subscriptionsCount: 0,
   profilesCount: 0,
   manualNodesCount: 0,
-  generatorCount: 0,
-  isLoggedIn: false
+  generatorCount: 0
 });
 
 // ==================== Emit 事件定义 ====================
@@ -614,10 +611,4 @@ onUnmounted(() => {
   </aside>
 </template>
 
-<style scoped>
-/* ==================== Vue 过渡动画 ==================== */
 
-
-
-
-</style>
