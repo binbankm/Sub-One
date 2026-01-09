@@ -50,6 +50,10 @@ export function buildNodeUrl(node: Node): string {
                 return buildAnyTLSUrl(node);
             case 'snell':
                 return buildSnellUrl(node);
+            case 'socks5':
+                return buildSocks5Url(node);
+            case 'http':
+                return buildHttpUrl(node);
             default:
                 // 如果是未知类型但有 originalUrl，则返回之
                 if ('originalUrl' in node && node.originalUrl) {
@@ -61,6 +65,31 @@ export function buildNodeUrl(node: Node): string {
         console.error(`构建节点 URL 失败 (${node.name}):`, e);
         return '';
     }
+}
+
+function buildSocks5Url(node: any): string {
+    const host = node.server.includes(':') ? `[${node.server}]` : node.server;
+    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
+    let userInfo = '';
+
+    if (node.username || node.password) {
+        userInfo = `${encodeURIComponent(node.username || '')}:${encodeURIComponent(node.password || '')}@`;
+    }
+
+    return `socks5://${userInfo}${host}:${node.port}${hash}`;
+}
+
+function buildHttpUrl(node: any): string {
+    const host = node.server.includes(':') ? `[${node.server}]` : node.server;
+    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
+    let userInfo = '';
+
+    if (node.username || node.password) {
+        userInfo = `${encodeURIComponent(node.username || '')}:${encodeURIComponent(node.password || '')}@`;
+    }
+
+    // HTTP Proxy 格式通常也支持 http://user:pass@host:port
+    return `http://${userInfo}${host}:${node.port}${hash}`;
 }
 
 function buildVlessUrl(node: VlessNode): string {
