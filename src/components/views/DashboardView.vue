@@ -546,14 +546,23 @@ const handleEditNode = (nodeId: string) => {
 
 /**
  * 保存节点
+ * 
+ * 说明：
+ * - 验证节点链接
+ * - 新建或更新节点
+ * - 自动保存并触发数据更新
  */
-const handleSaveNode = async () => {
-  if (!editingNode.value?.url) return showToast('节点链接不能为空', 'error');
+const handleSaveNode = async (updatedNode?: AppNode) => {
+  // 使用传入的参数，如果没有则使用 editingNode.value
+  const nodeToSave = updatedNode || editingNode.value;
+  
+  // 验证节点链接
+  if (!nodeToSave?.url) return showToast('节点链接不能为空', 'error');
 
   if (isNewNode.value) {
-    addNode(editingNode.value);
+    addNode(nodeToSave);
   } else {
-    updateNode(editingNode.value);
+    updateNode(nodeToSave);
   }
   await handleDirectSave('节点');
   triggerDataUpdate();
