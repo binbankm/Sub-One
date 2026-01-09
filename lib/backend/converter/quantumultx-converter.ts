@@ -1,4 +1,4 @@
-import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Socks5Node, HttpNode } from '../../shared/types';
 import { QX_CONFIG, DEFAULT_TEST_URL } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -101,6 +101,8 @@ function nodeToQuantumultXLine(node: ProxyNode): string | null {
             case 'vless': return buildVless(node as VlessNode);
             case 'trojan': return buildTrojan(node as TrojanNode);
             case 'ss': return buildShadowsocks(node as ShadowsocksNode);
+            case 'socks5': return buildSocks5(node as Socks5Node);
+            case 'http': return buildHttp(node as HttpNode);
             default:
                 // QX 不支持 Hy2, Tuic, WG 原生配置行格式 (或者比较非标准)
                 return null;
@@ -204,6 +206,60 @@ function buildShadowsocks(node: ShadowsocksNode): string {
 
     parts.push('fast-open=false');
     parts.push('udp-relay=true');
+    parts.push(`tag=${node.name}`);
+
+    return parts.join(', ');
+}
+
+function buildSocks5(node: Socks5Node): string {
+    // Quantumult X SOCKS5 format: socks5=server:port, username=user, password=pass, fast-open=false, udp-relay=false, tag=NodeName
+    const parts: string[] = [];
+    parts.push(`socks5=${node.server}:${node.port}`);
+
+    // Add authentication if present
+    if (node.username) parts.push(`username=${node.username}`);
+    if (node.password) parts.push(`password=${node.password}`);
+
+    // Add TLS support if enabled
+    if (node.tls?.enabled) {
+        parts.push('over-tls=true');
+        if (node.tls.serverName) parts.push(`tls-host=${node.tls.serverName}`);
+        if (node.tls.insecure) {
+            parts.push('tls-verification=false');
+        } else {
+            parts.push('tls-verification=true');
+        }
+    }
+
+    parts.push('fast-open=false');
+    parts.push('udp-relay=true');
+    parts.push(`tag=${node.name}`);
+
+    return parts.join(', ');
+}
+
+function buildHttp(node: HttpNode): string {
+    // Quantumult X HTTP format: http=server:port, username=user, password=pass, fast-open=false, udp-relay=false, tag=NodeName
+    const parts: string[] = [];
+    parts.push(`http=${node.server}:${node.port}`);
+
+    // Add authentication if present
+    if (node.username) parts.push(`username=${node.username}`);
+    if (node.password) parts.push(`password=${node.password}`);
+
+    // Add TLS support if enabled (HTTPS)
+    if (node.tls?.enabled) {
+        parts.push('over-tls=true');
+        if (node.tls.serverName) parts.push(`tls-host=${node.tls.serverName}`);
+        if (node.tls.insecure) {
+            parts.push('tls-verification=false');
+        } else {
+            parts.push('tls-verification=true');
+        }
+    }
+
+    parts.push('fast-open=false');
+    parts.push('udp-relay=false');
     parts.push(`tag=${node.name}`);
 
     return parts.join(', ');

@@ -1,4 +1,4 @@
-import { ProxyNode, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node, HttpNode } from '../../shared/types';
 import { SURGE_CONFIG, DEFAULT_TEST_URL } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -116,6 +116,8 @@ function nodeToSurgeLine(node: ProxyNode): string | null {
             // Surge 对 VLESS 支持有限或者通常使用外部模块，此处暂不原生支持 VLESS
             // 或者如果 Surge 5 支持的话可以添加
             case 'snell': return buildSnell(node as SnellNode);
+            case 'socks5': return buildSocks5(node as Socks5Node);
+            case 'http': return buildHttp(node as HttpNode);
             default:
                 // console.warn(`Surge 不原生支持或暂未实现: ${node.type}`);
                 return null;
@@ -274,5 +276,53 @@ function buildSnell(node: SnellNode): string {
         parts.push(`obfs=${node.obfs.type}`);
         if (node.obfs.host) parts.push(`obfs-host=${node.obfs.host}`);
     }
+    return `${node.name} = ${parts.join(', ')}`;
+}
+
+function buildSocks5(node: Socks5Node): string {
+    // Surge SOCKS5 format: ProxyName = socks5, server, port, username, password
+    const parts = [
+        'socks5',
+        node.server,
+        node.port.toString(),
+    ];
+
+    // Add authentication if present
+    if (node.username && node.password) {
+        parts.push(node.username);
+        parts.push(node.password);
+    }
+
+    // Add TLS support if enabled (SOCKS5-TLS)
+    if (node.tls?.enabled) {
+        parts.push('tls=true');
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
+    }
+
+    return `${node.name} = ${parts.join(', ')}`;
+}
+
+function buildHttp(node: HttpNode): string {
+    // Surge HTTP format: ProxyName = http, server, port, username, password
+    const parts = [
+        'http',
+        node.server,
+        node.port.toString(),
+    ];
+
+    // Add authentication if present
+    if (node.username && node.password) {
+        parts.push(node.username);
+        parts.push(node.password);
+    }
+
+    // Add TLS support if enabled (HTTPS)
+    if (node.tls?.enabled) {
+        parts.push('tls=true');
+        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
+        if (node.tls.insecure) parts.push('skip-cert-verify=true');
+    }
+
     return `${node.name} = ${parts.join(', ')}`;
 }

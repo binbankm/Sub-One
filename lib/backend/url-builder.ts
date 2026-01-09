@@ -73,30 +73,18 @@ function buildSocks5Url(node: Socks5Node): string {
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
 
-    // 检查是否包含任何可能导致兼容性问题的特殊字符（响应："如果有其他特殊符号呢"）
-    // 为了最大程度兼容，如果用户名或密码进行 URI 编码后内容发生变化（说明包含如 @:/#? 等特殊字符），
-    // 或者直接包含冒号（可能影响 user:pass 格式解析），则启用 Base64 编码模式。
-    const hasSpecialChars = (str: string | undefined) => {
-        if (!str) return false;
-        return encodeURIComponent(str) !== str || str.includes(':');
-    };
-
-    if ((node.username && hasSpecialChars(node.username)) ||
-        (node.password && hasSpecialChars(node.password))) {
-
-        // 构造未编码的原始字符串 user:pass@host:port
-        let userInfo = '';
-        if (node.username || node.password) {
-            userInfo = `${node.username || ''}:${node.password || ''}@`;
-        }
-        const fullInfo = `${userInfo}${host}:${node.port}`;
-        return `socks5://${encodeBase64(fullInfo)}${hash}`;
-    }
-
-    // 标准格式 (无特殊字符时优先使用，兼容性最广)
+    // 标准格式: socks5://[user:pass@]host:port#name
+    // 使用 URL 编码处理特殊字符，兼容性最好
     let userInfo = '';
-    if (node.username || node.password) {
-        userInfo = `${encodeURIComponent(node.username || '')}:${encodeURIComponent(node.password || '')}@`;
+    if (node.username && node.password) {
+        // 同时有用户名和密码
+        userInfo = `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password)}@`;
+    } else if (node.username) {
+        // 只有用户名
+        userInfo = `${encodeURIComponent(node.username)}@`;
+    } else if (node.password) {
+        // 只有密码（罕见但支持）
+        userInfo = `:${encodeURIComponent(node.password)}@`;
     }
 
     return `socks5://${userInfo}${host}:${node.port}${hash}`;
