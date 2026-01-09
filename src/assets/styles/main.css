@@ -57,14 +57,14 @@
   textarea:focus-visible,
   select:focus-visible,
   button:focus-visible {
-    @apply outline-2 outline-primary-500 outline-offset-2 rounded-lg;
+    @apply outline-none ring-0 border-primary-500;
   }
 
   html.dark input:focus-visible,
   html.dark textarea:focus-visible,
   html.dark select:focus-visible,
   html.dark button:focus-visible {
-    @apply outline-primary-400;
+    @apply border-primary-400;
   }
 
   /* 重置 Tailwind 默认 focus ring */
@@ -144,7 +144,7 @@
     @apply border-2 border-gray-200 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-400 dark:placeholder-gray-500;
-    @apply focus:outline-none;
+    @apply focus:outline-none focus:ring-0 focus:border-primary-500;
     @apply transition-all duration-300;
   }
 
@@ -154,7 +154,7 @@
     @apply border-2 border-gray-200 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-500 dark:placeholder-gray-400;
-    @apply focus:outline-none;
+    @apply focus:outline-none focus:ring-0 focus:border-primary-500;
     @apply transition-all duration-300;
   }
 
@@ -164,9 +164,9 @@
     @apply border-2 border-gray-200 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-500 dark:placeholder-gray-400;
-    @apply focus:outline-none;
+    @apply focus:outline-none focus:ring-0 focus:border-primary-500;
     @apply transition-all duration-300;
-    @apply shadow-sm hover:shadow-md;
+    @apply shadow-sm hover:shadow-md focus:shadow-none;
   }
 
   .search-input-unified {
@@ -176,9 +176,9 @@
     @apply rounded-xl;
     @apply text-sm text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-400 dark:placeholder-gray-500;
-    @apply focus:outline-none;
+    @apply focus:outline-none focus:ring-0 focus:border-primary-500;
     @apply transition-all duration-300;
-    @apply shadow-sm hover:shadow-md;
+    @apply shadow-sm hover:shadow-md focus:shadow-none;
   }
   
   /* ===== 卡片组件 ===== */
@@ -226,9 +226,32 @@
     @apply text-gray-500 dark:text-gray-500;
   }
 
+  /* ===== 动画关键帧 ===== */
+
+  /* 抖动动画 */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  /* 淡出动画 */
+  @keyframes fadeOut {
+    to { opacity: 0; }
+  }
+
   .input-error {
     @apply border-red-600 !important;
     animation: shake 0.5s ease;
+  }
+
+  /* Vue过渡动画类 */
+  .shake-enter-active {
+    animation: shake 0.5s ease;
+  }
+
+  .shake-leave-active {
+    animation: fadeOut 0.3s ease;
   }
 
   .login-button {
