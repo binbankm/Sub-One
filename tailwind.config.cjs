@@ -67,7 +67,7 @@ module.exports = {
 
       // 🔠 字体
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Nunito', 'Quicksand', 'PingFang SC', 'Microsoft YaHei', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'Monaco', 'monospace'],
       },
 
