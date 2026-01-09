@@ -1,4 +1,4 @@
-import { Node, VlessNode, VmessNode, TrojanNode, ShadowsocksNode, ShadowsocksRNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, SnellNode, V2rayNConfig } from '../shared/types';
+import { Node, VlessNode, VmessNode, TrojanNode, ShadowsocksNode, ShadowsocksRNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, SnellNode, V2rayNConfig, Socks5Node, HttpNode } from '../shared/types';
 import { buildStandardQuery } from './parsers/helper';
 import { encodeBase64 } from './converter/base64';
 
@@ -67,7 +67,7 @@ export function buildNodeUrl(node: Node): string {
     }
 }
 
-function buildSocks5Url(node: any): string {
+function buildSocks5Url(node: Socks5Node): string {
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
     let userInfo = '';
@@ -79,7 +79,7 @@ function buildSocks5Url(node: any): string {
     return `socks5://${userInfo}${host}:${node.port}${hash}`;
 }
 
-function buildHttpUrl(node: any): string {
+function buildHttpUrl(node: HttpNode): string {
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;
     const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
     let userInfo = '';

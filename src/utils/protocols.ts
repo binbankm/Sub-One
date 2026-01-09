@@ -44,7 +44,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'anytls':
             return {
                 text: 'AnyTLS',
-                icon: '🌐',
+                icon: '🔓',
                 gradient: 'from-slate-400 to-gray-500',
                 bg: 'bg-slate-100 dark:bg-slate-900/30',
                 color: 'text-slate-600 dark:text-slate-400'
@@ -60,7 +60,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'hysteria2':
             return {
                 text: 'HY2',
-                icon: '⚡',
+                icon: '🌩️',
                 gradient: 'from-purple-400 to-violet-500',
                 bg: 'bg-purple-100 dark:bg-purple-900/30',
                 color: 'text-purple-600 dark:text-purple-400'
@@ -76,7 +76,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'tuic':
             return {
                 text: 'TUIC',
-                icon: '🚀',
+                icon: '🛸',
                 gradient: 'from-cyan-400 to-blue-500',
                 bg: 'bg-cyan-100 dark:bg-cyan-900/30',
                 color: 'text-cyan-600 dark:text-cyan-400'
@@ -84,7 +84,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'vmess':
             return {
                 text: 'VMess',
-                icon: '🔒',
+                icon: '💎',
                 gradient: 'from-emerald-400 to-teal-500',
                 bg: 'bg-emerald-100 dark:bg-emerald-900/30',
                 color: 'text-emerald-600 dark:text-emerald-400'
@@ -92,7 +92,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'ss':
             return {
                 text: 'SS',
-                icon: '🛡️',
+                icon: '🔒',
                 gradient: 'from-sky-400 to-blue-500',
                 bg: 'bg-sky-100 dark:bg-sky-900/30',
                 color: 'text-sky-600 dark:text-sky-400'
@@ -141,7 +141,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
         case 'snell':
             return {
                 text: 'Snell',
-                icon: '⚡',
+                icon: '💡',
                 gradient: 'from-blue-600 to-indigo-700',
                 bg: 'bg-blue-100 dark:bg-blue-900/30',
                 color: 'text-blue-700 dark:text-blue-300'

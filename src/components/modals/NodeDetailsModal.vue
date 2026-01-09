@@ -21,6 +21,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../stores/toast';
 import type { Subscription, Profile, Node } from '../../types';
 import { filterNodes } from '../../utils/search';
+import { getProtocolInfo, getProtocol } from '../../utils/protocols';
 
 const props = defineProps<{
   show: boolean;
@@ -105,7 +106,7 @@ const fetchNodes = async () => {
         id: n.id,
         name: n.name,
         url: n.url || '',
-        protocol: getProtocolFromUrl(n.url || ''),
+        protocol: getProtocol(n.url || ''),
         enabled: true
       }));
     } else {
@@ -143,7 +144,7 @@ const fetchProfileNodes = async () => {
           id: node.id,
           name: node.name || '未命名节点',
           url: node.url || '',
-          protocol: getProtocolFromUrl(node.url || ''),
+          protocol: getProtocol(node.url || ''),
           enabled: node.enabled,
           type: 'manual'
         });
@@ -179,7 +180,7 @@ const fetchProfileNodes = async () => {
                   id: node.id,
                   name: node.name,
                   url: node.url || '',
-                  protocol: getProtocolFromUrl(node.url || ''),
+                  protocol: getProtocol(node.url || ''),
                   enabled: true,
                   type: 'subscription' as const,
                   subscriptionName: subscription.name || ''
@@ -209,31 +210,9 @@ const fetchProfileNodes = async () => {
   }
 };
 
-// 从URL获取协议类型 (辅助函数)
-const getProtocolFromUrl = (url: string) => {
-  // 与后端 parser/index.ts 保持一致的协议支持
-  const nodeRegex = /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy[1-2]?|tuic|anytls|socks5|snell|wireguard|wg):\/\//;
-  const match = url.match(nodeRegex);
-  return match ? match[1] : 'unknown';
-};
 
-// 获取协议图标和样式
-const getProtocolInfo = (protocol: string) => {
-  const protocolMap: Record<string, { icon: string; color: string; bg: string }> = {
-    'ss': { icon: '🔒', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    'ssr': { icon: '🛡️', color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-    'vmess': { icon: '⚡', color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30' },
-    'vless': { icon: '🚀', color: 'text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-900/30' },
-    'trojan': { icon: '🛡️', color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30' },
-    'hysteria': { icon: '⚡', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
-    'hysteria2': { icon: '⚡', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30' },
-    'tuic': { icon: '🚀', color: 'text-teal-500', bg: 'bg-teal-100 dark:bg-teal-900/30' },
-    'socks5': { icon: '🔌', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' },
-    'anytls': { icon: '🌐', color: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
-  };
 
-  return protocolMap[protocol] || { icon: '❓', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' };
-};
+
 
 // 选择/取消选择节点
 const toggleNodeSelection = (nodeId: string) => {

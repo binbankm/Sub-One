@@ -2,32 +2,55 @@
  * ==================== TypeScript 类型定义文件 ====================
  * 
  * 功能说明：
- * - 定义应用中使用的核心数据类型
- * - 包括节点、订阅、订阅组、配置等核心接口
- * - 确保类型安全和代码可维护性
+ * - 应用核心类型定义入口
+ * - 聚合 Shared 类型并进行前端扩展
+ * - 统一导出所有节点具体类型
  * 
  * =================================================================
  */
 
-// ==================== 基础类型定义 ====================
+// ==================== 1. 核心类型透传导出 ====================
+// 直接导出无需扩展的共享类型，减少冗余代码
+export type {
+    CipherType,
+    ClientFormat,
+    // 基础枚举
+    ProxyType,
+    NetworkType,
+    // 具体节点接口
+    VmessNode,
+    VlessNode,
+    TrojanNode,
+    ShadowsocksNode,
+    ShadowsocksRNode,
+    HysteriaNode,
+    Hysteria2Node,
+    TuicNode,
+    WireGuardNode,
+    AnyTLSNode,
+    SnellNode,
+    Socks5Node,
+    HttpNode,
+    // 配置相关
+    V2rayNConfig,
+    ClashProxyConfig,
+    SingBoxOutbound,
+    // 其他
+    User,
+    UserRole
+} from '../lib/shared/types';
 
-// ==================== 统一类型引用 (Single Source of Truth) ====================
-// 核心数据结构直接复用 lib/shared/types
+// ==================== 2. 需要扩展的基础类型导入 ====================
 import type {
     ProxyNode as SharedProxyNode,
     Subscription as SharedSubscription,
     Profile as SharedProfile,
     AppConfig as SharedAppConfig,
     SubscriptionUserInfo as SharedUserInfo,
-    CipherType,
-    ProtocolType as SharedProtocolType,
-    ClientFormat
+    ProtocolType as SharedProtocolType
 } from '../lib/shared/types';
 
-// 重新导出核心类型，方便前端其他文件引用
-export type { CipherType, ClientFormat };
-
-// ==================== 基础类型扩展 ====================
+// ==================== 3. 类型扩展定义 ====================
 
 /** 
  * 支持的代理协议类型 
@@ -35,121 +58,105 @@ export type { CipherType, ClientFormat };
  */
 export type ProtocolType = SharedProtocolType | string;
 
-
 /**
  * 订阅用户信息
- * 直接复用共享定义
+ * 目前直接复用共享定义，预留扩展空间
  */
 export type SubscriptionUserInfo = SharedUserInfo;
 
-// ==================== 节点接口扩展 ====================
+// -------------------- 节点 (Node) --------------------
 /**
- * 节点（Node）接口定义 - 前端扩展版
- * 继承自共享 ProxyNode 定义，并添加前端 UI 所需字段
+ * 节点接口 - 前端扩展版
+ * 继承自 SharedProxyNode，添加 UI 交互状态字段
  */
 export type Node = SharedProxyNode & {
-    /** 旧版协议类型字段 (兼容性保留，指向 type) */
+    /** 旧版协议类型字段 (兼容性保留) */
     protocol?: ProtocolType;
-    /** 启用状态 (UI控制) */
+
+    /** 启用状态 (UI控制开关) */
     enabled: boolean;
-    /** 原始代理配置对象 (兼容旧逻辑) */
+
+    /** 原始代理配置对象 (用于 Clash/SingBox 编辑回显) */
     originalProxy?: Record<string, unknown>;
 
-    // 前端可能用到但 SharedProxyNode 中可能是特定协议才有的字段，
-    // 在此声明为可选以方便 UI 统一访问 (如列表中展示 cipher)
+    // --- 便捷访问字段 (Flattened/Optional) ---
+    // 为了方便 UI 列表展示，声明一些可能存在的字段为可选
     cipher?: string;
     uuid?: string;
     password?: string;
     udp?: boolean;
-    sni?: string;
+    sni?: string; // from tls.serverName
 
-    /** 动态扩展字段 */
+    /** 动态扩展字段 (允许 UI 临时状态) */
     [key: string]: unknown;
 };
 
-// ==================== 订阅接口扩展 ====================
+// -------------------- 订阅 (Subscription) --------------------
 /**
- * 订阅（Subscription）接口定义 - 前端扩展版
+ * 订阅接口 - 前端扩展版
  */
 export type Subscription = SharedSubscription & {
-    /** 订阅状态（前端特有：unchecked、checking、success、error） */
-    status?: string;
-    /** 更新状态标识 */
+    /** 订阅状态 (UI 状态机: unchecked -> checking -> success/error) */
+    status?: 'unchecked' | 'checking' | 'success' | 'error' | string;
+
+    /** 更新中标识 (Loading 状态) */
     isUpdating?: boolean;
 
-    /** 动态扩展字段 */
+    /** 错误信息 (如果更新失败) */
+    errorMsg?: string;
+
     [key: string]: unknown;
-}
+};
 
-
-// ==================== 订阅组接口 ====================
+// -------------------- 订阅组 (Profile) --------------------
 /**
- * 订阅组（Profile）接口定义 - 前端引用版
+ * 订阅组接口
  */
-export type Profile = SharedProfile;
+export type Profile = SharedProfile & {
+    // 前端可能需要扩展 UI 相关的字段
+    [key: string]: unknown;
+};
 
-// ==================== 应用配置接口 ====================
-/**
- * 应用配置（AppConfig）接口定义 - 前端引用版
- */
+// -------------------- 应用配置 (AppConfig) --------------------
 export type AppConfig = SharedAppConfig;
 
-// ==================== 转换选项接口 ====================
+// ==================== 4. 工具类型定义 ====================
+
 /**
  * 转换器选项 (ConverterOptions)
- * 控制输出格式和内容的选项
  */
 export interface ConverterOptions {
-    /** 配置文件名称 */
     filename?: string;
-    /** 是否包含规则 */
     includeRules?: boolean;
-    /** 远程规则配置 URL */
     remoteConfig?: string;
-    /** 订阅用户信息 */
     userInfo?: {
         upload?: number;
         download?: number;
         total?: number;
         expire?: number;
     };
-    /** 目标客户端版本 */
     clientVersion?: string;
-    /** 是否启用 UDP */
     udp?: boolean;
 }
 
-// ==================== 初始数据接口 ====================
 /**
- * 初始数据（InitialData）接口定义
- * 应用启动时从服务器获取的完整数据结构
+ * 初始数据结构 (服务端 -> 客户端)
  */
 export interface InitialData {
-    /** 所有订阅列表 */
     subs?: Subscription[];
-    /** 所有订阅组列表 */
     profiles?: Profile[];
-    /** 应用配置对象 */
     config?: AppConfig;
 }
 
-// ==================== API 响应接口 ====================
 /**
- * API 响应（ApiResponse）通用接口定义
- * 统一所有 API 请求的响应格式
- * 
- * @template T - 响应数据的类型参数
+ * 通用 API 响应结构
+ * @template T 响应数据类型
  */
 export interface ApiResponse<T = unknown> {
-    /** 请求是否成功（true=成功, false=失败） */
     success: boolean;
-    /** 响应数据（成功时返回） */
     data?: T;
-    /** 成功消息（可选） */
     message?: string;
-    /** 错误消息（失败时返回） */
     error?: string;
-    /** 兼容某些 API 使用 results 字段返回数据 */
+    /** @deprecated 兼容旧 API */
     results?: T;
 }
-
