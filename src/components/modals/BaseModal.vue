@@ -102,7 +102,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
   <!-- 使用 Teleport 将模态框渲染到 body -->
   <Teleport to="body">
     <!-- 遮罩层过渡 -->
-    <Transition name="modal-fade">
+    <Transition name="fade">
       <!-- 遮罩层 - 点击关闭 -->
       <div 
         v-if="show" 
@@ -110,7 +110,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
         @click="emit('update:show', false)"
       >
         <!-- 模态框内容过渡 -->
-        <Transition name="modal-inner">
+        <Transition name="scale-fade">
           <!-- 模态框容器 - 点击阻止冒泡，避免关闭 -->
           <div 
             v-if="show"
@@ -165,27 +165,4 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
   </Teleport>
 </template>
 
-<style scoped>
-/* ==================== 遮罩层过渡 ==================== */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
 
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-/* ==================== 模态框内容过渡 ==================== */
-.modal-inner-enter-active,
-.modal-inner-leave-active {
-  transition: all 0.25s ease;
-}
-
-.modal-inner-enter-from,
-.modal-inner-leave-to {
-  opacity: 0;
-  transform: scale(0.95); /* 缩放效果 */
-}
-</style>

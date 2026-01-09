@@ -301,7 +301,7 @@ const handleDragEnd = (evt: unknown) => {
 </template>
 
 <style scoped>
-/* 过渡动画已移至 design-system.css 全局定义 */
+/* 过渡动画已移至 main.css 全局定义 */
 
 .cursor-move {
   cursor: move;

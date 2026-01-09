@@ -348,10 +348,10 @@ onUnmounted(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="modal-fade">
+    <Transition name="fade">
       <div v-if="show" class="fixed inset-0 bg-black/60 z-[99] flex items-center justify-center p-4"
         @click="emit('update:show', false)">
-        <Transition name="modal-inner">
+        <Transition name="scale-fade-bounce">
           <div v-if="show"
             class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
             @click.stop>
@@ -573,18 +573,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.modal-fade-enter-active, .modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.modal-fade-enter-from, .modal-fade-leave-to {
-  opacity: 0;
-}
-.modal-inner-enter-active, .modal-inner-leave-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.modal-inner-enter-from, .modal-inner-leave-to {
-  opacity: 0;
-  transform: scale(0.9) translateY(20px);
-}
+
+
 </style>
 

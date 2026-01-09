@@ -253,7 +253,7 @@ onUnmounted(() => {
 
 <template>
   <!-- ==================== 移动端遮罩层 ==================== -->
-  <Transition name="fade-overlay">
+  <Transition name="fade">
     <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[39] lg:hidden" @click="closeMobileMenu"></div>
   </Transition>
 
@@ -617,26 +617,7 @@ onUnmounted(() => {
 <style scoped>
 /* ==================== Vue 过渡动画 ==================== */
 
-/* 淡入淡出过渡 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateX(-10px);
-}
 
-/* 遮罩层过渡 */
-.fade-overlay-enter-active,
-.fade-overlay-leave-active {
-  transition: opacity 0.3s ease;
-}
 
-.fade-overlay-enter-from,
-.fade-overlay-leave-to {
-  opacity: 0;
-}
 </style>

@@ -430,12 +430,7 @@ onMounted(() => {
   animation-direction: reverse; /* 反向旋转 */
 }
 
-/* 旋转动画关键帧 */
-@keyframes spin {
-  to {
-    transform: rotate(360deg); /* 旋转一圈 */
-  }
-}
+
 
 /* 加载文字 - 带脉冲动画 */
 .loading-text {

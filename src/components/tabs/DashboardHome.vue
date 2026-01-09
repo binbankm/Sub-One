@@ -380,15 +380,5 @@ onMounted(() => {
   transition: transform 0.3s ease;
 }
 
-@keyframes pulse {
 
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
 </style>
