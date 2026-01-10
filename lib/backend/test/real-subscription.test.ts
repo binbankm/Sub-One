@@ -1,103 +1,129 @@
+import { describe, it, expect } from 'vitest';
 import { parseClashProxy } from '../parsers/clash';
-import { toLoon } from '../converter/loon-converter';
+import { toClash } from '../converter/clash-converter';
+import { toSingBox } from '../converter/singbox-converter';
 import { toSurge } from '../converter/surge-converter';
-import { toQuantumultX } from '../converter/quantumultx-converter';
-import * as yaml from 'js-yaml';
+import { toLoon } from '../converter/loon-converter';
+import { ClashProxyConfig, ProxyNode } from '../../shared/types';
 
-describe('真实订阅测试 - SOCKS5 节点解析和转换', () => {
-    it('应该正确解析和转换真实的 SOCKS5 节点', () => {
-        // 模拟真实的 Clash 订阅内容（包含 SOCKS5 节点）
-        const clashYaml = `port: 7890
-socks-port: 7891
-proxies:
-  - {name: 德国 - 法兰克福 - WAIcore Ltd - 1, server: 193.233.254.7, port: 1080, type: socks5, username: Og@193.233.254.7, password: "@193.233.254.7:"}
-  - {name: HTTP代理测试, server: 192.168.1.1, port: 8080, type: http, username: testuser, password: testpass}
-  - {name: 澳大利亚 - 悉尼 - DigitalOcean, server: v2.dabache.top, port: 443, type: vless, uuid: b61ce65d-cad5-4d31-a0a8-4fe5b9355b3c, tls: true, servername: do-syd1.025713.xyz}`;
+// 来自真实订阅的 Hysteria2 节点配置
+const realHy2Nodes: ClashProxyConfig[] = [
+    {
+        name: "德国 - Frankfurt Am Main - Hetzner Online AG - 2",
+        server: "91.107.190.166",
+        port: 8443,
+        type: "hysteria2",
+        password: "xtGIM7iEx9",
+        sni: "dash.cloudflare.com",
+        'skip-cert-verify': true,
+        obfs: "salamander",
+        'obfs-password': "KLSADFIU43#$",
+        udp: true
+    },
+    {
+        name: "韩国 - 春川市 - Oracle Corporation - 5",
+        server: "kr1.miyazono-kaori.com",
+        port: 42574,
+        type: "hysteria2",
+        password: "274691f9-e6c0-46ff-82f2-3a9062872a04",
+        sni: "kr1.miyazono-kaori.com",
+        'skip-cert-verify': false,
+        obfs: "salamander",
+        'obfs-password': "MKsqfibVxwhZ3pCf",
+        udp: true
+    }
+];
 
-        console.log('\n========================================');
-        console.log('📥 开始解析订阅');
-        console.log('========================================\n');
+describe('真实订阅 Hysteria2 节点测试', () => {
+    it('应该正确解析来自真实订阅的 Clash 配置', () => {
+        const nodes = realHy2Nodes
+            .map(proxy => parseClashProxy(proxy))
+            .filter((n): n is ProxyNode => n !== null);
 
-        // 解析 YAML
-        const clashConfig: any = yaml.load(clashYaml);
-        const proxies = clashConfig.proxies || [];
+        console.log(`\n解析到 ${nodes.length} 个节点\n`);
 
-        // 解析节点
-        const nodes = proxies.map((proxy: any) => parseClashProxy(proxy)).filter((n: any) => n !== null);
+        expect(nodes.length).toBe(2);
 
-        console.log(`✅ 解析完成，共 ${nodes.length} 个节点\n`);
+        nodes.forEach((node, index) => {
+            console.log(`\n节点 ${index + 1}:`);
+            console.log(JSON.stringify(node, null, 2));
 
-        // 找到 SOCKS5 节点
-        const socks5Nodes = nodes.filter(n => n?.type === 'socks5');
-        const httpNodes = nodes.filter(n => n?.type === 'http');
-
-        console.log('========================================');
-        console.log('🔍 SOCKS5 节点分析');
-        console.log('========================================\n');
-
-        socks5Nodes.forEach((node, index) => {
-            if (node && node.type === 'socks5') {
-                console.log(`SOCKS5 节点 #${index + 1}:`);
-                console.log(`  名称: ${node.name}`);
-                console.log(`  服务器: ${node.server}`);
-                console.log(`  端口: ${node.port}`);
-                console.log(`  用户名: ${node.username || '(无)'}`);
-                console.log(`  密码: ${node.password || '(无)'}`);
-                console.log(`  UDP: ${node.udp}`);
-                console.log('');
+            expect(node.type).toBe('hysteria2');
+            if (node.type === 'hysteria2') {
+                expect(node.obfs).toBeDefined();
+                expect(node.obfs?.type).toBe('salamander');
+                expect(node.obfs?.password).toBeTruthy();
             }
         });
+    });
 
-        console.log('========================================');
-        console.log('🔍 HTTP 节点分析');
-        console.log('========================================\n');
+    it('应该正确转换为 Clash 格式', () => {
+        const nodes = realHy2Nodes
+            .map(proxy => parseClashProxy(proxy))
+            .filter((n): n is ProxyNode => n !== null);
 
-        httpNodes.forEach((node, index) => {
-            if (node && node.type === 'http') {
-                console.log(`HTTP 节点 #${index + 1}:`);
-                console.log(`  名称: ${node.name}`);
-                console.log(`  服务器: ${node.server}`);
-                console.log(`  端口: ${node.port}`);
-                console.log(`  用户名: ${node.username || '(无)'}`);
-                console.log(`  密码: ${node.password || '(无)'}`);
-                console.log('');
-            }
+        const output = toClash(nodes, { ruleTemplate: 'none' });
+
+        console.log('\n========== Clash 输出 ==========');
+        console.log(output);
+
+        expect(output).toContain('obfs: salamander');
+        expect(output).toContain('obfs-password: KLSADFIU43#$');
+        expect(output).toContain('obfs-password: MKsqfibVxwhZ3pCf');
+    });
+
+    it('应该正确转换为 Sing-Box 格式', () => {
+        const nodes = realHy2Nodes
+            .map(proxy => parseClashProxy(proxy))
+            .filter((n): n is ProxyNode => n !== null);
+
+        const output = toSingBox(nodes);
+        const config = JSON.parse(output);
+
+        const hy2Nodes = config.outbounds.filter((o: any) => o.type === 'hysteria2');
+
+        console.log('\n========== Sing-Box Hysteria2 节点 ==========');
+        hy2Nodes.forEach((node: any, index: number) => {
+            console.log(`\n节点 ${index + 1}:`);
+            console.log(JSON.stringify(node, null, 2));
         });
 
-        // 转换为不同客户端格式
-        if (socks5Nodes.length > 0 || httpNodes.length > 0) {
-            const testNodes = [...socks5Nodes, ...httpNodes].filter(n => n !== null);
+        expect(hy2Nodes.length).toBe(2);
+        hy2Nodes.forEach((node: any) => {
+            expect(node.obfs).toBeDefined();
+            expect(node.obfs.type).toBe('salamander');
+        });
+    });
 
-            console.log('========================================');
-            console.log('📤 Loon 格式转换');
-            console.log('========================================\n');
-            const loonConfig = toLoon(testNodes as any, { ruleTemplate: 'none' });
-            console.log(loonConfig);
+    it('应该正确转换为 Surge 格式', () => {
+        const nodes = realHy2Nodes
+            .map(proxy => parseClashProxy(proxy))
+            .filter((n): n is ProxyNode => n !== null);
 
-            console.log('\n========================================');
-            console.log('📤 Surge 格式转换');
-            console.log('========================================\n');
-            const surgeConfig = toSurge(testNodes as any, { ruleTemplate: 'none' });
-            console.log(surgeConfig);
+        const output = toSurge(nodes);
 
-            console.log('\n========================================');
-            console.log('📤 Quantumult X 格式转换');
-            console.log('========================================\n');
-            const qxConfig = toQuantumultX(testNodes as any, { ruleTemplate: 'none' });
-            console.log(qxConfig);
-        }
+        console.log('\n========== Surge 节点部分 ==========');
+        const proxySection = output.match(/\[Proxy\]([\s\S]*?)\[Proxy Group\]/)?.[1];
+        console.log(proxySection);
 
-        // 验证
-        expect(nodes.length).toBeGreaterThan(0);
-        expect(socks5Nodes.length).toBeGreaterThan(0);
+        expect(output).toContain('obfs=salamander');
+        expect(output).toContain('obfs-password=KLSADFIU43#$');
+        expect(output).toContain('obfs-password=MKsqfibVxwhZ3pCf');
+    });
 
-        // 验证 SOCKS5 节点数据正确性
-        const socks5Node = socks5Nodes[0];
-        if (socks5Node && socks5Node.type === 'socks5') {
-            expect(socks5Node.server).toBe('193.233.254.7');
-            expect(socks5Node.port).toBe(1080);
-            expect(socks5Node.username).toBe('Og@193.233.254.7');
-            expect(socks5Node.password).toBe('@193.233.254.7:');
-        }
+    it('应该正确转换为 Loon 格式', () => {
+        const nodes = realHy2Nodes
+            .map(proxy => parseClashProxy(proxy))
+            .filter((n): n is ProxyNode => n !== null);
+
+        const output = toLoon(nodes);
+
+        console.log('\n========== Loon 节点部分 ==========');
+        const proxySection = output.match(/\[Proxy\]([\s\S]*?)\[Proxy Group\]/)?.[1];
+        console.log(proxySection);
+
+        expect(output).toContain('obfs:salamander');
+        expect(output).toContain('obfs-pwd:KLSADFIU43#$');
+        expect(output).toContain('obfs-pwd:MKsqfibVxwhZ3pCf');
     });
 });

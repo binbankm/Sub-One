@@ -84,7 +84,7 @@ describe('Hysteria2 obfs support', () => {
         console.log('\n========== Loon 输出 ==========');
         console.log(output);
 
-        expect(output).toContain('obfs:salamander');
-        expect(output).toContain('obfs-pwd:KLSADFIU43#$');
+        expect(output).toContain('salamander-password=KLSADFIU43#$');
+        expect(output).not.toContain('obfs:salamander'); // Loon 不使用 obfs: 前缀
     });
 });

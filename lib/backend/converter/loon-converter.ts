@@ -264,9 +264,13 @@ function buildHysteria2(node: Hysteria2Node): string {
         if (node.tls.insecure) parts.push('skip-cert-verify:true');
     }
 
+    // Loon Hysteria2 obfs 配置
+    // 根据官方文档，使用 salamander-password 参数
+    // 示例: salamander-password=bbb
     if (node.obfs) {
-        parts.push(`obfs:${node.obfs.type}`);
-        if (node.obfs.password) parts.push(`obfs-pwd:${node.obfs.password}`);
+        if (node.obfs.type === 'salamander' && node.obfs.password) {
+            parts.push(`salamander-password=${node.obfs.password}`);
+        }
     }
 
     return `${node.name} = ${parts.join(',')}`;
