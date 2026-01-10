@@ -442,11 +442,12 @@ onUnmounted(() => {
                             class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
                       </div>
 
-                      <!-- 协议图标 (小) -->
-                      <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg shadow-sm"
-                           :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color">
-                          {{ getProtocolInfo(node.protocol).icon }}
-                      </div>
+                      <!-- 协议标签 (图标+文字) -->
+                    <div class="flex-shrink-0 h-8 px-2.5 rounded-lg flex items-center gap-1.5 shadow-sm"
+                         :class="getProtocolInfo(node.protocol).bg + ' ' + getProtocolInfo(node.protocol).color">
+                        <span class="text-lg leading-none">{{ getProtocolInfo(node.protocol).icon }}</span>
+                        <span class="text-xs font-bold uppercase tracking-wide pt-0.5">{{ node.protocol }}</span>
+                    </div>
 
                       <!-- 节点名称 & 简要信息 -->
                       <div class="flex-1 min-w-0 pr-2">
@@ -606,7 +607,7 @@ onUnmounted(() => {
                                 </p>
                             </div>
                             <button 
-                              @click.stop="copyToClipboard(node.url)"
+                              @click.stop="copyToClipboard(decodeURIComponent(node.url))"
                               class="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
                               title="复制完整链接">
                               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
