@@ -285,6 +285,16 @@ const copySelectedNodes = () => {
   });
 };
 
+const safeUrlDecode = (str: string) => {
+  if (!str) return '';
+  try {
+    return decodeURIComponent(str.trim());
+  } catch (e) {
+    console.warn('URL Decode failed:', str);
+    return str;
+  }
+};
+
 // 复制单个节点到剪贴板
 const copyToClipboard = (url: string) => {
   navigator.clipboard.writeText(url).then(() => {
@@ -603,11 +613,11 @@ onUnmounted(() => {
                          <div v-if="node.url" class="w-full mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2">
                             <div class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-2 overflow-hidden">
                                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-mono break-all whitespace-normal leading-relaxed">
-                                  {{ decodeURIComponent(node.url.trim()) }}
+                                  {{ safeUrlDecode(node.url) }}
                                 </p>
                             </div>
                             <button 
-                              @click.stop="copyToClipboard(decodeURIComponent(node.url))"
+                              @click.stop="copyToClipboard(safeUrlDecode(node.url))"
                               class="flex-shrink-0 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors"
                               title="复制完整链接">
                               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

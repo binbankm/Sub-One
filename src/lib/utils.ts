@@ -262,7 +262,12 @@ export function prependNodeName(link: string, prefix: string): string {
 
   // 分离基础链接和原始名称
   const baseLink = link.substring(0, hashIndex);
-  const originalName = decodeURIComponent(link.substring(hashIndex + 1));
+  let originalName = '';
+  try {
+    originalName = decodeURIComponent(link.substring(hashIndex + 1));
+  } catch (e) {
+    originalName = link.substring(hashIndex + 1);
+  }
 
   // 如果原始名称已经包含了前缀，则不再重复添加
   if (originalName.startsWith(prefix)) {
