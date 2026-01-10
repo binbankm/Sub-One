@@ -530,6 +530,64 @@ onUnmounted(() => {
                         <div v-if="node.raw?.tls?.serverName" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 max-w-[150px] truncate" title="SNI / Server Name">
                           <span class="opacity-70">SNI:</span> {{ node.raw.tls.serverName }}
                        </div>
+                       
+                       <!-- Fingerprint (如果有) -->
+                       <div v-if="node.raw?.tls?.fingerprint" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700" title="uTLS Fingerprint">
+                          <span class="opacity-70">FP:</span> {{ node.raw.tls.fingerprint }}
+                       </div>
+
+                       <!-- Insecure (如果允许) -->
+                       <div v-if="node.raw?.tls?.insecure" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/30 text-xs font-medium text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-800" title="Allow Insecure">
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                          Insecure
+                       </div>
+
+                       <!-- Transport Path (WS/H2/HTTP) -->
+                       <div v-if="node.raw?.transport?.path" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 max-w-[150px] truncate" title="Path">
+                          <span class="opacity-70">Path:</span> {{ node.raw.transport.path }}
+                       </div>
+                       
+                       <!-- ServiceName (gRPC) -->
+                       <div v-if="node.raw?.transport?.serviceName" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800 max-w-[150px] truncate" title="Service Name">
+                          <span class="opacity-70">Service:</span> {{ node.raw.transport.serviceName }}
+                       </div>
+                    </div>
+                    
+                    <!-- 4. 高级参数区域 (Obfs, Reality, etc.) -->
+                    <div v-if="node.raw?.obfs || (node.raw?.tls?.reality?.enabled)" class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 border-t border-gray-100 dark:border-gray-800/50">
+                        <!-- 混淆 Obfs (Hysteria2/Trojan) -->
+                        <div v-if="node.raw.obfs" class="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700">
+                             <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs text-gray-400 dark:text-gray-500">Obfuscation</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ typeof node.raw.obfs === 'string' ? 'Simple' : (node.raw.obfs.type || 'Unknown') }}</span>
+                             </div>
+                             <div v-if="typeof node.raw.obfs === 'object' && node.raw.obfs.password" class="flex items-center gap-2">
+                                <span class="text-xs font-mono text-gray-700 dark:text-gray-300 truncate">
+                                   pwd: {{ node.raw.obfs.password }}
+                                </span>
+                                <button @click.stop="copyToClipboard(node.raw.obfs.password)" class="text-gray-300 hover:text-indigo-500" title="复制混淆密码">
+                                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                             </div>
+                             <div v-else-if="typeof node.raw.obfs === 'string'" class="text-xs font-mono text-gray-700 dark:text-gray-300 truncate">
+                                {{ node.raw.obfs }}
+                             </div>
+                        </div>
+
+                        <!-- Reality Keys -->
+                        <div v-if="node.raw.tls?.reality?.enabled" class="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700 md:col-span-2">
+                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-1 block">Reality Keys</span>
+                             <div class="space-y-1">
+                                <div class="flex items-center gap-2">
+                                   <span class="text-[10px] text-gray-400 w-6">PK:</span>
+                                   <span class="text-xs font-mono text-gray-700 dark:text-gray-300 truncate select-all flex-1">{{ node.raw.tls.reality.publicKey }}</span>
+                                </div>
+                                <div v-if="node.raw.tls.reality.shortId" class="flex items-center gap-2">
+                                   <span class="text-[10px] text-gray-400 w-6">SID:</span>
+                                   <span class="text-xs font-mono text-gray-700 dark:text-gray-300 truncate select-all flex-1">{{ node.raw.tls.reality.shortId }}</span>
+                                </div>
+                             </div>
+                        </div>
 
                        <!-- 显示原始URL或解码URL的开关区域 -->
                        <div v-if="node.url" class="w-full mt-1 pt-2 border-t border-gray-100 dark:border-gray-800">
