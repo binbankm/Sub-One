@@ -290,7 +290,7 @@ const safeUrlDecode = (str: string) => {
   try {
     return decodeURIComponent(str.trim());
   } catch (e) {
-    console.warn('URL Decode failed:', str);
+    // URL format is likely properly malformed or raw (e.g. contains unescaped %), return original
     return str;
   }
 };

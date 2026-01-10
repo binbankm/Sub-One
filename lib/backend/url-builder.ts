@@ -196,7 +196,7 @@ function buildShadowsocksUrl(node: ShadowsocksNode): string {
     const userInfo = `${node.cipher}:${node.password}`;
     const base64Info = encodeBase64(userInfo);
     const host = node.server.includes(':') ? `[${node.server}]` : node.server;
-    const hash = node.name ? `#${node.name}` : '';
+    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
 
     let url = `ss://${base64Info}@${host}:${node.port}`;
 
