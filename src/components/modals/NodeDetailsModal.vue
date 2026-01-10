@@ -43,6 +43,16 @@ interface DisplayNode {
   enabled?: boolean;
   type?: 'manual' | 'subscription';
   subscriptionName?: string;
+  // 详情字段
+  server?: string;
+  port?: number | string;
+  uuid?: string;      // UUID 或 Password
+  cipher?: string;    // 加密方式
+  network?: string;   // 传输协议 (tcp, ws, grpc...)
+  tls?: boolean;      // 是否开启 TLS
+  flow?: string;      // VLESS Flow / XTLS
+  raw?: any;          // 原始完整对象，便于扩展
+  showPassword?: boolean; // UI控制：是否显示密码
 }
 
 const nodes = ref<DisplayNode[]>([]);
@@ -107,7 +117,17 @@ const fetchNodes = async () => {
         name: n.name,
         url: n.url || '',
         protocol: getProtocol(n.url || ''),
-        enabled: true
+        enabled: true,
+        // 映射详情字段
+        server: n.server,
+        port: n.port,
+        uuid: n.uuid || n.password || n.privateKey, // 统一映射为凭证
+        cipher: n.cipher,
+        network: n.transport?.type || n.network || 'tcp',
+        tls: n.tls?.enabled || false,
+        flow: n.flow,
+        raw: n,
+        showPassword: false
       }));
     } else {
       nodes.value = [];
@@ -183,7 +203,17 @@ const fetchProfileNodes = async () => {
                   protocol: getProtocol(node.url || ''),
                   enabled: true,
                   type: 'subscription' as const,
-                  subscriptionName: subscription.name || ''
+                  subscriptionName: subscription.name || '',
+                  // 映射详情字段
+                  server: node.server,
+                  port: node.port,
+                  uuid: node.uuid || node.password || node.privateKey,
+                  cipher: node.cipher,
+                  network: node.transport?.type || node.network || 'tcp',
+                  tls: node.tls?.enabled || false,
+                  flow: node.flow,
+                  raw: node,
+                  showPassword: false
                 }));
               }
             }
@@ -443,35 +473,70 @@ onUnmounted(() => {
                     </h4>
                   </div>
 
-                  <!-- URL 展示区域 -->
-                  <div class="relative">
-                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <div class="flex items-start gap-2">
-                        <!-- URL 图标 -->
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                        </svg>
-                        
-                        <!-- URL 文本 -->
-                        <div class="flex-1 min-w-0">
-                          <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed">
-                            {{ node.url ? node.url.trim() : '' }}
-                          </p>
-                        </div>
-
-                        <!-- 复制按钮 -->
-                        <button 
-                          @click.stop="copyToClipboard(node.url)"
-                          class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group/copy"
-                          title="复制节点链接">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                          </svg>
-                        </button>
-                      </div>
+                  <!-- 详情信息网格 (Sub-Store 风格) -->
+                  <div class="mt-2 text-sm space-y-3">
+                    
+                    <!-- 1. 基础信息行 (Server | Port) -->
+                    <div class="grid grid-cols-12 gap-2">
+                       <div class="col-span-8 bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+                          <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Server</span>
+                          <div class="flex items-center gap-1.5 overflow-hidden">
+                             <span class="font-mono text-gray-700 dark:text-gray-300 truncate select-all">{{ node.server }}</span>
+                             <button @click.stop="copyToClipboard(node.server || '')" class="text-gray-300 hover:text-indigo-500 transition-colors" title="复制服务器地址">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                             </button>
+                          </div>
+                       </div>
+                       <div class="col-span-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700 flex flex-col justify-center">
+                          <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Port</span>
+                          <span class="font-mono text-gray-700 dark:text-gray-300 select-all">{{ node.port }}</span>
+                       </div>
                     </div>
+
+                    <!-- 2. 凭证信息 (UUID/Password) -->
+                    <div v-if="node.uuid" class="bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 border border-gray-100 dark:border-gray-700">
+                       <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5 block">
+                         {{ ['ss', 'trojan', 'hysteria2'].includes(node.protocol) ? 'Password' : 'UUID / Key' }}
+                       </span>
+                       <div class="flex items-center gap-2">
+                          <span class="font-mono text-gray-700 dark:text-gray-300 truncate flex-1 select-all">
+                             {{ node.showPassword ? node.uuid : (node.uuid.length > 10 ? node.uuid.substring(0, 4) + '******' + node.uuid.substring(node.uuid.length - 4) : '******') }}
+                          </span>
+                          <button @click.stop="node.showPassword = !node.showPassword" class="text-gray-400 hover:text-indigo-500 p-1">
+                             <svg v-if="!node.showPassword" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                          </button>
+                           <button @click.stop="copyToClipboard(node.uuid)" class="text-gray-400 hover:text-indigo-500 p-1" title="复制凭证">
+                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                          </button>
+                       </div>
+                    </div>
+
+                    <!-- 3. 技术参数 (Tags) -->
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                       <!-- 传输协议 -->
+                       <div v-if="node.network" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                          {{ node.network.toUpperCase() }}
+                       </div>
+
+                       <!-- 安全 -->
+                       <div v-if="node.tls" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/30 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800">
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                          TLS
+                       </div>
+
+                       <!-- SNI (如果有) -->
+                        <div v-if="node.raw?.tls?.serverName" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 max-w-[150px] truncate" title="SNI / Server Name">
+                          <span class="opacity-70">SNI:</span> {{ node.raw.tls.serverName }}
+                       </div>
+
+                       <!-- 显示原始URL或解码URL的开关区域 -->
+                       <div v-if="node.url" class="w-full mt-1 pt-2 border-t border-gray-100 dark:border-gray-800">
+                          <p class="text-[10px] text-gray-400 font-mono break-all">{{ decodeURIComponent(node.url.trim()) }}</p>
+                       </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
