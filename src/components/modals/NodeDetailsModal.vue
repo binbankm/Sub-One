@@ -49,12 +49,13 @@ const nodes = ref<DisplayNode[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
+const showDecoded = ref(false); // 是否显示解码后的 URL
+const expandedNodes = ref(new Set<string>()); // 展开查看详情的节点 ID
 const selectedNodes = ref(new Set<string>());
 
 
 const toastStore = useToastStore();
 
-// 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
   if (newVal) {
     if (props.profile) {
@@ -65,6 +66,8 @@ watch(() => props.show, async (newVal) => {
   } else {
     nodes.value = [];
     searchTerm.value = '';
+    showDecoded.value = false;
+    expandedNodes.value.clear();
     selectedNodes.value.clear();
     errorMessage.value = '';
   }
@@ -103,10 +106,11 @@ const fetchNodes = async () => {
     // 后端已解析并过滤，直接使用返回的节点
     if (data.nodes && data.nodes.length > 0) {
       nodes.value = data.nodes.map((n: any) => ({
+        ...n,
         id: n.id,
         name: n.name,
         url: n.url || '',
-        protocol: getProtocol(n.url || ''),
+        protocol: n.type || getProtocol(n.url || ''),
         enabled: true
       }));
     } else {
@@ -177,10 +181,11 @@ const fetchProfileNodes = async () => {
               // 后端已解析并过滤，直接使用返回的节点
               if (data.nodes && data.nodes.length > 0) {
                 return data.nodes.map((node: any) => ({
+                  ...node,
                   id: node.id,
                   name: node.name,
                   url: node.url || '',
-                  protocol: getProtocol(node.url || ''),
+                  protocol: node.type || getProtocol(node.url || ''),
                   enabled: true,
                   type: 'subscription' as const,
                   subscriptionName: subscription.name || ''
@@ -257,6 +262,38 @@ const copyToClipboard = (url: string) => {
   }).catch(() => {
     toastStore.showToast('复制失败', 'error');
   });
+};
+
+// 展开/折叠节点详情
+const toggleNodeExpansion = (nodeId: string) => {
+  if (expandedNodes.value.has(nodeId)) {
+    expandedNodes.value.delete(nodeId);
+  } else {
+    expandedNodes.value.add(nodeId);
+  }
+};
+
+// 智能解码 URL
+const decodeUrl = (url: string) => {
+  if (!url) return '';
+  try {
+    // 处理 vmess 特殊编码
+    if (url.startsWith('vmess://')) {
+      const b64 = url.slice(8);
+      try {
+        // 尝试用现代方式解码 Base64 UTF-8
+        const json = decodeURIComponent(atob(b64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const obj = JSON.parse(json);
+        return `vmess://${JSON.stringify(obj, null, 2)}`;
+      } catch {
+        return decodeURIComponent(url);
+      }
+    }
+    // 通用 URL 解码 (针对 VLESS/Trojan/SS 等)
+    return decodeURIComponent(url);
+  } catch (e) {
+    return url;
+  }
 };
 
 // 刷新节点信息
@@ -344,6 +381,20 @@ onUnmounted(() => {
                   </path>
                 </svg>
                 <span v-else>刷新</span>
+              </button>
+
+              <button @click="showDecoded = !showDecoded"
+                :class="showDecoded ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'"
+                class="px-4 py-2 text-sm rounded-xl transition-all duration-300 shadow hover:shadow-md flex items-center gap-1.5"
+                title="显示解码后的 URL (Emoji 恢复)">
+                <svg v-if="showDecoded" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m5.882-2.282A10.05 10.05 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-2.101-2.101L3 3m9 9a3 3 0 100-6 3 3 0 000 6z" />
+                </svg>
+                {{ showDecoded ? '已解码' : '解码' }}
               </button>
 
               <button @click="copySelectedNodes" :disabled="selectedNodes.size === 0"
@@ -437,10 +488,17 @@ onUnmounted(() => {
                   </div>
 
                   <!-- 节点名称 -->
-                  <div class="mb-3">
+                  <div class="mb-3 flex items-center justify-between gap-2">
                     <h4 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">
                       {{ node.name }}
                     </h4>
+                    <button @click.stop="toggleNodeExpansion(node.id)"
+                      class="flex-shrink-0 text-xs text-indigo-500 hover:text-indigo-600 font-medium flex items-center gap-1 group/details">
+                      <span>{{ expandedNodes.has(node.id) ? '收起详情' : '查看详情' }}</span>
+                      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': expandedNodes.has(node.id) }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
 
                   <!-- URL 展示区域 -->
@@ -455,8 +513,13 @@ onUnmounted(() => {
                         
                         <!-- URL 文本 -->
                         <div class="flex-1 min-w-0">
-                          <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed">
+                          <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed"
+                            :class="{ 'hidden': showDecoded }">
                             {{ node.url ? node.url.trim() : '' }}
+                          </p>
+                          <p v-if="showDecoded" 
+                             class="text-xs font-mono text-indigo-600 dark:text-indigo-400 break-all leading-relaxed whitespace-pre-wrap">
+                            {{ decodeUrl(node.url) }}
                           </p>
                         </div>
 
@@ -473,6 +536,19 @@ onUnmounted(() => {
                       </div>
                     </div>
                   </div>
+
+                  <!-- 详情展开区域 (原始节点数据) -->
+                  <Transition name="fade">
+                    <div v-if="expandedNodes.has(node.id)" 
+                      class="mt-3 p-3 bg-gray-50/80 dark:bg-gray-900/80 rounded-lg border border-indigo-100 dark:border-indigo-900/50 overflow-hidden">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">原始节点详情 (Structured Data)</span>
+                      </div>
+                      <div class="max-h-48 overflow-y-auto">
+                        <pre class="text-[11px] font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ JSON.stringify(node, (key, value) => ['id', 'url', 'enabled', 'type', 'subscriptionName'].includes(key) ? undefined : value, 2) }}</pre>
+                      </div>
+                    </div>
+                  </Transition>
                 </div>
               </div>
             </div>
