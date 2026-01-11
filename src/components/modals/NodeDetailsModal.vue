@@ -51,9 +51,19 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const searchTerm = ref('');
 const selectedNodes = ref(new Set<string>());
+const expandedNodes = ref(new Set<string>()); // [New] Track expanded state
 
 
 const toastStore = useToastStore();
+
+// 切换节点展开/收起
+const toggleNodeExpansion = (nodeId: string) => {
+  if (expandedNodes.value.has(nodeId)) {
+    expandedNodes.value.delete(nodeId);
+  } else {
+    expandedNodes.value.add(nodeId);
+  }
+};
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
@@ -385,10 +395,9 @@ onUnmounted(() => {
             </div>
 
             <!-- 节点卡片列表 - 重新设计 -->
-            <div class="max-h-96 overflow-y-auto space-y-3">
+            <div class="max-h-96 overflow-y-auto space-y-3 p-1">
               <div v-for="node in filteredNodes" :key="node.id"
-                @click="toggleNodeSelection(node.id)"
-                class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden cursor-pointer"
+                class="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-200 overflow-hidden"
                 :class="{ 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20': selectedNodes.has(node.id) }">
                 
                 <!-- 顶部彩色条 -->
@@ -400,10 +409,11 @@ onUnmounted(() => {
                           'from-gray-400 to-gray-500'">
                 </div>
 
-                <div class="p-4">
-                  <!-- 头部：选择框 + 协议标签 + 来源标签 -->
-                  <div class="flex items-start gap-3 mb-3">
-                    <!-- 选择框 -->
+                <!-- 卡片主体 (可点击展开) -->
+                <div class="p-4 cursor-pointer" @click="toggleNodeExpansion(node.id)">
+                  <!-- 头部：选择框 + 协议标签 + 来源标签 + 展开图标 -->
+                  <div class="flex items-start gap-3 mb-2">
+                    <!-- 选择框 (点击仅选中，不展开) -->
                     <input type="checkbox" 
                       :checked="selectedNodes.has(node.id)" 
                       @click.stop
@@ -438,17 +448,30 @@ onUnmounted(() => {
                         </span>
                       </template>
                     </div>
+
+                    <!-- 展开收起图标 -->
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors transform duration-200"
+                      :class="expandedNodes.has(node.id) ? 'rotate-180' : ''">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
 
                   <!-- 节点名称 -->
-                  <div class="mb-3">
+                  <div class="mb-1 ml-8">
                     <h4 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">
                       {{ node.name }}
                     </h4>
                   </div>
+                  
+                  <!-- 简要信息 (收起时显示) -->
+                  <div v-show="!expandedNodes.has(node.id)" class="ml-8 mt-1 text-xs text-gray-500 dark:text-gray-400 font-mono">
+                    {{ (node.details as any).server }}:{{ (node.details as any).port }}
+                  </div>
 
-                  <!-- 节点详情展示区域 -->
-                  <div class="space-y-3">
+                  <!-- 展开后的详情详情展示区域 -->
+                  <div v-show="expandedNodes.has(node.id)" class="space-y-3 mt-4 animate-fade-in-down">
                     <!-- 关键参数网格 -->
                     <div v-if="node.details" class="grid grid-cols-2 gap-2 text-sm">
                       <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
@@ -460,23 +483,41 @@ onUnmounted(() => {
                         <span class="font-mono font-medium text-gray-800 dark:text-gray-200 select-all">{{ node.details.port }}</span>
                       </div>
                       <!-- 用户名/UUID -->
-                      <div v-if="node.details.uuid || node.details.username" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
-                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">{{ node.details.uuid ? 'UUID' : 'Username' }}</span>
-                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.uuid || node.details.username }}</span>
+                      <div v-if="(node.details as any).uuid || (node.details as any).username" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">{{ (node.details as any).uuid ? 'UUID' : 'Username' }}</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ (node.details as any).uuid || (node.details as any).username }}</span>
                       </div>
                       <!-- 密码 -->
-                      <div v-if="node.details.password" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                      <div v-if="(node.details as any).password" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
                         <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">密码</span>
-                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.password }}</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ (node.details as any).password }}</span>
                       </div>
                       <!-- 加密方式/流控/网络 -->
                       <div v-if="(node.details as any).cipher" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
                         <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">加密 / Cipher</span>
                         <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).cipher }}</span>
                       </div>
-                      <div v-if="(node.details.transport as any)?.type" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
-                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">传输协议</span>
-                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 uppercase">{{ (node.details.transport as any).type }}</span>
+                      
+                      <!-- Transport Block Extended -->
+                      <div v-if="(node.details.transport as any)?.type" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50 flex flex-col gap-2">
+                        <div>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">传输协议</span>
+                            <span class="font-mono font-medium text-gray-800 dark:text-gray-200 uppercase">{{ (node.details.transport as any).type }}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div v-if="(node.details.transport as any).path">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">路径 / Path</span>
+                                <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details.transport as any).path }}</span>
+                            </div>
+                            <div v-if="(node.details.transport as any).headers?.Host">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Host</span>
+                                <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details.transport as any).headers.Host }}</span>
+                            </div>
+                             <div v-if="(node.details.transport as any).serviceName">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">gRPC Service</span>
+                                <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details.transport as any).serviceName }}</span>
+                            </div>
+                        </div>
                       </div>
 
                       <!-- VLESS / VMess 特有 -->
@@ -611,30 +652,42 @@ onUnmounted(() => {
 
                     <!-- 原始链接 (折叠/次要显示) -->
                     <div class="relative group/url">
-                      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-start gap-2">
-                        <!-- URL 图标 -->
-                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                        </svg>
-                        
-                        <!-- URL 文本 -->
-                        <div class="flex-1 min-w-0">
-                          <p class="text-xs font-mono text-gray-500 dark:text-gray-500 break-all leading-relaxed line-clamp-1 group-hover/url:line-clamp-none transition-all duration-300">
-                            {{ node.url ? node.url.trim() : '' }}
-                          </p>
-                        </div>
+                      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex flex-col gap-2">
+                         <div class="flex items-start gap-2">
+                            <!-- URL 图标 -->
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            </svg>
+                            
+                            <!-- URL 文本 (优先显示原始链接) -->
+                            <div class="flex-1 min-w-0">
+                              <p class="text-xs font-mono text-gray-500 dark:text-gray-500 break-all leading-relaxed line-clamp-3 group-hover/url:line-clamp-none transition-all duration-300">
+                                {{ (node.details && (node.details as any).originalUrl) ? (node.details as any).originalUrl : (node.url ? node.url.trim() : '') }}
+                              </p>
+                            </div>
 
-                        <!-- 复制按钮 -->
-                        <button 
-                          @click.stop="copyToClipboard(node.url)"
-                          class="flex-shrink-0 p-1.5 -my-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
-                          title="复制节点链接">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                          </svg>
-                        </button>
+                            <!-- 复制按钮 -->
+                            <button 
+                              @click.stop="copyToClipboard((node.details && (node.details as any).originalUrl) ? (node.details as any).originalUrl : node.url)"
+                              class="flex-shrink-0 p-1.5 -my-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+                              title="复制节点链接">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                              </svg>
+                            </button>
+                         </div>
+                         
+                         <!-- 如果原始链接存在，且与生成的URL不同，或者是编码的，提供解码查看选项（仅展示，不可直接复制为链接因为可能无效） -->
+                         <div v-if="node.url && node.url.includes('%')" class="text-[10px] text-gray-400 dark:text-gray-600 border-t border-gray-200 dark:border-gray-800 pt-1 mt-1">
+                            <details class="cursor-pointer">
+                                <summary class="hover:text-gray-600 dark:hover:text-gray-400 select-none">查看解码后参数 / View Decoded</summary>
+                                <p class="mt-1 font-mono break-all bg-white dark:bg-gray-900 p-2 rounded border border-gray-100 dark:border-gray-800 select-all text-gray-600 dark:text-gray-400">
+                                    {{ decodeURIComponent((node.details && (node.details as any).originalUrl) ? (node.details as any).originalUrl : node.url) }}
+                                </p>
+                            </details>
+                         </div>
                       </div>
                     </div>
                   </div>
