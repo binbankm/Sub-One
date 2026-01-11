@@ -76,6 +76,12 @@ export function parseHttp(url: string): HttpNode | null {
 
         if (!server || isNaN(port) || port <= 0) return null;
 
+        // 严格检查 server 格式，防止将 URL (如规则订阅 https://...) 误识别为节点
+        // Rule lists typically contain '/', ',', or 'policy='
+        if (server.includes('/') || server.includes(',') || server.includes(' ') || server.includes('\\')) {
+            return null;
+        }
+
         const node: HttpNode = {
             type: 'http',
             id: generateId(),
