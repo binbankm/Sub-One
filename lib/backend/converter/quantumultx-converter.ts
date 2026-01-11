@@ -1,17 +1,9 @@
 import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Socks5Node } from '../../shared/types';
-import { QX_CONFIG, DEFAULT_TEST_URL } from '../config/config';
-import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
 
-export function toQuantumultX(nodes: ProxyNode[], options: ConverterOptions = {}): string {
+
+export function toQuantumultX(nodes: ProxyNode[], _options: ConverterOptions = {}): string {
     const lines: string[] = [];
-    const tpl: RuleTemplate = getTemplate(options.ruleTemplate || 'advanced');
-
-    lines.push('[general]');
-    lines.push(`server_check_url=${DEFAULT_TEST_URL}`);
-    lines.push(`dns_server=${QX_CONFIG.dns}`);
-    lines.push('');
-    lines.push('[server_local]');
 
     const nodeNames: string[] = [];
     for (const node of nodes) {
@@ -21,75 +13,6 @@ export function toQuantumultX(nodes: ProxyNode[], options: ConverterOptions = {}
             nodeNames.push(node.name);
         }
     }
-
-    // 如果选择了"仅节点"模板，只返回节点配置
-    if (tpl.id === 'none') {
-        return lines.join('\n');
-    }
-
-    lines.push('');
-    lines.push('[policy]');
-
-    // QX Policies
-    // static=Proxy, direct, proxy, img-url=...
-    // url-latency-benchmark=Auto,…
-
-
-    // 基础策略组
-    // Manual: 手动选择 (所有节点)
-    lines.push(`static=${QX_CONFIG.groupNames.manual}, ${nodeNames.join(', ')}, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png`);
-    // Auto: 自动选择 (所有节点, 测速)
-    lines.push(`url-latency-benchmark=${QX_CONFIG.groupNames.auto}, ${nodeNames.join(', ')}, url=${DEFAULT_TEST_URL}, interval=600, tolerance=50, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png`);
-    // Proxy: 节点选择 (Auto, Manual, Direct) - 注意 QX 引用策略组不需要特殊前缀，直接写名字
-    lines.push(`static=${QX_CONFIG.groupNames.proxy}, ${QX_CONFIG.groupNames.auto}, ${QX_CONFIG.groupNames.manual}, ${QX_CONFIG.groupNames.direct}, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png`);
-
-    // Template Groups
-    tpl.groups.forEach(g => {
-        if (g.type === 'url-test') {
-            lines.push(`url-latency-benchmark=${g.name}, ${QX_CONFIG.groupNames.proxy}, ${QX_CONFIG.groupNames.manual}, ${QX_CONFIG.groupNames.direct}, url=${DEFAULT_TEST_URL}, interval=600, tolerance=50${g.iconUrl ? `, img-url=${g.iconUrl}` : ''}`);
-        } else {
-            // select / fallback
-            lines.push(`static=${g.name}, ${QX_CONFIG.groupNames.proxy}, ${QX_CONFIG.groupNames.auto}, ${QX_CONFIG.groupNames.manual}, ${QX_CONFIG.groupNames.direct}${g.iconUrl ? `, img-url=${g.iconUrl}` : ''}`);
-        }
-    });
-
-    lines.push('');
-    const filterRemote: string[] = [];
-    const filterLocal: string[] = [];
-
-    // Template Rules
-    tpl.rules.forEach(r => {
-        let target = r.target;
-        // Map target names
-        if (target === 'Proxy') target = QX_CONFIG.groupNames.proxy;
-        if (target === 'Direct') target = QX_CONFIG.groupNames.direct;
-        if (target === 'Reject') target = 'reject';
-        if (target === 'Auto') target = QX_CONFIG.groupNames.auto;
-        if (target === 'Manual') target = QX_CONFIG.groupNames.manual;
-
-        if (r.type === 'domain') filterLocal.push(`host, ${r.value}, ${target}`);
-        else if (r.type === 'domain_suffix') filterLocal.push(`host-suffix, ${r.value}, ${target}`);
-        else if (r.type === 'domain_keyword') filterLocal.push(`host-keyword, ${r.value}, ${target}`);
-        else if (r.type === 'ip_cidr') filterLocal.push(`ip-cidr, ${r.value}, ${target}${r.noResolve ? ', no-resolve' : ''}`);
-        else if (r.type === 'geoip') filterLocal.push(`geoip, ${r.value}, ${target}`);
-        else if (r.type === 'rule_set') {
-            const tagName = r.value.split('/').pop()?.replace('.list', '') || 'RuleSet';
-            filterRemote.push(`${r.value}, tag=${tagName}, force-policy=${target}, update-interval=86400, enabled=true`);
-        }
-    });
-
-    if (filterRemote.length > 0) {
-        lines.push('[filter_remote]');
-        lines.push(...filterRemote);
-        lines.push('');
-    }
-
-    lines.push('[filter_local]');
-    lines.push(...filterLocal);
-
-    lines.push(`host-suffix, local, ${QX_CONFIG.groupNames.direct}`);
-    lines.push(`geoip, cn, ${QX_CONFIG.groupNames.direct}`);
-    lines.push(`final, ${QX_CONFIG.groupNames.proxy}`);
 
     return lines.join('\n');
 }

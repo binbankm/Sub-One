@@ -1,103 +1,20 @@
 import { ProxyNode, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node } from '../../shared/types';
-import { SURGE_CONFIG, DEFAULT_TEST_URL } from '../config/config';
-import { getTemplate, RuleTemplate } from '../config/rule-templates';
+
+
 
 
 /**
  * 转换为 Surge 配置
  */
-export function toSurge(nodes: ProxyNode[], options: ConverterOptions = {}): string {
-    const tpl: RuleTemplate = getTemplate(options.ruleTemplate || 'advanced');
-
-    // 如果选择了"仅节点"模板，只返回节点列表
-    if (tpl.id === 'none') {
-        const lines: string[] = ['[Proxy]'];
-        for (const node of nodes) {
-            const line = nodeToSurgeLine(node);
-            if (line) {
-                lines.push(line);
-            }
-        }
-        return lines.join('\n');
-    }
-
-    // 完整配置模式
-    const lines: string[] = [];
-
-    lines.push(SURGE_CONFIG.managedConfig);
-    lines.push('');
-    lines.push('[General]');
-    Object.entries(SURGE_CONFIG.general).forEach(([key, value]) => {
-        lines.push(`${key} = ${value}`);
-    });
-    lines.push('');
-    lines.push('[Proxy]');
-
-    const nodeNames: string[] = [];
+export function toSurge(nodes: ProxyNode[], _options: ConverterOptions = {}): string {
+    // 只返回节点列表，Surge 的 Managed Config 格式
+    const lines: string[] = ['[Proxy]'];
     for (const node of nodes) {
         const line = nodeToSurgeLine(node);
         if (line) {
             lines.push(line);
-            nodeNames.push(node.name);
         }
     }
-
-
-    lines.push('');
-    lines.push('[Proxy Group]');
-
-    // 基础策略组
-    // Proxy: 入口选择 (自动，手动，直连)
-    lines.push(`${SURGE_CONFIG.groupNames.proxy} = select, ${SURGE_CONFIG.groupNames.auto}, ${SURGE_CONFIG.groupNames.manual}, ${SURGE_CONFIG.groupNames.direct}, icon-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png`);
-    // Auto: 自动测速
-    lines.push(`${SURGE_CONFIG.groupNames.auto} = url-test, ${nodeNames.join(', ')}, url=${DEFAULT_TEST_URL}, interval=600, icon-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png`);
-    // Manual: 手动选择
-    lines.push(`${SURGE_CONFIG.groupNames.manual} = select, ${nodeNames.join(', ')}, icon-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png`);
-
-    // Template Groups
-    tpl.groups.forEach(g => {
-        const type = g.type === 'url-test' ? 'url-test' : 'select';
-        // 包含 Proxy, Auto, Manual, Direct
-        let content = `${g.name} = ${type}, ${SURGE_CONFIG.groupNames.proxy}, ${SURGE_CONFIG.groupNames.auto}, ${SURGE_CONFIG.groupNames.manual}, ${SURGE_CONFIG.groupNames.direct}`;
-        if (g.type === 'url-test') {
-            content += `, url=${DEFAULT_TEST_URL}, interval=600`;
-        }
-        if (g.iconUrl) {
-            content += `, icon-url=${g.iconUrl}`;
-        }
-        lines.push(content);
-    });
-
-    lines.push('');
-    lines.push('[Rule]');
-
-    // Template Rules
-    tpl.rules.forEach(r => {
-        let target = r.target;
-        // Map target names
-        if (target === 'Proxy') target = SURGE_CONFIG.groupNames.proxy;
-        if (target === 'Direct') target = 'DIRECT';
-        if (target === 'Reject') target = 'REJECT';
-        if (target === 'Auto') target = SURGE_CONFIG.groupNames.proxy; // Surge auto usually implies url-test group or load-balance
-
-        if (r.type === 'domain') lines.push(`DOMAIN,${r.value},"${target}"`);
-        else if (r.type === 'domain_suffix') lines.push(`DOMAIN-SUFFIX,${r.value},"${target}"`);
-        else if (r.type === 'domain_keyword') lines.push(`DOMAIN-KEYWORD,${r.value},"${target}"`);
-        else if (r.type === 'ip_cidr') lines.push(`IP-CIDR,${r.value},"${target}"${r.noResolve ? ',no-resolve' : ''}`);
-        else if (r.type === 'geoip') lines.push(`GEOIP,${r.value},"${target}"${r.noResolve ? ',no-resolve' : ''}`);
-
-        else if (r.type === 'process_name') lines.push(`PROCESS-NAME,${r.value},"${target}"`);
-        else if (r.type === 'rule_set') {
-            // Add comment based on rule value filename for better readability
-            // const filename = r.value.split('/').pop()?.split('.')[0] || 'Rule';
-            // lines.push(`# > ${filename}`);
-            lines.push(`RULE-SET,${r.value},"${target}"`);
-        }
-    });
-
-    lines.push('GEOIP,CN,"DIRECT"');
-    lines.push(`FINAL,"${SURGE_CONFIG.groupNames.proxy}",dns-failed`);
-
     return lines.join('\n');
 }
 

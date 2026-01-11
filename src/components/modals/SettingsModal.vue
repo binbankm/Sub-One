@@ -185,27 +185,7 @@ watch(() => props.show, (newValue) => {
                 placeholder="用于访问订阅链接的Token">
             </div>
             
-            <!-- 全局默认规则模板 (全宽) -->
-            <div class="md:col-span-2">
-                <label for="defaultRuleTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">全局默认规则模板</label>
-                <div class="relative">
-                    <select id="defaultRuleTemplate" v-model="settings.defaultRuleTemplate" class="input-modern-enhanced w-full appearance-none pr-10 cursor-pointer">
-                        <option value="none">仅节点 (None) - 只导出节点，不包含规则</option>
-                        <option value="minimal">极简版 (Minimal) - 仅区分黑白名单</option>
-                        <option value="standard">标准版 (Standard) - 包含常用流媒体/AI分流</option>
-                        <option value="acl4ssr">ACL4SSR版 - 经典全量规则</option>
-                        <option value="advanced">高级全能版 (Advanced) - 推荐，细分策略组</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    当订阅链接未指定 &template= 参数时使用的默认模板。
-                </p>
-            </div>
+
           </div>
         </section>
 

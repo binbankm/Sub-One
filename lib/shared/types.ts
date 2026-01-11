@@ -398,7 +398,7 @@ export interface Profile {
     filter?: string;
     token?: string;
     customId?: string;
-    ruleTemplate?: string; // 选用的规则模板 ID
+
     expiresAt?: string;
     createdAt?: number;
     updatedAt?: number;
@@ -414,7 +414,7 @@ export interface AppConfig {
     NotifyThresholdPercent: number;
     BotToken?: string;
     ChatID?: string;
-    defaultRuleTemplate?: string; // 全局默认规则模板
+
     [key: string]: unknown;
 }
 
@@ -434,7 +434,7 @@ export interface User {
 export interface ConverterOptions {
     filename?: string;
     includeRules?: boolean;
-    ruleTemplate?: string; // 传递给转换器的规则模板 ID
+
     remoteConfig?: string;
     userInfo?: {
         upload?: number;

@@ -1,115 +1,19 @@
 import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node } from '../../shared/types';
-import { LOON_CONFIG, DEFAULT_TEST_URL } from '../config/config';
-import { getTemplate, RuleTemplate } from '../config/rule-templates';
+
+
 
 /**
  * 转换为 Loon 配置
  */
-export function toLoon(nodes: ProxyNode[], options: ConverterOptions = {}): string {
-    const tpl: RuleTemplate = getTemplate(options.ruleTemplate || 'advanced');
-
-    // 如果选择了"仅节点"模板，只返回节点列表
-    if (tpl.id === 'none') {
-        const lines: string[] = ['[Proxy]'];
-        for (const node of nodes) {
-            const line = nodeToLoonLine(node);
-            if (line) {
-                lines.push(line);
-            }
-        }
-        return lines.join('\n');
-    }
-
-    // 完整配置模式
-    const lines: string[] = [];
-
-    lines.push('[General]');
-    Object.entries(LOON_CONFIG.general).forEach(([key, value]) => {
-        lines.push(`${key} = ${value}`);
-    });
-    lines.push('');
-    lines.push('[Proxy]');
-
-    const nodeNames: string[] = [];
+export function toLoon(nodes: ProxyNode[], _options: ConverterOptions = {}): string {
+    // 只返回节点列表
+    const lines: string[] = ['[Proxy]'];
     for (const node of nodes) {
         const line = nodeToLoonLine(node);
         if (line) {
             lines.push(line);
-            nodeNames.push(node.name);
         }
     }
-
-
-    lines.push('');
-    lines.push('[Proxy Group]');
-
-    // 基础策略组
-    // Proxy: 入口
-    lines.push(`${LOON_CONFIG.groupNames.proxy} = select, ${LOON_CONFIG.groupNames.auto}, ${LOON_CONFIG.groupNames.manual}, ${LOON_CONFIG.groupNames.direct}, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png`);
-    // Auto: 自动
-    lines.push(`${LOON_CONFIG.groupNames.auto} = url-test, ${nodeNames.join(', ')}, url=${DEFAULT_TEST_URL}, interval=600, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png`);
-    // Manual: 手动
-    lines.push(`${LOON_CONFIG.groupNames.manual} = select, ${nodeNames.join(', ')}, img-url=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png`);
-
-    // Template Groups
-    tpl.groups.forEach(g => {
-        const type = g.type === 'url-test' ? 'url-test' : 'select';
-        // 包含 Proxy, Auto, Manual, Direct
-        let content = `${g.name} = ${type}, ${LOON_CONFIG.groupNames.proxy}, ${LOON_CONFIG.groupNames.auto}, ${LOON_CONFIG.groupNames.manual}, ${LOON_CONFIG.groupNames.direct}`;
-        if (g.type === 'url-test') {
-            content += `, url=${DEFAULT_TEST_URL}, interval=600`;
-        }
-        if (g.iconUrl) {
-            content += `, img-url=${g.iconUrl}`;
-        }
-        lines.push(content);
-    });
-
-    lines.push('');
-    lines.push('');
-
-    // 分离本地规则和远程规则
-    const localRules: string[] = [];
-    const remoteRules: string[] = [];
-
-    tpl.rules.forEach(r => {
-        let target = r.target;
-        // Map target names
-        if (target === 'Proxy') target = LOON_CONFIG.groupNames.proxy;
-        if (target === 'Direct') target = 'DIRECT';
-        if (target === 'Reject') target = 'REJECT';
-        if (target === 'Auto') target = LOON_CONFIG.groupNames.proxy;
-
-        if (r.type === 'rule_set') {
-            // [Remote Rule] Format: URL, policy=PolicyName, tag=TagName, enabled=true
-            const tagName = r.value.split('/').pop()?.replace(/\.(list|txt|yaml|yml|wb)$/i, '') || 'Rule';
-            // Sanitize tag: allow alphanumeric, hyphen, underscore, and Chinese characters
-            const safeTag = tagName.replace(/[^a-zA-Z0-9_\-\u4e00-\u9fa5]/g, '');
-            remoteRules.push(`${r.value}, policy=${target}, tag=${safeTag}, enabled=true`);
-        } else {
-            // [Rule] Format
-            if (r.type === 'domain') localRules.push(`DOMAIN,${r.value},${target}`);
-            else if (r.type === 'domain_suffix') localRules.push(`DOMAIN-SUFFIX,${r.value},${target}`);
-            else if (r.type === 'domain_keyword') localRules.push(`DOMAIN-KEYWORD,${r.value},${target}`);
-            else if (r.type === 'ip_cidr') localRules.push(`IP-CIDR,${r.value},${target}${r.noResolve ? ',no-resolve' : ''}`);
-            else if (r.type === 'geoip') localRules.push(`GEOIP,${r.value},${target}${r.noResolve ? ',no-resolve' : ''}`);
-            else if (r.type === 'process_name') localRules.push(`PROCESS-NAME,${r.value},${target}`);
-        }
-    });
-
-    // Output [Rule]
-    lines.push('[Rule]');
-    lines.push(...localRules);
-    // Add default rules at the end of [Rule]
-    lines.push('GEOIP,CN,DIRECT');
-    lines.push(`FINAL,${LOON_CONFIG.groupNames.proxy}`);
-
-    lines.push('');
-    // Output [Remote Rule]
-    lines.push('[Remote Rule]');
-    lines.push(...remoteRules);
-
-
     return lines.join('\n');
 }
 

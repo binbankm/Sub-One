@@ -259,14 +259,11 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
     }
 
     try {
-        const ruleTemplate = url.searchParams.get('template') || config.defaultRuleTemplate || 'advanced';
         const convertedContent = subscriptionConverter.convert(
             combinedNodes,
             targetFormat,
             {
-                filename: subName,
-                includeRules: true,
-                ruleTemplate: ruleTemplate
+                filename: subName
             }
         );
 
