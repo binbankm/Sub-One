@@ -43,6 +43,7 @@ interface DisplayNode {
   enabled?: boolean;
   type?: 'manual' | 'subscription';
   subscriptionName?: string;
+  details?: Node;
 }
 
 const nodes = ref<DisplayNode[]>([]);
@@ -107,7 +108,8 @@ const fetchNodes = async () => {
         name: n.name,
         url: n.url || '',
         protocol: getProtocol(n.url || ''),
-        enabled: true
+        enabled: true,
+        details: n
       }));
     } else {
       nodes.value = [];
@@ -146,7 +148,8 @@ const fetchProfileNodes = async () => {
           url: node.url || '',
           protocol: getProtocol(node.url || ''),
           enabled: node.enabled,
-          type: 'manual'
+          type: 'manual',
+          details: node
         });
       }
     }
@@ -183,7 +186,8 @@ const fetchProfileNodes = async () => {
                   protocol: getProtocol(node.url || ''),
                   enabled: true,
                   type: 'subscription' as const,
-                  subscriptionName: subscription.name || ''
+                  subscriptionName: subscription.name || '',
+                  details: node
                 }));
               }
             }
@@ -443,10 +447,87 @@ onUnmounted(() => {
                     </h4>
                   </div>
 
-                  <!-- URL 展示区域 -->
-                  <div class="relative">
-                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <div class="flex items-start gap-2">
+                  <!-- 节点详情展示区域 -->
+                  <div class="space-y-3">
+                    <!-- 关键参数网格 -->
+                    <div v-if="node.details" class="grid grid-cols-2 gap-2 text-sm">
+                      <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">服务器</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.server }}</span>
+                      </div>
+                      <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">端口</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 select-all">{{ node.details.port }}</span>
+                      </div>
+                      <!-- 用户名/UUID -->
+                      <div v-if="node.details.uuid || node.details.username" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">{{ node.details.uuid ? 'UUID' : 'Username' }}</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.uuid || node.details.username }}</span>
+                      </div>
+                      <!-- 密码 -->
+                      <div v-if="node.details.password" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">密码</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.password }}</span>
+                      </div>
+                      <!-- 加密方式/流控/网络 -->
+                      <div v-if="node.details.cipher" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">加密 / Cipher</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ node.details.cipher }}</span>
+                      </div>
+                      <div v-if="(node.details.transport as any)?.type" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">传输协议</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 uppercase">{{ (node.details.transport as any).type }}</span>
+                      </div>
+                      
+                      <!-- TLS / Reality安全配置 & SNI -->
+                      <template v-if="(node.details.tls as any)?.enabled">
+                         <!-- TLS开启状态 & SNI -->
+                         <div class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50 flex flex-wrap gap-x-4 gap-y-1">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">TLS</span>
+                                <span class="font-mono font-medium text-green-600 dark:text-green-400">Enabled</span>
+                            </div>
+                            <div v-if="(node.details.tls as any).serverName" class="flex-1 min-w-[50%]">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">SNI / ServerName</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details.tls as any).serverName }}</span>
+                            </div>
+                            <div v-if="(node.details.tls as any).alpn" class="w-full mt-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 inline-block mr-1">ALPN:</span>
+                                <span class="font-mono text-xs text-gray-600 dark:text-gray-300">{{ (node.details.tls as any).alpn.join(', ') }}</span>
+                            </div>
+                         </div>
+
+                         <!-- Reality 专属字段 -->
+                         <div v-if="(node.details.tls as any).reality?.enabled" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-blue-50 dark:border-blue-900/30">
+                            <div class="mb-2 flex items-center gap-2">
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">REALITY</span>
+                                <span v-if="(node.details.tls as any).fingerprint" class="text-xs text-gray-500 dark:text-gray-400">Fingerprint: {{ (node.details.tls as any).fingerprint }}</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2">
+                                <div>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Public Key (pbk)</span>
+                                    <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 break-all select-all block bg-white dark:bg-gray-800 p-1 rounded border border-gray-100 dark:border-gray-600/50">
+                                        {{ (node.details.tls as any).reality.publicKey }}
+                                    </span>
+                                </div>
+                                <div class="flex gap-4">
+                                    <div class="flex-1">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Short ID (sid)</span>
+                                        <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 select-all">{{ (node.details.tls as any).reality.shortId }}</span>
+                                    </div>
+                                    <div v-if="(node.details.tls as any).reality.spiderX" class="flex-1">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">SpiderX</span>
+                                        <span class="font-mono text-xs font-medium text-gray-800 dark:text-gray-200 select-all">{{ (node.details.tls as any).reality.spiderX }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                      </template>
+                    </div>
+
+                    <!-- 原始链接 (折叠/次要显示) -->
+                    <div class="relative group/url">
+                      <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-start gap-2">
                         <!-- URL 图标 -->
                         <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -455,7 +536,7 @@ onUnmounted(() => {
                         
                         <!-- URL 文本 -->
                         <div class="flex-1 min-w-0">
-                          <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed">
+                          <p class="text-xs font-mono text-gray-500 dark:text-gray-500 break-all leading-relaxed line-clamp-1 group-hover/url:line-clamp-none transition-all duration-300">
                             {{ node.url ? node.url.trim() : '' }}
                           </p>
                         </div>
@@ -463,7 +544,7 @@ onUnmounted(() => {
                         <!-- 复制按钮 -->
                         <button 
                           @click.stop="copyToClipboard(node.url)"
-                          class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group/copy"
+                          class="flex-shrink-0 p-1.5 -my-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
                           title="复制节点链接">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
