@@ -82,6 +82,16 @@ export function parseHttp(url: string): HttpNode | null {
             return null;
         }
 
+        // 额外的安全性检查：排除常见的规则文件后缀和域名特征
+        // 防止某些极其特殊的情况下（如 URL 无参数且端口解析错误）误判
+        const lowerServer = server.toLowerCase();
+        if (lowerServer.includes('.list') || lowerServer.includes('.txt') || lowerServer.includes('.yaml') || lowerServer.includes('.yml') || lowerServer.includes('.conf')) {
+            return null;
+        }
+        if (lowerServer.includes('raw.githubusercontent.com') || lowerServer.includes('gist.githubusercontent.com')) {
+            return null;
+        }
+
         const node: HttpNode = {
             type: 'http',
             id: generateId(),
