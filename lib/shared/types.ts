@@ -18,7 +18,7 @@ export type ProxyType =
     | 'wireguard'
     | 'snell'
     | 'socks5'
-    | 'http'
+
     | 'unknown';
 
 // Alias for frontend compatibility
@@ -198,12 +198,7 @@ export interface SnellNode extends BaseNode {
     };
 }
 
-export interface HttpNode extends BaseNode {
-    type: 'http';
-    username?: string;
-    password?: string;
-    tls?: TlsOptions; // HTTP over TLS (HTTPS proxy)
-}
+
 
 export interface Socks5Node extends BaseNode {
     type: 'socks5';
@@ -225,7 +220,7 @@ export type ProxyNode =
     | TuicNode
     | WireGuardNode
     | SnellNode
-    | HttpNode
+
     | Socks5Node
     // 兼容未知类型，防止解析器崩溃
     | (BaseNode & { type: 'unknown';[key: string]: unknown });

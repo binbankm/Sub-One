@@ -1,4 +1,4 @@
-import { Node, VlessNode, VmessNode, TrojanNode, ShadowsocksNode, ShadowsocksRNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, SnellNode, V2rayNConfig, Socks5Node, HttpNode } from '../shared/types';
+import { Node, VlessNode, VmessNode, TrojanNode, ShadowsocksNode, ShadowsocksRNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, SnellNode, V2rayNConfig, Socks5Node } from '../shared/types';
 import { buildStandardQuery } from './parsers/helper';
 import { encodeBase64 } from './converter/base64';
 
@@ -52,8 +52,6 @@ export function buildNodeUrl(node: Node): string {
                 return buildSnellUrl(node);
             case 'socks5':
                 return buildSocks5Url(node);
-            case 'http':
-                return buildHttpUrl(node);
             default:
                 // 如果是未知类型但有 originalUrl，则返回之
                 if ('originalUrl' in node && node.originalUrl) {
@@ -90,18 +88,7 @@ function buildSocks5Url(node: Socks5Node): string {
     return `socks5://${userInfo}${host}:${node.port}${hash}`;
 }
 
-function buildHttpUrl(node: HttpNode): string {
-    const host = node.server.includes(':') ? `[${node.server}]` : node.server;
-    const hash = node.name ? `#${encodeURIComponent(node.name)}` : '';
-    let userInfo = '';
 
-    if (node.username || node.password) {
-        userInfo = `${encodeURIComponent(node.username || '')}:${encodeURIComponent(node.password || '')}@`;
-    }
-
-    // HTTP Proxy 格式通常也支持 http://user:pass@host:port
-    return `http://${userInfo}${host}:${node.port}${hash}`;
-}
 
 function buildVlessUrl(node: VlessNode): string {
     const params = buildStandardQuery(node.transport, node.tls);

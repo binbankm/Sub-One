@@ -1,4 +1,4 @@
-import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, TransportOptions, TlsOptions, HttpNode, Socks5Node, SingBoxOutbound } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, TransportOptions, TlsOptions, Socks5Node, SingBoxOutbound } from '../../shared/types';
 import { SING_BOX_CONFIG } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -202,7 +202,7 @@ function nodeToSingBoxOutbound(node: ProxyNode): SingBoxOutbound | null {
             case 'tuic': return buildTuic(node as TuicNode);
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
             case 'anytls': return buildAnyTLS(node as AnyTLSNode);
-            case 'http': return buildHttp(node as HttpNode);
+
             case 'socks5': return buildSocks5(node as Socks5Node);
             default:
                 console.warn(`[SingBox] Unsupported node type: ${node.type}`);
@@ -398,16 +398,7 @@ function buildAnyTLS(node: AnyTLSNode): SingBoxOutbound {
     return outbound;
 }
 
-function buildHttp(node: HttpNode): SingBoxOutbound {
-    const outbound: SingBoxOutbound = {
-        type: 'http',
-        ...buildBase(node),
-        username: node.username,
-        password: node.password
-    };
-    assignTls(outbound, node);
-    return outbound;
-}
+
 
 function buildSocks5(node: Socks5Node): SingBoxOutbound {
     const outbound: SingBoxOutbound = {

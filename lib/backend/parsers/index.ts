@@ -11,7 +11,7 @@ import { parseAnyTLS } from './anytls';
 import { parseSSR } from './ssr';
 import { parseSnell } from './snell';
 import { parseSocks5 } from './socks5';
-import { parseHttp } from './http';
+
 
 export { parseStandardParams } from './helper';
 
@@ -50,8 +50,6 @@ export function parseNodeUrl(url: string): ProxyNode | null {
         return parseSnell(trimmedUrl);
     } else if (trimmedUrl.startsWith('socks5://')) {
         return parseSocks5(trimmedUrl);
-    } else if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
-        return parseHttp(trimmedUrl);
     }
 
     return null;

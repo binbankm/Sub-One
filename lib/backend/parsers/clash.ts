@@ -1,4 +1,4 @@
-import { ProxyNode, TlsOptions, TransportOptions, HttpNode, Socks5Node, ClashProxyConfig, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode } from '../../shared/types';
+import { ProxyNode, TlsOptions, TransportOptions, Socks5Node, ClashProxyConfig, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode } from '../../shared/types';
 import { generateId } from './helper';
 
 /**
@@ -138,16 +138,7 @@ export function parseClashProxy(proxy: ClashProxyConfig): ProxyNode | null {
             } as Socks5Node;
         }
 
-        if (type === 'http') {
-            return {
-                ...baseConfig,
-                id: generateId(),
-                type: 'http',
-                username: proxy.username as string | undefined,
-                password: proxy.password as string | undefined,
-                tls: tls.enabled ? tls : undefined
-            } as HttpNode;
-        }
+
 
         if (type === 'snell') {
             // Snell 混淆配置

@@ -19,7 +19,7 @@ export const getProtocol = (url?: string): string => {
         if (lowerUrl.startsWith('wireguard://') || lowerUrl.startsWith('wg://')) return 'wireguard';
         if (lowerUrl.startsWith('socks5://')) return 'socks5';
         if (lowerUrl.startsWith('snell://')) return 'snell';
-        if (lowerUrl.startsWith('http')) return 'http';
+
     } catch {
         return 'unknown';
     }
@@ -113,14 +113,7 @@ export const getProtocolInfo = (protocol: string): ProtocolInfo => {
                 bg: 'bg-amber-100 dark:bg-amber-900/30',
                 color: 'text-amber-600 dark:text-amber-400'
             };
-        case 'http':
-            return {
-                text: 'HTTP',
-                icon: '🌐',
-                gradient: 'from-lime-400 to-green-500',
-                bg: 'bg-lime-100 dark:bg-lime-900/30',
-                color: 'text-lime-600 dark:text-lime-400'
-            };
+
         case 'socks5':
             return {
                 text: 'SOCKS5',

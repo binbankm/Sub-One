@@ -30,7 +30,7 @@ export type {
     AnyTLSNode,
     SnellNode,
     Socks5Node,
-    HttpNode,
+
     // 配置相关
     V2rayNConfig,
     ClashProxyConfig,

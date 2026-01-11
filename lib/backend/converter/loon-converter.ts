@@ -1,4 +1,4 @@
-import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node, HttpNode } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node } from '../../shared/types';
 import { LOON_CONFIG, DEFAULT_TEST_URL } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -125,7 +125,7 @@ function nodeToLoonLine(node: ProxyNode): string | null {
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
             case 'snell': return buildSnell(node as SnellNode);
             case 'socks5': return buildSocks5(node as Socks5Node);
-            case 'http': return buildHttp(node as HttpNode);
+
             default:
                 return null;
         }
@@ -342,28 +342,4 @@ function buildSocks5(node: Socks5Node): string {
     return `${node.name} = ${parts.join(', ')}`;
 }
 
-function buildHttp(node: HttpNode): string {
-    // Loon HTTP format: NodeName = http, server, port, username, password
-    const parts = [
-        'http',
-        node.server,
-        node.port.toString(),
-    ];
 
-    // Add authentication if present
-    if (node.username) {
-        parts.push(node.username);
-        if (node.password) {
-            parts.push(node.password);
-        }
-    }
-
-    // Add TLS support if enabled
-    if (node.tls?.enabled) {
-        parts.push('over-tls:true');
-        if (node.tls.serverName) parts.push(`tls-name:${node.tls.serverName}`);
-        if (node.tls.insecure) parts.push('skip-cert-verify:true');
-    }
-
-    return `${node.name} = ${parts.join(', ')}`;
-}

@@ -1,5 +1,5 @@
 import * as yaml from 'js-yaml';
-import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode, TransportOptions, TlsOptions, HttpNode, Socks5Node, ClashProxyConfig } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode, TransportOptions, TlsOptions, Socks5Node, ClashProxyConfig } from '../../shared/types';
 import { CLASH_CONFIG } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -189,7 +189,7 @@ function nodeToClashProxy(node: ProxyNode): ClashProxyConfig | null {
             case 'tuic': return buildTuic(node as TuicNode);
             case 'snell': return buildSnell(node as SnellNode);
             // 兼容性
-            case 'http': return buildHttp(node as HttpNode);
+
             case 'socks5': return buildSocks5(node as Socks5Node);
             default:
                 // 如果是未知类型但有 originalProxy (例如直接从 YAML 解析来的 Snell), 直接返回
@@ -371,14 +371,7 @@ function buildTuic(node: TuicNode): ClashProxyConfig {
     return proxy;
 }
 
-function buildHttp(node: HttpNode): ClashProxyConfig {
-    return {
-        ...buildCommon(node),
-        type: 'http',
-        username: node.username,
-        password: node.password
-    };
-}
+
 
 function buildSocks5(node: Socks5Node): ClashProxyConfig {
     return {

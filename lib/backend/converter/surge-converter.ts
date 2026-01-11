@@ -1,4 +1,4 @@
-import { ProxyNode, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node, HttpNode } from '../../shared/types';
+import { ProxyNode, ConverterOptions, VmessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, WireGuardNode, SnellNode, Socks5Node } from '../../shared/types';
 import { SURGE_CONFIG, DEFAULT_TEST_URL } from '../config/config';
 import { getTemplate, RuleTemplate } from '../config/rule-templates';
 
@@ -117,7 +117,7 @@ function nodeToSurgeLine(node: ProxyNode): string | null {
             // 或者如果 Surge 5 支持的话可以添加
             case 'snell': return buildSnell(node as SnellNode);
             case 'socks5': return buildSocks5(node as Socks5Node);
-            case 'http': return buildHttp(node as HttpNode);
+
             default:
                 // console.warn(`Surge 不原生支持或暂未实现: ${node.type}`);
                 return null;
@@ -308,26 +308,4 @@ function buildSocks5(node: Socks5Node): string {
     return `${node.name} = ${parts.join(', ')}`;
 }
 
-function buildHttp(node: HttpNode): string {
-    // Surge HTTP format: ProxyName = http, server, port, username, password
-    const parts = [
-        'http',
-        node.server,
-        node.port.toString(),
-    ];
 
-    // Add authentication if present
-    if (node.username && node.password) {
-        parts.push(node.username);
-        parts.push(node.password);
-    }
-
-    // Add TLS support if enabled (HTTPS)
-    if (node.tls?.enabled) {
-        parts.push('tls=true');
-        if (node.tls.serverName) parts.push(`sni=${node.tls.serverName}`);
-        if (node.tls.insecure) parts.push('skip-cert-verify=true');
-    }
-
-    return `${node.name} = ${parts.join(', ')}`;
-}
