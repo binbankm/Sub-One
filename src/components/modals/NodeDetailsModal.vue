@@ -470,13 +470,97 @@ onUnmounted(() => {
                         <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ node.details.password }}</span>
                       </div>
                       <!-- 加密方式/流控/网络 -->
-                      <div v-if="node.details.cipher" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                      <div v-if="(node.details as any).cipher" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
                         <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">加密 / Cipher</span>
-                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ node.details.cipher }}</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).cipher }}</span>
                       </div>
                       <div v-if="(node.details.transport as any)?.type" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
                         <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">传输协议</span>
                         <span class="font-mono font-medium text-gray-800 dark:text-gray-200 uppercase">{{ (node.details.transport as any).type }}</span>
+                      </div>
+
+                      <!-- VLESS / VMess 特有 -->
+                      <div v-if="(node.details as any).flow" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">流控 / Flow</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).flow }}</span>
+                      </div>
+                      <div v-if="(node.details as any).alterId !== undefined" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">AlterId</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).alterId }}</span>
+                      </div>
+
+                      <!-- Hysteria / Tuic 带宽与控制 -->
+                      <div v-if="(node.details as any).upMbps || (node.details as any).downMbps" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50 flex gap-4">
+                        <div v-if="(node.details as any).upMbps" class="flex-1">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">上行带宽 (Mbps)</span>
+                            <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).upMbps }}</span>
+                        </div>
+                        <div v-if="(node.details as any).downMbps" class="flex-1">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">下行带宽 (Mbps)</span>
+                            <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).downMbps }}</span>
+                        </div>
+                      </div>
+                      <div v-if="(node.details as any).auth" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">认证载荷 / Auth Payload</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all">{{ (node.details as any).auth }}</span>
+                      </div>
+                      <div v-if="(node.details as any).congestionControl" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">拥塞控制</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).congestionControl }}</span>
+                      </div>
+
+                      <!-- SSR / Shadowsocks 插件与混淆 -->
+                      <div v-if="(node.details as any).protocol" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">SSR 协议</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).protocol }}</span>
+                      </div>
+                      <div v-if="(node.details as any).protocolParam" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">SSR 协议参数</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details as any).protocolParam }}</span>
+                      </div>
+                       <div v-if="(node.details as any).obfs && typeof (node.details as any).obfs === 'string'" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">混淆 / Obfs</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).obfs }}</span>
+                      </div>
+                      <div v-if="(node.details as any).obfsParam" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">混淆参数</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all">{{ (node.details as any).obfsParam }}</span>
+                      </div>
+                      <div v-if="(node.details as any).plugin" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">插件 / Plugin</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).plugin }}</span>
+                      </div>
+
+                      <!-- WireGuard 特有 -->
+                      <template v-if="node.protocol === 'wireguard'">
+                           <div v-if="(node.details as any).ip || (node.details as any).ipv6" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">本地 IP (Local Address)</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all">
+                                    {{ [(node.details as any).ip, (node.details as any).ipv6].filter(Boolean).join(', ') }}
+                                </span>
+                           </div>
+                           <div v-if="(node.details as any).mtu" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">MTU</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).mtu }}</span>
+                           </div>
+                           <div v-if="(node.details as any).publicKey" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Peer Public Key</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all text-xs">{{ (node.details as any).publicKey }}</span>
+                           </div>
+                           <div v-if="(node.details as any).privateKey" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Private Key</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all text-xs filter blur-[2px] hover:blur-0 transition-all cursor-pointer" title="Hover to reveal">{{ (node.details as any).privateKey }}</span>
+                           </div>
+                           <div v-if="(node.details as any).preSharedKey" class="col-span-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Pre-Shared Key</span>
+                                <span class="font-mono font-medium text-gray-800 dark:text-gray-200 break-all select-all text-xs filter blur-[2px] hover:blur-0 transition-all cursor-pointer">{{ (node.details as any).preSharedKey }}</span>
+                           </div>
+                      </template>
+                      
+                      <!-- Snell 特有 -->
+                      <div v-if="(node.details as any).version" class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-2 border border-gray-100 dark:border-gray-700/50">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">版本 / Version</span>
+                        <span class="font-mono font-medium text-gray-800 dark:text-gray-200">{{ (node.details as any).version }}</span>
                       </div>
                       
                       <!-- TLS / Reality安全配置 & SNI -->
