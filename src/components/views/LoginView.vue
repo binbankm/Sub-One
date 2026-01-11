@@ -160,7 +160,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
       </div>
 
       <!-- ==================== 登录表单 ==================== -->
-      <div class="mt-4 sm:mt-6 animate-fade-in-up">
+      <form class="mt-4 sm:mt-6 animate-fade-in-up" @submit.prevent="handleSubmit">
         <!-- 用户名输入 -->
         <div class="mb-3 sm:mb-4">
           <label for="username" class="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2.5 sm:text-base">
@@ -283,10 +283,9 @@ const handleKeyPress = (e: KeyboardEvent) => {
 
         <!-- ==================== 提交按钮 ==================== -->
         <button 
-          type="button" 
+          type="submit" 
           class="login-button py-3 text-sm sm:text-base sm:py-3.5 hover:shadow-glow-primary hover:scale-[1.01]" 
           :disabled="isLoading || !username || !password || (isSetup && !confirmPassword)" 
-          @click="handleSubmit"
         >
           <!-- 正常状态 - 显示登录图标和文字 -->
           <span v-if="!isLoading" class="flex items-center justify-center gap-2">
@@ -314,7 +313,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
             <span>安全加密传输</span>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
