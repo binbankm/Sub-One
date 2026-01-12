@@ -11,7 +11,7 @@
  */
 
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 /**
  * 主题类型定义
@@ -171,6 +171,13 @@ export const useThemeStore = defineStore('theme', () => {
     }
   }
 
+  /**
+   * 是否为暗黑模式
+   * 
+   * @returns {boolean}
+   */
+  const isDarkMode = computed(() => theme.value === 'dark');
+
   // ==================== 导出接口 ====================
 
   return {
@@ -178,6 +185,8 @@ export const useThemeStore = defineStore('theme', () => {
     theme,
     /** 当前实际应用的主题 */
     currentTheme,
+    /** 是否为暗黑模式 */
+    isDarkMode,
     /** 初始化主题 */
     initTheme,
     /** 切换主题 */

@@ -798,102 +798,104 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
 
     <!-- ==================== 主要内容区域 ==================== -->
     <!-- 根据当前激活的标签页显示不同内容 -->
-    <div class="space-y-6 lg:space-y-8">
+    <Transition name="page-fade" mode="out-in">
+      <div :key="activeTab" class="space-y-6 lg:space-y-8">
 
-      <!-- 仪表盘首页 -->
-      <DashboardHome 
-        v-if="activeTab === 'dashboard'" 
-        :subscriptions="subscriptions"
-        :active-subscriptions="activeSubscriptions" 
-        :total-node-count="totalNodeCount"
-        :active-node-count="activeNodeCount" 
-        :profiles="profiles" 
-        :active-profiles="activeProfiles"
-        :manual-nodes="manualNodes" 
-        :active-manual-nodes="activeManualNodes" 
-        :is-updating-all-subs="isUpdatingAllSubs"
-        @add-subscription="handleAddSubscription" 
-        @update-all-subscriptions="handleUpdateAllSubscriptions"
-        @add-node="handleAddNode" 
-        @add-profile="handleAddProfile" 
-      />
+        <!-- 仪表盘首页 -->
+        <DashboardHome 
+          v-if="activeTab === 'dashboard'" 
+          :subscriptions="subscriptions"
+          :active-subscriptions="activeSubscriptions" 
+          :total-node-count="totalNodeCount"
+          :active-node-count="activeNodeCount" 
+          :profiles="profiles" 
+          :active-profiles="activeProfiles"
+          :manual-nodes="manualNodes" 
+          :active-manual-nodes="activeManualNodes" 
+          :is-updating-all-subs="isUpdatingAllSubs"
+          @add-subscription="handleAddSubscription" 
+          @update-all-subscriptions="handleUpdateAllSubscriptions"
+          @add-node="handleAddNode" 
+          @add-profile="handleAddProfile" 
+        />
 
-      <!-- 订阅管理标签页 -->
-      <SubscriptionsTab 
-        v-if="activeTab === 'subscriptions'" 
-        v-model:subscriptions="subscriptions"
-        :paginated-subscriptions="paginatedSubscriptions" 
-        :subs-current-page="subsCurrentPage"
-        :subs-total-pages="subsTotalPages" 
-        :is-sorting-subs="isSortingSubs"
-        :has-unsaved-sort-changes="hasUnsavedSortChanges" 
-        :is-updating-all-subs="isUpdatingAllSubs"
-        @add-subscription="handleAddSubscription" 
-        @update-all-subscriptions="handleUpdateAllSubscriptions"
-        @save-sort="handleSaveSortChanges" 
-        @toggle-sort="handleToggleSortSubs"
-        @delete-all-subs="showDeleteSubsModal = true" 
-        @batch-delete-subs="handleBatchDeleteSubs"
-        @drag-end="handleSubscriptionDragEnd" 
-        @delete-sub="handleDeleteSubscriptionWithCleanup"
-        @toggle-sub="handleSubscriptionToggle" 
-        @update-sub="handleSubscriptionUpdate" 
-        @edit-sub="handleEditSubscription"
-        @show-nodes="handleShowNodeDetails" 
-        @change-page="changeSubsPage" 
-      />
+        <!-- 订阅管理标签页 -->
+        <SubscriptionsTab 
+          v-if="activeTab === 'subscriptions'" 
+          v-model:subscriptions="subscriptions"
+          :paginated-subscriptions="paginatedSubscriptions" 
+          :subs-current-page="subsCurrentPage"
+          :subs-total-pages="subsTotalPages" 
+          :is-sorting-subs="isSortingSubs"
+          :has-unsaved-sort-changes="hasUnsavedSortChanges" 
+          :is-updating-all-subs="isUpdatingAllSubs"
+          @add-subscription="handleAddSubscription" 
+          @update-all-subscriptions="handleUpdateAllSubscriptions"
+          @save-sort="handleSaveSortChanges" 
+          @toggle-sort="handleToggleSortSubs"
+          @delete-all-subs="showDeleteSubsModal = true" 
+          @batch-delete-subs="handleBatchDeleteSubs"
+          @drag-end="handleSubscriptionDragEnd" 
+          @delete-sub="handleDeleteSubscriptionWithCleanup"
+          @toggle-sub="handleSubscriptionToggle" 
+          @update-sub="handleSubscriptionUpdate" 
+          @edit-sub="handleEditSubscription"
+          @show-nodes="handleShowNodeDetails" 
+          @change-page="changeSubsPage" 
+        />
 
-      <!-- 订阅组标签页 -->
-      <ProfilesTab 
-        v-if="activeTab === 'profiles'" 
-        :profiles="profiles" 
-        :paginated-profiles="paginatedProfiles"
-        :profiles-current-page="profilesCurrentPage" 
-        :profiles-total-pages="profilesTotalPages"
-        :subscriptions="subscriptions" 
-        @add-profile="handleAddProfile"
-        @delete-all-profiles="showDeleteProfilesModal = true" 
-        @batch-delete-profiles="handleBatchDeleteProfiles"
-        @edit-profile="handleEditProfile" 
-        @delete-profile="handleDeleteProfile" 
-        @toggle-profile="handleProfileToggle"
-        @copy-link="copyProfileLink" 
-        @show-nodes="handleShowProfileNodeDetails" 
-        @change-page="changeProfilesPage" 
-      />
+        <!-- 订阅组标签页 -->
+        <ProfilesTab 
+          v-if="activeTab === 'profiles'" 
+          :profiles="profiles" 
+          :paginated-profiles="paginatedProfiles"
+          :profiles-current-page="profilesCurrentPage" 
+          :profiles-total-pages="profilesTotalPages"
+          :subscriptions="subscriptions" 
+          @add-profile="handleAddProfile"
+          @delete-all-profiles="showDeleteProfilesModal = true" 
+          @batch-delete-profiles="handleBatchDeleteProfiles"
+          @edit-profile="handleEditProfile" 
+          @delete-profile="handleDeleteProfile" 
+          @toggle-profile="handleProfileToggle"
+          @copy-link="copyProfileLink" 
+          @show-nodes="handleShowProfileNodeDetails" 
+          @change-page="changeProfilesPage" 
+        />
 
-      <!-- 链接生成标签页 -->
-      <GeneratorTab 
-        v-if="activeTab === 'generator'" 
-        :config="config" 
-        :profiles="profiles" 
-      />
+        <!-- 链接生成标签页 -->
+        <GeneratorTab 
+          v-if="activeTab === 'generator'" 
+          :config="config" 
+          :profiles="profiles" 
+        />
 
-      <!-- 手动节点标签页 -->
-      <NodesTab 
-        v-if="activeTab === 'nodes'" 
-        v-model:manual-nodes="manualNodes" 
-        v-model:search-term="searchTerm"
-        :paginated-manual-nodes="paginatedManualNodes" 
-        :manual-nodes-current-page="manualNodesCurrentPage"
-        :manual-nodes-total-pages="manualNodesTotalPages" 
-        :is-sorting-nodes="isSortingNodes"
-        :has-unsaved-sort-changes="hasUnsavedSortChanges" 
-        @add-node="handleAddNode"
-        @bulk-import="showBulkImportModal = true" 
-        @save-sort="handleSaveSortChanges"
-        @toggle-sort="handleToggleSortNodes" 
-        @import-subs="showSubscriptionImportModal = true"
-        @auto-sort="handleAutoSortNodes" 
-        @deduplicate="handleDeduplicateNodes"
-        @delete-all-nodes="showDeleteNodesModal = true" 
-        @batch-delete-nodes="handleBatchDeleteNodes"
-        @drag-end="handleNodeDragEnd" 
-        @edit-node="handleEditNode" 
-        @delete-node="handleDeleteNodeWithCleanup"
-        @change-page="changeManualNodesPage" 
-      />
-    </div>
+        <!-- 手动节点标签页 -->
+        <NodesTab 
+          v-if="activeTab === 'nodes'" 
+          v-model:manual-nodes="manualNodes" 
+          v-model:search-term="searchTerm"
+          :paginated-manual-nodes="paginatedManualNodes" 
+          :manual-nodes-current-page="manualNodesCurrentPage"
+          :manual-nodes-total-pages="manualNodesTotalPages" 
+          :is-sorting-nodes="isSortingNodes"
+          :has-unsaved-sort-changes="hasUnsavedSortChanges" 
+          @add-node="handleAddNode"
+          @bulk-import="showBulkImportModal = true" 
+          @save-sort="handleSaveSortChanges"
+          @toggle-sort="handleToggleSortNodes" 
+          @import-subs="showSubscriptionImportModal = true"
+          @auto-sort="handleAutoSortNodes" 
+          @deduplicate="handleDeduplicateNodes"
+          @delete-all-nodes="showDeleteNodesModal = true" 
+          @batch-delete-nodes="handleBatchDeleteNodes"
+          @drag-end="handleNodeDragEnd" 
+          @edit-node="handleEditNode" 
+          @delete-node="handleDeleteNodeWithCleanup"
+          @change-page="changeManualNodesPage" 
+        />
+      </div>
+    </Transition>
   </div>
 
   <!-- ==================== 模态框组件 ==================== -->

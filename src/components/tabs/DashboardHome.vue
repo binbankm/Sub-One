@@ -9,6 +9,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Subscription, Profile, Node } from '../../types';
+import NodeChart from '../charts/NodeChart.vue';
 
 defineProps<{
   subscriptions: Subscription[];
@@ -151,203 +152,134 @@ onMounted(() => {
     <!-- Bento Grid 布局 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
 
-      <!-- 核心指标卡片 (占2列) -->
+      <!-- 核心统计图表 (占2列) -->
       <div
-        class="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-indigo-500/30 to-purple-600/30 border border-indigo-300/20 rounded-3xl p-6 shadow-xl shadow-indigo-500/10 relative overflow-hidden group min-h-[220px]">
+        class="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-white/20 dark:border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group min-h-[300px] flex flex-col">
         <!-- 背景装饰 -->
-        <div
-          class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700">
-        </div>
-        <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-black/10 rounded-full blur-2xl"></div>
-
-        <div class="relative z-10 h-full flex flex-col justify-between">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-gray-600 dark:text-indigo-100 font-medium mb-1 text-sm">订阅源状态</p>
-              <h3 class="text-5xl font-bold tracking-tight text-gray-900 dark:text-white">{{ subscriptions.length
-              }}<span class="text-2xl text-gray-600 dark:text-indigo-200 font-normal ml-2">个</span></h3>
-            </div>
-            <div class="bg-indigo-100 dark:bg-white/20 backdrop-blur-md p-2 rounded-xl">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-indigo-600 dark:text-white" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-              </svg>
-            </div>
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-all duration-1000"></div>
+        
+        <div class="flex items-center justify-between mb-6 relative z-10">
+          <div>
+            <h3 class="text-gray-900 dark:text-white font-bold text-lg">节点概览</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-xs">Node Distribution & Status</p>
           </div>
-
-          <div class="mt-8">
-            <div class="flex justify-between items-end mb-2">
-              <span class="text-gray-600 dark:text-indigo-100 text-sm">活跃度</span>
-              <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions }} <span
-                  class="text-sm font-normal text-gray-500 dark:text-indigo-200">/ {{ subscriptions.length
-                  }}</span></span>
-            </div>
-            <!-- 进度条 -->
-            <div class="w-full bg-gray-200 dark:bg-black/20 rounded-full h-3 backdrop-blur-sm overflow-hidden">
-              <div
-                class="bg-indigo-600 dark:bg-white h-full rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)] dark:shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-1000 ease-out"
-                :style="{ width: subscriptions.length > 0 ? `${(activeSubscriptions / subscriptions.length) * 100}%` : '0%' }">
+          <div class="flex gap-4">
+            <div class="text-right">
+              <div class="text-[10px] uppercase tracking-wider font-bold text-gray-400">活跃率</div>
+              <div class="text-lg font-black text-indigo-600 dark:text-indigo-400">
+                {{ totalNodeCount > 0 ? Math.round((activeNodeCount / totalNodeCount) * 100) : 0 }}%
               </div>
             </div>
-            <p class="text-xs text-gray-500 dark:text-indigo-200 mt-2">
-              {{ subscriptions.length === 0 ? '暂无订阅，请添加' : `系统中有 ${subscriptions.length - activeSubscriptions}
-              个订阅处于停用状态` }}
-            </p>
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col sm:flex-row gap-6 items-center relative z-10">
+          <!-- 图表区域 -->
+          <div class="w-full sm:w-1/2 h-[220px]">
+            <NodeChart 
+              :subscribed-nodes="totalNodeCount - manualNodes.length"
+              :manual-nodes="manualNodes.length"
+              :active-nodes="activeNodeCount"
+              :total-nodes="totalNodeCount"
+            />
+          </div>
+          
+          <!-- 详细指标 -->
+          <div class="w-full sm:w-1/2 grid grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃订阅</div>
+              <div class="text-xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃节点</div>
+              <div class="text-xl font-bold text-emerald-500">{{ activeNodeCount }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">订阅组</div>
+              <div class="text-xl font-bold text-purple-500">{{ profiles.length }}</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+              <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">手动节点</div>
+              <div class="text-xl font-bold text-orange-500">{{ manualNodes.length }}</div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- 智能更新卡片 -->
-      <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
-        class="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between h-full min-h-[220px]">
-
-        <div
-          class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-        </div>
-
-        <div class="relative z-10">
-          <div
-            class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300">
-            <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <svg v-else class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
+      <div class="flex flex-col gap-4 lg:gap-6">
+        <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
+          class="relative flex-1 overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div class="relative z-10">
+            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300">
+              <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <svg v-else class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ isUpdatingAllSubs ? '正在更新...' : '立即更新' }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ isUpdatingAllSubs ? '正在同步最新节点信息' : '同步所有订阅源的节点信息' }}</p>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
-            {{ isUpdatingAllSubs ? '正在更新...' : '立即更新' }}
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ isUpdatingAllSubs ? '正在同步最新节点信息' : '同步所有订阅源的节点信息' }}
-          </p>
-        </div>
-      </button>
+        </button>
 
-      <!-- 数据指标卡片 (3个) -->
-
-      <!-- 节点池 -->
-      <div
-        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
-        <div class="flex items-center gap-4 mb-3">
-          <div
-            class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4" />
-            </svg>
-          </div>
-          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">节点池</span>
-        </div>
-        <div class="flex items-baseline gap-2">
-          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ totalNodeCount }}</h4>
-          <span class="text-sm text-emerald-500 font-medium">{{ activeNodeCount }} 可用</span>
-        </div>
-        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
-          <div class="bg-emerald-500 h-1.5 rounded-full"
-            :style="{ width: totalNodeCount > 0 ? `${(activeNodeCount / totalNodeCount) * 100}%` : '0%' }"></div>
-        </div>
-      </div>
-
-      <!-- 订阅组 -->
-      <div
-        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
-        <div class="flex items-center gap-4 mb-3">
-          <div
-            class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </div>
-          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">订阅组</span>
-        </div>
-        <div class="flex items-baseline gap-2">
-          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ profiles.length }}</h4>
-          <span class="text-sm text-purple-500 font-medium">{{ activeProfiles }} 启用</span>
-        </div>
-        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
-          <div class="bg-purple-500 h-1.5 rounded-full"
-            :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
-        </div>
-      </div>
-
-      <!-- 手动节点 -->
-      <div
-        class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 min-h-[180px] flex flex-col justify-between">
-        <div class="flex items-center gap-4 mb-3">
-          <div
-            class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span class="text-gray-600 dark:text-gray-300 font-bold text-base">手动节点</span>
-        </div>
-        <div class="flex items-baseline gap-2">
-          <h4 class="text-3xl font-bold text-gray-900 dark:text-white">{{ manualNodes.length }}</h4>
-          <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">个节点</span>
-        </div>
-        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 mt-3">
-          <div class="bg-orange-500 h-1.5 rounded-full w-full"></div>
+        <!-- 订阅组指示 -->
+        <div class="relative flex-1 rounded-3xl bg-gradient-to-br from-purple-500/20 to-indigo-600/20 border border-purple-500/10 p-6 shadow-md">
+           <div class="flex justify-between items-start mb-2">
+             <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+               <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+               </svg>
+             </div>
+             <span class="px-2 py-0.5 rounded-full bg-purple-500 text-white text-[10px] font-bold">{{ activeProfiles }} Active</span>
+           </div>
+           <div class="text-2xl font-black text-gray-900 dark:text-white">{{ profiles.length }} <span class="text-sm font-normal text-gray-500">订阅组</span></div>
+           <!-- 迷你进度条 -->
+           <div class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-1.5 mt-4 overflow-hidden">
+             <div class="bg-purple-500 h-full rounded-full transition-all duration-1000" :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
+           </div>
         </div>
       </div>
 
       <!-- 快捷操作按钮 (3个) -->
       <button @click="$emit('add-subscription')"
         class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 min-h-[120px]">
-        <div
-          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
+        <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
         </div>
         <div class="text-left">
-          <p
-            class="font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-            添加订阅</p>
+          <p class="font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">添加订阅</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">支持 HTTP/HTTPS</p>
         </div>
       </button>
 
       <button @click="$emit('add-node')"
         class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 min-h-[120px]">
-        <div
-          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
+        <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
         <div class="text-left">
-          <p
-            class="font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-            添加节点</p>
+          <p class="font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">添加节点</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">支持多种协议</p>
         </div>
       </button>
 
       <button @click="$emit('add-profile')"
         class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-100/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-300 min-h-[120px]">
-        <div
-          class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300">
+        <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
         </div>
         <div class="text-left">
-          <p
-            class="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-            创建订阅组</p>
+          <p class="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">创建订阅组</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">组合订阅和节点</p>
         </div>
       </button>

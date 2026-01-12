@@ -497,6 +497,22 @@
   opacity: 0;
 }
 
+/* Page Fade - 用于大型页面/标签切换 */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(1.02);
+}
+
 /* ==================== 可访问性 (A11y) ==================== */
 
 @media (prefers-reduced-motion: reduce) {
