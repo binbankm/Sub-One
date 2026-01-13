@@ -58,6 +58,7 @@ function buildVmess(node: VmessNode): string {
         parts.push('over-tls:true');
         if (node.tls.serverName) parts.push(`tls-name:${node.tls.serverName}`);
         if (node.tls.insecure) parts.push('skip-cert-verify:true');
+        if (node.tls.fingerprint) parts.push(`fingerprint:${node.tls.fingerprint}`);
     }
 
     return `${node.name} = ${parts.join(',')}`;
