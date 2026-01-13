@@ -278,7 +278,7 @@ export interface ClashProxyConfig {
     };
     'reality-opts'?: {
         'public-key': string;
-        'short-id': string;
+        'short-id'?: string;
         'spider-x'?: string;
     };
     'congestion-controller'?: string;
@@ -326,7 +326,7 @@ export interface SingBoxOutbound {
         reality?: {
             enabled: boolean;
             public_key: string;
-            short_id: string;
+            short_id?: string;
         };
     };
     transport?: {

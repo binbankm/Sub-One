@@ -98,12 +98,14 @@ function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }) {
         alpn: tls.alpn
     };
 
-    if (tls.reality?.enabled) {
-        outbound.tls.reality = {
+    if (tls.reality?.enabled && outbound.tls) {
+        const realityConfig: NonNullable<typeof outbound.tls.reality> = {
             enabled: true,
-            public_key: tls.reality.publicKey,
-            short_id: tls.reality.shortId
+            public_key: tls.reality.publicKey
         };
+        if (tls.reality.shortId) realityConfig.short_id = tls.reality.shortId;
+
+        outbound.tls.reality = realityConfig;
     }
 }
 

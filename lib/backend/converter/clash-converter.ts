@@ -102,11 +102,13 @@ function assignTls(proxy: ClashProxyConfig, node: { tls?: TlsOptions }) {
         // For Reality, we usually set tls=true + network options
         // But let's check standard Meta config:
         proxy.tls = true;
-        proxy['reality-opts'] = {
-            'public-key': tls.reality.publicKey,
-            'short-id': tls.reality.shortId
+        const realityOpts: NonNullable<ClashProxyConfig['reality-opts']> = {
+            'public-key': tls.reality.publicKey
         };
-        if (tls.reality.spiderX) proxy['reality-opts']['spider-x'] = tls.reality.spiderX;
+        if (tls.reality.shortId) realityOpts['short-id'] = tls.reality.shortId;
+        if (tls.reality.spiderX) realityOpts['spider-x'] = tls.reality.spiderX;
+
+        proxy['reality-opts'] = realityOpts;
     }
 }
 
