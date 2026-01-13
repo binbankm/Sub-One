@@ -51,93 +51,91 @@ const copyToClipboard = (url: string) => {
 <template>
   <!-- 卡片容器 -->
   <div
-    class="card-glass rounded-xl border-2 hover:border-indigo-300 dark:hover:border-indigo-600 group relative overflow-hidden h-full flex flex-col"
+    class="card-glass group relative flex flex-col h-full overflow-hidden transition-all duration-300 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1"
     :class="{
-      'opacity-60': !node.enabled,
-      'ring-2 ring-emerald-500 dark:ring-emerald-400 border-emerald-500': isBatchMode && isSelected,
+      'opacity-60 grayscale filter': !node.enabled,
+      'ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900 border-emerald-500/50': isBatchMode && isSelected,
       'cursor-pointer': isBatchMode
     }" @click="isBatchMode ? emit('toggleSelect') : null">
     
-    <!-- 顶部彩色条 -->
-    <div class="h-1 bg-gradient-to-r" :class="protocolInfo.gradient"></div>
+    <!-- 顶部彩色条 (更细致的渐变) -->
+    <div class="h-1.5 w-full bg-gradient-to-r opacity-80" :class="protocolInfo.gradient"></div>
 
-    <div class="flex-1 flex flex-col p-4">
+    <div class="flex-1 flex flex-col p-5">
       <!-- 头部：复选框 + 协议标签 + 操作按钮 -->
-      <div class="flex items-start gap-3 mb-3">
-        <!-- 批量模式复选框 -->
-        <div v-if="isBatchMode" class="flex-shrink-0 pt-0.5" @click.stop>
-          <input type="checkbox" :checked="isSelected" @change="emit('toggleSelect')"
-            class="w-5 h-5 rounded-md border-gray-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-all">
-        </div>
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <!-- 批量模式复选框 -->
+          <div v-if="isBatchMode" class="flex-shrink-0 animate-in fade-in zoom-in duration-200" @click.stop>
+            <div class="relative flex items-center justify-center w-5 h-5">
+                <input type="checkbox" :checked="isSelected" @change="emit('toggleSelect')"
+                  class="peer appearance-none w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer" />
+                <svg class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" 
+                  viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+          </div>
 
-        <!-- 协议标签 -->
-        <div class="flex-1">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"
-            :class="protocolInfo.bg + ' ' + protocolInfo.color">
-            <span class="text-base">{{ protocolInfo.icon }}</span>
+          <!-- 协议标签 (胶囊样式) -->
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tracking-wide uppercase shadow-sm border"
+            :class="[protocolInfo.bg, protocolInfo.color, 'border-transparent bg-opacity-10 dark:bg-opacity-20']">
+            <span class="text-sm font-normal filter drop-shadow-sm">{{ protocolInfo.icon }}</span>
             <span>{{ protocolInfo.text }}</span>
           </span>
         </div>
 
-        <!-- 操作按钮 -->
-        <div class="flex-shrink-0 flex items-center gap-1" 
-          :class="isBatchMode ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity duration-200'"
+        <!-- 操作按钮 (悬浮显示) -->
+        <div class="flex items-center gap-1 transition-all duration-200"
+          :class="isBatchMode ? 'opacity-100' : 'opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'"
           @click.stop>
           <button @click="emit('edit')"
-            class="p-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
-            title="编辑节点">
+            class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition-colors"
+            title="编辑">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" />
             </svg>
           </button>
           <button @click="emit('delete')"
-            class="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all"
-            title="删除节点">
+            class="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/40 dark:hover:text-rose-400 transition-colors"
+            title="删除">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         </div>
       </div>
 
       <!-- 节点名称 -->
-      <div class="mb-3">
-        <h4 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2"
+      <div class="mb-4">
+        <h4 class="text-base font-bold text-gray-800 dark:text-gray-100 leading-snug break-words line-clamp-2 hover:line-clamp-none transition-all duration-300"
           :title="node.name || '未命名节点'">
           {{ node.name || '未命名节点' }}
         </h4>
       </div>
 
-      <!-- URL 展示区域 -->
-      <div class="mt-auto">
-        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-          <div class="flex items-start gap-2">
-            <!-- URL 图标 -->
-            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-
-            <!-- URL 文本 -->
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-mono text-gray-600 dark:text-gray-400 break-all leading-relaxed line-clamp-2"
-                :title="node.url">
-                {{ node.url ? node.url.trim() : '' }}
-              </p>
-            </div>
-
-            <!-- 复制按钮 -->
-            <button v-if="node.url" @click.stop="copyToClipboard(node.url)"
-              class="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
-              title="复制节点链接">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      <!-- 底部信息：地址 & 复制 -->
+      <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700/50">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <!-- 服务器地址展示 (更简洁) -->
+          <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 overflow-hidden" title="服务器地址">
+             <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-            </button>
+              <span class="truncate font-mono">{{ node.server }}</span>
+              <span class="text-gray-300 dark:text-gray-600">:</span>
+              <span class="font-mono text-gray-400">{{ node.port }}</span>
           </div>
+
+          <!-- 复制链接按钮 -->
+          <button v-if="node.url" @click.stop="copyToClipboard(node.url)"
+            class="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all font-medium"
+            title="复制完整链接">
+            <span class="hidden sm:inline">复制</span>
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 01-2-2V3" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
