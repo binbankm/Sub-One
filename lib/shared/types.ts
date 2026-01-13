@@ -323,6 +323,10 @@ export interface SingBoxOutbound {
         server_name?: string;
         insecure?: boolean;
         alpn?: string[];
+        utls?: {
+            enabled: boolean;
+            fingerprint: string;
+        };
         reality?: {
             enabled: boolean;
             public_key: string;

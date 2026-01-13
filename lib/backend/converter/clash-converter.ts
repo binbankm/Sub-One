@@ -177,7 +177,7 @@ function buildHysteria2(node: Hysteria2Node): ClashProxyConfig {
         if (node.tls.serverName) proxy.sni = node.tls.serverName;
         if (node.tls.insecure) proxy['skip-cert-verify'] = true;
         if (node.tls.alpn) proxy.alpn = node.tls.alpn;
-        if (node.tls.fingerprint) proxy.fingerprint = node.tls.fingerprint;
+        if (node.tls.fingerprint) proxy['client-fingerprint'] = node.tls.fingerprint;
     }
     return proxy;
 }

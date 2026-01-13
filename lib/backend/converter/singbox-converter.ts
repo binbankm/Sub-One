@@ -98,6 +98,13 @@ function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }) {
         alpn: tls.alpn
     };
 
+    if (tls.fingerprint) {
+        outbound.tls.utls = {
+            enabled: true,
+            fingerprint: tls.fingerprint
+        };
+    }
+
     if (tls.reality?.enabled && outbound.tls) {
         const realityConfig: NonNullable<typeof outbound.tls.reality> = {
             enabled: true,
