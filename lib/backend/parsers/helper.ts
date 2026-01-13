@@ -65,7 +65,7 @@ export function parseStandardParams(params: URLSearchParams): { transport: Trans
     if (sni) tls.serverName = sni;
 
     const alpn = params.get('alpn');
-    if (alpn) tls.alpn = decodeURIComponent(alpn).split(',');
+    if (alpn) tls.alpn = safeDecodeURIComponent(alpn).split(',');
 
     const fp = params.get('fp');
     if (fp) tls.fingerprint = fp;

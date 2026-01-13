@@ -100,6 +100,7 @@ function buildVlessUrl(node: VlessNode): string {
 
     if (node.tls?.reality?.enabled) {
         params.set('security', 'reality');
+        // Reality params (pbk, sid, spx) are handled by buildStandardQuery
     } else if (node.tls?.enabled) {
         params.set('security', 'tls');
     } else {
