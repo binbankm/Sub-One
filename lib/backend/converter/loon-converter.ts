@@ -86,7 +86,7 @@ function buildVless(node: VlessNode): string {
         if (tls.reality?.enabled) {
             parts.push('reality:true');
             parts.push(`public-key:${tls.reality.publicKey}`);
-            parts.push(`short-id:${tls.reality.shortId}`);
+            if (tls.reality.shortId) parts.push(`short-id:${tls.reality.shortId}`);
             if (tls.reality.spiderX) parts.push(`spider-x:${tls.reality.spiderX}`);
             if (tls.fingerprint) parts.push(`fingerprint:${tls.fingerprint}`);
         }
