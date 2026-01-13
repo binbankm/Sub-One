@@ -161,9 +161,45 @@ function buildShadowsocks(node: ShadowsocksNode): SingBoxOutbound {
         password: node.password
     };
     if (node.plugin) {
-        outbound.plugin = node.plugin;
-        outbound.plugin_opts = ""; // SingBox plugin options string format?
-        // TODO: Map plugin opts object to string if needed
+        if (node.plugin === 'v2ray-plugin' || node.plugin === 'obfs-local') {
+            // SingBox doesn't support 'plugin' field like clash.
+            // But it supports Shadowsocks over separate Transport (ws/http) or just standard SIP003 (which singbox supports via external plugin binary?)
+            // Actually, modern SingBox supports SS with Multiplex/Transport natively without "plugin".
+
+            // If it's v2ray-plugin, we should map it to transport: ws/http
+            if (node.plugin === 'v2ray-plugin') {
+                const mode = node.pluginOpts?.mode || 'websocket'; // websocket | quic
+                if (mode === 'websocket') {
+                    assignTransport(outbound, {
+                        transport: {
+                            type: 'ws',
+                            path: node.pluginOpts?.path,
+                            headers: node.pluginOpts?.host ? { Host: node.pluginOpts.host } : undefined
+                        }
+                    });
+                }
+                // TLS is handled via plugin opts "tls" usually?
+                if (node.pluginOpts?.tls === 'tls') {
+                    outbound.tls = {
+                        enabled: true,
+                        server_name: node.pluginOpts?.host,
+                        insecure: true // Plugins usually loose on certs? Or strictly check? Better default to enabled.
+                    };
+                }
+            } else {
+                // obfs-local -> http/tls obfuscation
+                // SingBox doesn't have direct Obfs support in shadowsocks outbound except via transport
+                // So we might need to fallback or leave it as basic SS if complex.
+                outbound.plugin = node.plugin;
+                // plugin_opts is platform specific string
+            }
+        } else {
+            outbound.plugin = node.plugin;
+            // Best effort serialization of options
+            if (node.pluginOpts) {
+                outbound.plugin_opts = Object.entries(node.pluginOpts).map(([k, v]) => `${k}=${v}`).join(';');
+            }
+        }
     }
     return outbound;
 }

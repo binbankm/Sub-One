@@ -1,6 +1,6 @@
 import { VmessNode, TransportOptions, TlsOptions, NetworkType, V2rayNConfig } from '../../shared/types';
 import { decodeBase64 } from '../converter/base64';
-import { generateId } from './helper';
+import { generateId, safeDecodeURIComponent, parseStandardParams } from './helper';
 
 /**
  * 解析 VMess 链接
@@ -14,14 +14,57 @@ export function parseVmess(url: string): VmessNode | null {
     // 尝试解析 Base64 JSON (最常见)
     try {
         const decoded = decodeBase64(content);
-        // require('fs').appendFileSync('vmess-debug.log', `Decoded: ${decoded}\n`);
         const config = JSON.parse(decoded);
         return parseVmessJson(config, url);
-    } catch (e) {
-        // require('fs').appendFileSync('vmess-debug.log', `Error: ${e}\n`);
-        console.error('[VMess Parsing Error]', e);
-        return null;
+    } catch {
+        // JSON 解析失败，尝试解析普通 URI 格式
+        // 格式: vmess://uuid@host:port?params#name
+        try {
+            return parseVmessUri(url);
+        } catch (e) {
+            console.error('[VMess Parsing Error]', e);
+            return null;
+        }
     }
+}
+
+function parseVmessUri(url: string): VmessNode | null {
+    const urlObj = new URL(url);
+    const uuid = urlObj.username;
+    // vmess uri format varies, sometimes it is user@host:port, sometimes host:port?id=...
+    // But QuantumultX/Shadowrocket style usually vmess://method:uuid@host:port ?
+    // Actually the "standard" URI is vmess://user@host:port?extra...
+    // Let's assume user is UUID.
+
+    if (!uuid) return null;
+
+    const server = urlObj.hostname.replace(/^\[|\]$/g, '');
+    const port = Number(urlObj.port);
+    const name = safeDecodeURIComponent(urlObj.hash.slice(1)) || 'VMess节点';
+
+    if (!server || !port) return null;
+
+    const params = new URLSearchParams(urlObj.search);
+    const { transport, tls } = parseStandardParams(params);
+
+    // Additional params
+    const alterId = Number(params.get('aid') || params.get('alterId') || 0);
+    const cipher = params.get('scy') || params.get('security') || 'auto';
+
+    return {
+        type: 'vmess',
+        id: generateId(),
+        name,
+        server,
+        port,
+        uuid,
+        alterId,
+        cipher,
+        udp: true,
+        transport,
+        tls,
+        originalUrl: url
+    };
 }
 
 function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | null {

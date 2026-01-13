@@ -72,9 +72,9 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
                 try {
                     if (/^[A-Za-z0-9+/=_]+$/.test(userInfoPart)) {
                         const decoded = decodeBase64(userInfoPart);
-                        if (decoded.includes(':')) {
-                            decodedUserInfo = decoded;
-                        }
+                        // 不需要检查冒号，如果解码成功，就应当优先使用解码后的内容
+                        // 因为原始串不含冒号（否则不匹配正则），所以它大概率是 Base64
+                        decodedUserInfo = decoded;
                     }
                 } catch { }
 
@@ -84,9 +84,8 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
                         method = parts[0];
                         password = parts.slice(1).join(':');
                     } else {
-                        // 容错：如果是 "method:" 这种，把 method 当 password，套用默认 cipher
                         method = 'aes-256-gcm';
-                        password = parts[0];
+                        password = decodedUserInfo;
                     }
                 } else {
                     method = 'aes-256-gcm';
