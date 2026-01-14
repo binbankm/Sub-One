@@ -13,6 +13,7 @@ import type { Node, Subscription } from '../../types/index';
 // Async Components
 const NodeEditModal = defineAsyncComponent(() => import('./components/NodeEditModal.vue'));
 const BulkImportModal = defineAsyncComponent(() => import('../../components/ui/BulkImportModal.vue'));
+const SubscriptionImportModal = defineAsyncComponent(() => import('./components/SubscriptionImportModal.vue'));
 
 const props = defineProps<{
   manualNodes: Node[];
@@ -42,7 +43,6 @@ const emit = defineEmits<{
   (e: 'update:manualNodes', value: Node[]): void;
   (e: 'save-sort'): void;
   (e: 'toggle-sort'): void;
-  (e: 'import-subs'): void; // Signals parent to switch tab or handle sub import
   (e: 'drag-end', evt: unknown): void;
   (e: 'change-page', page: number): void;
   (e: 'action-handled'): void;
@@ -63,6 +63,7 @@ const isNewNode = ref(false);
 const editingNode = ref<Node | null>(null);
 const showNodeModal = ref(false);
 const showBulkImportModal = ref(false);
+const showSubscriptionImportModal = ref(false);
 const showDeleteNodesModal = ref(false);
 const showDeleteSingleNodeModal = ref(false);
 const deletingItemId = ref<string | null>(null);
@@ -280,7 +281,7 @@ onUnmounted(() => {
             <Transition name="slide-fade-sm">
               <div v-if="showNodesMoreMenu"
                 class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="$emit('import-subs'); showNodesMoreMenu = false"
+                <button @click="showSubscriptionImportModal = true; showNodesMoreMenu = false"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入订阅</button>
                 <button @click="handleAutoSort(); showNodesMoreMenu = false"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
@@ -415,6 +416,12 @@ onUnmounted(() => {
       :node="editingNode"
       :is-new="isNewNode"
       @save="handleSaveNode"
+    />
+
+    <SubscriptionImportModal
+      v-model:show="showSubscriptionImportModal"
+      :add-nodes-from-bulk="props.addNodesFromBulk"
+      :on-import-success="async () => { await props.saveData('导入节点'); props.triggerUpdate(); }"
     />
   </div>
 </template>

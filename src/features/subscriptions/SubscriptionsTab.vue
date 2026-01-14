@@ -12,7 +12,7 @@ import { useToastStore } from '../../stores/toast';
 
 // 异步加载模态框
 const SubscriptionEditModal = defineAsyncComponent(() => import('./components/SubscriptionEditModal.vue'));
-const SubscriptionImportModal = defineAsyncComponent(() => import('./components/SubscriptionImportModal.vue'));
+
 
 import type { Subscription } from '../../types/index';
 
@@ -66,7 +66,7 @@ const showSubModal = ref(false);
 const isNewSubscription = ref(false);
 const editingSubscription = ref<Subscription | null>(null);
 
-const showSubscriptionImportModal = ref(false);
+
 
 const showDeleteSingleSubModal = ref(false);
 const showDeleteAllSubsModal = ref(false);
@@ -275,9 +275,6 @@ watch(() => props.tabAction, (newAction) => {
   if (newAction?.action === 'add') {
     handleAddSubscription();
     emit('action-handled');
-  } else if (newAction?.action === 'import') {
-    showSubscriptionImportModal.value = true;
-    emit('action-handled');
   }
 }, { immediate: true });
 
@@ -347,9 +344,6 @@ watch(() => props.tabAction, (newAction) => {
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="showDeleteAllSubsModal = true; showSubsMoreMenu = false"
                   class="w-full text-left px-5 py-3 text-base text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">清空所有</button>
-                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                <button @click="showSubscriptionImportModal = true; showSubsMoreMenu = false"
-                  class="w-full text-left px-5 py-3 text-base text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">导入订阅</button>
               </div>
             </Transition>
           </div>
@@ -461,12 +455,7 @@ watch(() => props.tabAction, (newAction) => {
     @save="handleSaveSubscription"
   />
 
-  <SubscriptionImportModal 
-    :show="showSubscriptionImportModal" 
-    @update:show="showSubscriptionImportModal = $event"
-    :add-nodes-from-bulk="props.addNodesFromBulk || (async () => {})"
-    :on-import-success="async () => { await props.saveData('导入订阅'); props.triggerUpdate(); }" 
-  />
+
 
   <ConfirmModal
     v-model:show="showDeleteAllSubsModal"

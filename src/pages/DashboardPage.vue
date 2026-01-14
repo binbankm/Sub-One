@@ -220,10 +220,7 @@ const handleHomeAddNode = () => {
   tabAction.value = { action: 'add' };
 };
 
-const handleImportSubs = () => {
-    emit('update:activeTab', 'subscriptions');
-    tabAction.value = { action: 'import' };
-};
+
 
 const handleHomeAddProfile = () => {
     emit('update:activeTab', 'profiles');
@@ -442,7 +439,7 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
           :trigger-update="triggerDataUpdate"
 
           @update:search-term="nodeSearchTerm = $event"
-          @import-subs="handleImportSubs"
+
           @save-sort="handleSaveSortChanges"
           @toggle-sort="handleToggleSortNodes" 
           @drag-end="handleNodeDragEnd" 
