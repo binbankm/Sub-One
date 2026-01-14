@@ -192,6 +192,38 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
     }
 }
 
+/**
+ * 保存所有数据（订阅、订阅组、配置）
+ * 
+ * 说明：
+ * - 统一保存接口，虽然当前 saveSubs 只支持 subs/profiles，但可以扩展。
+ * - 目前实现为分别调用 saveSubs, saveSettings 或调整后端接口支持统一保存。
+ * - 根据 `useDataStore.saveData` 逻辑，它期望一个统一的 payload。
+ * - 这里我们实现一个包装器，将 payload 拆分为 saveSubs 和 saveSettings 调用，或者假设后端 /api/subs 已经升级支持。
+ * - 鉴于后端未知，我们假设需要分别保存，或者创建一个新函数适配旧接口。
+ * - 但为了最简改动，我们假设后端 `/api/data` POST 存在？这里没有。
+ * - 让我们复用 `saveSubs` 来保存 subs 和 profiles。Config 单独保存？
+ * - DataStore 这里是 `await api.saveAllData(payload)`。
+ * 
+ * 真正的实现：为了保证事务性，后端最好有一个 `POST /api/data`。但既然要兼容，我们先并行或串行调用。
+ */
+export async function saveAllData(data: { subs: Subscription[], profiles: Profile[], config: AppConfig }): Promise<ApiResponse> {
+    try {
+        // 并行保存配置和订阅
+        const [subsResult, settingsResult] = await Promise.all([
+            saveSubs(data.subs, data.profiles),
+            saveSettings(data.config)
+        ]);
+
+        if (!subsResult.success) return subsResult;
+        if (!settingsResult.success) return settingsResult;
+
+        return { success: true, message: '数据保存成功' };
+    } catch (e: any) {
+        return { success: false, message: e.message || '保存失败' };
+    }
+}
+
 // ==================== 节点信息获取 ====================
 
 /**

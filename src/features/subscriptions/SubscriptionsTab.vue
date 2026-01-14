@@ -6,62 +6,70 @@ import Card from './components/SubscriptionCard.vue';
 import Pagination from '../../components/ui/Pagination.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import ConfirmModal from '../../components/ui/ConfirmModal.vue';
-import { createSubscription } from '../../utils/importer';
-import { HTTP_REGEX } from '../../utils/constants';
-import { useToastStore } from '../../stores/toast';
+
 
 // 异步加载模态框
 const SubscriptionEditModal = defineAsyncComponent(() => import('./components/SubscriptionEditModal.vue'));
 
+import { storeToRefs } from 'pinia';
+import { useDataStore } from '../../stores/data';
+import { createSubscription } from '../../utils/importer';
+import { HTTP_REGEX } from '../../utils/constants';
+import { useToastStore } from '../../stores/toast';
 
 import type { Subscription } from '../../types/index';
 
 const props = defineProps<{
-  subscriptions: Subscription[];
-  paginatedSubscriptions: Subscription[];
-  subsCurrentPage: number;
-  subsTotalPages: number;
-  isSortingSubs: boolean;
-  hasUnsavedSortChanges: boolean;
-  
-  // Logic Props (passed from useSubscriptions in parent)
-  addSubscription: (sub: Subscription) => Promise<boolean>;
-  updateSubscription: (sub: Subscription) => void;
-  deleteSubscription: (id: string) => void;
-  deleteAllSubscriptions: () => void;
-  handleUpdateNodeCount: (id: string, isInitialLoad?: boolean) => Promise<boolean>;
-  addSubscriptionsFromBulk: (subs: Subscription[]) => Promise<void>;
-  
-  // Persistence & Global
-  saveData: (reason: string, showToast?: boolean) => Promise<boolean>;
-  triggerUpdate: () => void;
-  
-  // Add missing prop for Nodes import if we want to support mixed import
-  addNodesFromBulk?: (nodes: any[]) => Promise<void>;
-  
   // Tab Action from parent (for cross-tab interaction)
   tabAction?: { action: string, payload?: any } | null;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:subscriptions', value: Subscription[]): void;
-  (e: 'save-sort'): void;
-  (e: 'toggle-sort'): void;
-  (e: 'drag-end', evt: unknown): void;
   (e: 'show-nodes', sub: Subscription): void;
-  (e: 'change-page', page: number): void;
-  // Cleanup events for parent
-  (e: 'subscription-deleted', id: string): void;
-  (e: 'all-subscriptions-deleted'): void;
-  (e: 'batch-subscriptions-deleted', ids: string[]): void;
   (e: 'action-handled'): void;
 }>();
 
+// State
+const itemsPerPage = 6; // Subscription cards are larger? Or same grid. 12 or 8 is better?
+const currentPage = ref(1);
+
+const isSortingSubs = ref(false);
+const hasUnsavedSortChanges = ref(false);
+
+const filteredSubscriptions = computed(() => subscriptions.value); // Add search if needed later
+const totalPages = computed(() => Math.ceil(filteredSubscriptions.value.length / itemsPerPage) || 1);
+
+const paginatedSubscriptions = computed(() => {
+    if (isSortingSubs.value) return filteredSubscriptions.value;
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return filteredSubscriptions.value.slice(start, start + itemsPerPage);
+});
+
+const changePage = (page: number) => {
+    if (page >= 1 && page <= totalPages.value) currentPage.value = page;
+};
+
+const handleSortSave = async () => {
+    await dataStore.saveData('订阅排序');
+    hasUnsavedSortChanges.value = false;
+    isSortingSubs.value = false;
+};
+
+const handleToggleSort = () => {
+    isSortingSubs.value = !isSortingSubs.value;
+    if (!isSortingSubs.value) hasUnsavedSortChanges.value = false;
+};
+
+// Utils
 const { showToast } = useToastStore();
+const dataStore = useDataStore();
+const { subscriptions } = storeToRefs(dataStore);
+
+// State
 const showSubsMoreMenu = ref(false);
 const subsMoreMenuRef = ref<HTMLElement | null>(null);
 
-// ==================== 模态框状态管理 ====================
+// Modal States
 const showSubModal = ref(false);
 const isNewSubscription = ref(false);
 const editingSubscription = ref<Subscription | null>(null);
@@ -75,6 +83,19 @@ const deletingItemId = ref<string | null>(null);
 const isUpdatingAllSubs = ref(false);
 
 // ==================== Batch Selection ====================
+// Note: Batch selection usually needs a list. 
+// We can use the props.paginatedSubscriptions or store list.
+// If using store, we need to know pagination. Pagination is likely still passed from parent or moved to Store?
+// For now assume pagination logic is still in useSubscriptions (which might be in Dashboard or moved to Store?)
+// IF we move state to store, pagination logic should also be close to data or use a helper.
+// The prompted plan was: useDataStore. 
+// If DashboardPage still handles pagination using `useSubscriptions` (which we want to replace), we have a conflict.
+// We should probably move pagination to Store or use a local pagination helper with Store data.
+// Let's try to compute pagination locally or allow parent to handle layout/pagination if that's easier.
+// BUT, the goal is to remove props passing.
+// So let's use `dataStore.subscriptions` directly.
+// And maybe we need to implement pagination here or add it to store getters.
+// Let's use `store` for actions.
 const {
   isBatchDeleteMode,
   selectedCount,
@@ -86,12 +107,15 @@ const {
   invertSelection,
   getSelectedIds
 } = useBatchSelection(
-  computed(() => props.isSortingSubs ? props.subscriptions : props.paginatedSubscriptions)
+  paginatedSubscriptions
 );
 
 const localSubscriptions = computed({
-  get: () => props.subscriptions,
-  set: (value) => emit('update:subscriptions', value)
+  get: () => subscriptions.value,
+  set: (value) => {
+     dataStore.subscriptions = value;
+     // Sort change detected implicitly if dragging reorders
+  }
 });
 
 // ==================== Handlers ====================
@@ -105,7 +129,7 @@ const handleAddSubscription = () => {
 };
 
 const handleEditSubscription = (subId: string) => {
-  const sub = props.subscriptions.find(s => s.id === subId);
+  const sub = subscriptions.value.find(s => s.id === subId);
   if (sub) {
     isNewSubscription.value = false;
     editingSubscription.value = { ...sub };
@@ -122,19 +146,17 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
   
   if (isNewSubscription.value) {
      const newSub = { ...updatedSub, id: crypto.randomUUID() };
-     updatePromise = props.addSubscription(newSub);
+     updatePromise = dataStore.addSubscription(newSub);
   } else {
-     props.updateSubscription(updatedSub);
+     dataStore.updateSubscription(updatedSub);
+     await dataStore.saveData('更新订阅');
   }
   
-  await props.saveData('订阅');
-  props.triggerUpdate();
   showSubModal.value = false;
   
   // 新建订阅后自动更新节点
   if (updatePromise && await updatePromise) {
-    await props.saveData('订阅更新', false);
-    props.triggerUpdate();
+    await dataStore.saveData('订阅更新', false);
   }
 };
 
@@ -143,56 +165,37 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
 const handleSubscriptionToggle = async (subscription: Subscription) => {
   if (subscription) {
     subscription.enabled = !subscription.enabled;
-    await props.saveData(`${subscription.name || '订阅'} 状态`);
+    // We modify the object directly (which is a ref from store), so simple update
+    // But to be safe/explicit:
+    dataStore.updateSubscription(subscription); 
+    await dataStore.saveData(`${subscription.name || '订阅'} 状态`);
   }
 };
 
 const handleSubscriptionUpdate = async (subscriptionId: string) => {
-  const sub = props.subscriptions.find(s => s.id === subscriptionId);
+  const sub = subscriptions.value.find(s => s.id === subscriptionId);
   if (!sub) return;
-
-  if (await props.handleUpdateNodeCount(subscriptionId, false)) {
+  
+  const success = await dataStore.updateSubscriptionNodes(subscriptionId);
+  if (success) {
     showToast(`${sub.name || '订阅'} 已更新`, 'success');
-    await props.saveData('订阅更新', false);
+    await dataStore.saveData('订阅节点更新', false);
   } else {
-    showToast(`${sub.name || '订阅'} 更新失败`, 'error');
+    showToast(`更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
   }
 };
 
 const handleUpdateAllSubscriptions = async () => {
   if (isUpdatingAllSubs.value) return;
-  const enabledSubs = props.subscriptions.filter(sub => sub.enabled && sub.url && HTTP_REGEX.test(sub.url));
-  if (enabledSubs.length === 0) return showToast('没有可更新的订阅', 'warning');
-
   isUpdatingAllSubs.value = true;
   try {
-      const { batchUpdateNodes } = await import('../../utils/api');
-      
-      const result = await batchUpdateNodes(enabledSubs.map(sub => sub.id));
-      
-      interface UpdateResult { success: boolean; id: string; nodeCount?: number; userInfo?: any; }
-      const updateResults = (Array.isArray(result.data) 
-        ? result.data 
-        : (Array.isArray((result as any).results) ? (result as any).results : null)) as UpdateResult[] | null;
-
-      if (result.success && updateResults) {
-        const subsMap = new Map(props.subscriptions.map(s => [s.id, s]));
-        let successCount = 0;
-        updateResults.forEach((r) => {
-           if (r.success) {
-             const sub = subsMap.get(r.id);
-             if (sub) {
-               if (typeof r.nodeCount === 'number') sub.nodeCount = r.nodeCount;
-               if (r.userInfo) sub.userInfo = r.userInfo;
-               successCount++;
-             }
-           }
-        });
-        showToast(`成功更新了 ${successCount} 个订阅`, 'success');
-        await props.saveData('订阅更新', false);
-      } else {
-        showToast(`更新失败: ${result.message}`, 'error');
-      }
+     const result = await dataStore.updateAllEnabledSubscriptions();
+     if (result.success) {
+       showToast(`成功更新了 ${result.count} 个订阅`, 'success');
+       await dataStore.saveData('批量更新', false);
+     } else {
+       showToast(`更新失败: ${result.message}`, 'error');
+     }
   } catch (e) {
     showToast('批量更新失败', 'error');
   } finally {
@@ -209,33 +212,26 @@ const handleDeleteSubscriptionWithCleanup = (subId: string) => {
 
 const handleConfirmDeleteSingleSub = async () => {
   if (!deletingItemId.value) return;
-  props.deleteSubscription(deletingItemId.value);
-  emit('subscription-deleted', deletingItemId.value);
-  
-  await props.saveData('订阅删除');
-  props.triggerUpdate();
+  dataStore.deleteSubscription(deletingItemId.value);
+  await dataStore.saveData('删除订阅');
   showDeleteSingleSubModal.value = false;
 };
 
 
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
-  props.deleteAllSubscriptions();
-  emit('all-subscriptions-deleted');
-  
-  await props.saveData('订阅清空');
-  props.triggerUpdate();
+  dataStore.deleteAllSubscriptions();
+  await dataStore.saveData('清空订阅');
   showDeleteAllSubsModal.value = false;
 };
 
 const handleBatchDeleteSubs = async (ids: string[]) => {
    if (!ids || ids.length === 0) return;
-   ids.forEach(id => {
-     props.deleteSubscription(id);
-   });
-   emit('batch-subscriptions-deleted', ids);
    
-   await props.saveData(`批量删除 ${ids.length} 个订阅`);
-   props.triggerUpdate();
+   // Store doesn't have batch delete subs yet? We can loop or add one.
+   // Let's loop for now or add to store.
+   // Step 95 store has `deleteSubscription`.
+   ids.forEach(id => dataStore.deleteSubscription(id));
+   await dataStore.saveData(`批量删除 ${ids.length} 个订阅`);
 };
 
 // Override toggle to also close menu
@@ -265,8 +261,8 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
-const handleDragEnd = (evt: unknown) => {
-  emit('drag-end', evt);
+const handleDragEnd = () => {
+  hasUnsavedSortChanges.value = true;
 };
 
 // Watch for external actions
@@ -307,7 +303,7 @@ watch(() => props.tabAction, (newAction) => {
               <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
             </button>
 
-            <button v-if="isSortingSubs && hasUnsavedSortChanges" @click="$emit('save-sort')"
+            <button v-if="isSortingSubs && hasUnsavedSortChanges" @click="handleSortSave"
               class="btn-modern-enhanced btn-primary text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -316,7 +312,7 @@ watch(() => props.tabAction, (newAction) => {
               </svg>
               <span class="hidden sm:inline">保存排序</span>
             </button>
-            <button @click="$emit('toggle-sort')"
+            <button @click="handleToggleSort"
               :class="isSortingSubs ? 'btn-modern-enhanced btn-sort sorting text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300' : 'btn-modern-enhanced btn-sort text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300'">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -423,9 +419,9 @@ watch(() => props.tabAction, (newAction) => {
         </div>
       </div>
       <Pagination
-        :current-page="subsCurrentPage"
-        :total-pages="subsTotalPages"
-        @change-page="(page) => $emit('change-page', page)"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        @change-page="changePage"
         v-if="!isSortingSubs"
       />
     </div>

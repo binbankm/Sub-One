@@ -1,11 +1,10 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import { useDataStore } from '../../stores/data';
 import SubscriptionLinkGenerator from './components/SubscriptionLinkGeneratorCard.vue';
-import type { AppConfig, Profile } from '../../types/index';
 
-defineProps<{
-  config: AppConfig;
-  profiles: Profile[];
-}>();
+const dataStore = useDataStore();
+const { config, profiles } = storeToRefs(dataStore);
 </script>
 
 <template>

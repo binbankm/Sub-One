@@ -39,7 +39,7 @@ import { useUIStore } from './stores/ui';
 import { storeToRefs } from 'pinia';
 
 // 类型定义
-import type { InitialData } from './types/index';
+// import type { InitialData } from './types/index';
 
 // 同步加载的核心组件（立即显示）
 import Dashboard from './pages/DashboardPage.vue';
@@ -76,37 +76,7 @@ const { sessionState, initialData } = storeToRefs(sessionStore);
  */
 const { checkSession, login, logout, initializeSystem } = sessionStore;
 
-/**
- * 更新初始数据的方法
- * 
- * 说明：
- * - 供 Dashboard 组件调用
- * - 当数据发生变化时更新全局状态
- * - 支持部分更新（只更新传入的字段）
- * 
- * @param {Partial<InitialData>} newData - 新的数据（部分更新）
- */
-const updateInitialData = (newData: Partial<InitialData>) => {
-  // 确保 initialData 已初始化
-  if (!initialData.value) {
-    initialData.value = {};
-  }
 
-  // 更新订阅列表
-  if (newData.subs) {
-    initialData.value.subs = newData.subs;
-  }
-  
-  // 更新订阅组列表
-  if (newData.profiles) {
-    initialData.value.profiles = newData.profiles;
-  }
-  
-  // 更新配置（合并而不是替换）
-  if (newData.config) {
-    initialData.value.config = { ...initialData.value.config, ...newData.config };
-  }
-};
 
 // ==================== 主题和布局管理 ====================
 
@@ -349,7 +319,6 @@ onMounted(() => {
             <Dashboard 
               :data="initialData" 
               v-model:active-tab="activeTab" 
-              @update-data="updateInitialData" 
             />
           </div>
 

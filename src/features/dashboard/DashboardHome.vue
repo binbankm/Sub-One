@@ -7,21 +7,29 @@
 -->
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import type { Subscription, Profile, Node } from '../../types/index';
+import { ref, onMounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useDataStore } from '../../stores/data';
 import NodeChart from '../../components/charts/NodeChart.vue';
 
-defineProps<{
-  subscriptions: Subscription[];
-  activeSubscriptions: number;
-  totalNodeCount: number;
-  activeNodeCount: number;
-  profiles: Profile[];
-  activeProfiles: number;
-  manualNodes: Node[];
-  activeManualNodes: number;
-  isUpdatingAllSubs: boolean;
-}>();
+const dataStore = useDataStore();
+const { 
+  activeSubscriptions,
+  manualNodes,
+  profiles,
+  totalNodeCount,
+  activeNodeCount
+} = storeToRefs(dataStore);
+
+// Computed for Display
+const activeProfilesCount = computed(() => profiles.value.filter(p => p.enabled).length);
+const isUpdatingAllSubs = ref(false);
+
+const handleUpdateAll = async () => {
+    isUpdatingAllSubs.value = true;
+    await dataStore.updateAllEnabledSubscriptions();
+    isUpdatingAllSubs.value = false;
+};
 
 defineEmits<{
   (e: 'add-subscription'): void;
@@ -188,7 +196,7 @@ onMounted(() => {
           <div class="w-full sm:w-1/2 grid grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃订阅</div>
-              <div class="text-xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions }}</div>
+              <div class="text-xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions.length }}</div>
             </div>
             <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃节点</div>
@@ -208,7 +216,7 @@ onMounted(() => {
 
       <!-- 智能更新卡片 -->
       <div class="flex flex-col gap-4 lg:gap-6">
-        <button @click="$emit('update-all-subscriptions')" :disabled="isUpdatingAllSubs"
+        <button @click="handleUpdateAll" :disabled="isUpdatingAllSubs"
           class="relative flex-1 overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
           <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <div class="relative z-10">
@@ -234,12 +242,12 @@ onMounted(() => {
                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                </svg>
              </div>
-             <span class="px-2 py-0.5 rounded-full bg-purple-500 text-white text-[10px] font-bold">{{ activeProfiles }} Active</span>
+             <span class="px-2 py-0.5 rounded-full bg-purple-500 text-white text-[10px] font-bold">{{ activeProfilesCount }} Active</span>
            </div>
            <div class="text-2xl font-black text-gray-900 dark:text-white">{{ profiles.length }} <span class="text-sm font-normal text-gray-500">订阅组</span></div>
            <!-- 迷你进度条 -->
            <div class="w-full bg-gray-200 dark:bg-white/10 rounded-full h-1.5 mt-4 overflow-hidden">
-             <div class="bg-purple-500 h-full rounded-full transition-all duration-1000" :style="{ width: profiles.length > 0 ? `${(activeProfiles / profiles.length) * 100}%` : '0%' }"></div>
+             <div class="bg-purple-500 h-full rounded-full transition-all duration-1000" :style="{ width: profiles.length > 0 ? `${(activeProfilesCount / profiles.length) * 100}%` : '0%' }"></div>
            </div>
         </div>
       </div>

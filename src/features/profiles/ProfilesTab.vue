@@ -1,45 +1,48 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, defineAsyncComponent, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useDataStore } from '../../stores/data';
 import { useBatchSelection } from '../../composables/useBatchSelection';
 import ProfileCard from './components/ProfileCard.vue';
 import Pagination from '../../components/ui/Pagination.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import ConfirmModal from '../../components/ui/ConfirmModal.vue';
 import { useToastStore } from '../../stores/toast';
-import type { Profile, Subscription, Node, AppConfig } from '../../types/index';
+import type { Profile } from '../../types/index';
 
 // Async components
 const ProfileModal = defineAsyncComponent(() => import('./components/ProfileModal.vue'));
 
 const props = defineProps<{
-  profiles: Profile[];
-  paginatedProfiles: Profile[];
-  profilesCurrentPage: number;
-  profilesTotalPages: number;
-  subscriptions: Subscription[];
-  manualNodes: Node[];
-  config: AppConfig;
   tabAction?: { action: string } | null;
-  // Function Props
-  addProfile: (profile: Profile) => boolean;
-  updateProfile: (profile: Profile) => boolean;
-  deleteProfile: (id: string) => void;
-  deleteAllProfiles: () => void;
-  batchDeleteProfiles: (ids: string[]) => void;
-  toggleProfile: (id: string, enabled: boolean) => void;
-  copyProfileLink: (id: string) => void;
-  saveData: (message: string, showToast?: boolean) => Promise<boolean>;
-  triggerUpdate: () => void;
 }>();
 
 const emit = defineEmits<{
-  (e: 'change-page', page: number): void;
   (e: 'show-nodes', profile: Profile): void;
   (e: 'action-handled'): void;
 }>();
 
 // Utils
 const { showToast } = useToastStore();
+const dataStore = useDataStore();
+const { profiles, subscriptions, manualNodes, config } = storeToRefs(dataStore);
+
+// Pagination
+const itemsPerPage = 8;
+const currentPage = ref(1);
+
+const totalPages = computed(() => Math.ceil(profiles.value.length / itemsPerPage) || 1);
+
+const paginatedProfiles = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return profiles.value.slice(start, start + itemsPerPage);
+});
+
+const changePage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
 
 // State
 const showProfilesMoreMenu = ref(false);
@@ -66,7 +69,7 @@ const {
   invertSelection,
   getSelectedIds
 } = useBatchSelection(
-  computed(() => props.paginatedProfiles)
+  paginatedProfiles
 );
 
 // Watch for Cross-Tab Actions
@@ -80,7 +83,7 @@ watch(() => props.tabAction, (val) => {
 // Handlers
 
 const handleAddProfile = () => {
-  if (!props.config?.profileToken?.trim()) {
+  if (!config.value.profileToken?.trim()) {
     return showToast('请先在"设置"中配置"订阅组分享Token"', 'error');
   }
   isNewProfile.value = true;
@@ -97,7 +100,7 @@ const handleAddProfile = () => {
 };
 
 const handleEditProfile = (profileId: string) => {
-  const profile = props.profiles.find(p => p.id === profileId);
+  const profile = profiles.value.find(p => p.id === profileId);
   if (profile) {
     isNewProfile.value = false;
     editingProfile.value = JSON.parse(JSON.stringify(profile));
@@ -109,12 +112,11 @@ const handleSaveProfile = async (profileData: Profile) => {
   if (!profileData?.name) return showToast('订阅组名称不能为空', 'error');
 
   const success = isNewProfile.value
-    ? props.addProfile(profileData)
-    : props.updateProfile(profileData);
+    ? dataStore.addProfile(profileData)
+    : dataStore.updateProfile(profileData);
 
   if (success) {
-    await props.saveData('订阅组');
-    props.triggerUpdate();
+    await dataStore.saveData('订阅组');
     showProfileModal.value = false;
   }
 };
@@ -126,37 +128,48 @@ const handleDeleteProfile = (profileId: string) => {
 
 const handleConfirmDeleteSingleProfile = async () => {
   if (!deletingItemId.value) return;
-  props.deleteProfile(deletingItemId.value);
-  await props.saveData('订阅组删除');
-  props.triggerUpdate();
+  dataStore.deleteProfile(deletingItemId.value);
+  await dataStore.saveData('订阅组删除');
   showDeleteSingleProfileModal.value = false;
 };
 
 const handleDeleteAllProfiles = async () => {
-  props.deleteAllProfiles();
-  await props.saveData('订阅组清空');
-  props.triggerUpdate();
+  dataStore.deleteAllProfiles();
+  await dataStore.saveData('订阅组清空');
   showDeleteAllProfilesModal.value = false;
 };
 
 const handleBatchDelete = async (ids: string[]) => {
   if (!ids || ids.length === 0) return;
-  props.batchDeleteProfiles(ids);
-  await props.saveData(`批量删除 ${ids.length} 个订阅组`);
-  props.triggerUpdate();
-  // Batch selection reset is handled by useBatchSelection or logic in parent?
-  // Actually useBatchSelection doesn't auto-reset on external data change usually.
+  dataStore.batchDeleteProfiles(ids);
+  await dataStore.saveData(`批量删除 ${ids.length} 个订阅组`);
   toggleBatchDeleteMode(); // Exit batch mode
+  deselectAll();
 };
 
 const handleToggleProfile = async (profile: Profile) => {
-  props.toggleProfile(profile.id, profile.enabled);
-  await props.saveData(`${profile.name || '订阅组'} 状态`);
-  props.triggerUpdate();
+  dataStore.toggleProfile(profile.id, profile.enabled);
+  await dataStore.saveData(`${profile.name || '订阅组'} 状态`);
 };
 
 const handleCopyLink = (id: string) => {
-  props.copyProfileLink(id);
+  // Logic from removed prop, assumed:
+  const profile = profiles.value.find(p => p.id === id);
+  if (!profile || !config.value.profileToken) return;
+  
+  // Construct link
+  // Assuming relative path or constructed link based on customId and token
+  // Typically: /api/profile/:token/:customId
+  // But wait, the original logic was in DashboardPage. Let's replicate or find it.
+  // DashboardPage (Step 71): `handleCopyProfileLink` calls `copyToClipboard(url)`.
+  // Url construction: `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${p.customId}`
+  const url = `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${profile.customId}`;
+  
+  navigator.clipboard.writeText(url).then(() => {
+      showToast('链接已复制', 'success');
+  }).catch(() => {
+      showToast('复制失败', 'error');
+  });
 };
 
 // UI Handlers
@@ -274,9 +287,9 @@ onUnmounted(() => {
         @showNodes="$emit('show-nodes', profile)" @toggleSelect="toggleSelection(profile.id)" />
     </div>
     <Pagination
-        :current-page="profilesCurrentPage"
-        :total-pages="profilesTotalPages"
-        @change-page="(page) => $emit('change-page', page)"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        @change-page="changePage"
       />
     <EmptyState v-if="profiles.length === 0"
       title="没有订阅组"
