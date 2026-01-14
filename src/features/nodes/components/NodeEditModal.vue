@@ -13,7 +13,8 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { useToastStore } from '../../../stores/toast';
-import { extractNodeName } from '../../../utils/utils';
+import { extractNodeName, extractHostAndPort } from '../../../utils/utils';
+import { getProtocol } from '../../../utils/protocols';
 import Modal from '../../../components/ui/BaseModal.vue';
 import type { Node } from '../../../types/index';
 
@@ -153,6 +154,16 @@ const handleSave = () => {
   // 如果没有名称，尝试自动提取
   if (!localNode.value.name && localNode.value.url) {
     localNode.value.name = extractNodeName(localNode.value.url);
+  }
+
+  // 解析并填充服务器信息 (server, port, type)
+  if (localNode.value.url) {
+     const { host, port } = extractHostAndPort(localNode.value.url);
+     const type = getProtocol(localNode.value.url);
+     
+     localNode.value.server = host;
+     localNode.value.port = parseInt(port) || 0;
+     localNode.value.type = type as any;
   }
 
   // 触发保存事件

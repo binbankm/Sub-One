@@ -10,9 +10,10 @@
  * ==========================================================
  */
 
-import { extractNodeName } from './utils';
+import { extractNodeName, extractHostAndPort } from './utils';
 import type { Subscription, Node } from '../types';
 import { HTTP_REGEX, NODE_PROTOCOL_REGEX } from './constants';
+import { getProtocol } from './protocols';
 
 // ==================== 接口定义 ====================
 
@@ -75,6 +76,9 @@ export function createSubscription(url: string, name?: string): Subscription {
  * @returns {Node} 标准化的节点对象
  */
 export function createNode(url: string, name?: string): Node {
+    const { host, port } = extractHostAndPort(url);
+    const protocol = getProtocol(url);
+
     return {
         // 生成唯一标识符（使用浏览器原生 UUID）
         id: crypto.randomUUID(),
@@ -82,8 +86,12 @@ export function createNode(url: string, name?: string): Node {
         name: name || extractNodeName(url) || '未命名',
         // 保存节点 URL
         url: url,
-        // 节点类型未知（需要后续解析才能确定具体协议）
-        type: 'unknown',
+        // 节点类型
+        type: protocol as any,
+        // 解析出的服务器地址
+        server: host,
+        // 解析出的端口
+        port: parseInt(port) || 0,
         // 默认启用该节点
         enabled: true
     } as any;

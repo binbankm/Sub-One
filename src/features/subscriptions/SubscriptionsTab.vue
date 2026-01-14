@@ -149,9 +149,8 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
      
      if (success) {
        currentPage.value = 1; // 优化：新增时跳转到第一页
-       // 新增后自动更新节点
-       showToast('订阅已添加，正在获取节点...', 'info');
-       handleSubscriptionUpdate(newSubId);
+       // 新增后自动更新节点 (静默)
+       handleSubscriptionUpdate(newSubId, true);
      }
   } else {
      await dataStore.updateSubscription(updatedSub);
@@ -172,13 +171,13 @@ const handleSubscriptionToggle = async (subscription: Subscription) => {
   }
 };
 
-const handleSubscriptionUpdate = async (subscriptionId: string) => {
+const handleSubscriptionUpdate = async (subscriptionId: string, silent: boolean = false) => {
   const sub = subscriptions.value.find(s => s.id === subscriptionId);
   if (!sub) return;
   
   const success = await dataStore.updateSubscriptionNodes(subscriptionId);
   if (success) {
-    showToast(`${sub.name || '订阅'} 已更新`, 'success');
+    if (!silent) showToast(`${sub.name || '订阅'} 已更新`, 'success');
     await dataStore.saveData('订阅节点更新', false);
   } else {
     showToast(`更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
