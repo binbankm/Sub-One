@@ -7,7 +7,7 @@ export const defaultSettings: AppConfig = {
     profileToken: '',
 
     theme: 'dark',
-    emojiStyle: true,
+
 
     prependSubName: true,
     dedupe: false,

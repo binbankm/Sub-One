@@ -21,7 +21,7 @@ export const useDataStore = defineStore('data', () => {
 
         // UI & Display
         theme: 'dark',
-        emojiStyle: true,
+
         FileName: 'Sub-One',
 
         // Converter / Network Logic

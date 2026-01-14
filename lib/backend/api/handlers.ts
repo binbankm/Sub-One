@@ -145,11 +145,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json').then(res => res as Partial<AppConfig> | null)
                 ]);
                 const settings = { ...defaultSettings, ...(settingsData || {}) } as AppConfig;
-                const config = {
-                    FileName: settings.FileName || 'SUB_ONE',
-                    mytoken: settings.mytoken || 'auto',
-                    profileToken: settings.profileToken || ''  // 默认为空
-                };
+                const config = settings;
                 return new Response(JSON.stringify({ subs, profiles, config }), { headers: { 'Content-Type': 'application/json' } });
             } catch (e) {
                 console.error('[API Error /data]', 'Failed to read from KV:', e);
