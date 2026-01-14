@@ -111,9 +111,9 @@ const handleEditProfile = (profileId: string) => {
 const handleSaveProfile = async (profileData: Profile) => {
   if (!profileData?.name) return showToast('订阅组名称不能为空', 'error');
 
-  const success = isNewProfile.value
+  const success = await (isNewProfile.value
     ? dataStore.addProfile(profileData)
-    : dataStore.updateProfile(profileData);
+    : dataStore.updateProfile(profileData));
 
   if (success) {
     await dataStore.saveData('订阅组');

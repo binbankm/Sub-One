@@ -286,7 +286,7 @@ export const useDataStore = defineStore('data', () => {
 
     async function addNodesFromBulk(nodes: Node[]) {
         if (nodes.length > 0) {
-            manualNodes.value.push(...nodes);
+            manualNodes.value.unshift(...nodes);
             await saveData('批量导入节点');
         }
     }
