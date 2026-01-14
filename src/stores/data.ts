@@ -288,12 +288,28 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Profiles ====================
 
     function addProfile(profile: Profile): boolean {
-        // Simple duplicate check
-        if (profiles.value.some(p => p.customId === profile.customId)) {
-            showToast('自定义ID已存在', 'error');
+        // Generate ID
+        const newProfile = { ...profile };
+        if (!newProfile.id) {
+            newProfile.id = crypto.randomUUID();
+        }
+
+        // Generate Custom ID if empty
+        if (!newProfile.customId?.trim()) {
+            // Simple random string
+            newProfile.customId = Math.random().toString(36).substring(2, 10);
+        }
+
+        // Duplicate check (Custom ID)
+        if (profiles.value.some(p => p.customId === newProfile.customId)) {
+            // Try to append random suffix if auto-generated? Or just fail?
+            // If user provided it, fail.
+            // If auto-generated, we could retry, but rarity is high.
+            showToast('自定义ID已存在，请修改', 'error');
             return false;
         }
-        profiles.value.push(profile);
+
+        profiles.value.push(newProfile);
         return true;
     }
 
@@ -303,6 +319,11 @@ export const useDataStore = defineStore('data', () => {
 
         // Check customId conflict if changed
         if (profile.customId !== profiles.value[idx].customId) {
+            // If new customId is empty, generate one? Or allow user to clear it (not recommended for profiles)?
+            if (!profile.customId?.trim()) {
+                showToast('自定义ID不能为空', 'error');
+                return false;
+            }
             if (profiles.value.some(p => p.id !== profile.id && p.customId === profile.customId)) {
                 showToast('自定义ID已存在', 'error');
                 return false;
