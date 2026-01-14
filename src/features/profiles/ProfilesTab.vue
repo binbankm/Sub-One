@@ -162,10 +162,7 @@ const handleCopyLink = (id: string) => {
   // Construct link
   // Legacy support: if no token, use /my/[id]
   // New format: /sub/[token]/[customId]
-  const identifier = profile.customId || profile.id;
-  const url = config.value.profileToken 
-    ? `${window.location.protocol}//${window.location.host}/my/${config.value.profileToken}/${identifier}`
-    : `${window.location.protocol}//${window.location.host}/my/${profile.id}`;
+  const url = `${window.location.protocol}//${window.location.host}/${config.value.profileToken}/${profile.id}`;
   
   navigator.clipboard.writeText(url).then(() => {
       showToast('链接已复制', 'success');
