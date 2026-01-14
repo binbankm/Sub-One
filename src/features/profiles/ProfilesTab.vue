@@ -164,7 +164,7 @@ const handleCopyLink = (id: string) => {
   // New format: /sub/[token]/[customId]
   const identifier = profile.customId || profile.id;
   const url = config.value.profileToken 
-    ? `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${identifier}`
+    ? `${window.location.protocol}//${window.location.host}/my/${config.value.profileToken}/${identifier}`
     : `${window.location.protocol}//${window.location.host}/my/${profile.id}`;
   
   navigator.clipboard.writeText(url).then(() => {
