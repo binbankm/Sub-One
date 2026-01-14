@@ -50,7 +50,7 @@ const isSortingNodes = ref(false); // Local sort state
 const hasUnsavedSortChanges = ref(false); 
 
 // Pagination Logic
-const itemsPerPage = 12;
+const itemsPerPage = 16;
 const currentPage = ref(1);
 
 const filteredNodes = computed(() => {

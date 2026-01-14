@@ -28,7 +28,7 @@ const dataStore = useDataStore();
 const { profiles, subscriptions, manualNodes, config } = storeToRefs(dataStore);
 
 // Pagination
-const itemsPerPage = 8;
+const itemsPerPage = 9;
 const currentPage = ref(1);
 
 const totalPages = computed(() => Math.ceil(profiles.value.length / itemsPerPage) || 1);

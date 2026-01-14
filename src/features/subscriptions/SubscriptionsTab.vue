@@ -30,7 +30,7 @@ const emit = defineEmits<{
 }>();
 
 // State
-const itemsPerPage = 6; // Subscription cards are larger? Or same grid. 12 or 8 is better?
+const itemsPerPage = 9; // Grid-cols-3 friendly
 const currentPage = ref(1);
 
 const isSortingSubs = ref(false);
