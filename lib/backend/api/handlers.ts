@@ -448,7 +448,22 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 try {
                     const newSettings = await request.json();
                     const oldSettings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {}) as Partial<AppConfig>;
-                    const finalSettings = { ...oldSettings as any, ...newSettings as any } as AppConfig;
+                    // 使用白名单机制清洗数据：只保留 defaultSettings 中存在的字段
+                    // 这样即使未来删除了某个配置项，保存时也会自动剔除旧数据
+                    const finalSettings: any = {};
+                    const anyNewSettings = newSettings as any;
+
+                    for (const key of Object.keys(defaultSettings)) {
+                        const k = key as keyof AppConfig;
+                        // 优先使用新提交的值，其次是旧值，最后是默认值
+                        if (anyNewSettings[k] !== undefined) {
+                            finalSettings[k] = anyNewSettings[k];
+                        } else if (oldSettings[k] !== undefined) {
+                            finalSettings[k] = oldSettings[k];
+                        } else {
+                            finalSettings[k] = defaultSettings[k];
+                        }
+                    }
 
                     await env.SUB_ONE_KV.put(KV_KEY_SETTINGS, JSON.stringify(finalSettings));
 

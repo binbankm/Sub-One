@@ -9,11 +9,11 @@ export const defaultSettings: AppConfig = {
     theme: 'dark',
 
 
-    prependSubName: true,
+    prependSubName: false,
     dedupe: false,
 
     // 网络与安全
-    udp: true,
+    udp: false,
     skipCertVerify: false,
 
     NotifyThresholdDays: 3,

@@ -25,11 +25,11 @@ export const useDataStore = defineStore('data', () => {
         FileName: 'Sub-One',
 
         // Converter / Network Logic
-        udp: true,
+        udp: false,
         skipCertVerify: false,
 
         // Processing Logic
-        prependSubName: true,
+        prependSubName: false,
         dedupe: false, // Default off to prevent accidental loss
 
         // Notifications
