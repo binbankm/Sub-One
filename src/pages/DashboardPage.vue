@@ -30,7 +30,6 @@
 // Vue 核心功能
 import { ref, onMounted, type PropType } from 'vue';
 import { useDataStore } from '../stores/data';
-import { storeToRefs } from 'pinia';
 
 // API 和工具函数
 import { useToastStore } from '../stores/toast';
@@ -72,7 +71,6 @@ const emit = defineEmits(['update-data', 'update:activeTab']);
 
 const { showToast } = useToastStore();
 const dataStore = useDataStore();
-const { subscriptions, manualNodes } = storeToRefs(dataStore); // For NodeDetailsModal context if needed
 
 /** 加载状态 */
 const isLoading = ref(true);
@@ -263,8 +261,6 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
     @update:show="showNodeDetailsModal = $event"
     :subscription="selectedSubscription" 
     :profile="selectedProfile" 
-    :all-subscriptions="subscriptions"
-    :all-manual-nodes="manualNodes" 
   />
 </template>
 
@@ -272,6 +268,22 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
 /* 拖拽光标 */
 .cursor-move {
   cursor: move;
+}
+
+/* ==================== 页面过度动画 ==================== */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
 }
 
 /* ==================== 响应式设计 ==================== */

@@ -156,6 +156,7 @@ const handleSaveNode = async (updatedNode?: Node) => {
   
   if (isNewNode.value) {
     dataStore.addNode(nodeToSave);
+    currentPage.value = 1; // 优化：新增时跳转到第一页
   } else {
     dataStore.updateNode(nodeToSave);
   }
@@ -196,7 +197,10 @@ const handleBatchDelete = async (ids: string[]) => {
 const handleBulkImport = async (importText: string) => {
   const { subs, nodes } = parseImportText(importText);
   if (subs.length > 0) await dataStore.addSubscriptionsFromBulk(subs);
-  if (nodes.length > 0) dataStore.addNodesFromBulk(nodes);
+  if (nodes.length > 0) {
+    dataStore.addNodesFromBulk(nodes);
+    currentPage.value = 1;
+  }
   
   await dataStore.saveData('批量导入');
   showToast(`成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`, 'success');
@@ -222,6 +226,11 @@ const handleSaveSort = async () => {
     await dataStore.saveData('节点排序');
     hasUnsavedSortChanges.value = false;
     isSortingNodes.value = false;
+};
+
+const handleSubscriptionImportSuccess = async () => {
+    await dataStore.saveData('导入节点');
+    currentPage.value = 1;
 };
 
 // UI Handlers
@@ -454,7 +463,7 @@ onUnmounted(() => {
     <SubscriptionImportModal
       v-model:show="showSubscriptionImportModal"
       :add-nodes-from-bulk="dataStore.addNodesFromBulk"
-      :on-import-success="async () => { await dataStore.saveData('导入节点'); }"
+      :on-import-success="handleSubscriptionImportSuccess"
     />
   </div>
 </template>

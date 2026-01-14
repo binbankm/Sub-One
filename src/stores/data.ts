@@ -94,6 +94,8 @@ export const useDataStore = defineStore('data', () => {
 
     // Save all data to backend
     async function saveData(reason: string = '数据变动', showSuccessToast: boolean = true): Promise<boolean> {
+        if (isLoading.value) return false; // 防止重叠保存
+
         // Merge subs and nodes back into one list
         const combinedSubs = [...subscriptions.value, ...manualNodes.value] as unknown as Subscription[];
 
@@ -104,6 +106,7 @@ export const useDataStore = defineStore('data', () => {
         };
 
         try {
+            isLoading.value = true;
             hasUnsavedChanges.value = true;
             console.log(`[DataStore] Saving: ${reason}`);
 
@@ -123,6 +126,8 @@ export const useDataStore = defineStore('data', () => {
             console.error('Save failed:', error);
             showToast('保存数据时发生未知错误', 'error');
             return false;
+        } finally {
+            isLoading.value = false;
         }
     }
 

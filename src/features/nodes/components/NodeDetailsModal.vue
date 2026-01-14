@@ -19,16 +19,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useToastStore } from '../../../stores/toast';
-import type { Subscription, Profile, Node } from '../../../types/index';
+import type { Subscription, Profile } from '../../../types/index';
 import { filterNodes } from '../../../utils/search';
 import { getProtocolInfo, getProtocol } from '../../../utils/protocols';
+import { useDataStore } from '../../../stores/data';
+import { storeToRefs } from 'pinia';
 
 const props = defineProps<{
   show: boolean;
   subscription?: Subscription | { name: string; url: string; exclude?: string; nodeCount?: number } | null;
   profile?: Profile | null;
-  allSubscriptions?: Subscription[];
-  allManualNodes?: Node[];
 }>();
 
 const emit = defineEmits<{
@@ -53,6 +53,8 @@ const selectedNodes = ref(new Set<string>());
 
 
 const toastStore = useToastStore();
+const dataStore = useDataStore();
+const { subscriptions: allSubscriptions, manualNodes: allManualNodes } = storeToRefs(dataStore);
 
 // 监听模态框显示状态
 watch(() => props.show, async (newVal) => {
@@ -134,8 +136,8 @@ const fetchProfileNodes = async () => {
     const profileNodes: DisplayNode[] = [];
 
     // 1. 添加手动节点
-    if (props.allManualNodes) {
-      const selectedManualNodes = props.allManualNodes.filter(node =>
+    if (allManualNodes.value) {
+      const selectedManualNodes = allManualNodes.value.filter(node =>
         props.profile?.manualNodes?.includes(node.id) ?? false
       );
 
@@ -152,8 +154,8 @@ const fetchProfileNodes = async () => {
     }
 
     // 2. 添加订阅节点
-    if (props.allSubscriptions) {
-      const selectedSubscriptions = props.allSubscriptions.filter(sub =>
+    if (allSubscriptions.value) {
+      const selectedSubscriptions = allSubscriptions.value.filter(sub =>
         (props.profile?.subscriptions?.includes(sub.id) ?? false) && sub.enabled
       );
 

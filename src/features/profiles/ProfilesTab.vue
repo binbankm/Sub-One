@@ -118,6 +118,9 @@ const handleSaveProfile = async (profileData: Profile) => {
   if (success) {
     await dataStore.saveData('订阅组');
     showProfileModal.value = false;
+    if (isNewProfile.value) {
+      currentPage.value = 1; // 优化：新增后跳转到第一页
+    }
   }
 };
 

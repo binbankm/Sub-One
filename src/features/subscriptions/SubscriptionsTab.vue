@@ -147,6 +147,7 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
   if (isNewSubscription.value) {
      const newSub = { ...updatedSub, id: crypto.randomUUID() };
      updatePromise = dataStore.addSubscription(newSub);
+     currentPage.value = 1; // 优化：新增时跳转到第一页
   } else {
      dataStore.updateSubscription(updatedSub);
      await dataStore.saveData('更新订阅');
