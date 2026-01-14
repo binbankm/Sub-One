@@ -448,6 +448,7 @@ export interface ConverterOptions {
     };
     clientVersion?: string;
     udp?: boolean;
+    skipCertVerify?: boolean;
 }
 
 export interface ProcessOptions {

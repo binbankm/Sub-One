@@ -15,23 +15,28 @@ export const useDataStore = defineStore('data', () => {
     const manualNodes = ref<Node[]>([]);
     const profiles = ref<Profile[]>([]);
     const config = ref<AppConfig>({
-        password: '',
+        // Auth & Security
+        mytoken: 'auto',
         profileToken: '',
+
+        // UI & Display
         theme: 'dark',
-        converterUrl: '',
-        converterType: 'default',
         emojiStyle: true,
+        FileName: 'Sub-One',
+
+        // Converter / Network Logic
         udp: true,
         skipCertVerify: false,
-        sortStrategy: 'default',
-        customRules: '',
-        FileName: 'sub-one',
-        mytoken: '',
-        prependSubName: false,
-        dedupe: false,
-        expire: 0,
-        NotifyThresholdDays: 0,
-        NotifyThresholdPercent: 0
+
+        // Processing Logic
+        prependSubName: true,
+        dedupe: false, // Default off to prevent accidental loss
+
+        // Notifications
+        NotifyThresholdDays: 3,
+        NotifyThresholdPercent: 90,
+
+
     });
 
     const isInitialized = ref(false);

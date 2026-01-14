@@ -263,7 +263,9 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
             combinedNodes,
             targetFormat,
             {
-                filename: subName
+                filename: subName,
+                udp: Boolean(config.udp),
+                skipCertVerify: Boolean(config.skipCertVerify)
             }
         );
 

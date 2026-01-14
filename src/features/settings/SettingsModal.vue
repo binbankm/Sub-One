@@ -21,6 +21,7 @@ import { ref, watch, computed } from 'vue';
 import Modal from '../../components/ui/BaseModal.vue';
 import { fetchSettings, saveSettings } from '../../utils/api';
 import { useToastStore } from '../../stores/toast';
+import { useDataStore } from '../../stores/data';
 import type { AppConfig } from '../../types/index';
 
 const props = defineProps<{
@@ -32,6 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const { showToast } = useToastStore();
+const dataStore = useDataStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
 
@@ -110,6 +112,9 @@ const handleSave = async () => {
     if (result.success) {
       // 弹出成功提示
       showToast('设置已保存，页面将自动刷新...', 'success');
+      
+      // 同步到 Store，防止在此期间的其他操作覆盖配置
+      dataStore.updateConfig(settings.value);
 
       // 【核心新增】在短暂延迟后刷新页面，让用户能看到提示
       setTimeout(() => {
@@ -246,6 +251,56 @@ watch(() => props.show, (newValue) => {
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                   <input type="checkbox" v-model="settings.dedupe" class="sr-only peer">
+                  <div
+                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 网络设置 -->
+        <section>
+          <h4
+            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            网络设置
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 开关组：UDP 支持 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">UDP 转发</label>
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200">启用 UDP</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">允许节点处理 UDP 流量（游戏/语音）</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" v-model="settings.udp" class="sr-only peer">
+                  <div
+                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 开关组：跳过证书验证 -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">证书安全</label>
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                <div>
+                  <p class="text-sm font-medium text-gray-700 dark:text-gray-200">跳过证书验证</p>
+                  <p class="text-xs text-orange-500/80 dark:text-orange-400/80 mt-1 mr-2">⚠️ 不安全：忽略 SSL/TLS 证书错误</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" v-model="settings.skipCertVerify" class="sr-only peer">
                   <div
                     class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
                   </div>

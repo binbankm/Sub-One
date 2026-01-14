@@ -9,7 +9,19 @@ import { ProxyNode, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2
  */
 export function toClash(nodes: ProxyNode[], _options?: ConverterOptions): string {
     const proxies = nodes
-        .map(node => nodeToClashProxy(node))
+        .map(node => {
+            const proxy = nodeToClashProxy(node);
+            if (proxy && _options) {
+                // Apply global overrides
+                if (_options.udp !== undefined) {
+                    proxy.udp = _options.udp;
+                }
+                if (_options.skipCertVerify) {
+                    proxy['skip-cert-verify'] = true;
+                }
+            }
+            return proxy;
+        })
         .filter(p => p !== null);
 
     const config = {

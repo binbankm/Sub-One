@@ -10,7 +10,17 @@ export function toSingBox(nodes: ProxyNode[], _options: ConverterOptions = {}): 
 
 
     const outbounds = nodes
-        .map(node => nodeToSingBoxOutbound(node))
+        .map(node => {
+            const outbound = nodeToSingBoxOutbound(node);
+            if (outbound && _options.skipCertVerify) {
+                // Determine if outbound has TLS and we need to force insecure
+                if (outbound.tls) {
+                    outbound.tls.insecure = true;
+                }
+                // Note: Sing-Box usually handles UDP automatically, no explicit flag needed here
+            }
+            return outbound;
+        })
         .filter((o): o is SingBoxOutbound => o !== null);
 
     return JSON.stringify({
