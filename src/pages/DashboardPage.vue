@@ -208,23 +208,16 @@ const tabAction = ref<{ action: string, payload?: any } | null>(null);
 
 const handleHomeAddSubscription = () => {
   emit('update:activeTab', 'subscriptions');
-  // Need to wait for tab switch? Usually prop update is fast enough or watch inside component handles it.
-  // Using setTimeout to ensure component mount if transitions are involved?
-  // But standard prop update might be enough. 
-  // Let's set it immediately.
-  tabAction.value = { action: 'add' };
 };
 
 const handleHomeAddNode = () => {
   emit('update:activeTab', 'nodes');
-  tabAction.value = { action: 'add' };
 };
 
 
 
 const handleHomeAddProfile = () => {
     emit('update:activeTab', 'profiles');
-    tabAction.value = { action: 'add' };
 };
 
 const handleUpdateAllSubscriptions = async () => {
