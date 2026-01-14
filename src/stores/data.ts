@@ -124,7 +124,7 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Subscriptions ====================
 
     async function addSubscription(sub: Subscription): Promise<boolean> {
-        subscriptions.value.push(sub);
+        subscriptions.value.unshift(sub);
         return await saveData('新增订阅');
     }
 
@@ -239,7 +239,7 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Manual Nodes ====================
 
     function addNode(node: Node) {
-        manualNodes.value.push(node);
+        manualNodes.value.unshift(node);
     }
 
     function updateNode(node: Node) {
@@ -309,7 +309,7 @@ export const useDataStore = defineStore('data', () => {
             return false;
         }
 
-        profiles.value.push(newProfile);
+        profiles.value.unshift(newProfile);
         return true;
     }
 
