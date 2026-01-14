@@ -156,17 +156,16 @@ const handleToggleProfile = async (profile: Profile) => {
 };
 
 const handleCopyLink = (id: string) => {
-  // Logic from removed prop, assumed:
   const profile = profiles.value.find(p => p.id === id);
-  if (!profile || !config.value.profileToken) return;
+  if (!profile) return;
   
   // Construct link
-  // Assuming relative path or constructed link based on customId and token
-  // Typically: /api/profile/:token/:customId
-  // But wait, the original logic was in DashboardPage. Let's replicate or find it.
-  // DashboardPage (Step 71): `handleCopyProfileLink` calls `copyToClipboard(url)`.
-  // Url construction: `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${p.customId}`
-  const url = `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${profile.customId}`;
+  // Legacy support: if no token, use /my/[id]
+  // New format: /sub/[token]/[customId]
+  const identifier = profile.customId || profile.id;
+  const url = config.value.profileToken 
+    ? `${window.location.protocol}//${window.location.host}/sub/${config.value.profileToken}/${identifier}`
+    : `${window.location.protocol}//${window.location.host}/my/${profile.id}`;
   
   navigator.clipboard.writeText(url).then(() => {
       showToast('链接已复制', 'success');

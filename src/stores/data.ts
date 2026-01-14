@@ -304,10 +304,8 @@ export const useDataStore = defineStore('data', () => {
             newProfile.id = crypto.randomUUID();
         }
 
-        // Generate Custom ID if empty
         if (!newProfile.customId?.trim()) {
-            // Simple random string
-            newProfile.customId = Math.random().toString(36).substring(2, 10);
+            newProfile.customId = newProfile.id;
         }
 
         // Duplicate check (Custom ID)
