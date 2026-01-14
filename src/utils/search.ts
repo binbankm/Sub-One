@@ -1,4 +1,4 @@
-import { getCountryTerms } from '../lib/constants';
+import { getCountryTerms } from './constants';
 
 export interface SearchableNode {
     name?: string;

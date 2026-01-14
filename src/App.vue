@@ -39,18 +39,18 @@ import { useUIStore } from './stores/ui';
 import { storeToRefs } from 'pinia';
 
 // 类型定义
-import type { InitialData } from './types';
+import type { InitialData } from './types/index';
 
 // 同步加载的核心组件（立即显示）
-import Dashboard from './components/views/DashboardView.vue';
-import Login from './components/views/LoginView.vue';
+import Dashboard from './pages/DashboardPage.vue';
+import Login from './pages/LoginPage.vue';
 import Sidebar from './components/layout/AppSidebar.vue';
-import Toast from './components/common/Toast.vue';
+import Toast from './components/ui/Toast.vue';
 import Footer from './components/layout/AppFooter.vue';
 
 // 异步加载的模态框组件（按需加载，优化首屏性能）
-const SettingsModal = defineAsyncComponent(() => import('./components/modals/SettingsModal.vue'));
-const HelpModal = defineAsyncComponent(() => import('./components/modals/HelpModal.vue'));
+const SettingsModal = defineAsyncComponent(() => import('./features/settings/SettingsModal.vue'));
+const HelpModal = defineAsyncComponent(() => import('./features/settings/HelpModal.vue'));
 
 // ==================== 会话状态管理 ====================
 
@@ -348,7 +348,7 @@ onMounted(() => {
             <!-- Dashboard 组件 - 根据 activeTab 显示不同内容 -->
             <Dashboard 
               :data="initialData" 
-              :active-tab="activeTab" 
+              v-model:active-tab="activeTab" 
               @update-data="updateInitialData" 
             />
           </div>

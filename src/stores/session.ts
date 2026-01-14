@@ -12,8 +12,8 @@
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { fetchInitialData, login as apiLogin, logout as apiLogout, checkSystemStatus, initializeSystem as apiInitializeSystem } from '../lib/api';
-import type { InitialData } from '../types';
+import { fetchInitialData, login as apiLogin, logout as apiLogout, checkSystemStatus, initializeSystem as apiInitializeSystem } from '../utils/api';
+import type { InitialData } from '../types/index';
 
 /**
  * 会话状态类型定义

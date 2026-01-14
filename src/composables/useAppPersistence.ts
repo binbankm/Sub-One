@@ -11,9 +11,9 @@
  */
 
 import { ref, type Ref, onMounted, onUnmounted, watch } from 'vue';
-import { saveSubs } from '../lib/api';
+import { saveSubs } from '../utils/api';
 import { useToastStore } from '../stores/toast';
-import type { Subscription, Node, Profile, AppConfig } from '../types';
+import type { Subscription, Node, Profile, AppConfig } from '../types/index';
 
 /**
  * 数据持久化组合式函数

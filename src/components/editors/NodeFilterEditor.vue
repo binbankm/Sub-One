@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
-import Modal from '../modals/BaseModal.vue';
+import Modal from '../ui/BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
 
