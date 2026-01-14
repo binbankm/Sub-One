@@ -100,7 +100,7 @@ watch(() => props.tabAction, (val) => {
     handleAddNode();
     emit('action-handled');
   }
-});
+}, { immediate: true });
 
 // Handlers
 

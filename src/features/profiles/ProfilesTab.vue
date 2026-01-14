@@ -75,7 +75,7 @@ watch(() => props.tabAction, (val) => {
     handleAddProfile();
     emit('action-handled');
   }
-});
+}, { immediate: true });
 
 // Handlers
 
