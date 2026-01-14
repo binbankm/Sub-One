@@ -36,6 +36,7 @@ import { useSessionStore } from './stores/session';
 import { useThemeStore } from './stores/theme';
 import { useLayoutStore } from './stores/layout';
 import { useUIStore } from './stores/ui';
+import { useDataStore } from './stores/data';
 import { storeToRefs } from 'pinia';
 
 // 类型定义
@@ -59,6 +60,8 @@ const HelpModal = defineAsyncComponent(() => import('./features/settings/HelpMod
  * 管理用户登录状态和初始数据
  */
 const sessionStore = useSessionStore();
+const dataStore = useDataStore();
+const { isInitialized, subscriptions, manualNodes, profiles } = storeToRefs(dataStore);
 
 /**
  * 从 Store 中提取响应式状态
@@ -139,6 +142,7 @@ const HTTP_REGEX = /^https?:\/\//;
  * - 使用计算属性缓存结果，避免重复计算
  */
 const subscriptionsCount = computed(() => {
+  if (isInitialized.value) return subscriptions.value.length;
   return initialData.value?.subs?.filter(item => item.url && HTTP_REGEX.test(item.url))?.length || 0;
 });
 
@@ -147,6 +151,7 @@ const subscriptionsCount = computed(() => {
  * 统计订阅组列表的长度
  */
 const profilesCount = computed(() => {
+  if (isInitialized.value) return profiles.value.length;
   return initialData.value?.profiles?.length || 0;
 });
 
@@ -158,6 +163,7 @@ const profilesCount = computed(() => {
  * - 这些是手动添加的节点链接
  */
 const manualNodesCount = computed(() => {
+  if (isInitialized.value) return manualNodes.value.length;
   return initialData.value?.subs?.filter(item => !item.url || !HTTP_REGEX.test(item.url))?.length || 0;
 });
 
@@ -166,6 +172,7 @@ const manualNodesCount = computed(() => {
  * 与订阅组数量相同（每个订阅组可以生成一个链接）
  */
 const generatorCount = computed(() => {
+  if (isInitialized.value) return profiles.value.length;
   return initialData.value?.profiles?.length || 0;
 });
 
