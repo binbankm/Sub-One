@@ -142,23 +142,22 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
   if (!updatedSub.url) return showToast('订阅链接不能为空', 'error');
   if (!HTTP_REGEX.test(updatedSub.url)) return showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error');
   
-  let updatePromise = null;
-  
   if (isNewSubscription.value) {
-     const newSub = { ...updatedSub, id: crypto.randomUUID() };
-     updatePromise = dataStore.addSubscription(newSub);
-     currentPage.value = 1; // 优化：新增时跳转到第一页
+     const newSubId = crypto.randomUUID();
+     const newSub = { ...updatedSub, id: newSubId };
+     const success = await dataStore.addSubscription(newSub);
+     
+     if (success) {
+       currentPage.value = 1; // 优化：新增时跳转到第一页
+       // 新增后自动更新节点
+       showToast('订阅已添加，正在获取节点...', 'info');
+       handleSubscriptionUpdate(newSubId);
+     }
   } else {
-     dataStore.updateSubscription(updatedSub);
-     await dataStore.saveData('更新订阅');
+     await dataStore.updateSubscription(updatedSub);
   }
   
   showSubModal.value = false;
-  
-  // 新建订阅后自动更新节点
-  if (updatePromise && await updatePromise) {
-    await dataStore.saveData('订阅更新', false);
-  }
 };
 
 // --- Update Actions ---
