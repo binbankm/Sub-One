@@ -44,7 +44,7 @@ const defaultSettings: AppConfig = {
   mytoken: 'auto',
   profileToken: '', // 默认为空，用户需主动设置
   
-  prependSubName: true,
+  prependSubName: false,
   dedupe: false,  // 默认关闭去重，保留所有节点
   
   // Telegram 通知配置

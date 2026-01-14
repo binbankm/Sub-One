@@ -138,28 +138,32 @@ export const useDataStore = defineStore('data', () => {
         return await saveData('新增订阅');
     }
 
-    function updateSubscription(sub: Subscription) {
+    async function updateSubscription(sub: Subscription) {
         const index = subscriptions.value.findIndex(s => s.id === sub.id);
         if (index !== -1) {
             subscriptions.value[index] = { ...sub }; // Reactive replacement
+            await saveData('更新订阅');
         }
     }
 
-    function deleteSubscription(id: string) {
+    async function deleteSubscription(id: string) {
         subscriptions.value = subscriptions.value.filter(s => s.id !== id);
         // Also remove from profiles
         removeIdFromProfiles(id, 'subscriptions');
+        await saveData('删除订阅');
     }
 
-    function deleteAllSubscriptions() {
+    async function deleteAllSubscriptions() {
         subscriptions.value = [];
         // Clean profiles
         clearProfilesField('subscriptions');
+        await saveData('清空订阅');
     }
 
     async function addSubscriptionsFromBulk(newSubs: Subscription[]) {
         if (newSubs.length === 0) return;
         subscriptions.value.push(...newSubs);
+        await saveData('批量导入订阅');
     }
 
     // Update logic is more complex, might need api call
@@ -248,56 +252,71 @@ export const useDataStore = defineStore('data', () => {
 
     // ==================== Actions: Manual Nodes ====================
 
-    function addNode(node: Node) {
+    async function addNode(node: Node) {
         manualNodes.value.unshift(node);
+        await saveData('新增节点');
     }
 
-    function updateNode(node: Node) {
+    async function updateNode(node: Node) {
         const idx = manualNodes.value.findIndex(n => n.id === node.id);
-        if (idx !== -1) manualNodes.value[idx] = { ...node };
+        if (idx !== -1) {
+            manualNodes.value[idx] = { ...node };
+            await saveData('更新节点');
+        }
     }
 
-    function deleteNode(id: string) {
+    async function deleteNode(id: string) {
         manualNodes.value = manualNodes.value.filter(n => n.id !== id);
         removeIdFromProfiles(id, 'manualNodes');
+        await saveData('删除节点');
     }
 
-    function deleteAllNodes() {
+    async function deleteAllNodes() {
         manualNodes.value = [];
         clearProfilesField('manualNodes');
+        await saveData('清空节点');
     }
 
-    function batchDeleteNodes(ids: string[]) {
+    async function batchDeleteNodes(ids: string[]) {
         const idSet = new Set(ids);
         manualNodes.value = manualNodes.value.filter(n => !idSet.has(n.id + ''));
         ids.forEach(id => removeIdFromProfiles(id, 'manualNodes'));
+        await saveData('批量删除节点');
     }
 
-    function addNodesFromBulk(nodes: Node[]) {
-        if (nodes.length > 0) manualNodes.value.push(...nodes);
+    async function addNodesFromBulk(nodes: Node[]) {
+        if (nodes.length > 0) {
+            manualNodes.value.push(...nodes);
+            await saveData('批量导入节点');
+        }
     }
 
-    function deduplicateNodes() {
+    async function deduplicateNodes() {
         const unique = new Map();
         manualNodes.value.forEach(node => {
-            // Use URL (if shadow/vmess link) or complex key as identifier
-            const key = node.url || JSON.stringify({ server: node.server, port: node.port, type: node.type });
+            // Use stable key generation
+            const key = node.url || `${node.server}|${node.port}|${node.type}`;
             if (!unique.has(key)) {
                 unique.set(key, node);
             }
         });
-        manualNodes.value = Array.from(unique.values());
+
+        if (manualNodes.value.length !== unique.size) {
+            manualNodes.value = Array.from(unique.values());
+            await saveData('节点去重');
+        }
     }
 
-    function autoSortNodes() {
+    async function autoSortNodes() {
         // Simple sort by name
         manualNodes.value.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-CN'));
+        await saveData('自动排序');
     }
 
 
     // ==================== Actions: Profiles ====================
 
-    function addProfile(profile: Profile): boolean {
+    async function addProfile(profile: Profile): Promise<boolean> {
         // Generate ID
         const newProfile = { ...profile };
         if (!newProfile.id) {
@@ -318,10 +337,10 @@ export const useDataStore = defineStore('data', () => {
         }
 
         profiles.value.unshift(newProfile);
-        return true;
+        return await saveData('新增订阅组');
     }
 
-    function updateProfile(profile: Profile): boolean {
+    async function updateProfile(profile: Profile): Promise<boolean> {
         const idx = profiles.value.findIndex(p => p.id === profile.id);
         if (idx === -1) return false;
 
@@ -339,25 +358,31 @@ export const useDataStore = defineStore('data', () => {
         }
 
         profiles.value[idx] = { ...profile };
-        return true;
+        return await saveData('更新订阅组');
     }
 
-    function deleteProfile(id: string) {
+    async function deleteProfile(id: string) {
         profiles.value = profiles.value.filter(p => p.id !== id);
+        await saveData('删除订阅组');
     }
 
-    function deleteAllProfiles() {
+    async function deleteAllProfiles() {
         profiles.value = [];
+        await saveData('清空订阅组');
     }
 
-    function batchDeleteProfiles(ids: string[]) {
+    async function batchDeleteProfiles(ids: string[]) {
         const idSet = new Set(ids);
         profiles.value = profiles.value.filter(p => !idSet.has(p.id));
+        await saveData('批量删除订阅组');
     }
 
-    function toggleProfile(id: string, enabled: boolean) {
+    async function toggleProfile(id: string, enabled: boolean) {
         const p = profiles.value.find(p => p.id === id);
-        if (p) p.enabled = enabled;
+        if (p) {
+            p.enabled = enabled;
+            await saveData('切换订阅组状态', false); // Optional: don't show toast for toggle
+        }
     }
 
     // Helper: Remove subscription/node ID from all profiles
@@ -383,6 +408,11 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Config ====================
     function updateConfig(newConfig: Partial<AppConfig>) {
         config.value = { ...config.value, ...newConfig };
+        // Config saving is usually handled by Settings component individually using api.saveSettings
+        // But if we update via store, we might want to sync?
+        // Let's leave it as is, or add persistence if needed. 
+        // Based on SettingsModal.vue, it calls api.saveSettings then store.updateConfig.
+        // So store.updateConfig is just for local sync. No need to saveData here.
     }
 
     return {
