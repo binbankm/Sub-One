@@ -1,0 +1,18 @@
+name = "sub-one"
+# main = "functions/[[path]].js"
+compatibility_date = "2024-06-13"
+
+# KV 命名空间绑定
+# 注意：ID 需要用户在自己的 Cloudflare 后台创建 KV 后填写
+[[kv_namespaces]]
+binding = "SUB_ONE_KV"
+id = "" # 留空，让 Fork 用户自己填写
+preview_id = "" # 留空，让 Fork 用户自己填写
+
+[vars]
+# 默认密码，建议用户部署后在后台修改
+ADMIN_PASSWORD = "admin"
+
+[triggers]
+# 定时触发器示例
+crons = ["0 */6 * * *"] 
