@@ -180,7 +180,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请输入您的用户名" 
               autocomplete="username" 
               :disabled="isLoading" 
-              @keypress="handleKeyPress" 
+              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
@@ -214,7 +214,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请输入您的密码" 
               autocomplete="current-password" 
               :disabled="isLoading" 
-              @keypress="handleKeyPress" 
+              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <!-- 输入框右侧图标 - 根据状态显示不同图标 -->
@@ -262,7 +262,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请再次输入密码" 
               autocomplete="new-password" 
               :disabled="isLoading" 
-              @keypress="handleKeyPress" 
+              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
