@@ -335,7 +335,7 @@ watch(() => props.tabAction, (newAction) => {
             <Transition name="slide-fade-sm">
               <div v-if="showSubsMoreMenu"
                 class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="() => toggleBatchDeleteMode()"
+                <button @click="handleToggleBatchDeleteMode"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="showDeleteAllSubsModal = true; showSubsMoreMenu = false"
