@@ -294,11 +294,15 @@
   /* 响应式 */
   @media (max-width: 640px) {
     .form-input-login {
-      @apply px-3.5 pr-10 py-3 text-sm;
+      /* 移除 text-sm，使用基础的 15px (0.9375rem) 或更大 */
+      /* iOS Safari 在字体 < 16px 时会自动放大，所以这里使用 16px */
+      @apply px-3.5 pr-10 py-3;
+      font-size: 16px !important; /* 强制 16px，防止自动缩放 */
     }
 
     .login-button {
-      @apply py-3.5 text-[0.9375rem];
+      @apply py-3.5;
+      font-size: 15px; /* 按钮可以稍小，不会触发缩放 */
     }
   }
 

@@ -304,10 +304,12 @@ export class SubscriptionParser {
             });
         }
 
-        // 4. 填充 URL (Runtime Generate) if missing
+        // 4. 填充/更新 URL (Runtime Generate)
         result.forEach(n => {
-            if (!n.url) {
-                // 确保有 URL，特别是重命名后需要更新 URL 中的 hash
+            // 重新生成 URL 的条件：
+            // 1. URL 不存在（从 YAML/JSON 解析的节点）
+            // 2. 进行了重命名（需要更新 URL 中的 hash 部分）
+            if (!n.url || options.prependSubName) {
                 n.url = buildNodeUrl(n);
             }
         });
