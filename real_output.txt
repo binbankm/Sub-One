@@ -1,0 +1,63 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/Administrator/Desktop/Sub-One[39m
+
+[90mstdout[2m | lib/backend/proxy/realworld.test.ts[2m > [22m[2mReal World Subscription Test - All Producers[2m > [22m[2mshould parse real world subscription and generate all formats
+[22m[39m[Sub-One] Detected Base64 encoded content, decoding...
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI VMess Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI Trojan Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VMess Parser] matched
+
+[Test] Parsed 93 proxies
+[Test] 鉁?Generated CLASHMETA format successfully (27581 characters)
+[Test] 鉁?Generated SINGBOX format successfully (35654 characters)
+[Test] 鉁?Generated SURGE format successfully (13528 characters)
+[Test] 鉁?Generated LOON format successfully (17987 characters)
+[Test] 鉁?Generated QX format successfully (20792 characters)
+[Test] 鉁?Generated BASE64 format successfully (36676 characters)
+
+stderr | lib/backend/proxy/realworld.test.ts > Real World Subscription Test - All Producers > should parse real world subscription and generate all formats
+Surge Producer: Skip node [馃嚭馃嚫US_1|3.1MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_2|3.8MB/s|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_3|8.8MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_4|5.1MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_5|9.6MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_6|6.5MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_8|8.0MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_9|5.1MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_11|5.8MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_12|13.6MB/s|43%|TK-US|YT-US|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚞馃嚙GB_1|3.1MB/s|0%|TK-GB|YT-US|NF|D+|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚛馃嚜DE_1|4.2MB/s|33%|TK-DE|YT-US|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚨馃嚤PL_1|2.3MB/s|0%|TK-PL] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚦馃嚤NL_1|2.4MB/s|20%|TK-NL|YT-RU|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚝馃嚠FI_1|1.2MB/s|0%|TK-FI|YT-FI|NF|D+|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚝馃嚠FI_2|1.7MB/s|0%|TK-FI|YT-FI|NF|D+|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚝馃嚠FI_3|1.4MB/s|0%|TK-FI|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_13|9.0MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM] - Surge does not support VLESS
+Surge Producer: Skip node [馃嚛馃嚜DE_2|3.1MB/s|33%|TK-DE|YT-US|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚝馃嚠FI_4|3.3MB/s|6%|TK-FI|YT-US|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚦馃嚤NL_3|5.1MB/s|TK-NL|YT-NL|NF|GPT鈦篯 - Surge does not support VLESS
+Surge Producer: Skip node [馃嚭馃嚫US_15|3.5MB/s|TK-US|YT-US|NF|D+|GM] - Surge does not support VLESS
+
+ [32m鉁?[39m lib/backend/proxy/realworld.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1260[2mms[22m[39m
+     [33m[2m鉁?[22m[39m should parse real world subscription and generate all formats [33m 1258[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 15:53:32
+[2m   Duration [22m 2.05s[2m (transform 257ms, setup 0ms, import 313ms, tests 1.26s, environment 0ms)[22m
+

@@ -1,55 +1,43 @@
-
-/// <reference types="@cloudflare/workers-types" />
-
 import { Env } from '../types';
 import { KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_PROFILES } from '../config/constants';
 import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
 import { formatBytes } from '../utils/common';
 import { sendTgNotification } from '../services/notification';
-import { SubscriptionParser } from '../subscription-parser';
-import { subscriptionConverter } from '../converter';
-import { encodeBase64 } from '../converter/base64';
-import { Subscription, Profile, AppConfig, Node, SubConfig } from '../../shared/types';
-
-const subscriptionParser = new SubscriptionParser();
+import { ProxyUtils } from '../proxy';
+import { Proxy } from '../proxy/types';
+import { Subscription, Profile, AppConfig } from '../../shared/types';
 
 async function generateCombinedNodeList(
-    config: SubConfig,
     userAgent: string,
     subs: Subscription[]
-): Promise<Node[]> {
-    // 1. 处理手动节点
-    const manualNodes = subs.filter(sub => !sub.url.toLowerCase().startsWith('http'));
-    // 解析手动节点
-    const parsedManualNodes = subscriptionParser.parseNodeLines(manualNodes.map(n => n.url), '手动节点');
+): Promise<Proxy[]> {
+    const allProxies: Proxy[] = [];
 
-    const processedManualNodes = subscriptionParser.processNodes(
-        parsedManualNodes,
-        '手动节点',
-        { prependSubName: config.prependSubName, dedupe: config.dedupe }
-    );
-
-    // 2. 处理 HTTP 订阅
-    const httpSubs = subs.filter(sub => sub.url.toLowerCase().startsWith('http'));
-    const subPromises = httpSubs.map(async (sub) => {
+    // 1. 处理手动节点和 HTTP 订阅
+    const subPromises = subs.map(async (sub) => {
+        if (!sub.enabled) return [];
         try {
-            const response = await Promise.race([
-                fetch(new Request(sub.url, {
-                    headers: { 'User-Agent': userAgent },
-                    redirect: "follow",
-                    cf: { insecureSkipVerify: true }
-                })),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ]) as Response;
+            let content = sub.url;
+            if (sub.url.toLowerCase().startsWith('http')) {
+                const response = await Promise.race([
+                    fetch(new Request(sub.url, {
+                        headers: { 'User-Agent': userAgent },
+                        redirect: "follow",
+                        cf: { insecureSkipVerify: true }
+                    })),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+                ]) as Response;
 
-            if (!response.ok) return [];
-            const text = await response.text();
+                if (!response.ok) return [];
+                content = await response.text();
+            }
 
-            // parse 方法内部会调用 processNodes
-            return subscriptionParser.parse(text, sub.name, {
+            // 解析
+            const proxies = ProxyUtils.parse(content);
+            // 订阅级过滤
+            return ProxyUtils.process(proxies, {
+                subName: sub.name,
                 exclude: sub.exclude,
-                prependSubName: config.prependSubName,
-                dedupe: config.dedupe
             });
         } catch (e) {
             console.error(`Failed to fetch/parse sub ${sub.name}:`, e);
@@ -57,10 +45,10 @@ async function generateCombinedNodeList(
         }
     });
 
-    const processedSubResults = await Promise.all(subPromises);
-    const allNodes: Node[] = [...processedManualNodes, ...processedSubResults.flat()];
+    const results = await Promise.all(subPromises);
+    results.forEach(list => allProxies.push(...list));
 
-    return allNodes;
+    return allProxies;
 }
 
 export async function handleSubRequest(context: EventContext<Env, any, any>): Promise<Response> {
@@ -157,21 +145,21 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
     if (!targetFormat) {
         const ua = userAgentHeader.toLowerCase();
         const uaMapping = [
-            // Clash Meta/Mihomo 系列客户端
-            ['clash-meta', 'clash'],
-            ['clash.meta', 'clash'],
-            ['clash-verge', 'clash'],
-            ['clash-verge-rev', 'clash'],
-            ['flclash', 'clash'],              // FlClash - 跨平台 Clash Meta 客户端
-            ['clash party', 'clash'],          // Clash Party (原 Mihomo Party)
-            ['clashparty', 'clash'],
-            ['mihomo party', 'clash'],
-            ['mihomoparty', 'clash'],
-            ['clashmi', 'clash'],              // Clash Mi - 移动端客户端
-            ['mihomo', 'clash'],
-            ['stash', 'clash'],
-            ['nekoray', 'clash'],
-            ['clash', 'clash'],                // 放在最后，避免误匹配
+            // Clash Meta/Mihomo 系列客户端 (支持 VLESS, Hysteria2 等)
+            ['clash-meta', 'clashmeta'],
+            ['clash.meta', 'clashmeta'],
+            ['clash-verge', 'clashmeta'],
+            ['clash-verge-rev', 'clashmeta'],
+            ['flclash', 'clashmeta'],
+            ['clash party', 'clashmeta'],
+            ['clashparty', 'clashmeta'],
+            ['mihomo party', 'clashmeta'],
+            ['mihomoparty', 'clashmeta'],
+            ['mihomo', 'clashmeta'],
+            ['stash', 'stash'],                // Stash 映射到 ClashMeta 逻辑
+            ['nekoray', 'clashmeta'],
+            // 标准 Clash 客户端
+            ['clash', 'clash'],
             // 其他客户端
             ['sing-box', 'singbox'],
             ['shadowrocket', 'base64'],
@@ -209,11 +197,9 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
         context.waitUntil(sendTgNotification(config as AppConfig, message));
     }
 
-    let prependedContentForSubconverter = '';
-
-    if (isProfileExpired) {
-        prependedContentForSubconverter = '';
-    } else {
+    // 3. 构建临时节点 (如流量信息等)
+    const extraProxies: Proxy[] = [];
+    if (!isProfileExpired) {
         const totalRemainingBytes = targetSubs.reduce((acc, sub) => {
             if (sub.enabled && sub.userInfo && sub.userInfo.total > 0) {
                 const used = (sub.userInfo.upload || 0) + (sub.userInfo.download || 0);
@@ -224,50 +210,47 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
         }, 0);
         if (totalRemainingBytes > 0) {
             const formattedTraffic = formatBytes(totalRemainingBytes);
-            const fakeNodeName = `流量剩余 ≫ ${formattedTraffic}`;
-            const encodedName = encodeURIComponent(fakeNodeName);
-            prependedContentForSubconverter = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443?#${encodedName}\n`;
+            extraProxies.push({
+                name: `流量剩余 ≫ ${formattedTraffic}`,
+                type: 'trojan',
+                server: '127.0.0.1',
+                port: 443,
+                password: '00000000-0000-0000-0000-000000000000',
+            } as any);
         }
+    } else {
+        extraProxies.push({
+            name: '您的订阅已失效',
+            type: 'trojan',
+            server: '127.0.0.1',
+            port: 443,
+            password: '00000000-0000-0000-0000-000000000000',
+        } as any);
     }
 
-    const upstreamUserAgent = GLOBAL_USER_AGENT;
-    console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
+    const combinedNodes = [...extraProxies, ...await generateCombinedNodeList(GLOBAL_USER_AGENT, targetSubs)];
 
-    const combinedNodes = await generateCombinedNodeList(config, upstreamUserAgent, targetSubs);
+    // 4. 全局处理 (去重、全局开关)
+    const processedNodes = ProxyUtils.process(combinedNodes, {
+        dedupe: !!config.dedupe,
+        udp: !!config.udp,
+        skipCertVerify: !!config.skipCertVerify,
+    });
 
-    let combinedContent = combinedNodes.map(n => n.url).join('\n');
-    if (combinedContent.length > 0 && !combinedContent.endsWith('\n')) combinedContent += '\n';
-
-    if (prependedContentForSubconverter) {
-        combinedContent = `${combinedContent}${prependedContentForSubconverter}`;
-    }
-
-    if (targetFormat === 'base64') {
-        let contentToEncode;
-        if (isProfileExpired) {
-            contentToEncode = DEFAULT_EXPIRED_NODE + '\n';
-        } else {
-            contentToEncode = combinedContent;
-        }
-
-        const headers: Record<string, string> = {
-            "Content-Type": "text/plain; charset=utf-8",
-            'Cache-Control': 'no-store, no-cache',
-            "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
-        };
-        return new Response(encodeBase64(contentToEncode), { headers });
-    }
+    // 5. 生成目标格式
+    const finalTarget = targetFormat === 'base64' ? 'URI' : targetFormat;
 
     try {
-        const convertedContent = subscriptionConverter.convert(
-            combinedNodes,
-            targetFormat,
+        const convertedContent = ProxyUtils.produce(
+            processedNodes,
+            finalTarget,
+            'external',
             {
                 filename: subName,
-                udp: Boolean(config.udp),
-                skipCertVerify: Boolean(config.skipCertVerify)
+                udp: !!config.udp,
+                skipCertVerify: !!config.skipCertVerify
             }
-        );
+        ) as string;
 
         const responseHeaders = new Headers({
             'Content-Type': 'text/plain; charset=utf-8',

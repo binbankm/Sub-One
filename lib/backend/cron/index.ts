@@ -3,10 +3,8 @@ import { Env } from '../types';
 import { KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
 import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
 import { checkAndNotify } from '../services/notification';
-import { SubscriptionParser } from '../subscription-parser';
+import { ProxyUtils } from '../proxy';
 import { Subscription, AppConfig, SubscriptionUserInfo } from '../../shared/types';
-
-const subscriptionParser = new SubscriptionParser();
 
 export async function handleCronTrigger(env: Env): Promise<Response> {
     console.log("Cron trigger fired. Checking all subscriptions for traffic and node count...");
@@ -54,9 +52,7 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                         // 2. 提取节点数量（从body）
                         const text = await response.text();
                         try {
-                            const nodes = subscriptionParser.parse(text, sub.name, {
-                                dedupe: false
-                            });
+                            const nodes = ProxyUtils.parse(text);
                             if (nodes.length > 0) {
                                 sub.nodeCount = nodes.length;
                                 changesMade = true;

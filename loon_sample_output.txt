@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.16 [39m[90mC:/Users/Administrator/Desktop/Sub-One[39m
+
+[90mstdout[2m | lib/backend/proxy/loon_sample.test.ts[2m > [22m[2mReal World Subscription Test - Loon Detailed[2m > [22m[2mshould show simplified Loon config
+[22m[39m[Sub-One] Detected Base64 encoded content, decoding...
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI VMess Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI Trojan Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VLESS Parser] matched
+[Sub-One] Parser [URI SS Parser] matched
+[Sub-One] Parser [URI VMess Parser] matched
+
+=== Loon Configuration Sample ===
+馃嚭馃嚫US_1|3.1MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM = vless,25.129.197.138,2053,"8a07740f-b932-4372-a3a2-ed91f184cd33",transport=ws,path=/eyJqdW5rIjoiNDBNWGY3Z0NPd0loZ2YiLCJwcm90b2NvbCI6InZsIiwibW9kZSI6InByb3h5aXAiLCJwYW5lbElQcyI6W119?ed=2560,over-tls=true,tls-name=khamenei.dpdns.org,skip-cert-verify=false
+馃嚭馃嚫US_7|4.6MB/s|TK-US|YT-US|NF|GPT鈦?= vmess,47.253.197.26,12056,none,"dd7be7f1-38ff-45e6-f1e5-b20c2190f527",alterId=0
+馃嚭馃嚫US_10|13.1MB/s|4%|TK-US|YT-US|NF|D+|GPT鈦簗GM = trojan,172.64.145.38,8443,"k52nemqqdx9e",transport=ws,path=/?ed=2560,host=8end0fr.zjde5.de5.net,over-tls=true,tls-name=8end0fr.zjde5.de5.net,skip-cert-verify=true
+馃嚫馃嚘SA_1|1.9MB/s|23%|YT-SA|NF|GPT鈦簗GM = shadowsocks,154.205.134.251,11201,chacha20-ietf-poly1305,"7bc8eeffd0325141"
+=================================
+
+
+ [32m鉁?[39m lib/backend/proxy/loon_sample.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1252[2mms[22m[39m
+     [33m[2m鉁?[22m[39m should show simplified Loon config [33m 1251[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 15:54:50
+[2m   Duration [22m 2.04s[2m (transform 268ms, setup 0ms, import 326ms, tests 1.25s, environment 0ms)[22m
+

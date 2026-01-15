@@ -4,11 +4,10 @@ import { authMiddleware, generateSecureToken, COOKIE_NAME, SESSION_DURATION } fr
 import { OLD_KV_KEY, KV_KEY_SUBS, KV_KEY_PROFILES, KV_KEY_SETTINGS } from '../config/constants';
 import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
 import { checkAndNotify, sendTgNotification } from '../services/notification';
-import { SubscriptionParser } from '../subscription-parser';
-import { Subscription, Profile, AppConfig, Node, SubscriptionUserInfo } from '../../shared/types';
+import { ProxyUtils } from '../proxy';
+import { Proxy } from '../proxy/types';
+import { Subscription, Profile, AppConfig, SubscriptionUserInfo } from '../../shared/types';
 import { authenticateUser, hasUsers, createUser } from '../services/users';
-
-const subscriptionParser = new SubscriptionParser();
 
 /**
  * 主要 API 请求处理
@@ -252,7 +251,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
             }
 
-            const result: { count: number; userInfo: Partial<SubscriptionUserInfo> | null; nodes?: Node[] } = { count: 0, userInfo: null };
+            const result: { count: number; userInfo: Partial<SubscriptionUserInfo> | null; nodes?: Proxy[] } = { count: 0, userInfo: null };
 
             try {
                 const fetchOptions = {
@@ -297,13 +296,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     const nodeCountResponse = responses[1].value;
                     const text = await nodeCountResponse.text();
 
-                    // 使用统一的 SubscriptionParser 解析
+                    // 使用统一的 ProxyUtils 解析
                     let nodeCount = 0;
-                    let parsedNodes: Node[] = [];
+                    let parsedNodes: Proxy[] = [];
                     try {
-                        // 解析节点，应用过滤规则
-                        parsedNodes = subscriptionParser.parse(text, '', {
-                            dedupe: false,
+                        // 解析节点
+                        const rawProxies = ProxyUtils.parse(text);
+                        // 应用过滤规则，这里我们不强制去重，保持原样
+                        parsedNodes = ProxyUtils.process(rawProxies, {
                             exclude: exclude  // 应用过滤规则
                         });
                         nodeCount = parsedNodes.length;
@@ -386,13 +386,11 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                             // 更新节点数量
                             const text = await response.text();
 
-                            // 使用统一的 SubscriptionParser 解析
+                            // 使用统一的 ProxyUtils 解析
                             let nodeCount = 0;
                             try {
                                 // 管理端需要显示全部节点，不进行去重
-                                const nodes = subscriptionParser.parse(text, sub.name, {
-                                    dedupe: false
-                                });
+                                const nodes = ProxyUtils.parse(text);
                                 nodeCount = nodes.length;
                             } catch (e) {
                                 console.error(`Batch update parse failed:`, e);

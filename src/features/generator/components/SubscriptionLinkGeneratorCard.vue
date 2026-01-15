@@ -28,12 +28,14 @@ const showUrl = ref(false);
 const copied = ref(false);
 let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const formats = ['自适应', 'V2Ray', 'Clash', 'Sing-Box', 'Quantumult X', 'Surge', 'Loon'];
+const formats = ['自适应', 'Base64', 'Clash', 'Clash Meta', 'Stash', 'Sing-Box', 'Quantumult X', 'Surge', 'Loon'];
 
 /** 格式映射表 */
 const FORMAT_MAPPING: Record<string, string> = {
-  'V2Ray': 'base64',
+  'Base64': 'base64',
   'Clash': 'clash',
+  'Clash Meta': 'clashmeta',
+  'Stash': 'stash',
   'Sing-Box': 'singbox',
   'Quantumult X': 'quantumultx',
   'Surge': 'surge',
