@@ -93,7 +93,7 @@ export function parseVless(url: string): VlessNode | null {
         };
 
         // 日志输出（调试模式）
-        if (process.env.DEBUG_PARSER) {
+        if (typeof process !== 'undefined' && process.env?.DEBUG_PARSER) {
             console.log('[VLESS] 解析成功:', {
                 name: node.name,
                 server: node.server,

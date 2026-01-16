@@ -18,7 +18,7 @@ import {
     ShadowsocksNode, ShadowsocksRNode, Socks5Node
 } from '../../shared/types';
 
-const DEBUG = process.env.DEBUG_CONVERTER === '1';
+const DEBUG = typeof process !== 'undefined' && process.env?.DEBUG_CONVERTER === '1';
 
 /**
  * 转换为 QuantumultX 配置

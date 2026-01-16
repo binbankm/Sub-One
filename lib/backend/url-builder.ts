@@ -23,7 +23,7 @@ import { buildStandardQuery } from './parsers/helper';
 import { Base64 } from 'js-base64';
 
 // 调试模式
-const DEBUG = process.env.DEBUG_URL_BUILDER === '1';
+const DEBUG = typeof process !== 'undefined' && process.env?.DEBUG_URL_BUILDER === '1';
 
 /**
  * 参数回填：从 originalUrl 中提取当前 Node 缺失的参数

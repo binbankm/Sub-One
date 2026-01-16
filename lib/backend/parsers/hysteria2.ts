@@ -110,7 +110,7 @@ export function parseHysteria2(url: string): Hysteria2Node | null {
         };
 
         // 调试日志
-        if (process.env.DEBUG_PARSER) {
+        if (typeof process !== 'undefined' && process.env?.DEBUG_PARSER) {
             console.log('[Hysteria2] 解析成功:', {
                 name: node.name,
                 server: node.server,
