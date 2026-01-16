@@ -4,7 +4,6 @@
 import { Env } from '../types';
 import { KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_PROFILES } from '../config/constants';
 import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
-import { formatBytes } from '../utils/common';
 import { sendTgNotification } from '../services/notification';
 import { SubscriptionParser } from '../subscription-parser';
 import { subscriptionConverter } from '../converter';
@@ -209,26 +208,26 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
         context.waitUntil(sendTgNotification(config as AppConfig, message));
     }
 
-    let prependedContentForSubconverter = '';
+    // 计算订阅组的流量统计信息（用于 HTTP 头部）
+    let totalUpload = 0;
+    let totalDownload = 0;
+    let totalBytes = 0;
+    let earliestExpire: number | undefined;
 
-    if (isProfileExpired) {
-        prependedContentForSubconverter = '';
-    } else {
-        const totalRemainingBytes = targetSubs.reduce((acc, sub) => {
-            if (sub.enabled && sub.userInfo && sub.userInfo.total > 0) {
-                const used = (sub.userInfo.upload || 0) + (sub.userInfo.download || 0);
-                const remaining = sub.userInfo.total - used;
-                return acc + Math.max(0, remaining);
+    targetSubs.forEach(sub => {
+        if (sub.enabled && sub.userInfo) {
+            if (sub.userInfo.upload) totalUpload += sub.userInfo.upload;
+            if (sub.userInfo.download) totalDownload += sub.userInfo.download;
+            if (sub.userInfo.total) totalBytes += sub.userInfo.total;
+
+            // 找出最早的到期时间
+            if (sub.userInfo.expire && sub.userInfo.expire > 0) {
+                if (!earliestExpire || sub.userInfo.expire < earliestExpire) {
+                    earliestExpire = sub.userInfo.expire;
+                }
             }
-            return acc;
-        }, 0);
-        if (totalRemainingBytes > 0) {
-            const formattedTraffic = formatBytes(totalRemainingBytes);
-            const fakeNodeName = `流量剩余 ≫ ${formattedTraffic}`;
-            const encodedName = encodeURIComponent(fakeNodeName);
-            prependedContentForSubconverter = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443?#${encodedName}\n`;
         }
-    }
+    });
 
     const upstreamUserAgent = GLOBAL_USER_AGENT;
     console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
@@ -237,10 +236,6 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
 
     let combinedContent = combinedNodes.map(n => n.url).join('\n');
     if (combinedContent.length > 0 && !combinedContent.endsWith('\n')) combinedContent += '\n';
-
-    if (prependedContentForSubconverter) {
-        combinedContent = `${combinedContent}${prependedContentForSubconverter}`;
-    }
 
     if (targetFormat === 'base64') {
         let contentToEncode;
@@ -274,6 +269,22 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
             'Content-Disposition': `inline; filename*=utf-8''${encodeURIComponent(subName)}`,
             'Cache-Control': 'no-store, no-cache'
         });
+
+        // 添加标准的 Subscription-UserInfo HTTP 头部
+        // 格式: upload=xxx; download=xxx; total=xxx; expire=xxx
+        // 被 Clash、Surge、Loon、QuantumultX 等主流客户端原生支持
+        if (totalUpload > 0 || totalDownload > 0 || totalBytes > 0 || earliestExpire) {
+            const userInfoParts: string[] = [];
+
+            if (totalUpload > 0) userInfoParts.push(`upload=${totalUpload}`);
+            if (totalDownload > 0) userInfoParts.push(`download=${totalDownload}`);
+            if (totalBytes > 0) userInfoParts.push(`total=${totalBytes}`);
+            if (earliestExpire) userInfoParts.push(`expire=${earliestExpire}`);
+
+            if (userInfoParts.length > 0) {
+                responseHeaders.set('Subscription-UserInfo', userInfoParts.join('; '));
+            }
+        }
 
         return new Response(convertedContent, {
             status: 200,
