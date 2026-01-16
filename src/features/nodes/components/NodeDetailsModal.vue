@@ -281,16 +281,55 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
 });
-// 提取主机名 helper
+// 修改后的提取主机名 helper
 const extractHost = (url: string) => {
+  if (!url) return '';
+
   try {
+    // 1. 特殊处理 VMess 协议
+    if (url.startsWith('vmess://')) {
+      const base64 = url.replace('vmess://', '');
+      try {
+        // 解码 Base64 (处理可能存在的中文乱码)
+        const decoded = decodeURIComponent(escape(window.atob(base64)));
+        const config = JSON.parse(decoded);
+        // VMess JSON 标准字段: add (地址), port (端口)
+        if (config.add && config.port) {
+          return `${config.add}:${config.port}`;
+        }
+        return config.add || '未知地址';
+      } catch (e) {
+        console.warn('VMess 解析失败:', e);
+        return 'VMess 格式错误';
+      }
+    }
+
+    // 2. 特殊处理纯 Base64 的 SS (Legacy 格式: ss://Base64)
+    // 如果是 ss:// 且不包含 @ 符号，通常是旧版 Base64 格式
+    if (url.startsWith('ss://') && !url.includes('@')) {
+       const base64 = url.replace('ss://', '').split('#')[0]; // 去掉末尾可能的 #备注
+       try {
+         const decoded = decodeURIComponent(escape(window.atob(base64)));
+         // 解码后通常是 method:password@hostname:port
+         const parts = decoded.split('@');
+         if (parts.length > 1) {
+           return parts[1]; // 返回 hostname:port
+         }
+       } catch (e) {
+         // 解码失败则继续尝试标准 URL 解析
+       }
+    }
+
+    // 3. 处理标准 URL 格式 (VLESS, Hysteria, Trojan, 标准 SS)
     const urlObj = new URL(url);
     if (!urlObj.hostname) return '';
     return urlObj.port ? `${urlObj.hostname}:${urlObj.port}` : urlObj.hostname;
-  } catch {
+
+  } catch (e) {
     return 'URL 解析错误';
   }
 };
+
 </script>
 
 <template>
