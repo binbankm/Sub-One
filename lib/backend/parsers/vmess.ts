@@ -1,10 +1,17 @@
 import { VmessNode, TransportOptions, TlsOptions, NetworkType, V2rayNConfig } from '../../shared/types';
-import { decodeBase64 } from '../converter/base64';
+import { Base64 } from 'js-base64';
 import { generateId, safeDecodeURIComponent, parseStandardParams } from './helper';
 
 /**
  * 解析 VMess 链接
- * 支持 VMess JSON (vmess://base64-json) 和标准 URI
+ * 
+ * 支持格式:
+ * 1. VMess JSON: vmess://base64({v:2, ps:..., add:..., ...})
+ * 2. 标准 URI: vmess://uuid@host:port?params#name
+ * 
+ * 注意:
+ * - alterId (额外ID) 已被废弃，推荐使用 VLESS
+ * - cipher 默认为 'auto' 符合 v2fly 规范
  */
 export function parseVmess(url: string): VmessNode | null {
     if (!url.startsWith('vmess://')) return null;
@@ -13,7 +20,7 @@ export function parseVmess(url: string): VmessNode | null {
 
     // 尝试解析 Base64 JSON (最常见)
     try {
-        const decoded = decodeBase64(content);
+        const decoded = Base64.decode(content);
         const config = JSON.parse(decoded);
         return parseVmessJson(config, url);
     } catch {
@@ -22,7 +29,7 @@ export function parseVmess(url: string): VmessNode | null {
         try {
             return parseVmessUri(url);
         } catch (e) {
-            console.error('[VMess Parsing Error]', e);
+            console.error('[VMess] 解析失败:', e instanceof Error ? e.message : e);
             return null;
         }
     }
@@ -31,10 +38,6 @@ export function parseVmess(url: string): VmessNode | null {
 function parseVmessUri(url: string): VmessNode | null {
     const urlObj = new URL(url);
     const uuid = urlObj.username;
-    // vmess uri format varies, sometimes it is user@host:port, sometimes host:port?id=...
-    // But QuantumultX/Shadowrocket style usually vmess://method:uuid@host:port ?
-    // Actually the "standard" URI is vmess://user@host:port?extra...
-    // Let's assume user is UUID.
 
     if (!uuid) return null;
 
@@ -50,6 +53,11 @@ function parseVmessUri(url: string): VmessNode | null {
     // Additional params
     const alterId = Number(params.get('aid') || params.get('alterId') || 0);
     const cipher = params.get('scy') || params.get('security') || 'auto';
+
+    // 警告: alterId 已废弃
+    if (alterId > 0) {
+        console.warn('[VMess] alterId 已被废弃，建议迁移至 VLESS');
+    }
 
     return {
         type: 'vmess',
@@ -91,13 +99,13 @@ function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | 
     }
     // gRPC
     else if (net === 'grpc') {
-        if (config.path) transport.serviceName = config.path; // VMess JSON 中 path 常用于存放 serviceName
+        if (config.path) transport.serviceName = config.path;
         if (config.type === 'multi') transport.mode = 'multi';
     }
     // KCP / QUIC
     else if (net === 'kcp' || net === 'quic') {
         if (config.type) transport.headerType = config.type;
-        if (config.path) transport.quicKey = config.path; // QUIC key/path 复用
+        if (config.path) transport.quicKey = config.path;
     }
 
     // --- TLS 解析 ---
@@ -108,10 +116,14 @@ function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | 
         if (config.sni) tls.serverName = config.sni;
         if (config.alpn) tls.alpn = config.alpn.split(',');
         if (config.fp) tls.fingerprint = config.fp;
-        // VMess JSON 通常不带 insecure 字段，默认视作 false，除非有特殊扩展字段
         if (config.allowInsecure === true) {
             tls.insecure = true;
         }
+    }
+
+    const alterId = Number(config.aid || 0);
+    if (alterId > 0) {
+        console.warn('[VMess] alterId 已被废弃，建议迁移至 VLESS');
     }
 
     return {
@@ -121,7 +133,7 @@ function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | 
         server: config.add,
         port: port,
         uuid: config.id,
-        alterId: Number(config.aid || 0),
+        alterId,
         cipher: config.scy || 'auto',
         udp: true,
         transport,

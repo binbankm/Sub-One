@@ -48,7 +48,7 @@ export function parseHysteria(url: string): HysteriaNode | null {
         return node;
 
     } catch (e) {
-        console.error('解析 Hysteria v1 链接失败:', e);
+        console.error('[Hysteria] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

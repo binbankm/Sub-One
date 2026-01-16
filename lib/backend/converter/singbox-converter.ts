@@ -1,41 +1,60 @@
+/**
+ * =================================================================
+ * Sing-Box 转换器 - 完整参数增强版
+ * =================================================================
+ * 
+ * 设计原则:
+ * 1. 参数完整性优先
+ * 2. 符合 Sing-Box 最新规范
+ * 3. 零参数丢失
+ * 
+ * 参考规范:
+ * - Sing-Box: https://sing-box.sagernet.org/
+ * - GitHub: https://github.com/SagerNet/sing-box
+ * 
+ * @module converter/singbox-enhanced
+ * =================================================================
+ */
 
-import { ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, HysteriaNode, Hysteria2Node, TuicNode, WireGuardNode, AnyTLSNode, Socks5Node, TransportOptions, TlsOptions, SingBoxOutbound } from '../../shared/types';
+import {
+    ProxyNode, ConverterOptions, VmessNode, VlessNode, TrojanNode,
+    ShadowsocksNode, HysteriaNode, Hysteria2Node, TuicNode,
+    WireGuardNode, AnyTLSNode, Socks5Node,
+    TransportOptions, TlsOptions, SingBoxOutbound
+} from '../../shared/types';
 
-
+const DEBUG = process.env.DEBUG_CONVERTER === '1';
 
 /**
  * 转换为 Sing-Box JSON 配置
  */
-export function toSingBox(nodes: ProxyNode[], _options: ConverterOptions = {}): string {
-
-
+export function toSingBox(nodes: ProxyNode[], options: ConverterOptions = {}): string {
     const outbounds = nodes
         .map(node => {
             const outbound = nodeToSingBoxOutbound(node);
-            if (outbound && _options.skipCertVerify) {
-                // Determine if outbound has TLS and we need to force insecure
-                if (outbound.tls) {
-                    outbound.tls.insecure = true;
-                }
-                // Note: Sing-Box usually handles UDP automatically, no explicit flag needed here
+
+            if (outbound && options.skipCertVerify && outbound.tls) {
+                outbound.tls.insecure = true;
             }
+
             return outbound;
         })
         .filter((o): o is SingBoxOutbound => o !== null);
 
+    if (DEBUG) {
+        console.log(`[Sing-Box] 成功转换 ${outbounds.length}/${nodes.length} 个节点`);
+    }
+
     return JSON.stringify({
         outbounds: outbounds,
-        // Minimize other fields but keep basic structure valid
         route: {
             rules: [],
-            final: undefined
+            final: 'direct'
         }
     }, null, 2);
-
-
 }
 
-function nodeToSingBoxOutbound(node: ProxyNode): SingBoxOutbound | null {
+export function nodeToSingBoxOutbound(node: ProxyNode): SingBoxOutbound | null {
     try {
         switch (node.type) {
             case 'vmess': return buildVmess(node as VmessNode);
@@ -47,57 +66,75 @@ function nodeToSingBoxOutbound(node: ProxyNode): SingBoxOutbound | null {
             case 'tuic': return buildTuic(node as TuicNode);
             case 'wireguard': return buildWireGuard(node as WireGuardNode);
             case 'anytls': return buildAnyTLS(node as AnyTLSNode);
-
             case 'socks5': return buildSocks5(node as Socks5Node);
             default:
-                console.warn(`[SingBox] Unsupported node type: ${node.type} `);
+                if (DEBUG) console.warn(`[Sing-Box] 不支持的协议: ${node.type}`);
                 return null;
         }
     } catch (e) {
-        console.error(`[SingBox] Failed to convert node ${node.name}: `, e);
+        console.error(`[Sing-Box] 转换失败 (${node.name}):`, e);
         return null;
     }
 }
 
-// --- Specific Builders ---
+// =================================================================
+// 辅助函数
+// =================================================================
 
-function buildBase(node: ProxyNode) {
+function buildBase(node: ProxyNode): Pick<SingBoxOutbound, 'tag' | 'server' | 'server_port'> {
     return {
-        tag: node.name,
-        server: node.server,
-        server_port: node.port
+        tag: node.name || 'Unnamed',
+        server: node.server || '',
+        server_port: node.port || 0
     };
 }
 
-function assignTransport(outbound: SingBoxOutbound, node: { transport?: TransportOptions }) {
+function assignTransport(outbound: SingBoxOutbound, node: { transport?: TransportOptions }): void {
     const t = node.transport;
     if (!t || t.type === 'tcp') return;
 
-    if (t.type === 'ws') {
-        outbound.transport = {
-            type: 'ws',
-            path: t.path,
-            headers: t.headers
-        };
-    } else if (t.type === 'grpc') {
-        outbound.transport = {
-            type: 'grpc',
-            service_name: t.serviceName
-        };
-    } else if (t.type === 'http' || t.type === 'h2') {
-        outbound.transport = {
-            type: 'http',
-            path: t.path,
-            host: t.host
-        };
-    } else if (t.type === 'quic') {
-        outbound.transport = {
-            type: 'quic'
-        };
+    switch (t.type) {
+        case 'ws':
+            outbound.transport = {
+                type: 'ws',
+                path: t.path,
+                headers: t.headers
+            } as any; // Sing-Box 的 transport 类型定义可能不完整，使用 any
+            break;
+
+        case 'grpc':
+            outbound.transport = {
+                type: 'grpc',
+                service_name: t.serviceName
+            };
+            break;
+
+        case 'http':
+        case 'h2':
+            outbound.transport = {
+                type: 'http',
+                path: t.path,
+                host: t.host as any
+            };
+            break;
+
+        case 'quic':
+            outbound.transport = {
+                type: 'quic'
+            };
+            break;
+
+        case 'httpupgrade':
+            outbound.transport = {
+                type: 'httpupgrade',
+                path: t.path,
+                headers: t.headers
+            };
+            break;
     }
 }
 
-function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }) {
+function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }): void {
     const tls = node.tls;
     if (!tls || !tls.enabled) return;
 
@@ -108,6 +145,7 @@ function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }) {
         alpn: tls.alpn
     };
 
+    // ✅ uTLS 指纹
     if (tls.fingerprint) {
         outbound.tls.utls = {
             enabled: true,
@@ -115,16 +153,19 @@ function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }) {
         };
     }
 
-    if (tls.reality?.enabled && outbound.tls) {
-        const realityConfig: NonNullable<typeof outbound.tls.reality> = {
+    // ✅ REALITY 完整支持
+    if (tls.reality?.enabled) {
+        outbound.tls.reality = {
             enabled: true,
-            public_key: tls.reality.publicKey
+            public_key: tls.reality.publicKey,
+            short_id: tls.reality.shortId
         };
-        if (tls.reality.shortId) realityConfig.short_id = tls.reality.shortId;
-
-        outbound.tls.reality = realityConfig;
     }
 }
+
+// =================================================================
+// 协议构建函数
+// =================================================================
 
 function buildVmess(node: VmessNode): SingBoxOutbound {
     const outbound: SingBoxOutbound = {
@@ -134,9 +175,10 @@ function buildVmess(node: VmessNode): SingBoxOutbound {
         alter_id: node.alterId,
         security: node.cipher
     };
-    // SingBox VMess TLS structure is inside 'tls', handled by assignTls
+
     assignTls(outbound, node);
     assignTransport(outbound, node);
+
     return outbound;
 }
 
@@ -147,8 +189,10 @@ function buildVless(node: VlessNode): SingBoxOutbound {
         uuid: node.uuid,
         flow: node.flow
     };
+
     assignTls(outbound, node);
     assignTransport(outbound, node);
+
     return outbound;
 }
 
@@ -158,8 +202,10 @@ function buildTrojan(node: TrojanNode): SingBoxOutbound {
         ...buildBase(node),
         password: node.password
     };
+
     assignTls(outbound, node);
     assignTransport(outbound, node);
+
     return outbound;
 }
 
@@ -170,47 +216,38 @@ function buildShadowsocks(node: ShadowsocksNode): SingBoxOutbound {
         method: node.cipher,
         password: node.password
     };
-    if (node.plugin) {
-        if (node.plugin === 'v2ray-plugin' || node.plugin === 'obfs-local') {
-            // SingBox doesn't support 'plugin' field like clash.
-            // But it supports Shadowsocks over separate Transport (ws/http) or just standard SIP003 (which singbox supports via external plugin binary?)
-            // Actually, modern SingBox supports SS with Multiplex/Transport natively without "plugin".
 
-            // If it's v2ray-plugin, we should map it to transport: ws/http
-            if (node.plugin === 'v2ray-plugin') {
-                const mode = node.pluginOpts?.mode || 'websocket'; // websocket | quic
-                if (mode === 'websocket') {
-                    assignTransport(outbound, {
-                        transport: {
-                            type: 'ws',
-                            path: node.pluginOpts?.path,
-                            headers: node.pluginOpts?.host ? { Host: node.pluginOpts.host } : undefined
-                        }
-                    });
-                }
-                // TLS is handled via plugin opts "tls" usually?
-                if (node.pluginOpts?.tls === 'tls') {
-                    outbound.tls = {
-                        enabled: true,
-                        server_name: node.pluginOpts?.host,
-                        insecure: true // Plugins usually loose on certs? Or strictly check? Better default to enabled.
-                    };
-                }
-            } else {
-                // obfs-local -> http/tls obfuscation
-                // SingBox doesn't have direct Obfs support in shadowsocks outbound except via transport
-                // So we might need to fallback or leave it as basic SS if complex.
-                outbound.plugin = node.plugin;
-                // plugin_opts is platform specific string
+    // ✅ 插件处理
+    if (node.plugin) {
+        if (node.plugin === 'v2ray-plugin') {
+            const mode = node.pluginOpts?.mode || 'websocket';
+            if (mode === 'websocket' || mode === 'ws') {
+                assignTransport(outbound, {
+                    transport: {
+                        type: 'ws',
+                        path: node.pluginOpts?.path,
+                        headers: node.pluginOpts?.host ? { Host: node.pluginOpts.host } : undefined
+                    }
+                });
+            }
+
+            if (node.pluginOpts?.tls === 'tls' || node.pluginOpts?.tls === '1') {
+                outbound.tls = {
+                    enabled: true,
+                    server_name: node.pluginOpts?.host,
+                    insecure: true
+                };
             }
         } else {
             outbound.plugin = node.plugin;
-            // Best effort serialization of options
             if (node.pluginOpts) {
-                outbound.plugin_opts = Object.entries(node.pluginOpts).map(([k, v]) => `${k}=${v}`).join(';');
+                outbound.plugin_opts = Object.entries(node.pluginOpts)
+                    .map(([k, v]) => `${k}=${v}`)
+                    .join(';');
             }
         }
     }
+
     return outbound;
 }
 
@@ -224,7 +261,9 @@ function buildHysteria(node: HysteriaNode): SingBoxOutbound {
         obfs: node.obfs,
         protocol: node.protocol
     };
+
     assignTls(outbound, node);
+
     return outbound;
 }
 
@@ -234,13 +273,17 @@ function buildHysteria2(node: Hysteria2Node): SingBoxOutbound {
         ...buildBase(node),
         password: node.password
     };
+
+    // ✅ 混淆
     if (node.obfs) {
         outbound.obfs = {
             type: node.obfs.type,
             password: node.obfs.password
         };
     }
+
     assignTls(outbound, node);
+
     return outbound;
 }
 
@@ -250,14 +293,18 @@ function buildTuic(node: TuicNode): SingBoxOutbound {
         ...buildBase(node),
         uuid: node.uuid,
         password: node.password,
-        congestion_control: node.congestionControl
+        congestion_control: node.congestionControl,
+        udp_relay_mode: node.udpRelayMode
     };
-    if (node.udpRelayMode) outbound.udp_relay_mode = node.udpRelayMode;
+
     assignTls(outbound, node);
+
     return outbound;
 }
 
 function buildWireGuard(node: WireGuardNode): SingBoxOutbound {
+    const localAddresses = [node.ip, node.ipv6].filter((i): i is string => !!i);
+
     const outbound: SingBoxOutbound = {
         type: 'wireguard',
         tag: node.name,
@@ -265,10 +312,14 @@ function buildWireGuard(node: WireGuardNode): SingBoxOutbound {
         server_port: node.port,
         private_key: node.privateKey,
         peer_public_key: node.publicKey,
-        local_address: [node.ip, node.ipv6].filter((i): i is string => !!i),
+        local_address: localAddresses,
         mtu: node.mtu
     };
-    if (node.preSharedKey) outbound.pre_shared_key = node.preSharedKey;
+
+    if (node.preSharedKey) {
+        outbound.pre_shared_key = node.preSharedKey;
+    }
+
     return outbound;
 }
 
@@ -277,28 +328,27 @@ function buildAnyTLS(node: AnyTLSNode): SingBoxOutbound {
         type: 'anytls',
         ...buildBase(node),
         password: node.password,
-        idle_timeout: node.idleTimeout
+        idle_timeout: node.idleTimeout,
+        client_fingerprint: node.clientFingerprint
     };
 
-    if (node.clientFingerprint) {
-        outbound.client_fingerprint = node.clientFingerprint;
-    }
-
     assignTls(outbound, node);
+
     return outbound;
 }
 
-
-
 function buildSocks5(node: Socks5Node): SingBoxOutbound {
     const outbound: SingBoxOutbound = {
-        type: 'socks5',
+        type: 'socks',
         ...buildBase(node),
         username: node.username,
         password: node.password
     };
-    // SingBox socks5 outbound does not support TLS typically for standard socks5, but let's keep it consistent if singbox supports socks5+tls (unlikely standard, but maybe over tls transport?)
-    // Actually standard socks5 in sing-box is just tcp/udp. If it's over TLS it might be different structure. 
-    // But for basic compatibility:
+
     return outbound;
 }
+
+export default {
+    toSingBox,
+    nodeToSingBoxOutbound
+};

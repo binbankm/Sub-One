@@ -1,5 +1,5 @@
 import type { ProxyNode, ConverterOptions } from '../../shared/types';
-import { encodeBase64 } from './base64';
+import { Base64 } from 'js-base64';
 import { toClash } from './clash-converter';
 import { toSingBox } from './singbox-converter';
 import { toSurge } from './surge-converter';
@@ -54,7 +54,7 @@ export class SubscriptionConverter {
      */
     toBase64(nodes: ProxyNode[]): string {
         const urls = nodes.map(node => node.url).join('\n');
-        return encodeBase64(urls);
+        return Base64.encode(urls);
     }
 
     // 以下方法已移到独立的转换器模块

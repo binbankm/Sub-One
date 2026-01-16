@@ -8,7 +8,7 @@ import { formatBytes } from '../utils/common';
 import { sendTgNotification } from '../services/notification';
 import { SubscriptionParser } from '../subscription-parser';
 import { subscriptionConverter } from '../converter';
-import { encodeBase64 } from '../converter/base64';
+import { Base64 } from 'js-base64';
 import { Subscription, Profile, AppConfig, Node, SubConfig } from '../../shared/types';
 
 const subscriptionParser = new SubscriptionParser();
@@ -255,7 +255,7 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
             'Cache-Control': 'no-store, no-cache',
             "Content-Disposition": `inline; filename*=utf-8''${encodeURIComponent(subName)}`
         };
-        return new Response(encodeBase64(contentToEncode), { headers });
+        return new Response(Base64.encode(contentToEncode), { headers });
     }
 
     try {

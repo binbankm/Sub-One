@@ -1,6 +1,6 @@
 import { Socks5Node } from '../../shared/types';
 import { safeDecodeURIComponent, generateId } from './helper';
-import { decodeBase64 } from '../converter/base64';
+import { Base64 } from 'js-base64';
 
 /**
  * 解析 Socks5 链接
@@ -37,7 +37,7 @@ export function parseSocks5(url: string): Socks5Node | null {
         // 启发式：如果不包含 @ 且不包含 :（或者只有一个 : 且看起来像 base64），尝试解码
         if (!mainPart.includes('@') && !mainPart.includes(':')) {
             try {
-                const decoded = decodeBase64(mainPart);
+                const decoded = Base64.decode(mainPart);
                 // 解码后如果包含 :，则认为是有效的解码内容
                 if (decoded && decoded.includes(':')) {
                     mainPart = decoded;
@@ -102,6 +102,7 @@ export function parseSocks5(url: string): Socks5Node | null {
         return node;
 
     } catch (e) {
-        return null; // 解析失败
+        console.error('[SOCKS5] 解析失败:', e instanceof Error ? e.message : e);
+        return null;
     }
 }

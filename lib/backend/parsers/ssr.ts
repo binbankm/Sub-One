@@ -1,17 +1,23 @@
 import { ShadowsocksRNode } from '../../shared/types';
-import { decodeBase64 } from '../converter/base64';
+import { Base64 } from 'js-base64';
 import { safeDecodeURIComponent, generateId } from './helper';
 
 /**
  * 解析 ShadowsocksR (SSR) 链接
- * 格式: ssr://BASE64(server:port:protocol:method:obfs:base64password/?obfsparam=base64&protoparam=base64&remarks=base64&group=base64)
+ * 格式: ssr://BASE64(server:port:protocol:method:obfs:base64password/?params)
+ * 
+ * 参数:
+ * - obfsparam, protoparam: Base64 编码
+ * - remarks, group: Base64 编码
+ * 
+ * 注意: SSR 已停止维护，仅用于兼容
  */
 export function parseSSR(url: string): ShadowsocksRNode | null {
     if (!url.startsWith('ssr://')) return null;
 
     try {
         const base64Part = url.slice(6);
-        const decoded = decodeBase64(base64Part);
+        const decoded = Base64.decode(base64Part);
 
         // SSR 主要是用 : 分隔核心字段
         const mainParts = decoded.split(':');
@@ -38,7 +44,7 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
             passwordBase64 = rest;
         }
 
-        const password = decodeBase64(passwordBase64);
+        const password = Base64.decode(passwordBase64);
 
         let name = 'SSR节点';
         let protocolParam = '';
@@ -50,7 +56,7 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
             const remarksBase64 = params.get('remarks');
             if (remarksBase64) {
                 try {
-                    name = decodeBase64(remarksBase64);
+                    name = Base64.decode(remarksBase64);
                 } catch {
                     name = safeDecodeURIComponent(remarksBase64);
                 }
@@ -59,7 +65,7 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
             const protoParamBase64 = params.get('protoparam');
             if (protoParamBase64) {
                 try {
-                    protocolParam = decodeBase64(protoParamBase64);
+                    protocolParam = Base64.decode(protoParamBase64);
                 } catch {
                     protocolParam = protoParamBase64;
                 }
@@ -68,7 +74,7 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
             const obfsParamBase64 = params.get('obfsparam');
             if (obfsParamBase64) {
                 try {
-                    obfsParam = decodeBase64(obfsParamBase64);
+                    obfsParam = Base64.decode(obfsParamBase64);
                 } catch {
                     obfsParam = obfsParamBase64;
                 }
@@ -93,6 +99,7 @@ export function parseSSR(url: string): ShadowsocksRNode | null {
         };
 
     } catch (e) {
+        console.error('[SSR] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

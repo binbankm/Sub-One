@@ -48,6 +48,7 @@ export function parseSnell(url: string): SnellNode | null {
 
         return node;
     } catch (e) {
+        console.error('[Snell] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

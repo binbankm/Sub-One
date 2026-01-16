@@ -4,7 +4,7 @@ import { parseNodeUrl } from './parsers/index';
 import { parseClashProxy } from './parsers/clash';
 import { parseSIP008 } from './parsers/sip008';
 import { buildNodeUrl } from './url-builder';
-import { decodeBase64 } from './converter/base64';
+import { Base64 } from 'js-base64';
 
 /**
  * 下一代订阅解析器
@@ -100,7 +100,7 @@ export class SubscriptionParser {
 
         if (looksLikeBase64) {
             try {
-                const decoded = decodeBase64(trimmed);
+                const decoded = Base64.decode(trimmed);
                 console.log(`[Parser] ✅ Decoded Base64 content (${decoded.length} bytes), re-parsing...`);
 
                 // 解码后递归调用 parse（可能是YAML或URL List）
@@ -133,7 +133,7 @@ export class SubscriptionParser {
 
         if (mightBeShortBase64) {
             try {
-                const decoded = decodeBase64(trimmed);
+                const decoded = Base64.decode(trimmed);
                 console.log(`[Parser] ⚠️  Last attempt: Decoding potential short Base64 (${trimmed.length} chars)...`);
 
                 // 递归解析解码后的内容

@@ -1,11 +1,22 @@
 import { ShadowsocksNode } from '../../shared/types';
 import { safeDecodeURIComponent, generateId } from './helper';
-import { decodeBase64 } from '../converter/base64';
+import { Base64 } from 'js-base64';
 import { parseSIP008Server, SIP008Server } from './sip008';
 
 /**
  * 解析 Shadowsocks 链接
- * 支持 SIP002 (ss://user@host:port), Legacy (ss://base64), 和 JSON (ss://base64(json))
+ * 
+ * 支持多种格式:
+ * 1. SIP002: ss://method:password@host:port?plugin=...#name
+ * 2. Legacy: ss://base64(method:password@host:port)#name
+ * 3. SIP008 JSON: ss://base64({...json...})#name
+ * 
+ * 插件支持:
+ * - simple-obfs (obfs-local): obfs=http/tls, obfs-host=...
+ * - v2ray-plugin: tls, host, path, mode
+ * - xray-plugin: 类似 v2ray-plugin
+ * 
+ * 官方规范: SIP002 (https://shadowsocks.org/doc/sip002.html)
  */
 export function parseShadowsocks(url: string): ShadowsocksNode | null {
     if (!url.startsWith('ss://')) return null;
@@ -33,7 +44,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
             // 鲁棒性：移除可能的末尾省略号或其他非 Base64/JSON 字符
             potentialBase64 = potentialBase64.replace(/[^\w+/=]/g, '').trim();
 
-            const decoded = decodeBase64(potentialBase64);
+            const decoded = Base64.decode(potentialBase64);
             // 鲁棒性：处理 JSON 末尾可能存在的杂质
             const jsonMatch = decoded.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
@@ -71,7 +82,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
                 let decodedUserInfo = userInfoPart;
                 try {
                     if (/^[A-Za-z0-9+/=_]+$/.test(userInfoPart)) {
-                        const decoded = decodeBase64(userInfoPart);
+                        const decoded = Base64.decode(userInfoPart);
                         // 不需要检查冒号，如果解码成功，就应当优先使用解码后的内容
                         // 因为原始串不含冒号（否则不匹配正则），所以它大概率是 Base64
                         decodedUserInfo = decoded;
@@ -98,7 +109,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
         if (!method || !password || !server || !port) {
             const content = mainPart.split('?')[0];
             try {
-                const decoded = decodeBase64(content);
+                const decoded = Base64.decode(content);
                 if (decoded.startsWith('ss://')) {
                     return parseShadowsocks(decoded + (hash ? '#' + hash : ''));
                 }
@@ -117,23 +128,39 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
         if (!server || !port || !password) return null;
         if (!method) method = 'aes-256-gcm';
 
-        // 6. 解析参数 (Plugin 等)
+        // ========== 6. 插件解析（SIP002 增强） ==========
         const qIdx = mainPart.indexOf('?');
         const search = qIdx !== -1 ? mainPart.slice(qIdx) : '';
         const params = new URLSearchParams(search);
 
         let pluginName: string | undefined;
         let pluginOpts: Record<string, string> | undefined;
+
         const pluginParam = params.get('plugin');
         if (pluginParam) {
-            const parts = safeDecodeURIComponent(pluginParam).split(';');
-            pluginName = parts[0];
-            if (parts.length > 1) {
+            // SIP002 插件格式: plugin=obfs-local;obfs=http;obfs-host=www.bing.com
+            const pluginParts = safeDecodeURIComponent(pluginParam).split(';');
+            pluginName = pluginParts[0];
+
+            if (pluginParts.length > 1) {
                 pluginOpts = {};
-                for (let i = 1; i < parts.length; i++) {
-                    const pair = parts[i].split('=');
+                for (let i = 1; i < pluginParts.length; i++) {
+                    const pair = pluginParts[i].split('=');
                     if (pair.length === 2) {
                         pluginOpts[pair[0]] = pair[1];
+                    }
+                }
+
+                // 插件特定优化
+                if (pluginName === 'obfs-local' || pluginName === 'simple-obfs') {
+                    // simple-obfs 标准化
+                    if (!pluginOpts['obfs'] && !pluginOpts['mode']) {
+                        console.warn('[SS] simple-obfs 缺少 obfs 参数');
+                    }
+                } else if (pluginName === 'v2ray-plugin' || pluginName === 'xray-plugin') {
+                    // v2ray-plugin: mode=websocket;tls;host=...;path=...
+                    if (pluginOpts['mode'] === 'websocket') {
+                        pluginOpts['mode'] = 'ws';
                     }
                 }
             }
@@ -153,6 +180,7 @@ export function parseShadowsocks(url: string): ShadowsocksNode | null {
         };
 
     } catch (e) {
+        console.error('[SS] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

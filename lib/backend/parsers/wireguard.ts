@@ -44,7 +44,7 @@ export function parseWireGuard(url: string): WireGuardNode | null {
         return node;
 
     } catch (e) {
-        console.error('解析 WireGuard 链接失败:', e);
+        console.error('[WireGuard] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

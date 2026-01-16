@@ -4,6 +4,11 @@ import { safeDecodeURIComponent, parseStandardParams, generateId } from './helpe
 /**
  * 解析 Trojan 链接
  * 格式: trojan://password@host:port?params#name
+ * 
+ * 特点:
+ * - 默认启用 TLS
+ * - 支持 WebSocket/gRPC 等传输层
+ * - 官方规范: https://trojan-gfw.github.io/trojan/protocol
  */
 export function parseTrojan(url: string): TrojanNode | null {
     if (!url.startsWith('trojan://')) return null;
@@ -68,6 +73,7 @@ export function parseTrojan(url: string): TrojanNode | null {
         };
 
     } catch (e) {
+        console.error('[Trojan] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }

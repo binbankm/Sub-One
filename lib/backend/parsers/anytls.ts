@@ -43,7 +43,7 @@ export function parseAnyTLS(url: string): AnyTLSNode | null {
         };
 
     } catch (e) {
-        console.warn('Failed to parse AnyTLS URL:', e);
-        return null; // Silent fail
+        console.error('[AnyTLS] 解析失败:', e instanceof Error ? e.message : e);
+        return null;
     }
 }

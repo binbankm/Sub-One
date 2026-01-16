@@ -4,6 +4,14 @@ import { safeDecodeURIComponent, parseStandardParams, generateId } from './helpe
 /**
  * 解析 TUIC 链接
  * 格式: tuic://uuid:password@host:port?params#name
+ * 
+ * 支持参数:
+ * - congestion_control: cubic/bbr/new_reno
+ * - udp_relay_mode: native/quic
+ * - alpn: h3/h3-29 等
+ * - sni, insecure, pinSHA256
+ * 
+ * 官方规范: https://github.com/daeuniverse/dae/discussions/182
  */
 export function parseTuic(url: string): TuicNode | null {
     try {
@@ -43,7 +51,7 @@ export function parseTuic(url: string): TuicNode | null {
         return node;
 
     } catch (e) {
-        console.error('解析 TUIC 链接失败:', e);
+        console.error('[TUIC] 解析失败:', e instanceof Error ? e.message : e);
         return null;
     }
 }
