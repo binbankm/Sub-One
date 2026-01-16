@@ -144,10 +144,10 @@ function buildVless(node: VlessNode): string {
             opts.push('over-tls=true');
             opts.push('tls-name=' + (node.tls.serverName || node.server));
             if (node.tls.reality.publicKey) {
-                opts.push(`reality-pbk=${node.tls.reality.publicKey}`);
+                opts.push(`public-key=${node.tls.reality.publicKey}`);
             }
             if (node.tls.reality.shortId) {
-                opts.push(`reality-sid=${node.tls.reality.shortId}`);
+                opts.push(`short-id=${node.tls.reality.shortId}`);
             }
         } else {
             opts.push('over-tls=true');
