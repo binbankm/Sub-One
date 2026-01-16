@@ -22,7 +22,7 @@ export function parseVmess(url: string): VmessNode | null {
     try {
         const decoded = Base64.decode(content);
         const config = JSON.parse(decoded);
-        return parseVmessJson(config, url);
+        return parseVmessJson(config);
     } catch {
         // JSON 解析失败，尝试解析普通 URI 格式
         // 格式: vmess://uuid@host:port?params#name
@@ -75,7 +75,7 @@ function parseVmessUri(url: string): VmessNode | null {
     };
 }
 
-function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | null {
+function parseVmessJson(config: V2rayNConfig): VmessNode | null {
     if (!config.add) return null;
     if (!config.port) return null;
     if (!config.id) return null;
@@ -137,7 +137,7 @@ function parseVmessJson(config: V2rayNConfig, originalUrl: string): VmessNode | 
         cipher: config.scy || 'auto',
         udp: true,
         transport,
-        tls,
-        originalUrl
+        tls
+        // originalUrl: originalUrl // 移除以强制前端使用结构化字段显示
     };
 }
