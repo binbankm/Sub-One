@@ -100,23 +100,14 @@ onMounted(() => {
 
     <!-- 励志语录卡片 -->
     <div
-      class="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-indigo-400/20 border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
-
-      <!-- 背景装饰 -->
-      <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50"></div>
-      <div
-        class="absolute top-0 right-0 w-64 h-64 bg-pink-300/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700">
-      </div>
-      <div
-        class="absolute bottom-0 left-0 w-48 h-48 bg-purple-300/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform duration-700">
-      </div>
+      class="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
 
       <div class="relative z-10">
         <!-- 标题栏 -->
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div
-              class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-400/30 to-purple-400/30 backdrop-blur-md flex items-center justify-center border border-white/20">
+              class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 backdrop-blur-md flex items-center justify-center border border-gray-200 dark:border-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none"
                 viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -140,7 +131,7 @@ onMounted(() => {
             </span>
 
             <button @click="refreshQuote" :disabled="isRefreshing"
-              class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-white/20"
+              class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-gray-200 dark:border-gray-600"
               title="换一条">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform duration-500"
                 :class="{ 'rotate-180': isRefreshing }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,7 +145,7 @@ onMounted(() => {
         <!-- 语录内容 -->
         <div :key="currentQuote.text" class="quote-content animate-fadeIn">
           <blockquote class="my-3">
-            <p class="text-gray-800 dark:text-white text-lg md:text-xl font-semibold leading-relaxed mb-2">
+            <p class="text-gray-800 dark:text-white text-lg md:text-xl font-semibold leading-relaxed mb-2 text-center">
               "{{ currentQuote.text }}"
             </p>
             <footer class="flex items-center gap-2">
@@ -174,9 +165,7 @@ onMounted(() => {
 
       <!-- 核心统计图表 (占2列) -->
       <div
-        class="md:col-span-2 backdrop-blur-xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-indigo-500/10 border border-white/20 dark:border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group min-h-[300px] flex flex-col">
-        <!-- 背景装饰 -->
-        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-all duration-1000"></div>
+        class="md:col-span-2 backdrop-blur-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl relative overflow-hidden group min-h-[300px] flex flex-col">
         
         <div class="flex items-center justify-between mb-6 relative z-10">
           <div>
@@ -206,19 +195,19 @@ onMounted(() => {
           
           <!-- 详细指标 -->
           <div class="w-full sm:w-1/2 grid grid-cols-2 gap-4">
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃订阅</div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions.length }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃节点</div>
               <div class="text-xl font-bold text-emerald-500">{{ activeNodeCount }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">订阅组</div>
               <div class="text-xl font-bold text-purple-500">{{ profiles.length }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-white/50 dark:border-white/5 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">手动节点</div>
               <div class="text-xl font-bold text-orange-500">{{ manualNodes.length }}</div>
             </div>
@@ -229,8 +218,8 @@ onMounted(() => {
       <!-- 智能更新卡片 -->
       <div class="flex flex-col gap-4 lg:gap-6">
         <button @click="handleUpdateAll" :disabled="isUpdatingAllSubs"
-          class="relative flex-1 overflow-hidden rounded-3xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/20 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          class="relative flex-1 overflow-hidden rounded-3xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <div class="relative z-10">
             <div class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300">
               <svg v-if="!isUpdatingAllSubs" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -247,7 +236,7 @@ onMounted(() => {
         </button>
 
         <!-- 订阅组指示 -->
-        <div class="relative flex-1 rounded-3xl bg-gradient-to-br from-purple-500/20 to-indigo-600/20 border border-purple-500/10 p-6 shadow-md">
+        <div class="relative flex-1 rounded-3xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 p-6 shadow-md">
            <div class="flex justify-between items-start mb-2">
              <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
