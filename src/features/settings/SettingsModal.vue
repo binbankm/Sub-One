@@ -48,6 +48,10 @@ const defaultSettings: AppConfig = {
   
   prependSubName: false,
   dedupe: false,  // 默认关闭去重，保留所有节点
+
+  // 网络与安全
+  udp: false,
+  skipCertVerify: false,
   
   // Telegram 通知配置
   BotToken: '',

@@ -29,6 +29,7 @@ export type {
     WireGuardNode,
     AnyTLSNode,
     SnellNode,
+    HttpNode,
     Socks5Node,
 
     // 配置相关

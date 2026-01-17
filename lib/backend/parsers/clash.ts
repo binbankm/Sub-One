@@ -1,4 +1,4 @@
-import { ProxyNode, TlsOptions, TransportOptions, Socks5Node, ClashProxyConfig, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode } from '../../shared/types';
+import { ProxyNode, TlsOptions, TransportOptions, Socks5Node, ClashProxyConfig, VmessNode, VlessNode, TrojanNode, ShadowsocksNode, Hysteria2Node, TuicNode, AnyTLSNode, SnellNode, HttpNode } from '../../shared/types';
 import { generateId } from './helper';
 
 /**
@@ -136,6 +136,22 @@ export function parseClashProxy(proxy: ClashProxyConfig): ProxyNode | null {
                 password: proxy.password as string | undefined,
                 tls: tls.enabled ? tls : undefined
             } as Socks5Node;
+        }
+
+        if (type === 'http' || type === 'https') {
+            // 自动判断 TLS
+            if (type === 'https' || proxy.tls === true) {
+                tls.enabled = true;
+            }
+
+            return {
+                ...baseConfig,
+                id: generateId(),
+                type: type === 'http' ? 'http' : 'https',
+                username: proxy.username as string | undefined,
+                password: proxy.password as string | undefined,
+                tls: tls.enabled ? tls : undefined
+            } as HttpNode;
         }
 
 

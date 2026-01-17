@@ -46,6 +46,8 @@ export type ProxyType =
     | 'wireguard'   // WireGuard VPN
     | 'anytls'      // AnyTLS
     | 'snell'       // Snell (iOS)
+    | 'http'        // HTTP 代理
+    | 'https'       // HTTPS 代理
     | 'socks5'      // SOCKS5 代理
 
     // 特殊类型
@@ -569,6 +571,22 @@ export interface Socks5Node extends BaseNode {
 }
 
 /**
+ * HTTP/HTTPS 节点配置
+ */
+export interface HttpNode extends BaseNode {
+    type: 'http' | 'https';
+
+    /** 用户名 (可选) */
+    username?: string;
+
+    /** 密码 (可选) */
+    password?: string;
+
+    /** HTTPS requires TLS */
+    tls?: TlsOptions;
+}
+
+/**
  * 统一节点类型 (Discriminated Union)
  * 
  * 使用 type 字段进行类型区分
@@ -586,6 +604,7 @@ export type ProxyNode =
     | WireGuardNode
     | SnellNode
     | Socks5Node
+    | HttpNode
     // 兼容未知类型
     | (BaseNode & { type: 'unknown';[key: string]: unknown });
 
@@ -966,6 +985,15 @@ export interface AppConfig {
 
     /** 是否启用节点去重 */
     dedupe: boolean;
+
+    /** 是否启用 UDP (默认: false) */
+    udp?: boolean;
+
+    /** 是否跳过证书验证 (默认: false) */
+    skipCertVerify?: boolean;
+
+    /** 主题设置 */
+    theme?: 'dark' | 'light' | 'auto';
 
     /** 流量通知阈值 (天) */
     NotifyThresholdDays: number;
