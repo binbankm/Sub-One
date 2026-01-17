@@ -16,9 +16,6 @@ binding = "SUB_ONE_D1"
 database_name = "sub-one-d1"
 database_id = "" # 留空，让 Fork 用户自己填写
 
-[vars]
-# 默认密码，建议用户部署后在后台修改
-ADMIN_PASSWORD = "admin"
 
 [triggers]
 # 定时触发器示例
