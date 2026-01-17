@@ -402,3 +402,116 @@ export async function testLatency(url: string): Promise<{ success: boolean; late
         return { success: false, message: '网络请求失败' };
     }
 }
+
+// ==================== 备份恢复 ====================
+
+/**
+ * 导出备份数据
+ * 
+ * 说明：
+ * - 从服务器导出所有数据（订阅、订阅组、设置、用户等）
+ * - 返回包含所有数据的备份对象
+ * 
+ * @returns {Promise} 返回备份数据对象或错误
+ */
+export async function exportBackup(): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+        const response = await fetch('/api/backup/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({})) as any;
+            return {
+                success: false,
+                error: errorData.message || errorData.error || '导出失败'
+            };
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("导出备份失败:", error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : '网络请求失败'
+        };
+    }
+}
+
+/**
+ * 导入备份数据
+ * 
+ * 说明：
+ * - 上传备份文件恢复数据
+ * - 支持覆盖模式和合并模式
+ * 
+ * @param {any} backupData - 备份数据对象
+ * @param {'overwrite' | 'merge'} mode - 导入模式
+ * @returns {Promise<ApiResponse>} 返回导入结果
+ */
+export async function importBackup(backupData: any, mode: 'overwrite' | 'merge' = 'overwrite'): Promise<ApiResponse> {
+    try {
+        const response = await fetch('/api/backup/import', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: backupData, mode })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({})) as any;
+            return {
+                success: false,
+                message: errorData.message || errorData.error || '导入失败'
+            };
+        }
+
+        return await response.json() as ApiResponse;
+    } catch (error) {
+        console.error("导入备份失败:", error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : '网络请求失败'
+        };
+    }
+}
+
+/**
+ * 验证备份文件
+ * 
+ * 说明：
+ * - 验证备份文件的格式和完整性
+ * - 在导入前调用以检查备份文件是否有效
+ * 
+ * @param {any} backupData - 备份数据对象
+ * @returns {Promise} 返回验证结果
+ */
+export async function validateBackupFile(backupData: any): Promise<{
+    valid: boolean;
+    error?: string;
+    metadata?: any;
+}> {
+    try {
+        const response = await fetch('/api/backup/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: backupData })
+        });
+
+        if (!response.ok) {
+            return {
+                valid: false,
+                error: '验证请求失败'
+            };
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("验证备份失败:", error);
+        return {
+            valid: false,
+            error: error instanceof Error ? error.message : '网络请求失败'
+        };
+    }
+}
+

@@ -1,3 +1,137 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useToastStore } from '../../stores/toast';
+import ConfirmModal from './ConfirmModal.vue';
+
+interface BackendInfo {
+  current: 'kv' | 'd1';
+  available: ('kv' | 'd1')[];
+  canSwitch: boolean;
+}
+
+const { showToast } = useToastStore();
+const backendInfo = ref<BackendInfo | null>(null);
+const loading = ref(false);
+const switching = ref(false);
+const error = ref<string>('');
+const showConfirm = ref(false);
+const targetBackend = ref<'kv' | 'd1' | null>(null);
+
+async function loadBackendInfo() {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    const response = await fetch('/api/storage/backend');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    backendInfo.value = (await response.json()) as BackendInfo;
+  } catch (err: any) {
+    console.error('Failed to load backend info:', err);
+    error.value = err.message || '加载存储后端信息失败';
+    showToast(error.value, 'error');
+  } finally {
+    loading.value = false;
+  }
+}
+
+function initiateSwitch(backend: 'kv' | 'd1') {
+  if (backend === backendInfo.value?.current || switching.value) {
+    return;
+  }
+  
+  targetBackend.value = backend;
+  showConfirm.value = true;
+}
+
+async function confirmSwitch() {
+  if (!targetBackend.value) return;
+  
+  const backend = targetBackend.value;
+  switching.value = true;
+  error.value = '';
+  
+  // 关闭确认框
+  showConfirm.value = false;
+
+  showToast('正在迁移数据并切换存储后端...', 'info', 5000);
+
+  try {
+    // 第一步：执行数据迁移
+    const migrateResponse = await fetch('/api/storage/migrate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ targetBackend: backend }),
+    });
+
+    const migrateData = (await migrateResponse.json()) as {
+      success?: boolean;
+      message?: string;
+      error?: string;
+      details?: {
+        migrated: string[];
+        failed: string[];
+        total: number;
+      };
+    };
+
+    if (!migrateResponse.ok || !migrateData.success) {
+      throw new Error(migrateData.message || migrateData.error || '数据迁移失败');
+    }
+
+    // 第二步：切换存储后端
+    const switchResponse = await fetch('/api/storage/backend', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ backend }),
+    });
+
+    const switchData = (await switchResponse.json()) as {
+      success?: boolean;
+      message?: string;
+      error?: string;
+      backend?: string;
+    };
+
+    if (!switchResponse.ok) {
+      throw new Error(switchData.message || switchData.error || '切换失败');
+    }
+
+    if (switchData.success) {
+      const migratedKeys = migrateData.details?.migrated || [];
+      const count = migratedKeys.length;
+      
+      showToast(`切换成功！已自动迁移 ${count} 项数据`, 'success');
+      
+      // 延迟刷新页面以展示成功提示
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      throw new Error(switchData.message || '切换失败');
+    }
+  } catch (err: any) {
+    console.error('Failed to migrate and switch backend:', err);
+    error.value = err.message || '迁移或切换存储后端失败';
+    showToast(`操作失败：${error.value}`, 'error', 5000);
+  } finally {
+    switching.value = false;
+    targetBackend.value = null;
+  }
+}
+
+onMounted(() => {
+  loadBackendInfo();
+});
+</script>
+
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
     <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
@@ -152,136 +286,4 @@
   </ConfirmModal>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useToastStore } from '../../stores/toast';
-import ConfirmModal from './ConfirmModal.vue';
 
-interface BackendInfo {
-  current: 'kv' | 'd1';
-  available: ('kv' | 'd1')[];
-  canSwitch: boolean;
-}
-
-const { showToast } = useToastStore();
-const backendInfo = ref<BackendInfo | null>(null);
-const loading = ref(false);
-const switching = ref(false);
-const error = ref<string>('');
-const showConfirm = ref(false);
-const targetBackend = ref<'kv' | 'd1' | null>(null);
-
-async function loadBackendInfo() {
-  loading.value = true;
-  error.value = '';
-  
-  try {
-    const response = await fetch('/api/storage/backend');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    backendInfo.value = (await response.json()) as BackendInfo;
-  } catch (err: any) {
-    console.error('Failed to load backend info:', err);
-    error.value = err.message || '加载存储后端信息失败';
-    showToast(error.value, 'error');
-  } finally {
-    loading.value = false;
-  }
-}
-
-function initiateSwitch(backend: 'kv' | 'd1') {
-  if (backend === backendInfo.value?.current || switching.value) {
-    return;
-  }
-  
-  targetBackend.value = backend;
-  showConfirm.value = true;
-}
-
-async function confirmSwitch() {
-  if (!targetBackend.value) return;
-  
-  const backend = targetBackend.value;
-  switching.value = true;
-  error.value = '';
-  
-  // 关闭确认框
-  showConfirm.value = false;
-
-  showToast('正在迁移数据并切换存储后端...', 'info', 5000);
-
-  try {
-    // 第一步：执行数据迁移
-    const migrateResponse = await fetch('/api/storage/migrate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ targetBackend: backend }),
-    });
-
-    const migrateData = (await migrateResponse.json()) as {
-      success?: boolean;
-      message?: string;
-      error?: string;
-      details?: {
-        migrated: string[];
-        failed: string[];
-        total: number;
-      };
-    };
-
-    if (!migrateResponse.ok || !migrateData.success) {
-      throw new Error(migrateData.message || migrateData.error || '数据迁移失败');
-    }
-
-    // 第二步：切换存储后端
-    const switchResponse = await fetch('/api/storage/backend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ backend }),
-    });
-
-    const switchData = (await switchResponse.json()) as {
-      success?: boolean;
-      message?: string;
-      error?: string;
-      backend?: string;
-    };
-
-    if (!switchResponse.ok) {
-      throw new Error(switchData.message || switchData.error || '切换失败');
-    }
-
-    if (switchData.success) {
-      const migratedKeys = migrateData.details?.migrated || [];
-      const count = migratedKeys.length;
-      
-      showToast(`切换成功！已自动迁移 ${count} 项数据`, 'success');
-      
-      // 延迟刷新页面以展示成功提示
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } else {
-      throw new Error(switchData.message || '切换失败');
-    }
-  } catch (err: any) {
-    console.error('Failed to migrate and switch backend:', err);
-    error.value = err.message || '迁移或切换存储后端失败';
-    showToast(`操作失败：${error.value}`, 'error', 5000);
-  } finally {
-    switching.value = false;
-    targetBackend.value = null;
-  }
-}
-
-onMounted(() => {
-  loadBackendInfo();
-});
-</script>

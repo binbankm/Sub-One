@@ -23,6 +23,7 @@ import StorageBackendSwitcher from '../../components/ui/StorageBackendSwitcher.v
 import { fetchSettings, saveSettings } from '../../utils/api';
 import { useToastStore } from '../../stores/toast';
 import { useDataStore } from '../../stores/data';
+import { useUIStore } from '../../stores/ui';
 import type { AppConfig } from '../../types/index';
 
 const props = defineProps<{
@@ -35,6 +36,7 @@ const emit = defineEmits<{
 
 const { showToast } = useToastStore();
 const dataStore = useDataStore();
+const uiStore = useUIStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
 
@@ -131,11 +133,21 @@ const handleSave = async () => {
   }
 };
 
+// 打开备份恢复模态框
+const openBackupModal = () => {
+  emit('update:show', false); // 关闭设置模态框
+  uiStore.showBackupModal(); // 打开备份模态框
+};
+
+// 标签页状态
+const activeTab = ref<'general' | 'advanced' | 'storage'>('general');
+
 // 监听 show 属性，当模态框显示时加载设置
 // 添加 immediate: true 确保组件挂载时如果 show 为 true 也能触发
 watch(() => props.show, (newValue) => {
   if (newValue) {
     loadSettings();
+    activeTab.value = 'general'; // 重置到第一个标签页
   }
 }, { immediate: true });
 
@@ -165,7 +177,50 @@ watch(() => props.show, (newValue) => {
         <p class="text-gray-500 font-medium">正在加载配置...</p>
       </div>
 
-      <div v-else class="space-y-8 px-1">
+      <div v-else class="space-y-6 px-1">
+        <!-- 标签页导航 -->
+        <div class="border-b border-gray-200 dark:border-gray-700">
+          <nav class="flex gap-2 -mb-px" aria-label="Tabs">
+            <button
+              @click="activeTab = 'general'"
+              :class="[
+                'px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                activeTab === 'general'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ]"
+            >
+              常规设置
+            </button>
+            <button
+              @click="activeTab = 'advanced'"
+              :class="[
+                'px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                activeTab === 'advanced'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ]"
+            >
+              高级设置
+            </button>
+            <button
+              @click="activeTab = 'storage'"
+              :class="[
+                'px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                activeTab === 'storage'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              ]"
+            >
+              存储与备份
+            </button>
+          </nav>
+        </div>
+
+        <!-- 标签页内容 -->
+        <div class="space-y-8">
+          <!-- 第1页：常规设置 -->
+          <div v-show="activeTab === 'general'" class="space-y-8">
         <!-- 基础设置 -->
         <section>
           <h4
@@ -260,6 +315,12 @@ watch(() => props.show, (newValue) => {
             </div>
           </div>
         </section>
+
+        </div>
+        <!-- 第1页结束 -->
+
+        <!-- 第2页：高级设置 -->
+        <div v-show="activeTab === 'advanced'" class="space-y-8">
 
         <!-- 网络设置 -->
         <section>
@@ -394,6 +455,12 @@ watch(() => props.show, (newValue) => {
           </div>
         </section>
 
+        </div>
+        <!-- 第2页结束 -->
+
+        <!-- 第3页：存储与备份 -->
+        <div v-show="activeTab === 'storage'" class="space-y-8">
+
         <!-- 存储后端设置 -->
         <section>
           <h4
@@ -407,6 +474,40 @@ watch(() => props.show, (newValue) => {
           </h4>
           <StorageBackendSwitcher />
         </section>
+
+        <!-- 备份与恢复 -->
+        <section>
+          <h4
+            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            数据备份
+          </h4>
+          <div class="bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl p-6">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              导出或导入所有数据，包括订阅源、订阅组、手动节点和系统设置。
+            </p>
+            <button @click="openBackupModal" 
+              class="btn-secondary flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              备份与恢复
+            </button>
+          </div>
+        </section>
+
+        </div>
+        <!-- 第3页结束 -->
+
+        </div>
+        <!-- 标签页内容结束 -->
+
       </div>
     </template>
   </Modal>

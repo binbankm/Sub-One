@@ -10,6 +10,7 @@ import { Subscription, Profile, AppConfig, Node, SubscriptionUserInfo } from '..
 import { authenticateUser, hasUsers, createUser } from '../services/users';
 import { getStorageBackendInfo, setStorageBackend } from '../services/storage-backend';
 import { autoMigrate } from '../services/migration';
+import { exportAllData, importAllData, validateBackup, ImportMode } from '../services/backup';
 
 
 import { StorageFactory, IStorageService } from '../services/storage';
@@ -694,6 +695,118 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     return new Response(JSON.stringify({
                         success: false,
                         error: '迁移过程出错',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            return new Response('Method Not Allowed', { status: 405 });
+        }
+
+        case '/backup/export': {
+            // 导出所有数据为备份文件
+            if (request.method === 'POST') {
+                try {
+                    const storage = await getStorage(env);
+                    const backendInfo = await getStorageBackendInfo(env);
+
+                    // 导出数据
+                    const backupData = await exportAllData(
+                        storage,
+                        backendInfo.current,
+                        authResult.username
+                    );
+
+                    return new Response(JSON.stringify({
+                        success: true,
+                        data: backupData
+                    }), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                } catch (error: any) {
+                    console.error('[API Error /backup/export]', error);
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: '导出备份失败',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            return new Response('Method Not Allowed', { status: 405 });
+        }
+
+        case '/backup/import': {
+            // 导入备份数据
+            if (request.method === 'POST') {
+                try {
+                    const { data: backupData, mode } = await request.json() as {
+                        data: any;
+                        mode?: ImportMode
+                    };
+
+                    if (!backupData) {
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: '缺少备份数据'
+                        }), { status: 400 });
+                    }
+
+                    const storage = await getStorage(env);
+
+                    // 导入数据
+                    const result = await importAllData(storage, backupData, mode || 'overwrite');
+
+                    if (result.success) {
+                        return new Response(JSON.stringify(result), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    } else {
+                        return new Response(JSON.stringify(result), {
+                            status: 400,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
+
+                } catch (error: any) {
+                    console.error('[API Error /backup/import]', error);
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: '导入备份失败',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            return new Response('Method Not Allowed', { status: 405 });
+        }
+
+        case '/backup/validate': {
+            // 验证备份文件
+            if (request.method === 'POST') {
+                try {
+                    const { data: backupData } = await request.json() as { data: any };
+
+                    if (!backupData) {
+                        return new Response(JSON.stringify({
+                            valid: false,
+                            error: '缺少备份数据'
+                        }), { status: 400 });
+                    }
+
+                    // 验证数据
+                    const result = await validateBackup(backupData);
+
+                    return new Response(JSON.stringify(result), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                } catch (error: any) {
+                    console.error('[API Error /backup/validate]', error);
+                    return new Response(JSON.stringify({
+                        valid: false,
+                        error: '验证失败',
                         message: error.message
                     }), { status: 500 });
                 }
