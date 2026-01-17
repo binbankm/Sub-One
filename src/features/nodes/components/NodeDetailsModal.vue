@@ -437,7 +437,7 @@ const extractHost = (url: string) => {
             <div class="max-h-96 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
               <div v-for="node in filteredNodes" :key="node.id"
                 @click="toggleNodeSelection(node.id)"
-                class="group relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-100 dark:border-gray-700 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden cursor-pointer"
+                class="group relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden cursor-pointer"
                 :class="{ 
                   'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 border-indigo-500/50': selectedNodes.has(node.id),
                   'border-gray-200 dark:border-gray-700': !selectedNodes.has(node.id)

@@ -189,14 +189,14 @@ async function handleImport() {
         </button>
       </div>
 
-      <div class="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+      <div class="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
         包含订阅源、订阅组、手动节点、系统设置和账号信息。包括敏感数据（如密码哈希），请妥善保管。
       </div>
     </div>
 
     <!-- 导入备份 -->
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
-      <div class="mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+      <div class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
           导入备份
         </h3>

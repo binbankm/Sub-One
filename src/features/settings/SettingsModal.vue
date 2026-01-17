@@ -279,7 +279,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">节点名前缀</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">自动添加前缀</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">将订阅名作为节点名前缀</p>
@@ -297,7 +297,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">节点去重</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">自动去重</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">去除相同节点(IP+Port)</p>
@@ -325,8 +325,8 @@ watch(() => props.show, (newValue) => {
             class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             网络设置
           </h4>
@@ -335,7 +335,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">UDP 转发</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">启用 UDP</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">允许节点处理 UDP 流量（游戏/语音）</p>
@@ -353,7 +353,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">证书安全</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">跳过证书验证</p>
                   <p class="text-xs text-orange-500/80 dark:text-orange-400/80 mt-1 mr-2">⚠️ 不安全：忽略 SSL/TLS 证书错误</p>

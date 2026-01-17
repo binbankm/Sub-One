@@ -152,7 +152,7 @@
   .form-input {
     @apply w-full px-4 py-3 rounded-xl;
     @apply bg-white/90 dark:bg-gray-800/90;
-    @apply border-2 border-gray-200 dark:border-gray-700;
+    @apply border-2 border-gray-300 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-400 dark:placeholder-gray-500;
     @apply focus:outline-none focus:ring-0 focus:border-primary-500;
@@ -162,7 +162,7 @@
   .input-modern {
     @apply w-full px-4 py-3 rounded-xl;
     @apply bg-white/90 dark:bg-gray-800/90;
-    @apply border-2 border-gray-200 dark:border-gray-700;
+    @apply border-2 border-gray-300 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-500 dark:placeholder-gray-400;
     @apply focus:outline-none focus:ring-0 focus:border-primary-500;
@@ -172,7 +172,7 @@
   .input-modern-enhanced {
     @apply w-full px-4 py-3 rounded-xl;
     @apply bg-white/90 dark:bg-gray-800/90;
-    @apply border-2 border-gray-200 dark:border-gray-700;
+    @apply border-2 border-gray-300 dark:border-gray-700;
     @apply text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-500 dark:placeholder-gray-400;
     @apply focus:outline-none focus:ring-0 focus:border-primary-500;
@@ -183,7 +183,7 @@
   .search-input-unified {
     @apply w-full pl-11 pr-4 py-2.5;
     @apply bg-white dark:bg-gray-800;
-    @apply border border-gray-200 dark:border-gray-700;
+    @apply border border-gray-300 dark:border-gray-700;
     @apply rounded-xl;
     @apply text-sm text-gray-900 dark:text-gray-100;
     @apply placeholder-gray-400 dark:placeholder-gray-500;
