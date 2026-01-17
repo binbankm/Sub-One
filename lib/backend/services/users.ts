@@ -1,7 +1,16 @@
-
 import { Env } from '../types';
 import { KV_KEY_USERS } from '../config/constants';
 import { User, UserRole } from '../../shared/types';
+import { StorageFactory } from './storage';
+import { getStorageBackendInfo } from './storage-backend';
+
+/**
+ * 获取当前活动的存储服务实例
+ */
+async function getStorage(env: Env) {
+    const info = await getStorageBackendInfo(env);
+    return StorageFactory.create(env, info.current);
+}
 
 /**
  * 使用 Web Crypto API 生成密码哈希
@@ -23,12 +32,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 /**
- * 从KV获取所有用户
+ * 从存储获取所有用户
  */
 export async function getAllUsers(env: Env): Promise<User[]> {
     try {
-        const users = await env.SUB_ONE_KV.get(KV_KEY_USERS, 'json');
-        return (users as User[]) || [];
+        const storage = await getStorage(env);
+        const users = await storage.get<User[]>(KV_KEY_USERS);
+        return users || [];
     } catch (e) {
         console.error('[UserService] Failed to get users:', e);
         return [];
@@ -69,7 +79,9 @@ export async function createUser(
     };
 
     users.push(newUser);
-    await env.SUB_ONE_KV.put(KV_KEY_USERS, JSON.stringify(users));
+
+    const storage = await getStorage(env);
+    await storage.put(KV_KEY_USERS, users);
 
     return newUser;
 }
@@ -104,7 +116,8 @@ export async function updateUser(
     user.updatedAt = Date.now();
     users[userIndex] = user;
 
-    await env.SUB_ONE_KV.put(KV_KEY_USERS, JSON.stringify(users));
+    const storage = await getStorage(env);
+    await storage.put(KV_KEY_USERS, users);
 
     return user;
 }
@@ -120,7 +133,8 @@ export async function deleteUser(env: Env, userId: string): Promise<boolean> {
         return false; // 用户不存在
     }
 
-    await env.SUB_ONE_KV.put(KV_KEY_USERS, JSON.stringify(filteredUsers));
+    const storage = await getStorage(env);
+    await storage.put(KV_KEY_USERS, filteredUsers);
     return true;
 }
 

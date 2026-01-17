@@ -16,8 +16,20 @@ export const defaultSettings: AppConfig = {
     udp: false,
     skipCertVerify: false,
 
+    // Telegram 通知
+    BotToken: '',
+    ChatID: '',
+
+    // 通知阈值
     NotifyThresholdDays: 3,
-    NotifyThresholdPercent: 90
+    NotifyThresholdPercent: 90,
+
+    // WebDAV 备份
+    webdav: {
+        url: '',
+        username: '',
+        password: ''
+    }
 };
 
 export const GLOBAL_USER_AGENT = 'Clash.Meta/v1.19.18'; // Unified UA: Mihomo v1.19.18

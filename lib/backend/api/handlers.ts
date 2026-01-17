@@ -12,7 +12,17 @@ import { getStorageBackendInfo, setStorageBackend } from '../services/storage-ba
 import { autoMigrate } from '../services/migration';
 
 
+import { StorageFactory, IStorageService } from '../services/storage';
+
 const subscriptionParser = new SubscriptionParser();
+
+/**
+ * 获取当前活动的存储服务实例
+ */
+async function getStorage(env: Env): Promise<IStorageService> {
+    const info = await getStorageBackendInfo(env);
+    return StorageFactory.create(env, info.current);
+}
 
 /**
  * 主要 API 请求处理
@@ -143,16 +153,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
         case '/data': {
             try {
-                const [subs, profiles, settingsData]: [Subscription[], Profile[], Partial<AppConfig> | null] = await Promise.all([
-                    env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json').then(res => (res as Subscription[]) || []),
-                    env.SUB_ONE_KV.get(KV_KEY_PROFILES, 'json').then(res => (res as Profile[]) || []),
-                    env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json').then(res => res as Partial<AppConfig> | null)
+                const storage = await getStorage(env);
+                const [subs, profiles, settingsData] = await Promise.all([
+                    storage.get<Subscription[]>(KV_KEY_SUBS).then(res => res || []),
+                    storage.get<Profile[]>(KV_KEY_PROFILES).then(res => res || []),
+                    storage.get<Partial<AppConfig>>(KV_KEY_SETTINGS)
                 ]);
                 const settings = { ...defaultSettings, ...(settingsData || {}) } as AppConfig;
                 const config = settings;
                 return new Response(JSON.stringify({ subs, profiles, config }), { headers: { 'Content-Type': 'application/json' } });
             } catch (e) {
-                console.error('[API Error /data]', 'Failed to read from KV:', e);
+                console.error('[API Error /data]', 'Failed to read from Storage:', e);
                 return new Response(JSON.stringify({ error: '读取初始数据失败' }), { status: 500 });
             }
         }
@@ -190,9 +201,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 }
 
                 // 步骤4: 获取设置（带错误处理）
+                const storage = await getStorage(env);
                 let settings;
                 try {
-                    settings = await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings;
+                    settings = (await storage.get<AppConfig>(KV_KEY_SETTINGS)) || defaultSettings;
                 } catch (settingsError) {
                     console.error('[API Error /subs] 获取设置失败:', settingsError);
                     settings = defaultSettings; // 使用默认设置继续
@@ -216,14 +228,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     // 继续保存流程
                 }
 
-                // 步骤6: 保存数据到KV存储（使用条件写入）
+                // 步骤6: 保存数据到存储（使用条件写入）
                 try {
                     await Promise.all([
-                        env.SUB_ONE_KV.put(KV_KEY_SUBS, JSON.stringify(subs)),
-                        env.SUB_ONE_KV.put(KV_KEY_PROFILES, JSON.stringify(profiles))
+                        storage.put(KV_KEY_SUBS, subs),
+                        storage.put(KV_KEY_PROFILES, profiles)
                     ]);
                 } catch (kvError: any) {
-                    console.error('[API Error /subs] KV存储写入失败:', kvError);
+                    console.error('[API Error /subs] 存储写入失败:', kvError);
                     return new Response(JSON.stringify({
                         success: false,
                         message: `数据保存失败: ${kvError.message || '存储服务暂时不可用，请稍后重试'}`
@@ -352,7 +364,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
                 // 只有在至少获取到一个有效信息时，才更新数据库
                 if (result.userInfo || result.count > 0) {
-                    const originalSubs = (await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || []) as Subscription[];
+                    const storage = await getStorage(env);
+                    const originalSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
                     const allSubs = JSON.parse(JSON.stringify(originalSubs)) as Subscription[]; // 深拷贝
                     const subToUpdate = allSubs.find(s => s.url === subUrl);
 
@@ -360,7 +373,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                         subToUpdate.nodeCount = result.count;
                         subToUpdate.userInfo = result.userInfo as SubscriptionUserInfo;
 
-                        await env.SUB_ONE_KV.put(KV_KEY_SUBS, JSON.stringify(allSubs));
+                        await storage.put(KV_KEY_SUBS, allSubs);
                     }
                 }
 
@@ -381,7 +394,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     return new Response(JSON.stringify({ error: 'subscriptionIds must be an array' }), { status: 400 });
                 }
 
-                const allSubs = (await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || []) as Subscription[];
+                const storage = await getStorage(env);
+                const allSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
                 const subsToUpdate = allSubs.filter(sub => subscriptionIds.includes(sub.id) && sub.url.startsWith('http'));
 
                 console.log(`[Batch Update] Starting batch update for ${subsToUpdate.length} subscriptions`);
@@ -466,17 +480,19 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/settings': {
             if (request.method === 'GET') {
                 try {
-                    const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {}) as Partial<AppConfig>;
+                    const storage = await getStorage(env);
+                    const settings = (await storage.get<Partial<AppConfig>>(KV_KEY_SETTINGS)) || {};
                     return new Response(JSON.stringify({ ...defaultSettings, ...settings }), { headers: { 'Content-Type': 'application/json' } });
                 } catch (e) {
-                    console.error('[API Error /settings GET]', 'Failed to read settings from KV:', e);
+                    console.error('[API Error /settings GET]', 'Failed to read settings from Storage:', e);
                     return new Response(JSON.stringify({ error: '读取设置失败' }), { status: 500 });
                 }
             }
             if (request.method === 'POST') {
                 try {
                     const newSettings = await request.json();
-                    const oldSettings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || {}) as Partial<AppConfig>;
+                    const storage = await getStorage(env);
+                    const oldSettings = (await storage.get<Partial<AppConfig>>(KV_KEY_SETTINGS)) || {};
                     // 使用白名单机制清洗数据：只保留 defaultSettings 中存在的字段
                     // 这样即使未来删除了某个配置项，保存时也会自动剔除旧数据
                     const finalSettings: any = {};
@@ -494,14 +510,22 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                         }
                     }
 
-                    await env.SUB_ONE_KV.put(KV_KEY_SETTINGS, JSON.stringify(finalSettings));
+                    // 特殊处理：保留 webdav 配置（因为它可能不在 defaultSettings 中，或者我们应该更新 defaultSettings）
+                    // 暂时这里手动保留它，以防万一
+                    if (anyNewSettings.webdav) {
+                        finalSettings.webdav = anyNewSettings.webdav;
+                    } else if (oldSettings.webdav) {
+                        finalSettings.webdav = oldSettings.webdav;
+                    }
+
+                    await storage.put(KV_KEY_SETTINGS, finalSettings);
 
                     const message = `⚙️ *Sub-One 设置更新* ⚙️\n\n您的 Sub-One 应用设置已成功更新。`;
                     await sendTgNotification(finalSettings, message);
 
                     return new Response(JSON.stringify({ success: true, message: '设置已保存' }));
                 } catch (e) {
-                    console.error('[API Error /settings POST]', 'Failed to parse request or write settings to KV:', e);
+                    console.error('[API Error /settings POST]', 'Failed to parse request or write settings to Storage:', e);
                     return new Response(JSON.stringify({ error: '保存设置失败' }), { status: 500 });
                 }
             }
