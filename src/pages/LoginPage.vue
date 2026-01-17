@@ -110,20 +110,6 @@ const handleSubmit = async () => {
   }
 };
 
-/**
- * 处理键盘事件
- * 
- * 说明：
- * - 按下回车键时执行登录
- * - 提升用户体验
- * 
- * @param {KeyboardEvent} e - 键盘事件对象
- */
-const handleKeyPress = (e: KeyboardEvent) => {
-  if (e.key === 'Enter') {
-    handleSubmit();
-  }
-};
 </script>
 
 <template>
@@ -180,7 +166,6 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请输入您的用户名" 
               autocomplete="username" 
               :disabled="isLoading" 
-              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
@@ -214,7 +199,6 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请输入您的密码" 
               autocomplete="current-password" 
               :disabled="isLoading" 
-              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <!-- 输入框右侧图标 - 根据状态显示不同图标 -->
@@ -262,7 +246,6 @@ const handleKeyPress = (e: KeyboardEvent) => {
               placeholder="请再次输入密码" 
               autocomplete="new-password" 
               :disabled="isLoading" 
-              @keypress.enter.prevent="handleKeyPress" 
             />
 
             <div class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300">
@@ -285,7 +268,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
         <button 
           type="submit" 
           class="login-button py-3 text-sm sm:text-base sm:py-3.5 hover:shadow-glow-primary hover:scale-[1.01]" 
-          :disabled="isLoading || !username || !password || (isSetup && !confirmPassword)" 
+          :disabled="isLoading" 
         >
           <!-- 正常状态 - 显示登录图标和文字 -->
           <span v-if="!isLoading" class="flex items-center justify-center gap-2">
