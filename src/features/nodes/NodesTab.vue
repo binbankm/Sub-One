@@ -287,8 +287,8 @@ onUnmounted(() => {
             <button @click="handleAddNode"
               class="btn-modern-enhanced btn-add text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">新增</button>
 
-            <button @click="showBulkImportModal = true"
-              class="btn-modern-enhanced btn-import text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">批量导入</button>
+            <button @click="showSubscriptionImportModal = true"
+              class="btn-modern-enhanced btn-import text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 transform hover:scale-105 transition-all duration-300">导入节点</button>
 
             <button v-if="isSortingNodes && hasUnsavedSortChanges" @click="handleSaveSort"
               class="btn-modern-enhanced btn-primary text-xs sm:text-sm font-semibold px-3 sm:px-5 py-1.5 sm:py-2.5 flex items-center gap-1 sm:gap-2 transform hover:scale-105 transition-all duration-300">

@@ -249,16 +249,41 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
             const {
                 url: subUrl,
-                returnNodes = false,  // 可选：是否返回节点列表
-                exclude = ''          // 可选：过滤规则
-            } = await request.json() as { url?: string, returnNodes?: boolean, exclude?: string };
-            if (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl)) {
-                return new Response(JSON.stringify({ error: 'Invalid or missing url' }), { status: 400 });
+                content: rawContent,
+                returnNodes = false,
+                exclude = ''
+            } = await request.json() as { url?: string, content?: string, returnNodes?: boolean, exclude?: string };
+
+            // 验证参数：必须提供 url 或 content 其中之一
+            if (!rawContent && (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl))) {
+                return new Response(JSON.stringify({ error: 'Invalid or missing url/content' }), { status: 400 });
             }
 
             const result: { count: number; userInfo: Partial<SubscriptionUserInfo> | null; nodes?: Node[] } = { count: 0, userInfo: null };
+            const parser = new SubscriptionParser();
 
             try {
+                // 情况一：直接提供内容（文件导入/文本粘贴）
+                if (rawContent) {
+                    const nodes = parser.parse(rawContent, 'Imported', {
+                        exclude: exclude || '',
+                        dedupe: false,
+                        prependSubName: false
+                    });
+
+                    result.count = nodes.length;
+                    if (returnNodes) {
+                        result.nodes = nodes.map(n => ({
+                            ...n,
+                            // 确保每个节点都有唯一的 ID
+                            // Parser 解析出的节点应该已有 id，这里做兜底
+                            id: n.id || crypto.randomUUID()
+                        } as unknown as Node));
+                    }
+                    return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } });
+                }
+
+                // 情况二：通过 URL 下载（原有逻辑）
                 const fetchOptions = {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
                     redirect: "follow",
@@ -270,8 +295,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     cf: { insecureSkipVerify: true }
                 } as any;
 
-                const trafficRequest = fetch(new Request(subUrl, trafficFetchOptions));
-                const nodeCountRequest = fetch(new Request(subUrl, fetchOptions));
+                const trafficRequest = fetch(new Request(subUrl!, trafficFetchOptions));
+                const nodeCountRequest = fetch(new Request(subUrl!, fetchOptions));
 
                 const responses = await Promise.allSettled([trafficRequest, nodeCountRequest]);
 

@@ -2,10 +2,10 @@
   ==================== 订阅导入模态框 ====================
   
   功能说明：
-  - 从订阅链接导入节点
-  - 支持多种订阅格式（Base64、Clash YAML等）
-  - 自动解析节点信息
-  - 错误处理和用户提示
+  - 支持 URL 链接导入
+  - 支持文件导入（YAML/JSON/TXT）
+  - 支持文本内容粘贴导入
+  - 自动解析 Clash/Base64 等多种格式
   
   ==================================================
 -->
@@ -33,71 +33,118 @@ const emit = defineEmits<{
 
 // ==================== 状态 ====================
 
-/** 订阅链接 */
+const mode = ref<'url' | 'text'>('url');
 const subscriptionUrl = ref('');
-/** 加载状态 */
+const textContent = ref('');
 const isLoading = ref(false);
-/** 错误消息 */
 const errorMessage = ref('');
+const isDragging = ref(false);
+const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const toastStore = useToastStore();
 
+// ==================== 自定义指令 ====================
+// 简单的 v-focus 指令
+const vFocus = {
+  mounted: (el: HTMLElement) => el.focus()
+};
+
 // ==================== 监听器 ====================
 
-/** 监听显示状态，重置表单 */
 watch(() => props.show, (newVal) => {
   if (!newVal) {
+    // 关闭时重置状态
     subscriptionUrl.value = '';
+    textContent.value = '';
     errorMessage.value = '';
     isLoading.value = false;
+    mode.value = 'url';
+    isDragging.value = false;
   }
 });
 
-// ==================== 验证和解析 ====================
+// ==================== 文件处理逻辑 ====================
 
-/**
- * 验证 URL 格式
- */
-const isValidUrl = (url: string) => {
-  try {
-    const u = new URL(url);
-    return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
-    return false;
+const triggerFileInput = () => {
+  fileInputRef.value?.click();
+};
+
+const readFileContent = (file: File) => {
+  if (file.size > 5 * 1024 * 1024) { // 5MB 限制
+    errorMessage.value = '文件过大，请上传小于 5MB 的文件';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const result = e.target?.result;
+    if (typeof result === 'string') {
+      textContent.value = result;
+      errorMessage.value = ''; // 清除之前的错误
+      toastStore.showToast(`已读取文件: ${file.name}`, 'success');
+    }
+  };
+  reader.onerror = () => {
+    errorMessage.value = '文件读取失败';
+  };
+  reader.readAsText(file);
+};
+
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    readFileContent(input.files[0]);
+    // 清空 input 允许重复选择同一文件
+    input.value = '';
+  }
+};
+
+const handleFileDrop = (event: DragEvent) => {
+  isDragging.value = false;
+  if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+    readFileContent(event.dataTransfer.files[0]);
   }
 };
 
 // ==================== 导入逻辑 ====================
 
-/**
- * 导入订阅
- * 
- * 流程：
- * 1. 验证 URL
- * 2. 通过代理 API 获取订阅内容
- * 3. 解析节点
- * 4. 批量添加节点
- * 5. 保存并提示
- */
 const importSubscription = async () => {
   errorMessage.value = '';
   
-  // 验证 URL
-  if (!isValidUrl(subscriptionUrl.value)) {
-    errorMessage.value = '请输入有效的 HTTP 或 HTTPS 订阅链接。';
-    return;
+  // 参数构建
+  const payload: any = {
+    returnNodes: true
+  };
+
+  if (mode.value === 'url') {
+    if (!subscriptionUrl.value.trim()) {
+      errorMessage.value = '请输入订阅链接';
+      return;
+    }
+    // 简单验证 URL
+    try {
+      new URL(subscriptionUrl.value);
+    } catch {
+      errorMessage.value = '请输入有效的 URL (例如 https://example.com/...)';
+      return;
+    }
+    payload.url = subscriptionUrl.value.trim();
+  } else {
+    // 文本模式
+    if (!textContent.value.trim()) {
+      errorMessage.value = '请粘贴订阅内容或上传文件';
+      return;
+    }
+    payload.content = textContent.value;
   }
 
   isLoading.value = true;
+
   try {
-    // 使用 /api/node_count API 获取节点列表（后端已解析）
     const response = await fetch('/api/node_count', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        url: subscriptionUrl.value,
-        returnNodes: true  // 需要节点列表用于批量添加
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -107,38 +154,28 @@ const importSubscription = async () => {
     
     const data = await response.json() as any;
     
-    // 使用后端返回的节点列表
     const newNodes: Node[] = (data.nodes || []).map((n: any) => ({
       ...n,
-      id: n.id,
-      name: n.name,
-      url: n.url || '',
-      protocol: n.type,
+      id: n.id || crypto.randomUUID(), // 确保有 ID
       enabled: true
     } as unknown as Node));
 
     if (newNodes.length > 0) {
-      // 添加节点
       props.addNodesFromBulk(newNodes);
       
-      // 调用成功回调（保存数据）
       if (props.onImportSuccess) {
         await props.onImportSuccess();
       }
       
-      toastStore.showToast(`成功添加了 ${newNodes.length} 个节点。`, 'success');
-      // 只有成功时才关闭模态框
+      toastStore.showToast(`导入成功！共添加 ${newNodes.length} 个节点`, 'success');
       emit('update:show', false);
     } else {
-      errorMessage.value = '未能从订阅链接中解析出任何节点。请检查链接内容。';
-      // 失败时不关闭，让用户看到错误
+      errorMessage.value = '未能解析出任何节点，请检查内容格式是否正确。支持 Clash(YAML), Base64, SIP008 等格式。';
     }
   } catch (error: unknown) {
-    console.error('导入订阅失败:', error);
+    console.error('导入失败:', error);
     const msg = error instanceof Error ? error.message : String(error);
     errorMessage.value = `导入失败: ${msg}`;
-    toastStore.showToast(`导入失败: ${msg}`, 'error');
-    // 失败时不关闭，让用户看到错误
   } finally {
     isLoading.value = false;
   }
@@ -154,39 +191,116 @@ const importSubscription = async () => {
     :confirm-disabled="isLoading"
   >
     <template #title>
-      <h3 class="text-lg font-bold gradient-text">导入订阅</h3>
+      <div class="flex flex-col gap-1">
+        <h3 class="text-lg font-bold gradient-text">导入订阅</h3>
+        <p class="text-xs text-gray-400 font-normal">支持 URL 链接、纯文本、Base64 以及 Clash/YAML 配置文件</p>
+      </div>
     </template>
+    
     <template #body>
-      <!-- 说明文字 -->
-      <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-        请输入订阅链接，系统将尝试解析其中的节点信息。支持多种格式：
-      </p>
-      
-      <!-- 支持的格式列表 -->
-      <ul class="text-xs text-gray-500 dark:text-gray-400 mb-4 list-disc list-inside space-y-1">
-        <li>Base64 编码的节点列表</li>
-        <li>纯文本节点链接（每行一个）</li>
-        <li>Clash 配置文件（YAML 格式）</li>
-        <li>其他 YAML 格式的节点配置</li>
-        <li>支持的协议：SS、SSR、VMess、VLESS、Trojan、Hysteria、TUIC、Socks5 等</li>
-      </ul>
-      
-      <!-- URL 输入框 -->
-      <input 
-        type="text" 
-        v-model="subscriptionUrl" 
-        placeholder="https://example.com/your-subscription-link"
-        class="input-modern w-full" 
-        @keyup.enter="importSubscription" 
-      />
+      <!-- 导入模式切换 Tabs -->
+      <div class="flex p-1 mb-5 bg-gray-100 dark:bg-gray-800/50 rounded-xl">
+        <button
+          v-for="m in ['url', 'text'] as const"
+          :key="m"
+          class="flex-1 py-1.5 text-sm font-medium rounded-lg transition-all"
+          :class="mode === m 
+            ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+          @click="mode = m"
+        >
+          {{ m === 'url' ? '链接导入' : '文本/文件导入' }}
+        </button>
+      </div>
+
+      <!-- 模式 1: URL 导入 -->
+      <div v-if="mode === 'url'" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">订阅链接</label>
+          <input 
+            type="text" 
+            v-model="subscriptionUrl" 
+            placeholder="https://example.com/api/v1/client/subscribe?token=..."
+            class="input-modern w-full"
+            @keyup.enter="importSubscription" 
+            v-focus
+          />
+        </div>
+        
+        <div class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/30 text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+          <p class="font-bold mb-1">💡 提示：</p>
+          此模式通过后端服务器下载订阅内容，适合需要定期更新的订阅源。如果链接包含敏感参数（如 Token），它们将安全地传输给后端。
+        </div>
+      </div>
+
+      <!-- 模式 2: 文本/文件导入 -->
+      <div v-else class="space-y-4">
+        <!-- 文件上传区域 -->
+        <div 
+          class="relative group cursor-pointer"
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
+          @drop.prevent="handleFileDrop"
+          @click="triggerFileInput"
+        >
+          <input 
+            type="file" 
+            ref="fileInputRef" 
+            class="hidden" 
+            accept=".yaml,.yml,.txt,.json,.conf"
+            @change="handleFileSelect"
+          />
+          
+          <div 
+            class="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-all"
+            :class="isDragging 
+              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/10' 
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/30'"
+          >
+            <div class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
+              <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
+                点击上传或拖拽文件
+              </p>
+              <p class="text-xs text-gray-400">
+                支持 YAML, JSON, TXT 等格式
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 文本内容区域 -->
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">订阅内容</label>
+            <span v-if="textContent" class="text-xs text-gray-400">
+              {{ textContent.length }} 字符
+            </span>
+          </div>
+          <textarea 
+            v-model="textContent" 
+            rows="6"
+            placeholder="在此处粘贴 Base64、节点链接列表或 Clash 配置内容..."
+            class="input-modern w-full font-mono text-xs leading-relaxed resize-none"
+          ></textarea>
+        </div>
+      </div>
       
       <!-- 错误提示 -->
       <div 
         v-if="errorMessage"
-        class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800"
+        class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 flex items-start gap-2"
       >
-        <p class="text-red-600 dark:text-red-400 text-sm">{{ errorMessage }}</p>
+        <svg class="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-red-600 dark:text-red-400 text-xs leading-relaxed break-all">{{ errorMessage }}</p>
       </div>
+
     </template>
   </Modal>
 </template>
