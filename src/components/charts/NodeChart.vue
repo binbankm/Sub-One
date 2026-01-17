@@ -71,12 +71,9 @@ const getOption = () => {
         },
         emphasis: {
           label: {
-            show: true,
-            fontSize: 16,
-            fontWeight: 'bold',
-            color: isDark ? '#f1f5f9' : '#0f172a',
-            formatter: '{b}\n{c}'
+            show: false
           },
+          scale: true,
           itemStyle: {
             shadowBlur: 15,
             shadowOffsetX: 0,
