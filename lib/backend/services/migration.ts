@@ -3,16 +3,23 @@ import { Env } from '../types';
 import { KVStorage, D1Storage } from './storage';
 import { getStorageBackend } from './storage-backend';
 
+import {
+    KV_KEY_SUBS,
+    KV_KEY_PROFILES,
+    KV_KEY_SETTINGS,
+    KV_KEY_USERS
+} from '../config/constants';
+
 /**
  * 数据迁移服务
  */
 
 // 需要迁移的 KV 键列表
 const MIGRATION_KEYS = [
-    'subs',           // 订阅源数据
-    'profiles',       // 订阅组数据
-    'settings',       // 系统设置
-    'sub_one_users_v1' // 用户数据
+    KV_KEY_SUBS,      // 订阅源数据
+    KV_KEY_PROFILES,  // 订阅组数据
+    KV_KEY_SETTINGS,  // 系统设置
+    KV_KEY_USERS      // 用户数据
 ];
 
 /**
