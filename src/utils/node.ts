@@ -13,6 +13,9 @@
  * @param url 节点 URL
  * @returns 唯一标识键 (Fingerprint)
  */
+
+import { Base64 } from 'js-base64';
+
 export const getUniqueKey = (url: string): string => {
     try {
         const trimmedUrl = url.trim();
@@ -25,8 +28,8 @@ export const getUniqueKey = (url: string): string => {
                 // 兼容有些链接带不规范的空白字符
                 const cleanBase64 = base64Part.replace(/[\s\n\r]/g, '');
 
-                // 2. 解码并解析 JSON
-                const decodedString = atob(cleanBase64);
+                // 2. 使用 js-base64 解码（自动处理 Unicode）
+                const decodedString = Base64.decode(cleanBase64);
                 const nodeConfig = JSON.parse(decodedString);
 
                 // 3. 移除元数据字段（这些字段不影响实际连接）

@@ -10,6 +10,8 @@
  * =========================================================
  */
 
+import { Base64 } from 'js-base64';
+
 // ==================== 节点名称提取 ====================
 
 /**
@@ -76,20 +78,10 @@ export function extractNodeName(url: string): string {
           // VMess 配置使用 Base64 编码的 JSON 格式
           // 格式：vmess://base64EncodedJson
 
-          // 修正 Base64 填充（确保长度是 4 的倍数）
-          const padded = mainPart.padEnd(mainPart.length + (4 - mainPart.length % 4) % 4, '=');
-          // 解码 Base64，移除可能存在的空白符
-          const binaryString = atob(padded.replace(/\s/g, ''));
-
-          // 解析 JSON 配置
-          // 处理 UTF-8 字符
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          const jsonString = new TextDecoder('utf-8').decode(bytes);
-
+          // 使用 js-base64 解码（自动处理 Unicode）
+          const jsonString = Base64.decode(mainPart.replace(/\s/g, ''));
           const node = JSON.parse(jsonString);
+
           // 返回 ps 字段（节点名称）
           return node.ps || '';
         } catch (e) {
@@ -172,9 +164,8 @@ export function extractNodeName(url: string): string {
         // SS SIP002 Base64 解码后的格式是 method:password@host:port
         // 我们尝试从中提取 host
         try {
-          const cleanBase64 = mainPart.replace(/[\s-_]/g, (c) => c === '-' ? '+' : '/');
-          const padded = cleanBase64.padEnd(cleanBase64.length + (4 - cleanBase64.length % 4) % 4, '=');
-          const decoded = atob(padded);
+          // 使用 js-base64 解码（支持 URL-safe Base64）
+          const decoded = Base64.decode(mainPart.replace(/\s/g, ''));
 
           // 如果是 SSR
           if (protocol === 'ssr') {
@@ -302,9 +293,8 @@ export function extractHostAndPort(url: string): { host: string; port: string } 
     // ==================== VMess 专用处理 ====================
     if (protocol === 'vmess') {
       try {
-        const cleanBase64 = mainPart.replace(/[\s-_]/g, (c) => c === '-' ? '+' : '/');
-        const padded = cleanBase64.padEnd(cleanBase64.length + (4 - cleanBase64.length % 4) % 4, '=');
-        const decodedString = atob(padded);
+        // 使用 js-base64 解码
+        const decodedString = Base64.decode(mainPart.replace(/\s/g, ''));
         const nodeConfig = JSON.parse(decodedString);
         return {
           host: nodeConfig.add || '',
@@ -319,9 +309,8 @@ export function extractHostAndPort(url: string): { host: string; port: string } 
     let decoded = false;
     if ((protocol === 'ss' || protocol === 'ssr') && mainPart.indexOf('@') === -1) {
       try {
-        const cleanBase64 = mainPart.replace(/[\s-_]/g, (c) => c === '-' ? '+' : '/');
-        const padded = cleanBase64.padEnd(cleanBase64.length + (4 - cleanBase64.length % 4) % 4, '=');
-        mainPart = atob(padded);
+        // 使用 js-base64 解码（支持 URL-safe Base64）
+        mainPart = Base64.decode(mainPart.replace(/\s/g, ''));
         decoded = true;
       } catch (e) {
         // 解码失败则按原文处理

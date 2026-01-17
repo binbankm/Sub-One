@@ -24,6 +24,7 @@ import { filterNodes } from '../../../utils/search';
 import { getProtocolInfo, getProtocol } from '../../../utils/protocols';
 import { useDataStore } from '../../../stores/data';
 import { storeToRefs } from 'pinia';
+import { Base64 } from 'js-base64';
 
 const props = defineProps<{
   show: boolean;
@@ -290,8 +291,8 @@ const extractHost = (url: string) => {
     if (url.startsWith('vmess://')) {
       const base64 = url.replace('vmess://', '');
       try {
-        // 解码 Base64 (处理可能存在的中文乱码)
-        const decoded = decodeURIComponent(escape(window.atob(base64)));
+        // 使用 js-base64 解码（自动处理 Unicode）
+        const decoded = Base64.decode(base64);
         const config = JSON.parse(decoded);
         // VMess JSON 标准字段: add (地址), port (端口)
         if (config.add && config.port) {
@@ -309,7 +310,8 @@ const extractHost = (url: string) => {
     if (url.startsWith('ss://') && !url.includes('@')) {
        const base64 = url.replace('ss://', '').split('#')[0]; // 去掉末尾可能的 #备注
        try {
-         const decoded = decodeURIComponent(escape(window.atob(base64)));
+         // 使用 js-base64 解码
+         const decoded = Base64.decode(base64);
          // 解码后通常是 method:password@hostname:port
          const parts = decoded.split('@');
          if (parts.length > 1) {
