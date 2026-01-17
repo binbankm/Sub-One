@@ -26,13 +26,6 @@ export const useUIStore = defineStore('ui', () => {
    */
   const isSettingsModalVisible = ref(false);
 
-  /**
-   * 备份恢复模态框可见性
-   * true - 显示
-   * false - 隐藏
-   */
-  const isBackupModalVisible = ref(false);
-
   // ==================== 方法定义 ====================
 
   /**
@@ -49,34 +42,14 @@ export const useUIStore = defineStore('ui', () => {
     isSettingsModalVisible.value = false;
   }
 
-  /**
-   * 显示备份恢复模态框
-   */
-  function showBackupModal() {
-    isBackupModalVisible.value = true;
-  }
-
-  /**
-   * 隐藏备份恢复模态框
-   */
-  function hideBackupModal() {
-    isBackupModalVisible.value = false;
-  }
-
   // ==================== 导出接口 ====================
 
   return {
     /** 设置模态框可见性 */
     isSettingsModalVisible,
-    /** 备份模态框可见性 */
-    isBackupModalVisible,
     /** 显示设置模态框 */
     show,
     /** 隐藏设置模态框 */
-    hide,
-    /** 显示备份模态框 */
-    showBackupModal,
-    /** 隐藏备份模态框 */
-    hideBackupModal
+    hide
   };
 });

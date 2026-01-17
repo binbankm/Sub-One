@@ -20,10 +20,10 @@
 import { ref, watch, computed } from 'vue';
 import Modal from '../../components/ui/BaseModal.vue';
 import StorageBackendSwitcher from '../../components/ui/StorageBackendSwitcher.vue';
+import BackupView from './BackupView.vue';
 import { fetchSettings, saveSettings } from '../../utils/api';
 import { useToastStore } from '../../stores/toast';
 import { useDataStore } from '../../stores/data';
-import { useUIStore } from '../../stores/ui';
 import type { AppConfig } from '../../types/index';
 
 const props = defineProps<{
@@ -36,7 +36,6 @@ const emit = defineEmits<{
 
 const { showToast } = useToastStore();
 const dataStore = useDataStore();
-const uiStore = useUIStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
 
@@ -131,12 +130,6 @@ const handleSave = async () => {
     showToast(msg, 'error');
     isSaving.value = false; // 只有失败时才需要重置保存状态
   }
-};
-
-// 打开备份恢复模态框
-const openBackupModal = () => {
-  emit('update:show', false); // 关闭设置模态框
-  uiStore.showBackupModal(); // 打开备份模态框
 };
 
 // 标签页状态
@@ -470,37 +463,13 @@ watch(() => props.show, (newValue) => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
             </svg>
-            存储后端
+            存储设置
           </h4>
           <StorageBackendSwitcher />
         </section>
 
         <!-- 备份与恢复 -->
-        <section>
-          <h4
-            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            数据备份
-          </h4>
-          <div class="bg-gray-50/80 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl p-6">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              导出或导入所有数据，包括订阅源、订阅组、手动节点和系统设置。
-            </p>
-            <button @click="openBackupModal" 
-              class="btn-secondary flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-              </svg>
-              备份与恢复
-            </button>
-          </div>
-        </section>
+        <BackupView />
 
         </div>
         <!-- 第3页结束 -->

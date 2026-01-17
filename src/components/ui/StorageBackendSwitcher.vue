@@ -134,10 +134,16 @@ onMounted(() => {
 
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
-    <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
-      <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-        存储后端设置
-      </h3>
+    <!-- 头部：标题与刷新 -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          存储后端设置
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          管理应用数据的存储位置
+        </p>
+      </div>
       <button
         class="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         @click="loadBackendInfo"
@@ -162,54 +168,68 @@ onMounted(() => {
       {{ error }}
     </div>
 
+    <!-- 内容区域 -->
     <div v-if="backendInfo" class="space-y-6">
-      <!-- 当前后端状态 -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-700">
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-medium text-gray-500 dark:text-gray-400">当前存储后端：</span>
-          <span 
-            class="px-3 py-1 rounded-full text-sm font-bold tracking-wide"
-            :class="backendInfo.current === 'kv' 
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
-              : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'"
-          >
-            {{ backendInfo.current.toUpperCase() }}
-          </span>
-        </div>
-        
-        <div class="text-xs text-gray-400 dark:text-gray-500">
-          {{ backendInfo.current === 'kv' ? 'Cloudflare KV Storage' : 'Cloudflare D1 Database' }}
+      <!-- 当前状态展示 -->
+      <div class="relative overflow-hidden bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-xl p-4">
+        <div class="flex items-center justify-between relative z-10">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center"
+              :class="backendInfo.current === 'kv' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400' : 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400'">
+              <span class="font-bold text-xs">{{ backendInfo.current.toUpperCase() }}</span>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mb-0.5">当前正在使用</p>
+              <p class="text-sm font-bold text-gray-900 dark:text-white">
+                {{ backendInfo.current === 'kv' ? 'Cloudflare KV Storage' : 'Cloudflare D1 Database' }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-gray-800 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm">
+            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            运行中
+          </div>
         </div>
       </div>
 
       <!-- 切换选项 -->
       <div v-if="backendInfo.canSwitch" class="space-y-3">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">切换存储后端：</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">切换存储后端</label>
         <div class="grid grid-cols-2 gap-4">
           <button
             v-for="backend in backendInfo.available"
             :key="backend"
-            class="relative flex items-center justify-center gap-2 p-3 border-2 rounded-xl transition-all duration-200 font-medium text-sm"
+            class="group relative flex flex-col items-start p-4 border rounded-xl transition-all duration-200 text-left"
             :class="[
               backend === backendInfo.current
-                ? 'bg-indigo-600 border-indigo-600 text-white cursor-default shadow-md'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400'
+                ? 'bg-indigo-50/30 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-200 dark:ring-indigo-800 cursor-default'
+                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm'
             ]"
             :disabled="backend === backendInfo.current || switching"
             @click="initiateSwitch(backend)"
           >
-            <span v-if="backend === backendInfo.current" class="absolute -top-2 -right-2 bg-white dark:bg-gray-800 text-indigo-600 rounded-full p-0.5 shadow-sm border border-gray-100 dark:border-gray-600">
-              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-6-6a1 1 0 011.414-1.414L9 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+            <!-- 选中标记 -->
+            <div v-if="backend === backendInfo.current" class="absolute top-3 right-3 text-indigo-600 dark:text-indigo-400">
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
               </svg>
-            </span>
-            <span>{{ backend.toUpperCase() }}</span>
-            <span v-if="backend === backendInfo.current" class="text-indigo-100 text-xs font-normal">(当前)</span>
-            <span v-if="switching && targetBackend === backend" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 rounded-lg">
-              <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            </div>
+
+            <!-- 加载状态 -->
+            <div v-if="switching && targetBackend === backend" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 rounded-xl z-20">
+              <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
+            </div>
+
+            <span class="text-sm font-bold mb-1" :class="backend === backendInfo.current ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-900 dark:text-gray-100'">
+              {{ backend.toUpperCase() }}
+              <span v-if="backend === backendInfo.current" class="ml-1 text-xs font-normal opacity-70">(当前)</span>
+            </span>
+            <span class="text-xs leading-relaxed" :class="backend === backendInfo.current ? 'text-indigo-600/80 dark:text-indigo-400/80' : 'text-gray-500 dark:text-gray-400'">
+              {{ backend === 'kv' ? '读取速度极快，适合数据量较小的场景。' : '功能强大，适合大量订阅和复杂查询。' }}
             </span>
           </button>
         </div>
@@ -227,18 +247,6 @@ onMounted(() => {
               仅检测到一个可用的存储后端。如需使用 D1 存储，请在 Cloudflare 控制台创建名为 <strong class="text-indigo-600 dark:text-indigo-400">sub-one-d1</strong> 的 D1 数据库并绑定到项目变量 <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-gray-800 dark:text-gray-200 font-mono text-xs">SUB_ONE_D1</code>。
             </p>
           </div>
-        </div>
-      </div>
-
-      <!-- 后端说明 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-xs">
-        <div class="p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
-          <strong class="block text-blue-700 dark:text-blue-400 mb-1">KV Storage</strong>
-          <span class="text-blue-600/80 dark:text-blue-300/70">键值对存储，读取速度极快。适合订阅源 < 1000 的场景。</span>
-        </div>
-        <div class="p-3 bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900/30">
-          <strong class="block text-green-700 dark:text-green-400 mb-1">D1 Database</strong>
-          <span class="text-green-600/80 dark:text-green-300/70">SQL 关系数据库，支持复杂查询。适合大量数据管理。</span>
         </div>
       </div>
     </div>

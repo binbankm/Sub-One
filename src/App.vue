@@ -52,7 +52,6 @@ import Footer from './components/layout/AppFooter.vue';
 // 异步加载的模态框组件（按需加载，优化首屏性能）
 const SettingsModal = defineAsyncComponent(() => import('./features/settings/SettingsModal.vue'));
 const HelpModal = defineAsyncComponent(() => import('./features/settings/HelpModal.vue'));
-const BackupRestoreModal = defineAsyncComponent(() => import('./features/settings/BackupRestoreModal.vue'));
 
 // ==================== 会话状态管理 ====================
 
@@ -346,9 +345,6 @@ onMounted(() => {
 
     <!-- 帮助模态框 - 按需显示（异步加载） -->
     <HelpModal v-if="showHelpModal" v-model:show="showHelpModal" />
-
-    <!-- 备份恢复模态框 - 按需显示（异步加载，使用 uiStore 管理状态） -->
-    <BackupRestoreModal v-if="uiStore.isBackupModalVisible" v-model:show="uiStore.isBackupModalVisible" />
   </div>
 </template>
 
