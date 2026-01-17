@@ -47,7 +47,7 @@
       <div v-else class="no-switch-info">
         <p>仅配置了一个存储后端，无法切换</p>
         <p class="hint">
-          如需使用 D1 存储，请在 Cloudflare 控制台创建名为 <strong>SUB_ONE_D1</strong> 的 D1 数据库并绑定到项目
+          如需使用 D1 存储，请在 Cloudflare 控制台创建名为 <strong>sub-one-d1</strong> 的 D1 数据库并绑定到项目
         </p>
       </div>
 

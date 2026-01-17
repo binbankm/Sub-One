@@ -10,10 +10,10 @@ id = "" # 留空,让 Fork 用户自己填写
 preview_id = "" # 留空,让 Fork 用户自己填写
 
 # D1 数据库绑定（可选，如需使用 D1 作为存储后端请配置）
-# 注意：在 CF Web 端创建 D1 数据库时，数据库名称也使用 SUB_ONE_D1
+# 注意：D1 数据库名称只能使用小写字母、数字、连字符和下划线
 [[d1_databases]]
 binding = "SUB_ONE_D1"
-database_name = "SUB_ONE_D1"
+database_name = "sub-one-d1"
 database_id = "" # 留空，让 Fork 用户自己填写
 
 [vars]
