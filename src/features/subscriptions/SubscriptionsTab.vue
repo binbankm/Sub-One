@@ -10,7 +10,6 @@ import ConfirmModal from '../../components/ui/ConfirmModal.vue';
 
 // 异步加载模态框
 const SubscriptionEditModal = defineAsyncComponent(() => import('./components/SubscriptionEditModal.vue'));
-const SubscriptionImportModal = defineAsyncComponent(() => import('../nodes/components/SubscriptionImportModal.vue'));
 
 import { storeToRefs } from 'pinia';
 import { useDataStore } from '../../stores/data';
@@ -79,7 +78,6 @@ const editingSubscription = ref<Subscription | null>(null);
 
 const showDeleteSingleSubModal = ref(false);
 const showDeleteAllSubsModal = ref(false);
-const showSubscriptionImportModal = ref(false);
 const deletingItemId = ref<string | null>(null);
 
 const isUpdatingAllSubs = ref(false);
@@ -235,11 +233,6 @@ const handleBatchDeleteSubs = async (ids: string[]) => {
    await dataStore.saveData(`批量删除 ${ids.length} 个订阅`);
 };
 
-const handleSubscriptionImportSuccess = async () => {
-    await dataStore.saveData('导入节点');
-    showToast('节点已导入! 请前往 [节点管理] 查看详情', 'success', 5000);
-};
-
 // Override toggle to also close menu
 const handleToggleBatchDeleteMode = () => {
   toggleBatchDeleteMode();
@@ -341,9 +334,6 @@ watch(() => props.tabAction, (newAction) => {
             <Transition name="slide-fade-sm">
               <div v-if="showSubsMoreMenu"
                 class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="showSubscriptionImportModal = true; showSubsMoreMenu = false"
-                  class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入本地订阅</button>
-                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button @click="handleToggleBatchDeleteMode"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">批量删除</button>
                 <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
@@ -476,12 +466,6 @@ watch(() => props.tabAction, (newAction) => {
     title="确认删除订阅"
     message="您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。"
     type="danger"
-  />
-
-  <SubscriptionImportModal
-    v-model:show="showSubscriptionImportModal"
-    :add-nodes-from-bulk="dataStore.addNodesFromBulk"
-    :on-import-success="handleSubscriptionImportSuccess"
   />
 </template>
 

@@ -323,8 +323,6 @@ onUnmounted(() => {
             <Transition name="slide-fade-sm">
               <div v-if="showNodesMoreMenu"
                 class="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 ring-2 ring-gray-200 dark:ring-gray-700 border border-gray-200 dark:border-gray-700">
-                <button @click="showSubscriptionImportModal = true; showNodesMoreMenu = false"
-                  class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">导入订阅</button>
                 <button @click="handleAutoSort(); showNodesMoreMenu = false"
                   class="w-full text-left px-5 py-3 text-base text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">一键排序</button>
                 <button @click="handleDeduplicate(); showNodesMoreMenu = false"
