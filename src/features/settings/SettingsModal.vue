@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import Modal from '../../components/ui/BaseModal.vue';
+import StorageBackendSwitcher from '../../components/ui/StorageBackendSwitcher.vue';
 import { fetchSettings, saveSettings } from '../../utils/api';
 import { useToastStore } from '../../stores/toast';
 import { useDataStore } from '../../stores/data';
@@ -391,6 +392,20 @@ watch(() => props.show, (newValue) => {
               </p>
             </div>
           </div>
+        </section>
+
+        <!-- 存储后端设置 -->
+        <section>
+          <h4
+            class="flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+            </svg>
+            存储后端
+          </h4>
+          <StorageBackendSwitcher />
         </section>
       </div>
     </template>

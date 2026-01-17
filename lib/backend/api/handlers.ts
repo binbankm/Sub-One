@@ -1,4 +1,5 @@
 
+
 import { Env } from '../types';
 import { authMiddleware, generateSecureToken, COOKIE_NAME, SESSION_DURATION } from './auth';
 import { OLD_KV_KEY, KV_KEY_SUBS, KV_KEY_PROFILES, KV_KEY_SETTINGS } from '../config/constants';
@@ -7,6 +8,9 @@ import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { SubscriptionParser } from '../subscription-parser';
 import { Subscription, Profile, AppConfig, Node, SubscriptionUserInfo } from '../../shared/types';
 import { authenticateUser, hasUsers, createUser } from '../services/users';
+import { getStorageBackendInfo, setStorageBackend } from '../services/storage-backend';
+import { autoMigrate } from '../services/migration';
+
 
 const subscriptionParser = new SubscriptionParser();
 
@@ -549,6 +553,111 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     error: e.message === 'The user aborted a request.' ? 'Timeout' : e.message
                 }), { headers: { 'Content-Type': 'application/json' } });
             }
+        }
+
+        case '/storage/backend': {
+            // GET: 获取当前存储后端信息
+            if (request.method === 'GET') {
+                try {
+                    const info = await getStorageBackendInfo(env);
+                    return new Response(JSON.stringify(info), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                } catch (error: any) {
+                    console.error('[API Error /storage/backend GET]', error);
+                    return new Response(JSON.stringify({
+                        error: '获取存储后端信息失败',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            // POST: 切换存储后端
+            if (request.method === 'POST') {
+                try {
+                    const { backend } = await request.json() as { backend?: string };
+
+                    if (!backend || (backend !== 'kv' && backend !== 'd1')) {
+                        return new Response(JSON.stringify({
+                            error: '无效的存储后端类型',
+                            message: '存储后端必须是 "kv" 或 "d1"'
+                        }), { status: 400 });
+                    }
+
+                    const success = await setStorageBackend(env, backend);
+
+                    if (success) {
+                        return new Response(JSON.stringify({
+                            success: true,
+                            message: `已切换到 ${backend.toUpperCase()} 存储后端`,
+                            backend
+                        }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    } else {
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: '切换存储后端失败',
+                            message: `${backend.toUpperCase()} 存储后端可能未配置或不可用`
+                        }), { status: 400 });
+                    }
+                } catch (error: any) {
+                    console.error('[API Error /storage/backend POST]', error);
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: '切换存储后端失败',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            return new Response('Method Not Allowed', { status: 405 });
+        }
+
+        case '/storage/migrate': {
+            // POST: 执行数据迁移
+            if (request.method === 'POST') {
+                try {
+                    const { targetBackend } = await request.json() as { targetBackend?: string };
+
+                    if (!targetBackend || (targetBackend !== 'kv' && targetBackend !== 'd1')) {
+                        return new Response(JSON.stringify({
+                            error: '无效的目标存储后端',
+                            message: '目标存储后端必须是 "kv" 或 "d1"'
+                        }), { status: 400 });
+                    }
+
+                    console.log(`[Migration] Starting migration to ${targetBackend}`);
+
+                    const result = await autoMigrate(env, targetBackend);
+
+                    if (result.success) {
+                        return new Response(JSON.stringify({
+                            success: true,
+                            message: result.message,
+                            details: result.details
+                        }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    } else {
+                        return new Response(JSON.stringify({
+                            success: false,
+                            error: '迁移失败',
+                            message: result.message,
+                            details: result.details
+                        }), { status: 500 });
+                    }
+                } catch (error: any) {
+                    console.error('[API Error /storage/migrate]', error);
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: '迁移过程出错',
+                        message: error.message
+                    }), { status: 500 });
+                }
+            }
+
+            return new Response('Method Not Allowed', { status: 405 });
         }
 
     }

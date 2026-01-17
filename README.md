@@ -283,13 +283,61 @@ docker run -d \
 
 > 💡 **提示**: 不需要配置 `ADMIN_PASSWORD` 环境变量，系统内置默认Token签名密钥
 
-#### 步骤 4: 绑定KV命名空间
+#### 步骤 4: 配置存储后端
 
-1. 在项目设置中进入 "函数" → "KV命名空间绑定"
-2. 点击 "添加绑定"
-3. 配置绑定：
-   - **变量名称**: `SUB_ONE_KV`
-   - **KV命名空间**: 选择或创建新的KV命名空间
+本项目支持 **KV** 和 **D1** 两种存储后端，可在前端界面切换。
+
+##### 配置 KV 存储（必需）
+
+1. 在 Cloudflare Dashboard：**Workers & Pages** → **KV** → 创建命名空间
+2. 在 Pages 项目设置：**函数** → **KV 命名空间绑定** → 添加绑定
+   - **变量名称**: `SUB_ONE_KV` （⚠️ 必须完全一致）
+   - **KV 命名空间**: 从下拉菜单选择刚创建的命名空间
+3. 保存并重新部署
+
+##### 配置 D1 数据库（可选，适合大规模数据）
+
+1. **创建 D1 数据库**：
+   - **Workers & Pages** → **D1** → 创建数据库
+   - **数据库名称**: `SUB_ONE_D1` （⚠️ 必须使用这个名称）
+
+2. **初始化表结构**（二选一）：
+   
+   **方式一：使用 init.sql 文件（推荐）**
+   - 点击创建的数据库 → **控制台** 标签页
+   - 复制 `db/init.sql` 文件的全部内容并粘贴到控制台
+   - 点击 **执行** 按钮
+   
+   **方式二：手动输入 SQL**
+   - 如果找不到 init.sql 文件，可以直接复制以下 SQL 到控制台执行：
+   ```sql
+   CREATE TABLE IF NOT EXISTS storage (
+       key TEXT PRIMARY KEY,
+       value TEXT NOT NULL,
+       updated_at INTEGER NOT NULL
+   );
+   CREATE INDEX IF NOT EXISTS idx_updated_at ON storage(updated_at);
+   CREATE INDEX IF NOT EXISTS idx_key_prefix ON storage(key);
+   INSERT OR REPLACE INTO storage (key, value, updated_at)
+   VALUES ('_db_initialized', '"true"', strftime('%s', 'now') * 1000);
+   ```
+
+3. **绑定到项目**：
+   - Pages 项目设置 → **函数** → **D1 数据库绑定** → 添加绑定
+   - **变量名称**: `SUB_ONE_D1` （⚠️ 必须完全一致）
+   - **D1 数据库**: 从下拉菜单选择 `SUB_ONE_D1`
+
+4. 保存并重新部署
+
+##### 在前端切换存储后端
+
+配置完成后，登录管理后台 → **设置** → **存储后端设置**，即可在 KV 和 D1 之间切换。
+
+**存储对比**：
+- **KV**: 简单快速，适合 < 1000 条订阅源
+- **D1**: 支持 SQL 查询，适合 > 1000 条订阅源
+
+> 💡 **自动迁移**：切换存储后端时，系统会自动迁移所有数据（订阅源、订阅组、设置、用户数据）到新后端，无需手动操作！
 
 #### 步骤 5: 部署项目
 
