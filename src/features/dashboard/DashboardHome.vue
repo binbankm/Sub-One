@@ -100,7 +100,7 @@ onMounted(() => {
 
     <!-- 励志语录卡片 -->
     <div
-      class="relative overflow-hidden rounded-3xl backdrop-blur-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
+      class="card-glass relative overflow-hidden rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 group">
 
       <div class="relative z-10">
         <!-- 标题栏 -->
@@ -165,7 +165,7 @@ onMounted(() => {
 
       <!-- 核心统计图表 (占2列) -->
       <div
-        class="md:col-span-2 backdrop-blur-xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl relative overflow-hidden group min-h-[300px] flex flex-col">
+        class="md:col-span-2 card-glass rounded-3xl p-6 shadow-xl relative overflow-hidden group min-h-[300px] flex flex-col">
         
         <div class="flex items-center justify-between mb-6 relative z-10">
           <div>
@@ -218,7 +218,7 @@ onMounted(() => {
       <!-- 智能更新卡片 -->
       <div class="flex flex-col gap-4 lg:gap-6">
         <button @click="handleUpdateAll" :disabled="isUpdatingAllSubs"
-          class="relative flex-1 overflow-hidden rounded-3xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
+          class="card-glass relative flex-1 overflow-hidden rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 group text-left p-6 flex flex-col justify-between">
           <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent dark:from-blue-900/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <div class="relative z-10">
             <div class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -236,7 +236,7 @@ onMounted(() => {
         </button>
 
         <!-- 订阅组指示 -->
-        <div class="relative flex-1 rounded-3xl bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 p-6 shadow-md">
+        <div class="card-glass relative flex-1 rounded-3xl p-6 shadow-md">
            <div class="flex justify-between items-start mb-2">
              <div class="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -255,7 +255,7 @@ onMounted(() => {
 
       <!-- 快捷操作按钮 (3个) -->
       <button @click="$emit('add-subscription')"
-        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 min-h-[120px]">
+        class="card-glass group flex items-center gap-4 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 min-h-[120px]">
         <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -268,7 +268,7 @@ onMounted(() => {
       </button>
 
       <button @click="$emit('add-node')"
-        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 min-h-[120px]">
+        class="card-glass group flex items-center gap-4 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 min-h-[120px]">
         <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -281,7 +281,7 @@ onMounted(() => {
       </button>
 
       <button @click="$emit('add-profile')"
-        class="group flex items-center gap-4 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-300 min-h-[120px]">
+        class="card-glass group flex items-center gap-4 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-200 dark:hover:border-purple-800 transition-all duration-300 min-h-[120px]">
         <div class="w-12 h-12 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-300">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />

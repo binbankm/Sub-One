@@ -51,7 +51,7 @@ const copyToClipboard = (url: string) => {
 <template>
   <!-- 卡片容器 -->
   <div
-    class="card-glass group relative flex flex-col h-full overflow-hidden transition-all duration-300 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+    class="card-glass group relative flex flex-col h-full overflow-hidden transition-all duration-300 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1"
     :class="{
       'opacity-60 grayscale filter': !node.enabled,
       'ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900 border-emerald-500/50': isBatchMode && isSelected,
