@@ -5,14 +5,27 @@ import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
 import { checkAndNotify } from '../services/notification';
 import { SubscriptionParser } from '../subscription-parser';
 import { Subscription, AppConfig, SubscriptionUserInfo } from '../../shared/types';
+import { StorageFactory } from '../services/storage';
+import { getStorageBackendInfo } from '../services/storage-backend';
 
 const subscriptionParser = new SubscriptionParser();
 
+/**
+ * 获取当前活动的存储服务实例
+ */
+async function getStorage(env: Env) {
+    const info = await getStorageBackendInfo(env);
+    return StorageFactory.create(env, info.current);
+}
+
 export async function handleCronTrigger(env: Env): Promise<Response> {
     console.log("Cron trigger fired. Checking all subscriptions for traffic and node count...");
-    const originalSubs = (await env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json') || []) as Subscription[];
+
+    const storage = await getStorage(env);
+    const originalSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
+
     const allSubs = JSON.parse(JSON.stringify(originalSubs)) as Subscription[]; // 深拷贝以便比较
-    const settings = (await env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json') || defaultSettings) as AppConfig;
+    const settings = (await storage.get<AppConfig>(KV_KEY_SETTINGS)) || defaultSettings;
 
     let changesMade = false;
 
@@ -47,7 +60,7 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                                 }
                             });
                             sub.userInfo = info as SubscriptionUserInfo;
-                            await checkAndNotify(sub, settings);
+                            await checkAndNotify(sub, settings as AppConfig);
                             changesMade = true;
                         }
 
@@ -79,7 +92,7 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
     }
 
     if (changesMade) {
-        await env.SUB_ONE_KV.put(KV_KEY_SUBS, JSON.stringify(allSubs));
+        await storage.put(KV_KEY_SUBS, allSubs);
         console.log("Subscriptions updated with new traffic info and node counts.");
     } else {
         console.log("Cron job finished. No changes detected.");

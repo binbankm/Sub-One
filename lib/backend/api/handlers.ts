@@ -458,7 +458,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 );
 
                 // 使用批量写入管理器保存更新后的数据
-                await env.SUB_ONE_KV.put(KV_KEY_SUBS, JSON.stringify(allSubs));
+                await storage.put(KV_KEY_SUBS, allSubs);
 
                 console.log(`[Batch Update] Completed batch update, ${updateResults.filter(r => (r as any).success).length} successful`);
 
@@ -510,13 +510,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                         }
                     }
 
-                    // 特殊处理：保留 webdav 配置（因为它可能不在 defaultSettings 中，或者我们应该更新 defaultSettings）
-                    // 暂时这里手动保留它，以防万一
-                    if (anyNewSettings.webdav) {
-                        finalSettings.webdav = anyNewSettings.webdav;
-                    } else if (oldSettings.webdav) {
-                        finalSettings.webdav = oldSettings.webdav;
-                    }
 
                     await storage.put(KV_KEY_SETTINGS, finalSettings);
 

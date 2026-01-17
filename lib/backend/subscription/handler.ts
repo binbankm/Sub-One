@@ -1,6 +1,4 @@
 
-/// <reference types="@cloudflare/workers-types" />
-
 import { Env } from '../types';
 import { KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_PROFILES } from '../config/constants';
 import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
@@ -9,8 +7,18 @@ import { SubscriptionParser } from '../subscription-parser';
 import { subscriptionConverter } from '../converter';
 import { Base64 } from 'js-base64';
 import { Subscription, Profile, AppConfig, Node, SubConfig } from '../../shared/types';
+import { StorageFactory } from '../services/storage';
+import { getStorageBackendInfo } from '../services/storage-backend';
 
 const subscriptionParser = new SubscriptionParser();
+
+/**
+ * 获取当前活动的存储服务实例
+ */
+async function getStorage(env: Env) {
+    const info = await getStorageBackendInfo(env);
+    return StorageFactory.create(env, info.current);
+}
 
 async function generateCombinedNodeList(
     config: SubConfig,
@@ -67,15 +75,17 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
     const url = new URL(request.url);
     const userAgentHeader = request.headers.get('User-Agent') || "Unknown";
 
+    const storage = await getStorage(env);
+
     const [settingsData, subsData, profilesData] = await Promise.all([
-        env.SUB_ONE_KV.get(KV_KEY_SETTINGS, 'json'),
-        env.SUB_ONE_KV.get(KV_KEY_SUBS, 'json'),
-        env.SUB_ONE_KV.get(KV_KEY_PROFILES, 'json')
+        storage.get<AppConfig>(KV_KEY_SETTINGS),
+        storage.get<Subscription[]>(KV_KEY_SUBS),
+        storage.get<Profile[]>(KV_KEY_PROFILES)
     ]);
 
     const allSubs = (subsData || []) as Subscription[];
     const allProfiles = (profilesData || []) as Profile[];
-    const config = { ...defaultSettings, ...(settingsData as AppConfig) };
+    const config = { ...defaultSettings, ...(settingsData || {}) } as AppConfig;
 
     let token: string | null = '';
     let profileIdentifier: string | null = null;

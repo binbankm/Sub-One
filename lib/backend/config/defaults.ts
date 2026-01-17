@@ -22,14 +22,7 @@ export const defaultSettings: AppConfig = {
 
     // 通知阈值
     NotifyThresholdDays: 3,
-    NotifyThresholdPercent: 90,
-
-    // WebDAV 备份
-    webdav: {
-        url: '',
-        username: '',
-        password: ''
-    }
+    NotifyThresholdPercent: 90
 };
 
 export const GLOBAL_USER_AGENT = 'Clash.Meta/v1.19.18'; // Unified UA: Mihomo v1.19.18
