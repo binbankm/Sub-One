@@ -146,7 +146,8 @@ const importToClient = (client: string) => {
     'Shadowrocket': `shadowrocket://add/sub://${btoa(subLink.value)}?remark=${encodeURIComponent(name)}`,
     'Quantumult X': `quantumult-x:///add-resource?remote-resource={"server_remote":["${subLink.value},tag=${encodeURIComponent(name)}"]}`,
     'Loon': `loon://import?url=${encodedUrl}`,
-    'V2Ray': `v2rayng://install-config?url=${encodedUrl}`
+    'v2rayN': `v2rayn://install-config?url=${encodedUrl}`,
+    'v2rayNG': `v2rayng://install-config?url=${encodedUrl}`
   };
 
   const scheme = schemes[client];
@@ -270,7 +271,7 @@ onUnmounted(() => {
             <Transition name="scale-fade">
               <div v-if="showImport" class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border-2 border-violet-100 dark:border-violet-900 shadow-xl shadow-violet-500/10">
                 <div class="grid grid-cols-3 gap-2">
-                  <button v-for="client in ['Clash', 'Shadowrocket', 'Quantumult X', 'Surge', 'Stash', 'Loon']" 
+                  <button v-for="client in ['Clash', 'v2rayN', 'Shadowrocket', 'Quantumult X', 'Surge', 'v2rayNG', 'Stash', 'Loon']" 
                     :key="client"
                     @click="importToClient(client)"
                     class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-900/40 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all duration-200 border-2 border-transparent hover:border-violet-200 active:scale-90">
