@@ -311,6 +311,11 @@ export class SubscriptionParser {
             });
         }
 
+        // 3.5 自动补全旗帜 (Auto Flag Completion)
+        result.forEach(n => {
+            n.name = addFlagToName(n.name);
+        });
+
         // 4. 填充/更新 URL (Runtime Generate)
         result.forEach(n => {
             // 重新生成 URL 的条件：
@@ -333,4 +338,56 @@ export class SubscriptionParser {
         }
         return this.processNodes(nodes, subscriptionName, {});
     }
+}
+
+/**
+ * 自动为节点名补全旗帜 Emoji
+ * 
+ * @param name 原始节点名
+ * @returns 补全旗帜后的节点名
+ */
+export function addFlagToName(name: string): string {
+    if (!name) return name;
+
+    // 如果已经包含 Emoji (简单的正则判断常见 Emoji 范围)，则跳过
+    if (/\p{Emoji_Presentation}/u.test(name)) {
+        return name;
+    }
+
+    const flags: Record<string, string> = {
+        '香港': '🇭🇰', 'HK': '🇭🇰', 'Hong Kong': '🇭🇰',
+        '日本': '🇯🇵', 'JP': '🇯🇵', 'Japan': '🇯🇵', '东京': '🇯🇵', '大阪': '🇯🇵',
+        '美国': '🇺🇸', 'US': '🇺🇸', 'USA': '🇺🇸', 'United States': '🇺🇸', '洛杉矶': '🇺🇸', '圣何塞': '🇺🇸',
+        '新加坡': '🇸🇬', 'SG': '🇸🇬', 'Singapore': '🇸🇬',
+        '台湾': '🇹🇼', 'TW': '🇹🇼', 'Taiwan': '🇹🇼',
+        '韩国': '🇰🇷', 'KR': '🇰🇷', 'Korea': '🇰🇷', '首尔': '🇰🇷',
+        '英国': '🇬🇧', 'UK': '🇬🇧', 'United Kingdom': '🇬🇧', '伦敦': '🇬🇧',
+        '德国': '🇩🇪', 'DE': '🇩🇪', 'Germany': '🇩🇪', '法兰克福': '🇩🇪',
+        '法国': '🇫🇷', 'FR': '🇫🇷', 'France': '🇫🇷',
+        '加拿大': '🇨🇦', 'CA': '🇨🇦', 'Canada': '🇨🇦',
+        '澳大利亚': '🇦🇺', 'AU': '🇦🇺', 'Australia': '🇦🇺', '悉尼': '🇦🇺',
+        '俄罗斯': '🇷🇺', 'RU': '🇷🇺', 'Russia': '🇷🇺',
+        '印度': '🇮🇳', 'IN': '🇮🇳', 'India': '🇮🇳',
+        '荷兰': '🇳🇱', 'NL': '🇳🇱', 'Netherlands': '🇳🇱',
+        '土耳其': '🇹🇷', 'TR': '🇹🇷', 'Turkey': '🇹🇷',
+        '阿联酋': '🇦🇪', 'AE': '🇦🇪', '阿布扎比': '🇦🇪', '迪拜': '🇦🇪',
+        '巴西': '🇧🇷', 'BR': '🇧🇷', 'Brazil': '🇧🇷',
+        '泰国': '🇹🇭', 'TH': '🇹🇭', 'Thailand': '🇹🇭',
+        '越南': '🇻🇳', 'VN': '🇻🇳', 'Vietnam': '🇻🇳',
+        '菲律宾': '🇵🇭', 'PH': '🇵🇭', 'Philippines': '🇵🇭',
+        '马来西亚': '🇲🇾', 'MY': '🇲🇾', 'Malaysia': '🇲🇾'
+    };
+
+    // 搜索顺序：优先匹配最长关键词（防止如 "美国" 匹配到 "美国洛杉矶" 里的 "美国" 时顺序错乱，虽然这里是包含关系）
+    const keywords = Object.keys(flags).sort((a, b) => b.length - a.length);
+
+    for (const keyword of keywords) {
+        // 使用不区分大小写的正则表达式
+        const regex = new RegExp(keyword, 'i');
+        if (regex.test(name)) {
+            return `${flags[keyword]} ${name}`;
+        }
+    }
+
+    return name;
 }
