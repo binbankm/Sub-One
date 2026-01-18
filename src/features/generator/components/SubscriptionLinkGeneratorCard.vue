@@ -146,8 +146,8 @@ const importToClient = (client: string) => {
     'Shadowrocket': `shadowrocket://add/sub://${btoa(subLink.value)}?remark=${encodeURIComponent(name)}`,
     'Quantumult X': `quantumult-x:///add-resource?remote-resource={"server_remote":["${subLink.value},tag=${encodeURIComponent(name)}"]}`,
     'Loon': `loon://import?url=${encodedUrl}`,
-    'v2rayN': `v2rayn://install-config?url=${encodedUrl}`,
-    'v2rayNG': `v2rayng://install-config?url=${encodedUrl}`
+    'v2rayN': `v2rayN://install-sub?url=${encodedUrl}&name=${encodeURIComponent(name)}`,
+    'v2rayNG': `v2rayng://install-sub?url=${encodedUrl}&name=${encodeURIComponent(name)}`
   };
 
   const scheme = schemes[client];
