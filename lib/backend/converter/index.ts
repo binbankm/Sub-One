@@ -13,7 +13,7 @@ import { toQuantumultX } from './quantumultx-converter';
  * - 将节点数组转换为各种客户端格式
  * - 支持 Clash、Surge、Sing-Box、Loon、QuantumultX、Base64 等格式
  * - 完全内置,无需依赖外部 SubConverter 服务
- * - 基于 Sub-Store 和 SubConverter 的转换逻辑
+ * - 基于 SubConverter 的转换逻辑
  * 
  * 支持的格式:
  * - Base64: 原始节点链接的 Base64 编码
