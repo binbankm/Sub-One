@@ -143,11 +143,11 @@ onUnmounted(() => {
 
       <div class="relative z-10">
         <!-- 1. 选择订阅内容 -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
-          <div class="relative">
+        <div class="mb-8">
+          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">01. 选择订阅内容</label>
+          <div class="relative group">
             <select v-model="selectedId"
-              class="w-full px-4 py-3 text-sm text-gray-900 dark:text-white bg-white/60 dark:bg-gray-800/75 border-2 border-gray-300 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none transition-all duration-300 appearance-none cursor-pointer">
+              class="w-full px-4 py-3.5 text-sm font-medium text-gray-900 dark:text-white bg-gray-50/50 dark:bg-gray-800/40 border-2 border-gray-300 dark:border-gray-700 rounded-2xl shadow-sm focus:border-indigo-500 dark:focus:border-indigo-500 focus:outline-none transition-all duration-300 appearance-none cursor-pointer">
               <option value="default" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">默认订阅 (全部启用节点)
               </option>
               <option v-for="profile in enabledProfiles" :key="profile.id" :value="profile.customId || profile.id"
@@ -155,105 +155,84 @@ onUnmounted(() => {
                 {{ profile.name }}
               </option>
             </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-              <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400 group-hover:text-indigo-500 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
               </svg>
             </div>
           </div>
         </div>
 
         <!-- 2. 选择格式 -->
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">2. 选择格式</label>
-          <div class="grid grid-cols-2 gap-2">
+        <div class="mb-8">
+          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">02. 选择导出格式</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <button v-for="format in formats" :key="format" @click="selectedFormat = format"
-              class="px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 flex justify-center items-center transform hover:scale-105"
+              class="px-2 py-3 text-xs font-bold rounded-xl transition-all duration-300 flex justify-center items-center border-2 border-transparent active:scale-95"
               :class="[
                 selectedFormat === format
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
-                  : 'bg-gray-100 dark:bg-gray-800/75 text-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800/85 border border-gray-300 dark:border-gray-700'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 border-indigo-400'
+                  : 'bg-white dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700'
               ]">
               {{ format }}
             </button>
           </div>
         </div>
 
-        <!-- 2.1 选择规则策略 (动态显示) -->
-
-
         <!-- 3. 复制链接 -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3. 复制链接</label>
-          <div class="relative">
-            <input type="text" :value="showUrl ? subLink : '••••••••••••••••••••••••••••••••••••••••'" readonly
-              class="w-full px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-white/60 dark:bg-gray-800/75 border border-gray-300/50 dark:border-gray-700/50 rounded-xl"
-              :class="{ 'select-none': !showUrl }" />
-            <div class="flex items-center gap-2 mt-3">
-              <button @click="showUrl = !showUrl"
-                class="flex-1 px-3 py-2 rounded-xl hover:bg-orange-500/20 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 flex items-center justify-center gap-2"
-                :title="showUrl ? '隐藏链接' : '显示链接'">
-                <svg v-if="showUrl" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                </svg>
-                <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span class="text-sm">{{ showUrl ? '隐藏' : '显示' }}</span>
-              </button>
-              <button v-if="showUrl" @click="copyToClipboard"
-                class="flex-1 px-3 py-2 rounded-xl hover:bg-yellow-500/20 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 flex items-center justify-center gap-2"
-                :title="copied ? '已复制' : '复制'">
-                <Transition name="fade" mode="out-in">
-                  <svg v-if="copied" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        <div class="mb-6">
+          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">03. 订阅地址</label>
+          <div class="relative group">
+            <div class="flex flex-col gap-3">
+              <div class="relative">
+                <input type="text" :value="showUrl ? subLink : '••••••••••••••••••••••••••••••••••••••••'" readonly
+                  class="w-full pl-4 pr-12 py-4 text-sm font-mono bg-gray-50/80 dark:bg-gray-900/50 border-2 border-gray-300 dark:border-gray-700 rounded-2xl focus:border-indigo-500 transition-all duration-300"
+                  :class="{ 'select-none': !showUrl }" />
+                <button @click="showUrl = !showUrl" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-all">
+                  <svg v-if="showUrl" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                   </svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268-2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                </Transition>
-                <span class="text-sm">{{ copied ? '已复制' : '复制' }}</span>
-              </button>
-              <button v-if="showUrl" @click="openNodePreview"
-                class="flex-1 px-3 py-2 rounded-xl hover:bg-indigo-500/20 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 flex items-center justify-center gap-2"
-                title="预览节点列表">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span class="text-sm">预览</span>
-              </button>
-              <button v-if="showUrl" @click="toggleQrcode"
-                class="flex-1 px-3 py-2 rounded-xl hover:bg-gray-500/20 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-all duration-200 flex items-center justify-center gap-2"
-                :class="{ 'bg-gray-100 dark:bg-gray-700': showQrcode }"
-                title="生成二维码">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zm-6 0H6.414a1 1 0 00-.707.293L4 17.086v1.828l1.707 1.707a1 1 0 00.707.293H8v-4zM17 14h2v2h-2v-2zm-4-4h4m-4 4h2v2h-2v-2zm-10 6h2v2H3v-2zm6-10H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zm10 0h-4a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zM5 8h4v4H5V8zm10 0h4v4h-4V8z" />
-                </svg>
-                <span class="text-sm">二维码</span>
-              </button>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <button @click="copyToClipboard"
+                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-300 active:scale-95"
+                  :class="copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'">
+                  <svg v-if="copied" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg v-else class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  <span class="text-xs font-bold">{{ copied ? '已复制' : '复制链接' }}</span>
+                </button>
+
+                <button @click="openNodePreview"
+                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-300 active:scale-95">
+                  <svg class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268-2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  <span class="text-xs font-bold">预览节点</span>
+                </button>
+
+                <button @click="toggleQrcode"
+                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-300 active:scale-95"
+                  :class="showQrcode ? 'bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-700' : 'bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-900/20 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/40'">
+                  <svg class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zm-6 0H6.414a1 1 0 00-.707.293L4 17.086v1.828l1.707 1.707a1 1 0 00.707.293H8v-4zM17 14h2v2h-2v-2zm-4-4h4m-4 4h2v2h-2v-2zm-10 6h2v2H3v-2zm6-10H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zm10 0h-4a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zM5 8h4v4H5V8zm10 0h4v4h-4V8z" /></svg>
+                  <span class="text-xs font-bold">二维码</span>
+                </button>
+              </div>
             </div>
 
             <!-- 二维码显示区域 -->
-            <Transition name="fade">
-              <div v-if="showQrcode && qrcodeUrl" class="mt-4 flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-300 shadow-sm">
-                <img :src="qrcodeUrl" alt="订阅二维码" class="w-48 h-48 sm:w-64 sm:h-64 object-contain" />
-                <p class="mt-2 text-xs text-gray-500">请使用客户端扫描添加到订阅</p>
+            <Transition name="scale-fade">
+              <div v-if="showQrcode && qrcodeUrl" class="mt-4 flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-2xl border-2 border-amber-100 dark:border-amber-900 shadow-xl shadow-amber-500/10">
+                <div class="p-2 bg-white rounded-lg">
+                  <img :src="qrcodeUrl" alt="订阅二维码" class="w-48 h-48 object-contain" />
+                </div>
+                <p class="mt-4 text-[10px] font-bold text-amber-600 uppercase tracking-widest">请使用客户端扫描添加到订阅</p>
               </div>
             </Transition>
-
 
             <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
           </div>
@@ -262,77 +241,41 @@ onUnmounted(() => {
         <!-- Token提示 -->
         <div
           v-if="(selectedId === 'default' && config?.mytoken === 'auto') || (selectedId !== 'default' && (!config?.profileToken || config.profileToken === 'auto' || !config.profileToken.trim()))"
-          class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 animate-pulse-breathing mb-4">
-          <div class="flex items-start gap-3">
-            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0 animate-bounce" fill="none"
-              viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+          class="relative mt-8 p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 rounded-2xl border-2 border-amber-200/60 dark:border-amber-800/40 overflow-hidden">
+          <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-200/20 dark:bg-amber-800/10 rounded-full blur-xl"></div>
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+              <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
             <div>
-              <p class="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1 animate-pulse">Token配置提示</p>
-              <p class="text-xs text-yellow-600 dark:text-yellow-400">
+              <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1 leading-tight">Token 配置提示</h4>
+              <p class="text-xs text-amber-700/80 dark:text-amber-400/80 leading-relaxed">
                 <span v-if="selectedId === 'default'">
-                  当前为自动Token，链接可能会变化。为确保链接稳定，推荐在"设置"中配置一个固定Token。
+                  当前使用的是系统分配的自动 Token，为确保订阅链接长期稳定，强烈建议在设置中自定义一个固定 Token。
                 </span>
                 <span v-else>
-                  订阅组需要使用固定的"订阅组分享Token"。请在"设置"中配置一个固定的"订阅组分享Token"。
+                  订阅组需要独立的分享 Token 才能导出。请前往设置页面配置一个固定的"订阅组分享 Token"。
                 </span>
               </p>
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-@keyframes pulse-breathing {
-
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-    border-color: rgb(245, 158, 11);
-  }
-
-  50% {
-    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1);
-    border-color: rgb(245, 158, 11);
-  }
+.scale-fade-enter-active,
+.scale-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.animate-pulse-breathing {
-  animation: pulse-breathing 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-
-  0%,
-  20%,
-  53%,
-  80%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-
-  40%,
-  43% {
-    transform: translate3d(0, -8px, 0);
-  }
-
-  70% {
-    transform: translate3d(0, -4px, 0);
-  }
-
-  90% {
-    transform: translate3d(0, -2px, 0);
-  }
-}
-
-.animate-bounce {
-  animation: bounce 2s infinite;
+.scale-fade-enter-from,
+.scale-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
 }
 </style>
