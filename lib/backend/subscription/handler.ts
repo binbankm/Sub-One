@@ -55,7 +55,7 @@ async function generateCombinedNodeList(
             // parse 方法内部会调用 processNodes
             return subscriptionParser.parse(text, sub.name, {
                 exclude: sub.exclude,
-                renamePattern: sub.renamePattern,
+
                 prependSubName: config.prependSubName,
                 dedupe: config.dedupe
             });

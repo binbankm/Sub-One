@@ -938,8 +938,7 @@ export interface Subscription {
     /** 节点数量 */
     nodeCount?: number;
 
-    /** 重命名模式 (正则@替换) */
-    renamePattern?: string;
+
 
     /** 流量信息 */
     userInfo?: SubscriptionUserInfo;
@@ -1135,8 +1134,7 @@ export interface ProcessOptions {
     /** 包含规则列表 (正则字符串) */
     includeRules?: string[];
 
-    /** 重命名模式 */
-    renamePattern?: string;
+
 
     /** 是否在节点名前加订阅名 */
     prependSubName?: boolean;

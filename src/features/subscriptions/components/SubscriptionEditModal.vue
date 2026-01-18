@@ -163,7 +163,7 @@ const toggleAdvanced = () => {
     @confirm="handleSave"
     :confirm-text="saveButtonText"
     :confirm-disabled="!canSave"
-    size="2xl"
+    size="4xl"
   >
     <template #title>
       <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -172,7 +172,7 @@ const toggleAdvanced = () => {
     </template>
 
     <template #body>
-      <div v-if="localSubscription" class="space-y-6">
+      <div v-if="localSubscription" class="space-y-8">
         <!-- 基础信息 -->
         <div class="space-y-4">
           <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -183,50 +183,46 @@ const toggleAdvanced = () => {
             基础信息
           </h4>
 
-          <!-- 订阅名称 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              订阅名称
-              <span class="text-gray-400 text-xs ml-1">(可选)</span>
-            </label>
-            <input
-              v-model="localSubscription.name"
-              type="text"
-              placeholder="留空时自动从链接提取"
-              class="input-modern w-full"
-              @input="handleNameInput"
-            />
-            <p v-if="nameError" class="mt-1 text-sm text-red-600 dark:text-red-400">
-              {{ nameError }}
-            </p>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              如留空，系统将自动从订阅链接中提取名称
-            </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 订阅名称 (1列) -->
+            <div class="md:col-span-1">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                订阅名称
+                <span class="text-gray-400 text-xs ml-1">(可选)</span>
+              </label>
+              <input
+                v-model="localSubscription.name"
+                type="text"
+                placeholder="留空自动提取"
+                class="input-modern w-full"
+                @input="handleNameInput"
+              />
+            </div>
+
+            <!-- 订阅链接 (2列) -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                订阅链接
+                <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="localSubscription.url"
+                type="url"
+                placeholder="https://example.com/sub?token=xxx"
+                class="input-modern w-full font-mono text-sm"
+                :class="{ 'border-red-500 dark:border-red-500': urlError }"
+                @blur="handleUrlBlur"
+              />
+              <p v-if="urlError" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                {{ urlError }}
+              </p>
+            </div>
           </div>
-
-          <!-- 订阅链接 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              订阅链接
-              <span class="text-red-500">*</span>
-            </label>
-            <input
-              v-model="localSubscription.url"
-              type="url"
-              placeholder="https://example.com/sub?token=xxx"
-              class="input-modern w-full font-mono text-sm"
-              :class="{ 'border-red-500 dark:border-red-500': urlError }"
-              @blur="handleUrlBlur"
-            />
-            <p v-if="urlError" class="mt-1 text-sm text-red-600 dark:text-red-400">
-              {{ urlError }}
-            </p>
-            <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              请输入有效的 HTTP 或 HTTPS 订阅链接
-            </p>
+          
+          <div class="text-xs text-gray-500 dark:text-gray-400 px-1">
+             <p v-if="nameError" class="text-red-600 mb-1">{{ nameError }}</p>
+             <p v-else>名称留空将自动从链接中提取</p>
           </div>
-
-
 
         </div>
 
@@ -264,22 +260,7 @@ const toggleAdvanced = () => {
                 </p>
               </div>
 
-              <!-- 节点重命名 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  节点重命名
-                  <span class="text-gray-400 text-xs ml-1">(可选)</span>
-                </label>
-                <input
-                  v-model="localSubscription.renamePattern"
-                  type="text"
-                  placeholder="例如: Hong Kong@HK (将 'Hong Kong' 替换为 'HK')"
-                  class="input-modern w-full font-mono text-sm"
-                />
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  格式: <code>正则@替换内容</code>。左侧支持正则表达式。
-                </p>
-              </div>
+
             </div>
           </Transition>
         </div>

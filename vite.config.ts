@@ -80,5 +80,29 @@ export default defineConfig({
         changeOrigin: true,  // 改变源地址，解决跨域问题
       }
     }
+  },
+
+  // ==================== 构建配置 ====================
+
+  build: {
+    /** 
+     * 消除块大小警告 
+     * 默认 500kb -> 1000kb 
+     */
+    chunkSizeWarningLimit: 1000,
+
+    rollupOptions: {
+      output: {
+        /**
+         * 手动分包策略
+         * 将第三方依赖拆分到单独的 vendor chunk 中，利用浏览器缓存
+         */
+        manualChunks: {
+          'vendor-core': ['vue', 'pinia'],
+          'vendor-utils': ['lodash-es', 'js-base64', 'js-yaml', 'qrcode'],
+          'vendor-ui': ['echarts', 'vuedraggable'] // 较大的 UI 库单独打包
+        }
+      }
+    }
   }
 })
