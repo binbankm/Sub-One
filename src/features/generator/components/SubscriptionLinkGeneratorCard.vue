@@ -25,6 +25,7 @@ const { showToast } = useToastStore();
 const selectedId = ref('default');
 const selectedFormat = ref('自适应');
 const showUrl = ref(false);
+const showImport = ref(false);
 const copied = ref(false);
 let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -224,26 +225,33 @@ onUnmounted(() => {
                 </button>
               </div>
 
-              <div class="grid grid-cols-3 gap-3">
+              <div class="grid grid-cols-4 gap-2">
                 <button @click="copyToClipboard"
-                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-300 active:scale-95"
+                  class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 transition-all duration-300 active:scale-95"
                   :class="copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'">
                   <svg v-if="copied" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   <svg v-else class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  <span class="text-xs font-bold">{{ copied ? '已复制' : '复制链接' }}</span>
+                  <span class="text-[10px] font-bold">{{ copied ? '已复制' : '复制' }}</span>
                 </button>
 
                 <button @click="openNodePreview"
-                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-300 active:scale-95">
+                  class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 border-blue-100 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all duration-300 active:scale-95">
                   <svg class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268-2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  <span class="text-xs font-bold">预览节点</span>
+                  <span class="text-[10px] font-bold">预览</span>
                 </button>
 
                 <button @click="toggleQrcode"
-                  class="flex flex-col items-center justify-center py-3 px-2 rounded-2xl border-2 transition-all duration-300 active:scale-95"
+                  class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 transition-all duration-300 active:scale-95"
                   :class="showQrcode ? 'bg-amber-100 border-amber-200 text-amber-700 dark:bg-amber-900/40 dark:border-amber-700' : 'bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-900/20 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/40'">
                   <svg class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zm-6 0H6.414a1 1 0 00-.707.293L4 17.086v1.828l1.707 1.707a1 1 0 00.707.293H8v-4zM17 14h2v2h-2v-2zm-4-4h4m-4 4h2v2h-2v-2zm-10 6h2v2H3v-2zm6-10H5a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zm10 0h-4a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2V6a2 2 0 00-2-2zM5 8h4v4H5V8zm10 0h4v4h-4V8z" /></svg>
-                  <span class="text-xs font-bold">二维码</span>
+                  <span class="text-[10px] font-bold">二维码</span>
+                </button>
+
+                <button @click="showImport = !showImport; showQrcode = false"
+                  class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 transition-all duration-300 active:scale-95"
+                  :class="showImport ? 'bg-violet-100 border-violet-200 text-violet-700 dark:bg-violet-900/40 dark:border-violet-700' : 'bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-900/20 dark:border-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900/40'">
+                  <svg class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  <span class="text-[10px] font-bold">导入</span>
                 </button>
               </div>
             </div>
@@ -258,23 +266,25 @@ onUnmounted(() => {
               </div>
             </Transition>
 
+            <!-- 客户端列表显示区域 -->
+            <Transition name="scale-fade">
+              <div v-if="showImport" class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border-2 border-violet-100 dark:border-violet-900 shadow-xl shadow-violet-500/10">
+                <div class="grid grid-cols-3 gap-2">
+                  <button v-for="client in ['Clash', 'Shadowrocket', 'Quantumult X', 'Surge', 'Stash', 'Loon']" 
+                    :key="client"
+                    @click="importToClient(client)"
+                    class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-900/40 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-all duration-200 border-2 border-transparent hover:border-violet-200 active:scale-90">
+                    <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300">{{ client }}</span>
+                  </button>
+                </div>
+              </div>
+            </Transition>
+
             <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
           </div>
         </div>
 
-        <!-- 4. 一键导入客户端 -->
-        <div class="mb-2">
-          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">04. 一键导入客户端</label>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <button v-for="client in ['Clash', 'Shadowrocket', 'Quantumult X', 'Surge', 'Stash', 'Loon']" 
-              :key="client"
-              @click="importToClient(client)"
-              class="group flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-gray-800/40 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 transition-all duration-300 transform active:scale-95 shadow-sm hover:shadow-md">
-              <span class="w-2 h-2 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
-              <span class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ client }}</span>
-            </button>
-          </div>
-        </div>
+
 
         <!-- Token提示 -->
         <div
