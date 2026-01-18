@@ -5,7 +5,7 @@ export interface SearchableNode {
     url?: string;
     protocol?: string;
     type?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 /**

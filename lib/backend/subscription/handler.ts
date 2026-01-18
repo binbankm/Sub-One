@@ -70,7 +70,7 @@ async function generateCombinedNodeList(
     return allNodes;
 }
 
-export async function handleSubRequest(context: EventContext<Env, any, any>): Promise<Response> {
+export async function handleSubRequest(context: EventContext<Env, string, unknown>): Promise<Response> {
     const { request, env } = context;
     const url = new URL(request.url);
     const userAgentHeader = request.headers.get('User-Agent') || "Unknown";
@@ -301,8 +301,9 @@ export async function handleSubRequest(context: EventContext<Env, any, any>): Pr
             headers: responseHeaders
         });
 
-    } catch (conversionError: any) {
-        console.error('[Internal Converter Error]', conversionError);
-        return new Response(`Conversion Failed: ${conversionError.message}`, { status: 500 });
+    } catch (conversionError) {
+        const error = conversionError as Error;
+        console.error('[Internal Converter Error]', error);
+        return new Response(`Conversion Failed: ${error.message}`, { status: 500 });
     }
 }

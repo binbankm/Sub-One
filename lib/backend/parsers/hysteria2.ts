@@ -80,7 +80,7 @@ export function parseHysteria2(url: string): Hysteria2Node | null {
             }
         }
 
-        // ========== 4. 混淆参数 ==========
+        // ========== 4. 混淆与伪装 ==========
         const obfsType = params.get('obfs');
         const obfsPassword = params.get('obfs-password');
 
@@ -96,6 +96,8 @@ export function parseHysteria2(url: string): Hysteria2Node | null {
             };
         }
 
+        const masquerade = params.get('masquerade');
+
         // ========== 5. 构建节点对象 ==========
         const node: Hysteria2Node = {
             type: 'hysteria2',
@@ -103,10 +105,12 @@ export function parseHysteria2(url: string): Hysteria2Node | null {
             name,
             server,
             port,
+            ports: (portStr.includes(',') || portStr.includes('-')) ? portStr : undefined,
             password,
             udp: true, // Hysteria 2 基于 UDP/QUIC
             tls,
-            obfs
+            obfs,
+            masquerade: masquerade || undefined
         };
 
         // 调试日志

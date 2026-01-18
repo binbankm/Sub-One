@@ -208,7 +208,6 @@ function buildVlessUrl(node: VlessNode): string {
  */
 function buildVmessUrl(node: VmessNode): string {
     const config: V2rayNConfig = {
-        v: '2',
         ps: node.name,
         add: node.server,
         port: node.port,

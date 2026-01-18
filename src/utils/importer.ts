@@ -11,7 +11,7 @@
  */
 
 import { extractNodeName, extractHostAndPort } from './utils';
-import type { Subscription, Node } from '../types';
+import type { Subscription, Node, ProxyType } from '../types';
 import { HTTP_REGEX, NODE_PROTOCOL_REGEX } from './constants';
 import { getProtocol } from './protocols';
 
@@ -87,14 +87,14 @@ export function createNode(url: string, name?: string): Node {
         // 保存节点 URL
         url: url,
         // 节点类型
-        type: protocol as any,
+        type: protocol as ProxyType,
         // 解析出的服务器地址
         server: host,
         // 解析出的端口
         port: parseInt(port) || 0,
         // 默认启用该节点
         enabled: true
-    } as any;
+    } as Node;
 }
 
 // ==================== 文本解析函数 ====================

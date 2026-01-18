@@ -180,12 +180,12 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
         console.error('保存订阅数据失败:', error);
 
         // 根据错误类型返回更具体的错误信息
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && (error as TypeError).message.includes('fetch')) {
             return { success: false, message: '网络连接失败，请检查网络连接' };
         } else if (error instanceof SyntaxError) {
             return { success: false, message: '服务器响应格式错误' };
         } else if (error instanceof Error) {
-            return { success: false, message: `网络请求失败: ${error.message}` };
+            return { success: false, message: `网络请求失败: ${(error as Error).message}` };
         } else {
             return { success: false, message: '网络请求失败: 未知错误' };
         }
@@ -219,8 +219,8 @@ export async function saveAllData(data: { subs: Subscription[], profiles: Profil
         if (!settingsResult.success) return settingsResult;
 
         return { success: true, message: '数据保存成功' };
-    } catch (e: any) {
-        return { success: false, message: e.message || '保存失败' };
+    } catch (e: unknown) {
+        return { success: false, message: (e as Error).message || '保存失败' };
     }
 }
 
@@ -246,7 +246,7 @@ export async function fetchNodeCount(subUrl: string): Promise<{ count: number; u
         });
 
         // 解析响应数据
-        const data = await res.json() as any;
+        const data = await res.json() as { count: number; userInfo: SubscriptionUserInfo | null };
         // 直接返回完整对象（包含 count 和 userInfo 字段）
         return data;
     } catch (e) {
@@ -302,7 +302,7 @@ export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
         // 检查 HTTP 状态码
         if (!response.ok) {
             // 尝试解析错误响应
-            const errorData = await response.json().catch(() => ({})) as any;
+            const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
             const errorMessage = errorData.message || errorData.error || `服务器错误 (${response.status})`;
             return { success: false, message: errorMessage };
         }
@@ -414,7 +414,7 @@ export async function testLatency(url: string): Promise<{ success: boolean; late
  * 
  * @returns {Promise} 返回备份数据对象或错误
  */
-export async function exportBackup(): Promise<{ success: boolean; data?: any; error?: string }> {
+export async function exportBackup(): Promise<{ success: boolean; data?: unknown; error?: string }> {
     try {
         const response = await fetch('/api/backup/export', {
             method: 'POST',
@@ -422,7 +422,7 @@ export async function exportBackup(): Promise<{ success: boolean; data?: any; er
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({})) as any;
+            const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
             return {
                 success: false,
                 error: errorData.message || errorData.error || '导出失败'
@@ -450,7 +450,7 @@ export async function exportBackup(): Promise<{ success: boolean; data?: any; er
  * @param {'overwrite' | 'merge'} mode - 导入模式
  * @returns {Promise<ApiResponse>} 返回导入结果
  */
-export async function importBackup(backupData: any, mode: 'overwrite' | 'merge' = 'overwrite'): Promise<ApiResponse> {
+export async function importBackup(backupData: unknown, mode: 'overwrite' | 'merge' = 'overwrite'): Promise<ApiResponse> {
     try {
         const response = await fetch('/api/backup/import', {
             method: 'POST',
@@ -483,13 +483,13 @@ export async function importBackup(backupData: any, mode: 'overwrite' | 'merge' 
  * - 验证备份文件的格式和完整性
  * - 在导入前调用以检查备份文件是否有效
  * 
- * @param {any} backupData - 备份数据对象
- * @returns {Promise} 返回验证结果
+ * @param {unknown} backupData - 备份数据对象
+ * @returns {Promise<{ valid: boolean; error?: string; metadata?: unknown; }>} 返回验证结果
  */
-export async function validateBackupFile(backupData: any): Promise<{
+export async function validateBackupFile(backupData: unknown): Promise<{
     valid: boolean;
     error?: string;
-    metadata?: any;
+    metadata?: unknown;
 }> {
     try {
         const response = await fetch('/api/backup/validate', {

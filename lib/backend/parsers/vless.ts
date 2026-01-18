@@ -76,6 +76,9 @@ export function parseVless(url: string): VlessNode | null {
             }
         }
 
+        // ========== 4. 其他参数 ==========
+        const packetEncoding = params.get('packetEncoding') || params.get('packet_encoding');
+
         // ========== 4. 构建节点对象 ==========
         const node: VlessNode = {
             type: 'vless',
@@ -89,6 +92,7 @@ export function parseVless(url: string): VlessNode | null {
             encryption: encryption || 'none',
             transport,
             tls,
+            packetEncoding: packetEncoding || undefined,
             originalUrl: url // 保存原始URL，便于调试和重建
         };
 

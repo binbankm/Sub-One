@@ -222,6 +222,16 @@ export function parseStandardParams(params: URLSearchParams): {
         }
     }
 
+    // ========== 4. ECH 配置 ==========
+    const ech = params.get('ech') === '1' || params.get('ech') === 'true';
+    if (ech) {
+        tls.ech = {
+            enabled: true,
+            config: params.has('ech_config') ? [params.get('ech_config')!] : undefined
+        };
+        tls.enabled = true; // ECH 隐含 TLS
+    }
+
     return { transport, tls };
 }
 

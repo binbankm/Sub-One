@@ -53,10 +53,7 @@ export type ProxyType =
     // 特殊类型
     | 'unknown';    // 未知/不支持的协议
 
-/**
- * 协议类型别名 (前端兼容)
- */
-export type ProtocolType = ProxyType;
+
 
 /**
  * 网络传输层类型
@@ -267,6 +264,15 @@ export interface TlsOptions {
 
         /** Spider X (爬虫初始路径) */
         spiderX?: string;
+
+        /** Master Key (用于某些特定客户端) */
+        masterKey?: string;
+    };
+
+    /** ECH 配置 (Encrypted Client Hello) */
+    ech?: {
+        enabled: boolean;
+        config?: string[];
     };
 }
 
@@ -297,6 +303,9 @@ export interface VmessNode extends BaseNode {
 
     /** VMess AEAD (强制启用) */
     aead?: boolean;
+
+    /** 数据包编码 (packet/xudp) */
+    packetEncoding?: string;
 }
 
 /**
@@ -321,6 +330,9 @@ export interface VlessNode extends BaseNode {
 
     /** TLS/REALITY 配置 */
     tls?: TlsOptions;
+
+    /** 数据包编码 (packet/xudp) */
+    packetEncoding?: string;
 }
 
 /**
@@ -440,11 +452,17 @@ export interface Hysteria2Node extends BaseNode {
         password: string;
     };
 
+    /** 伪装 (Masquerade) 头部 (非标准, 可以在 Sing-Box 实现) */
+    masquerade?: string;
+
     /** TLS 配置 (必需) */
     tls?: TlsOptions;
 
     /** 拥塞控制: bbr | cubic | new_reno */
     congestionControl?: string;
+
+    /** 端口跳跃 (e.g. "443,10000-20000") */
+    ports?: string;
 }
 
 /**
@@ -715,6 +733,12 @@ export interface SingBoxOutbound {
     plugin?: string;
     plugin_opts?: string;
 
+    // Hysteria/Hysteria2 端口跳跃
+    ports?: string;
+
+    // Hysteria/Hysteria2 伪装
+    masquerade?: string;
+
     // Hysteria
     auth_str?: string;
     up_mbps?: number;
@@ -751,6 +775,24 @@ export interface SingBoxOutbound {
             public_key: string;
             short_id?: string;
         };
+        ech?: {
+            enabled: boolean;
+            config?: string[];
+            config_path?: string;
+        };
+    };
+
+    /** 数据包编码 (VLESS/VMess) */
+    packet_encoding?: string;
+
+    /** 多路复用 */
+    multiplex?: {
+        enabled: boolean;
+        padding?: boolean;
+        protocol?: string;
+        max_connections?: number;
+        min_streams?: number;
+        max_streams?: number;
     };
 
     // Transport
@@ -771,8 +813,7 @@ export interface SingBoxOutbound {
  * VMess 分享链接的内部格式
  */
 export interface V2rayNConfig {
-    /** 版本号 */
-    v: string;
+
 
     /** 节点名称 */
     ps: string;
@@ -819,6 +860,8 @@ export interface V2rayNConfig {
     /** Allow Insecure */
     allowInsecure?: boolean;
 }
+
+
 
 /**
  * SIP008 服务器配置
@@ -1073,8 +1116,7 @@ export interface ConverterOptions {
     /** 是否跳过证书验证 */
     skipCertVerify?: boolean;
 
-    /** 自定义模板 */
-    template?: string;
+
 }
 
 /**

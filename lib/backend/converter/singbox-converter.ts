@@ -99,7 +99,7 @@ function assignTransport(outbound: SingBoxOutbound, node: { transport?: Transpor
                 type: 'ws',
                 path: t.path,
                 headers: t.headers
-            } as any; // Sing-Box 的 transport 类型定义可能不完整，使用 any
+            } as { type: string; path?: string; headers?: Record<string, string> };
             break;
 
         case 'grpc':
@@ -114,7 +114,7 @@ function assignTransport(outbound: SingBoxOutbound, node: { transport?: Transpor
             outbound.transport = {
                 type: 'http',
                 path: t.path,
-                host: t.host as any
+                host: t.host
             };
             break;
 
@@ -161,6 +161,14 @@ function assignTls(outbound: SingBoxOutbound, node: { tls?: TlsOptions }): void 
             short_id: tls.reality.shortId
         };
     }
+
+    // ✅ ECH
+    if (tls.ech?.enabled) {
+        outbound.tls.ech = {
+            enabled: true,
+            config: tls.ech.config
+        };
+    }
 }
 
 // =================================================================
@@ -173,7 +181,8 @@ function buildVmess(node: VmessNode): SingBoxOutbound {
         ...buildBase(node),
         uuid: node.uuid,
         alter_id: node.alterId,
-        security: node.cipher
+        security: node.cipher,
+        packet_encoding: node.packetEncoding
     };
 
     assignTls(outbound, node);
@@ -187,7 +196,8 @@ function buildVless(node: VlessNode): SingBoxOutbound {
         type: 'vless',
         ...buildBase(node),
         uuid: node.uuid,
-        flow: node.flow
+        flow: node.flow,
+        packet_encoding: node.packetEncoding
     };
 
     assignTls(outbound, node);
@@ -270,8 +280,12 @@ function buildHysteria(node: HysteriaNode): SingBoxOutbound {
 function buildHysteria2(node: Hysteria2Node): SingBoxOutbound {
     const outbound: SingBoxOutbound = {
         type: 'hysteria2',
-        ...buildBase(node),
-        password: node.password
+        tag: node.name || 'Unnamed',
+        server: node.server || '',
+        server_port: node.port || 0,
+        password: node.password,
+        ports: node.ports,
+        masquerade: node.masquerade
     };
 
     // ✅ 混淆

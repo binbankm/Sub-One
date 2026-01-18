@@ -60,8 +60,8 @@ const emit = defineEmits<{
 // ==================== Slots 定义 ====================
 
 defineSlots<{
-  title(props: {}): any;
-  body(props: {}): any;
+  title(props: Record<string, never>): any;
+  body(props: Record<string, never>): any;
 }>();
 
 // ==================== 本地状态 ====================

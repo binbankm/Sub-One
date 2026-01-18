@@ -37,7 +37,7 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
                     redirect: "follow",
                     cf: { insecureSkipVerify: true }
-                } as any));
+                } as RequestInit));
 
                 try {
                     const response = await Promise.race([
@@ -55,7 +55,7 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                                 if (key && value) {
                                     const numValue = Number(value);
                                     if (!isNaN(numValue)) {
-                                        (info as any)[key] = numValue;
+                                        (info as Record<string, number>)[key] = numValue;
                                     }
                                 }
                             });
@@ -85,8 +85,9 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                     console.error(`Cron: Failed to fetch ${sub.name}:`, msg);
                 }
 
-            } catch (e: any) {
-                console.error(`Cron: Unhandled error while updating ${sub.name}`, e.message);
+            } catch (e) {
+                const error = e as Error;
+                console.error(`Cron: Unhandled error while updating ${sub.name}`, error.message);
             }
         }
     }

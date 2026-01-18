@@ -61,7 +61,7 @@ export interface BackupData {
     data: {
         subscriptions: unknown[];
         profiles: unknown[];
-        manualNodes?: unknown[];
+        manualNodes?: unknown[]; // Reverted to original as the provided snippet was syntactically incorrect for an interface
         settings: unknown;
         users: unknown;
     };
@@ -127,7 +127,7 @@ export async function exportAllData(
             subscriptions: Array.isArray(subscriptions) ? subscriptions : [],
             profiles: Array.isArray(profiles) ? profiles : [],
             manualNodes: Array.isArray(manualNodes) ? manualNodes : [],
-            settings: settings || {},
+            settings: settings || {}, // Reverted to original as the provided snippet was syntactically incorrect for an object literal
             users: users || {}
         };
 
@@ -164,7 +164,7 @@ export async function exportAllData(
  * @param backupData - 备份数据对象
  * @returns 验证结果
  */
-export async function validateBackup(backupData: any): Promise<{
+export async function validateBackup(backupData: unknown): Promise<{
     valid: boolean;
     error?: string;
     metadata?: BackupMetadata;
@@ -175,60 +175,63 @@ export async function validateBackup(backupData: any): Promise<{
             return { valid: false, error: '备份文件格式错误：不是有效的 JSON 对象' };
         }
 
+        const record = backupData as Record<string, any>;
+
         // 2. 检查必需字段
-        if (!backupData.version) {
+        if (!record.version) {
             return { valid: false, error: '备份文件缺少版本号' };
         }
 
-        if (!backupData.metadata) {
+        if (!record.metadata) {
             return { valid: false, error: '备份文件缺少元数据' };
         }
 
-        if (!backupData.data) {
+        if (!record.data) {
             return { valid: false, error: '备份文件缺少数据内容' };
         }
 
-        if (!backupData.checksum) {
+        if (!record.checksum) {
             return { valid: false, error: '备份文件缺少校验和' };
         }
 
         // 3. 验证版本兼容性（当前仅支持 1.0.0）
-        if (backupData.version !== BACKUP_VERSION) {
+        const backupContent = backupData as BackupData;
+        if (backupContent.version !== BACKUP_VERSION) {
             return {
                 valid: false,
-                error: `备份文件版本不兼容：${backupData.version}（当前系统版本：${BACKUP_VERSION}）`
+                error: `备份文件版本不兼容：${backupContent.version}（当前系统版本：${BACKUP_VERSION}）`
             };
         }
 
         // 4. 验证数据完整性（校验和）
-        const dataString = JSON.stringify(backupData.data);
+        const dataString = JSON.stringify(backupContent.data);
         const computedChecksum = await generateChecksum(dataString);
 
-        if (computedChecksum !== backupData.checksum) {
+        if (computedChecksum !== backupContent.checksum) {
             return { valid: false, error: '备份文件校验失败：数据可能已损坏' };
         }
 
         // 5. 检查数据结构
-        const { data } = backupData;
-        if (!data.subscriptions || !Array.isArray(data.subscriptions)) {
+        const content = backupContent.data; // 重命名 data 变量避免冲突
+        if (!content.subscriptions || !Array.isArray(content.subscriptions)) {
             return { valid: false, error: '备份文件中的订阅源数据格式错误' };
         }
 
-        if (!data.profiles || !Array.isArray(data.profiles)) {
+        if (!content.profiles || !Array.isArray(content.profiles)) {
             return { valid: false, error: '备份文件中的订阅组数据格式错误' };
         }
 
-        if (!data.settings || typeof data.settings !== 'object') {
+        if (!content.settings || typeof content.settings !== 'object') {
             return { valid: false, error: '备份文件中的设置数据格式错误' };
         }
 
         // 6. 验证通过
         return {
             valid: true,
-            metadata: backupData.metadata
+            metadata: backupContent.metadata
         };
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('[Backup Validate] 验证失败:', error);
         return {
             valid: false,
@@ -288,22 +291,22 @@ export async function importAllData(
 
             // 合并订阅源（基于 ID 或 URL）
             if (Array.isArray(existingSubs) && existingSubs.length > 0) {
-                const existingIds = new Set(existingSubs.map((s: any) => s.id || s.url));
-                const newSubs = data.subscriptions.filter((s: any) => !existingIds.has(s.id || s.url));
+                const existingIds = new Set(existingSubs.map((s) => (s as { id: string; url: string }).id || (s as { id: string; url: string }).url));
+                const newSubs = data.subscriptions.filter((s) => !existingIds.has((s as { id: string; url: string }).id || (s as { id: string; url: string }).url));
                 finalSubscriptions = [...existingSubs, ...newSubs];
             }
 
             // 合并订阅组（基于 ID）
             if (Array.isArray(existingProfiles) && existingProfiles.length > 0) {
-                const existingIds = new Set(existingProfiles.map((p: any) => p.id));
-                const newProfiles = data.profiles.filter((p: any) => !existingIds.has(p.id));
+                const existingIds = new Set(existingProfiles.map((p) => (p as { id: string }).id));
+                const newProfiles = data.profiles.filter((p) => !existingIds.has((p as { id: string }).id));
                 finalProfiles = [...existingProfiles, ...newProfiles];
             }
 
             // 合并手动节点（基于 ID）
             if (Array.isArray(existingNodes) && existingNodes.length > 0) {
-                const existingIds = new Set(existingNodes.map((n: any) => n.id));
-                const newNodes = (data.manualNodes || []).filter((n: any) => !existingIds.has(n.id));
+                const existingIds = new Set(existingNodes.map((n) => (n as { id: string }).id));
+                const newNodes = (data.manualNodes || []).filter((n) => !existingIds.has((n as { id: string }).id));
                 finalManualNodes = [...existingNodes, ...newNodes];
             }
 

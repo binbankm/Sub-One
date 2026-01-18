@@ -303,7 +303,7 @@ export class SubscriptionParser {
         // 3.1 模式重命名 (Regex Replacement)
         if (options.renamePattern && typeof options.renamePattern === 'string') {
             const parts = options.renamePattern.split('@'); // 简单分割 src@dest
-            if (parts.length === 2 && parts[0] && parts[1]) {
+            if (parts.length === 2 && parts[0]) {
                 try {
                     const regex = new RegExp(parts[0], 'g');
                     result.forEach(n => {

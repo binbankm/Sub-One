@@ -71,6 +71,7 @@ function parseVmessUri(url: string): VmessNode | null {
         udp: true,
         transport,
         tls,
+        packetEncoding: params.get('packetEncoding') || params.get('packet_encoding') || undefined,
         originalUrl: url
     };
 }

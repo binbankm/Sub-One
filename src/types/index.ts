@@ -47,8 +47,7 @@ import type {
     Subscription as SharedSubscription,
     Profile as SharedProfile,
     AppConfig as SharedAppConfig,
-    SubscriptionUserInfo as SharedUserInfo,
-    ProtocolType as SharedProtocolType
+    SubscriptionUserInfo as SharedUserInfo
 } from '../../lib/shared/types';
 
 // ==================== 3. 类型扩展定义 ====================
@@ -57,7 +56,7 @@ import type {
  * 支持的代理协议类型 
  * 扩展共享定义，允许前端特定的宽泛字符串
  */
-export type ProtocolType = SharedProtocolType | string;
+export type ProtocolType = string;
 
 /**
  * 订阅用户信息
