@@ -263,6 +263,23 @@ const toggleAdvanced = () => {
                   支持正则表达式，多个规则用换行分隔。使用 <code class="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">keep:</code> 前缀表示白名单
                 </p>
               </div>
+
+              <!-- 节点重命名 -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  节点重命名
+                  <span class="text-gray-400 text-xs ml-1">(可选)</span>
+                </label>
+                <input
+                  v-model="localSubscription.renamePattern"
+                  type="text"
+                  placeholder="例如: Hong Kong@HK (将 'Hong Kong' 替换为 'HK')"
+                  class="input-modern w-full font-mono text-sm"
+                />
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  格式: <code>正则@替换内容</code>。左侧支持正则表达式。
+                </p>
+              </div>
             </div>
           </Transition>
         </div>

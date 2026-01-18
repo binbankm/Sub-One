@@ -75,6 +75,21 @@ describe('SubscriptionParser - Renaming Logic', () => {
             const result = parser.processNodes(nodes, 'TestSub', options);
             expect(result[0].name).toBe('HongKong-HongKong-01');
         });
+
+        it('should support @ symbol in replacement string (new feature)', () => {
+            const nodes = [createNode('User-Bob')];
+            const options = {
+                // Should replace 'User-Bob' with 'admin@example.com'
+                // Pattern: User-(.*)
+                // Replacement: admin@$1.com
+                // Input format: User-(.*)@admin@$1.com
+                // But simple string first:
+                renamePattern: 'User-Bob@admin@example.com'
+            };
+
+            const result = parser.processNodes(nodes, 'TestSub', options);
+            expect(result[0].name).toBe('admin@example.com');
+        });
     });
 
     describe('Prepend Subscription Name (options.prependSubName)', () => {

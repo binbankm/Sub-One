@@ -938,6 +938,9 @@ export interface Subscription {
     /** 节点数量 */
     nodeCount?: number;
 
+    /** 重命名模式 (正则@替换) */
+    renamePattern?: string;
+
     /** 流量信息 */
     userInfo?: SubscriptionUserInfo;
 

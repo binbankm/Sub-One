@@ -301,19 +301,25 @@ export class SubscriptionParser {
         // 3. 重命名 (Renaming)
 
         // 3.1 模式重命名 (Regex Replacement)
+
         if (options.renamePattern && typeof options.renamePattern === 'string') {
-            const parts = options.renamePattern.split('@'); // 简单分割 src@dest
-            if (parts.length === 2 && parts[0]) {
+            // 使用 indexOf 而不是 split，以支持替换内容中包含 @ 符号
+            // 格式: Pattern@Replacement (Pattern 不能包含 @，除非转义，但这里简化处理)
+            const separatorIndex = options.renamePattern.indexOf('@');
+
+            if (separatorIndex > 0) {
+                const patternStr = options.renamePattern.substring(0, separatorIndex);
+                const replacementStr = options.renamePattern.substring(separatorIndex + 1);
+
                 try {
-                    const regex = new RegExp(parts[0], 'g');
+                    const regex = new RegExp(patternStr, 'g');
                     result.forEach(n => {
-                        n.name = n.name.replace(regex, parts[1]);
+                        n.name = n.name.replace(regex, replacementStr);
                     });
-                } catch {
-                    // Ignore invalid regex
+                    console.log(`[Parser] Applied rename pattern: "${patternStr}" -> "${replacementStr}"`);
+                } catch (e) {
+                    console.warn(`[Parser] Invalid rename regex: ${patternStr}`, e);
                 }
-            } else if (parts.length === 1 && parts[0]) {
-                // 简单字符串替换？暂时不处理复杂语法，只处理 basic regex replace
             }
         }
 
