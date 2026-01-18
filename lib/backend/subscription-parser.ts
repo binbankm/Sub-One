@@ -213,64 +213,69 @@ export class SubscriptionParser {
      */
     processNodes(nodes: ProxyNode[], subscriptionName: string, options: ProcessOptions): ProxyNode[] {
         let result = nodes;
+        const includeRules: string[] = [...(options.includeRules || [])];
+        const excludeRules: string[] = [...(options.excludeRules || [])];
 
-        // 1. 过滤 (Advanced Filter)
+        // 兼容旧的 exclude 字段
         if (options.exclude) {
-            try {
-                const rules = options.exclude.split('\n').map(r => r.trim()).filter(r => r);
+            const legacyRules = options.exclude.split('\n').map(r => r.trim()).filter(r => r);
+            legacyRules.forEach(r => {
+                if (r.startsWith('keep:')) {
+                    includeRules.push(r.replace(/^keep:/, ''));
+                } else {
+                    excludeRules.push(r);
+                }
+            });
+        }
 
-                // 将规则分为保留规则(白名单)和排除规则(黑名单)
-                const keepRules = rules.filter(r => r.startsWith('keep:'));
-                const excludeRules = rules.filter(r => !r.startsWith('keep:'));
-
-                // 辅助函数：判断节点是否匹配单条规则
-                const matchRule = (node: ProxyNode, rule: string): boolean => {
-                    // 去除可能存在的 keep: 前缀
-                    const cleanRule = rule.replace(/^keep:/, '');
-
-                    // 协议匹配 (proto:ss,vmess)
-                    if (cleanRule.startsWith('proto:')) {
-                        const protos = cleanRule.replace('proto:', '').toLowerCase().split(',');
-                        // 处理 ss/ssr 的别名情况
-                        const nodeType = node.type.toLowerCase();
-                        return protos.some(p => {
-                            if (p === 'ss' && (nodeType === 'ss' || nodeType === 'ssr')) return true;
-                            // 兼容前端可能的别名
-                            if (p === 'wg' && nodeType === 'wireguard') return true;
-                            return nodeType === p;
-                        });
-                    }
-
-                    // 正则/关键词匹配 (匹配名称)
-                    try {
-                        const regex = new RegExp(cleanRule, 'i');
-                        return regex.test(node.name);
-                    } catch (e) {
-                        // 如果正则无效，回退到简单的包含匹配
-                        return node.name.toLowerCase().includes(cleanRule.toLowerCase());
-                    }
-                };
-
-                result = result.filter(n => {
-                    // 1. 黑名单检查：只要命中任意一条排除规则，立即剔除
-                    if (excludeRules.length > 0) {
-                        const hitExclude = excludeRules.some(rule => matchRule(n, rule));
-                        if (hitExclude) return false;
-                    }
-
-                    // 2. 白名单检查：如果存在保留规则，必须命中至少一条
-                    if (keepRules.length > 0) {
-                        const hitKeep = keepRules.some(rule => matchRule(n, rule));
-                        if (!hitKeep) return false;
-                    }
-
-                    return true;
+        // 辅助函数：判断节点是否匹配单条规则
+        const matchRule = (node: ProxyNode, rule: string): boolean => {
+            // 协议匹配 (proto:ss,vmess)
+            if (rule.startsWith('proto:')) {
+                const protos = rule.replace('proto:', '').toLowerCase().split(',');
+                // 处理 ss/ssr 的别名情况
+                const nodeType = node.type.toLowerCase();
+                return protos.some(p => {
+                    if (p === 'ss' && (nodeType === 'ss' || nodeType === 'ssr')) return true;
+                    // 兼容前端可能的别名
+                    if (p === 'wg' && nodeType === 'wireguard') return true;
+                    return nodeType === p;
                 });
-            } catch (e) {
-                console.error('[Parser] Filter error:', e);
-                // 发生严重错误时，为安全起见不进行过滤，或回退到简单正则
-                // 这里选择尽可能保留节点
             }
+
+            // 正则/关键词匹配 (匹配名称)
+            try {
+                // 如果规则是简单的字符串，转义特殊字符
+                // 这里我们假设如果规则看起来像正则（包含特殊字符），就作为正则处理
+                const isRegex = /[\^\$\.\*\+\?\{\}\[\]\\\|\(\)]/.test(rule);
+                if (isRegex) {
+                    const regex = new RegExp(rule, 'i');
+                    return regex.test(node.name);
+                }
+                return node.name.toLowerCase().includes(rule.toLowerCase());
+            } catch (e) {
+                // 如果正则无效，回退到简单的包含匹配
+                return node.name.toLowerCase().includes(rule.toLowerCase());
+            }
+        };
+
+        // 1. 过滤 (Filter)
+        if (includeRules.length > 0 || excludeRules.length > 0) {
+            result = result.filter(n => {
+                // 1. 黑名单检查：只要命中任意一条排除规则，立即剔除
+                if (excludeRules.length > 0) {
+                    const hitExclude = excludeRules.some(rule => matchRule(n, rule));
+                    if (hitExclude) return false;
+                }
+
+                // 2. 白名单检查：如果存在保留规则，必须命中至少一条
+                if (includeRules.length > 0) {
+                    const hitKeep = includeRules.some(rule => matchRule(n, rule));
+                    if (!hitKeep) return false;
+                }
+
+                return true;
+            });
         }
 
         // 2. 去重 (Deduplicate) - 基于物理特征 (server + port + type + credentials + path)
@@ -293,7 +298,26 @@ export class SubscriptionParser {
             result = result.filter(n => bestNodesSet.has(n));
         }
 
-        // 3. 重命名 (Prepend Subscription Name)
+        // 3. 重命名 (Renaming)
+
+        // 3.1 模式重命名 (Regex Replacement)
+        if (options.renamePattern && typeof options.renamePattern === 'string') {
+            const parts = options.renamePattern.split('@'); // 简单分割 src@dest
+            if (parts.length === 2 && parts[0] && parts[1]) {
+                try {
+                    const regex = new RegExp(parts[0], 'g');
+                    result.forEach(n => {
+                        n.name = n.name.replace(regex, parts[1]);
+                    });
+                } catch {
+                    // Ignore invalid regex
+                }
+            } else if (parts.length === 1 && parts[0]) {
+                // 简单字符串替换？暂时不处理复杂语法，只处理 basic regex replace
+            }
+        }
+
+        // 3.2 订阅前缀重命名 (Prepend Subscription Name)
         if (options.prependSubName && subscriptionName) {
             result.forEach(n => {
                 // 避免重复前缀

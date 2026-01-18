@@ -1081,8 +1081,17 @@ export interface ConverterOptions {
  * 处理选项
  */
 export interface ProcessOptions {
-    /** 排除规则 */
+    /** 排除规则 (旧字段，建议用 excludeRules) */
     exclude?: string;
+
+    /** 排除规则列表 (正则字符串) */
+    excludeRules?: string[];
+
+    /** 包含规则列表 (正则字符串) */
+    includeRules?: string[];
+
+    /** 重命名模式 */
+    renamePattern?: string;
 
     /** 是否在节点名前加订阅名 */
     prependSubName?: boolean;

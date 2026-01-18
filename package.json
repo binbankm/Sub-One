@@ -11,7 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:auth": "vitest run lib/backend/api/__tests__/auth.test.ts",
+    "test:users": "vitest run lib/backend/services/__tests__/users.test.ts",
+    "test:parser": "vitest run lib/backend/__tests__/subscription-parser.test.ts",
+    "test:storage": "vitest run lib/backend/services/__tests__/storage.test.ts",
+    "test:core": "vitest run lib/backend/api/__tests__/auth.test.ts lib/backend/services/__tests__/users.test.ts lib/backend/__tests__/subscription-parser.test.ts lib/backend/services/__tests__/storage.test.ts"
   },
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
