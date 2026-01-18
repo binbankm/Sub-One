@@ -344,9 +344,7 @@
   }
 
   .content-wrapper {
-    @apply flex-1 flex flex-col padding-[2rem] max-w-[1600px] w-full mx-auto;
-    /* Tailwind padding shorthand might not work with brackets in @apply, using standard CSS for safety */
-    padding: 2rem;
+    @apply flex-1 flex flex-col p-8 max-w-[1600px] w-full mx-auto;
   }
 
   /* ===== 页面头部 (Page Header) ===== */
