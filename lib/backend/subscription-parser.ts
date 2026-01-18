@@ -349,8 +349,9 @@ export class SubscriptionParser {
 export function addFlagToName(name: string): string {
     if (!name) return name;
 
-    // 如果已经包含 Emoji (简单的正则判断常见 Emoji 范围)，则跳过
-    if (/\p{Emoji_Presentation}/u.test(name)) {
+    // 1. 只有当名字开头已经是国旗 Emoji 时才跳过
+    // 这种方式比判断全名包含 Emoji 更鲁棒，不会误伤带标识性图标的节点
+    if (/^[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/.test(name)) {
         return name;
     }
 
