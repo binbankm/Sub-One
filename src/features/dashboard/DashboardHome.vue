@@ -107,7 +107,7 @@ onMounted(() => {
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div
-              class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 backdrop-blur-md flex items-center justify-center border border-gray-200 dark:border-gray-600">
+              class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 backdrop-blur-md flex items-center justify-center border border-gray-300 dark:border-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-600 dark:text-purple-300" fill="none"
                 viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -131,7 +131,7 @@ onMounted(() => {
             </span>
 
             <button @click="refreshQuote" :disabled="isRefreshing"
-              class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-gray-200 dark:border-gray-600"
+              class="w-8 h-8 rounded-lg bg-white/30 dark:bg-white/10 backdrop-blur-md flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all duration-300 disabled:opacity-50 border border-gray-300 dark:border-gray-600"
               title="换一条">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transition-transform duration-500"
                 :class="{ 'rotate-180': isRefreshing }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -195,19 +195,19 @@ onMounted(() => {
           
           <!-- 详细指标 -->
           <div class="w-full sm:w-1/2 grid grid-cols-2 gap-4">
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃订阅</div>
               <div class="text-xl font-bold text-gray-900 dark:text-white">{{ activeSubscriptions.length }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">活跃节点</div>
               <div class="text-xl font-bold text-emerald-500">{{ activeNodeCount }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">订阅组</div>
               <div class="text-xl font-bold text-purple-500">{{ profiles.length }}</div>
             </div>
-            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="p-4 rounded-2xl bg-white/50 dark:bg-black/20 border border-gray-300 dark:border-gray-700 shadow-sm">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">手动节点</div>
               <div class="text-xl font-bold text-orange-500">{{ manualNodes.length }}</div>
             </div>

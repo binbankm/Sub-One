@@ -102,7 +102,7 @@ const emit = defineEmits<{
           </h4>
           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div
                 class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
@@ -132,7 +132,7 @@ const emit = defineEmits<{
               </ul>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div
                 class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
@@ -162,7 +162,7 @@ const emit = defineEmits<{
               </ul>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div
                 class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
@@ -192,7 +192,7 @@ const emit = defineEmits<{
               </ul>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div
                 class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
@@ -236,7 +236,7 @@ const emit = defineEmits<{
           </h4>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div class="flex items-start gap-3 mb-3">
                 <div
                   class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -248,7 +248,7 @@ const emit = defineEmits<{
                 点击"新增"按钮，输入订阅链接（http/https格式），系统会自动解析节点信息。支持多种订阅格式，包括Clash、Surge等。</p>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div class="flex items-start gap-3 mb-3">
                 <div
                   class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -260,7 +260,7 @@ const emit = defineEmits<{
                 在下面生成订阅链接面板选择订阅内容（默认或订阅组），选择输出格式，点击"复制"即可获取订阅链接。</p>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div class="flex items-start gap-3 mb-3">
                 <div
                   class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -272,7 +272,7 @@ const emit = defineEmits<{
                 支持Clash、Surge、Loon、Sing-Box、Base64等多种格式，系统会根据客户端自动选择最佳格式。</p>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift">
               <div class="flex items-start gap-3 mb-3">
                 <div
                   class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -284,7 +284,7 @@ const emit = defineEmits<{
                 在设置中配置固定的"订阅Token"，建议使用固定Token以确保链接稳定性。</p>
             </div>
             <div
-              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift lg:col-span-2">
+              class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-300 dark:border-gray-700 shadow-modern-enhanced hover:shadow-modern-enhanced-dark transition-all duration-300 hover-lift lg:col-span-2">
               <div class="flex items-start gap-3 mb-3">
                 <div
                   class="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">

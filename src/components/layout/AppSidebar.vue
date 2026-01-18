@@ -256,7 +256,7 @@ onUnmounted(() => {
 
   <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
   <button 
-    class="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-800 dark:text-gray-200 cursor-pointer transition-all duration-300 backdrop-blur-md shadow-lg hover:bg-white dark:hover:bg-gray-900 hover:scale-105 hover:shadow-xl lg:hidden" 
+    class="fixed top-4 left-4 z-50 w-12 h-12 flex items-center justify-center bg-white/95 dark:bg-gray-900/95 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-800 dark:text-gray-200 cursor-pointer transition-all duration-300 backdrop-blur-md shadow-lg hover:bg-white dark:hover:bg-gray-900 hover:scale-105 hover:shadow-xl lg:hidden" 
     @click="toggleMobileMenu" 
     :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
   >

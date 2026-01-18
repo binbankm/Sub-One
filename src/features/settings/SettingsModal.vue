@@ -176,7 +176,7 @@ watch(() => props.show, (newValue) => {
 
       <div v-else class="space-y-6 px-1">
         <!-- 标签页导航 -->
-        <div class="border-b border-gray-200 dark:border-gray-700">
+        <div class="border-b border-gray-300 dark:border-gray-700">
           <nav class="flex gap-2 -mb-px" aria-label="Tabs">
             <button
               @click="activeTab = 'general'"
@@ -335,7 +335,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">UDP 转发</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">启用 UDP</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">允许节点处理 UDP 流量（游戏/语音）</p>
@@ -353,7 +353,7 @@ watch(() => props.show, (newValue) => {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">证书安全</label>
               <div
-                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
+                class="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors h-[88px]">
                 <div>
                   <p class="text-sm font-medium text-gray-700 dark:text-gray-200">跳过证书验证</p>
                   <p class="text-xs text-orange-500/80 dark:text-orange-400/80 mt-1 mr-2">⚠️ 不安全：忽略 SSL/TLS 证书错误</p>

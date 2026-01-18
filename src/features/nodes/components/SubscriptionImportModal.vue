@@ -255,7 +255,7 @@ const importSubscription = async () => {
             class="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed transition-all"
             :class="isDragging 
               ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/10' 
-              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/30'"
+              : 'border-gray-300 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/30'"
           >
             <div class="p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm">
               <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

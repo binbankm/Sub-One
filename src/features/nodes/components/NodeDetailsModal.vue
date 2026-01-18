@@ -341,7 +341,7 @@ const extractHost = (url: string) => {
         @click="emit('update:show', false)">
         <Transition name="scale-fade-bounce">
           <div v-if="show"
-            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
+            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-300 dark:border-gray-700 shadow-2xl w-full max-w-4xl text-left flex flex-col max-h-[85vh]"
             @click.stop>
       <!-- 标题 -->
       <div class="p-6 pb-4 flex-shrink-0">
@@ -353,7 +353,7 @@ const extractHost = (url: string) => {
         <div class="space-y-4">
           <!-- 订阅/订阅组信息头部 -->
           <div v-if="subscription || profile"
-            class="bg-gray-50/60 dark:bg-gray-800/75 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+            class="bg-gray-50/60 dark:bg-gray-800/75 rounded-xl p-4 border border-gray-300 dark:border-gray-700">
             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">
@@ -437,10 +437,10 @@ const extractHost = (url: string) => {
             <div class="max-h-96 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
               <div v-for="node in filteredNodes" :key="node.id"
                 @click="toggleNodeSelection(node.id)"
-                class="group relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden cursor-pointer"
+                class="group relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-2xl hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden cursor-pointer"
                 :class="{ 
                   'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900 border-indigo-500/50': selectedNodes.has(node.id),
-                  'border-gray-200 dark:border-gray-700': !selectedNodes.has(node.id)
+                  'border-gray-300 dark:border-gray-700': !selectedNodes.has(node.id)
                 }">
                 
                 <!-- 顶部彩色条 -->
@@ -533,7 +533,7 @@ const extractHost = (url: string) => {
       </div>
 
       <!-- 底部按钮 -->
-      <div class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+      <div class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-300 dark:border-gray-700">
         <button @click="emit('update:show', false)"
           class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold text-sm rounded-lg transition-colors">
           关闭

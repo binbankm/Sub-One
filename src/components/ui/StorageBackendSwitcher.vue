@@ -133,7 +133,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
     <!-- 头部：标题与刷新 -->
     <div class="flex justify-between items-center mb-6">
       <div>
@@ -204,7 +204,7 @@ onMounted(() => {
             :class="[
               backend === backendInfo.current
                 ? 'bg-indigo-50/30 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 ring-1 ring-indigo-200 dark:ring-indigo-800 cursor-default'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm'
             ]"
             :disabled="backend === backendInfo.current || switching"
             @click="initiateSwitch(backend)"
@@ -236,7 +236,7 @@ onMounted(() => {
       </div>
 
       <!-- 无法切换提示 -->
-      <div v-else class="p-4 bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 rounded-lg">
+      <div v-else class="p-4 bg-gray-50 dark:bg-gray-700/30 border border-gray-300 dark:border-gray-700 rounded-lg">
         <div class="flex items-start gap-3">
           <svg class="h-5 w-5 text-gray-400 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

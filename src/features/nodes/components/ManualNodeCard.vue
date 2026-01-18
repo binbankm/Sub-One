@@ -51,7 +51,7 @@ const copyToClipboard = (url: string) => {
 <template>
   <!-- 卡片容器 -->
   <div
-    class="card-glass group relative flex flex-col h-full overflow-hidden transition-all duration-300 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+    class="card-glass group relative flex flex-col h-full overflow-hidden transition-all duration-300 rounded-2xl border border-gray-300 dark:border-gray-800 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1"
     :class="{
       'opacity-60 grayscale filter': !node.enabled,
       'ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900 border-emerald-500/50': isBatchMode && isSelected,
@@ -115,7 +115,7 @@ const copyToClipboard = (url: string) => {
       </div>
 
       <!-- 底部信息：地址 & 复制 -->
-      <div class="mt-auto pt-3 border-t border-gray-200 dark:border-gray-700/50">
+      <div class="mt-auto pt-3 border-t border-gray-300 dark:border-gray-700/50">
         <div class="flex items-center justify-between gap-2 text-xs">
           <!-- 服务器地址展示 (更简洁) -->
           <div class="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 overflow-hidden" title="服务器地址">

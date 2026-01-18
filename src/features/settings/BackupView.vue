@@ -166,7 +166,7 @@ async function handleImport() {
 <template>
   <div class="space-y-6">
     <!-- 导出备份 -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div>
           <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -189,14 +189,14 @@ async function handleImport() {
         </button>
       </div>
 
-      <div class="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div class="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/30 p-3 rounded-lg border border-gray-300 dark:border-gray-700">
         包含订阅源、订阅组、手动节点、系统设置和账号信息。包括敏感数据（如密码哈希），请妥善保管。
       </div>
     </div>
 
     <!-- 导入备份 -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
-      <div class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-300 dark:border-gray-700 p-6 shadow-sm transition-all hover:shadow-md">
+      <div class="mb-6 pb-4 border-b border-gray-300 dark:border-gray-700">
         <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
           导入备份
         </h3>
@@ -277,7 +277,7 @@ async function handleImport() {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">选择恢复方式</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label class="relative flex items-start p-3 border rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all"
-                :class="restoreMode === 'merge' ? 'border-indigo-500 bg-indigo-50/20 ring-1 ring-indigo-500' : 'border-gray-200 dark:border-gray-700'">
+                :class="restoreMode === 'merge' ? 'border-indigo-500 bg-indigo-50/20 ring-1 ring-indigo-500' : 'border-gray-300 dark:border-gray-700'">
                 <input type="radio" v-model="restoreMode" value="merge" class="sr-only">
                 <div class="flex items-center h-5">
                   <div class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center transition-colors"
@@ -292,7 +292,7 @@ async function handleImport() {
               </label>
 
               <label class="relative flex items-start p-3 border rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all"
-                :class="restoreMode === 'overwrite' ? 'border-amber-500 bg-amber-50/20 ring-1 ring-amber-500' : 'border-gray-200 dark:border-gray-700'">
+                :class="restoreMode === 'overwrite' ? 'border-amber-500 bg-amber-50/20 ring-1 ring-amber-500' : 'border-gray-300 dark:border-gray-700'">
                 <input type="radio" v-model="restoreMode" value="overwrite" class="sr-only">
                 <div class="flex items-center h-5">
                   <div class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center transition-colors"

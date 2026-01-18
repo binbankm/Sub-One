@@ -227,7 +227,7 @@ const toggleAdvanced = () => {
         </div>
 
         <!-- 高级选项 -->
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div class="border-t border-gray-300 dark:border-gray-700 pt-4">
           <button
             @click="toggleAdvanced"
             class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"

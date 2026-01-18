@@ -78,7 +78,7 @@ const getToastStyle = (type: string) => {
       <div 
         v-for="toast in toastStore.toasts" 
         :key="toast.id"
-        class="pointer-events-auto w-full p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex items-start gap-3 transform transition-all duration-300 hover:scale-[1.02]"
+        class="pointer-events-auto w-full p-4 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700 flex items-start gap-3 transform transition-all duration-300 hover:scale-[1.02]"
         :class="[
           getToastStyle(toast.type).bg,
           getToastStyle(toast.type).border

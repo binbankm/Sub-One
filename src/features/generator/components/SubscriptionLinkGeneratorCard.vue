@@ -147,7 +147,7 @@ onUnmounted(() => {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">1. 选择订阅内容</label>
           <div class="relative">
             <select v-model="selectedId"
-              class="w-full px-4 py-3 text-sm text-gray-900 dark:text-white bg-white/60 dark:bg-gray-800/75 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none transition-all duration-300 appearance-none cursor-pointer">
+              class="w-full px-4 py-3 text-sm text-gray-900 dark:text-white bg-white/60 dark:bg-gray-800/75 border-2 border-gray-300 dark:border-gray-700 rounded-xl shadow-sm focus:outline-none transition-all duration-300 appearance-none cursor-pointer">
               <option value="default" class="py-2 bg-white text-gray-900 dark:bg-gray-800 dark:text-white">默认订阅 (全部启用节点)
               </option>
               <option v-for="profile in enabledProfiles" :key="profile.id" :value="profile.customId || profile.id"
@@ -188,7 +188,7 @@ onUnmounted(() => {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">3. 复制链接</label>
           <div class="relative">
             <input type="text" :value="showUrl ? subLink : '••••••••••••••••••••••••••••••••••••••••'" readonly
-              class="w-full px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-white/60 dark:bg-gray-800/75 border border-gray-200/50 dark:border-gray-700/50 rounded-xl"
+              class="w-full px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-white/60 dark:bg-gray-800/75 border border-gray-300/50 dark:border-gray-700/50 rounded-xl"
               :class="{ 'select-none': !showUrl }" />
             <div class="flex items-center gap-2 mt-3">
               <button @click="showUrl = !showUrl"
@@ -248,7 +248,7 @@ onUnmounted(() => {
 
             <!-- 二维码显示区域 -->
             <Transition name="fade">
-              <div v-if="showQrcode && qrcodeUrl" class="mt-4 flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div v-if="showQrcode && qrcodeUrl" class="mt-4 flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-300 shadow-sm">
                 <img :src="qrcodeUrl" alt="订阅二维码" class="w-48 h-48 sm:w-64 sm:h-64 object-contain" />
                 <p class="mt-2 text-xs text-gray-500">请使用客户端扫描添加到订阅</p>
               </div>

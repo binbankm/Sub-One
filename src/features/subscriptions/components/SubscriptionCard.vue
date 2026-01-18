@@ -190,7 +190,7 @@ const handleTestLatency = async () => {
         <div class="relative">
           <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">订阅链接</label>
           <input type="text" :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'" readonly
-            class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-50/60 dark:bg-gray-900/75 border border-gray-200 dark:border-gray-700 rounded-xl transition-all duration-300"
+            class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-50/60 dark:bg-gray-900/75 border border-gray-300 dark:border-gray-700 rounded-xl transition-all duration-300"
             :class="{ 'select-none': !showUrl }" />
           <div class="flex items-center gap-2 mt-2 sm:mt-3">
             <button @click.stop="toggleUrlVisibility"
@@ -222,7 +222,7 @@ const handleTestLatency = async () => {
 
         <!-- 流量信息 -->
         <div v-if="trafficInfo"
-          class="mt-2 p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 backdrop-blur-sm">
+          class="mt-2 p-3 bg-gray-50/80 dark:bg-gray-800/50 rounded-xl border border-gray-300 dark:border-gray-700/50 backdrop-blur-sm">
           <div class="flex justify-between items-end mb-2">
             <span class="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -247,14 +247,14 @@ const handleTestLatency = async () => {
           <div class="flex justify-between mt-2 items-center">
             <span class="text-[10px] text-gray-400 font-medium">已用 {{ trafficInfo.percentage.toFixed(1) }}%</span>
             <span v-if="expiryInfo"
-              class="text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600"
+              class="text-[10px] px-1.5 py-0.5 rounded bg-white dark:bg-gray-700 shadow-sm border border-gray-300 dark:border-gray-600"
               :class="expiryInfo.style">{{ expiryInfo.daysRemaining }}</span>
           </div>
         </div>
       </div>
 
       <!-- 底部控制 -->
-      <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/50"
+      <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-300 dark:border-gray-700/50"
         @click.stop>
         <div class="flex items-center gap-3">
           <label  class="relative inline-flex items-center cursor-pointer group/toggle">
@@ -281,7 +281,7 @@ const handleTestLatency = async () => {
           </button>
 
           <button @click.stop="emit('showNodes')"
-            class="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
+            class="px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-300 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 group/btn">
             <span class="w-1.5 h-1.5 rounded-full"
               :class="(sub.nodeCount || 0) > 0 ? 'bg-green-500' : 'bg-gray-300'"></span>
             {{ sub.nodeCount }} 节点

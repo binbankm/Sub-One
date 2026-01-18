@@ -203,7 +203,7 @@
   /* ===== 加载和图标 ===== */
   
   .spinner {
-    @apply w-8 h-8 border-4 border-gray-200 dark:border-gray-700;
+    @apply w-8 h-8 border-4 border-gray-300 dark:border-gray-700;
     @apply border-t-indigo-500 rounded-full;
     @apply animate-spin;
   }
@@ -328,6 +328,103 @@
   .sidebar-nav-item:hover {
     @apply shadow-md;
   }
+
+  /* ===== 全局布局 (App Layout) ===== */
+  
+  .app-container {
+    @apply min-h-screen relative;
+  }
+
+  .main-content {
+    @apply flex-1 ml-[280px] min-h-screen flex flex-col transition-all duration-300 ease-in-out;
+  }
+
+  .main-content-full {
+    @apply ml-[80px];
+  }
+
+  .content-wrapper {
+    @apply flex-1 flex flex-col padding-[2rem] max-w-[1600px] w-full mx-auto;
+    /* Tailwind padding shorthand might not work with brackets in @apply, using standard CSS for safety */
+    padding: 2rem;
+  }
+
+  /* ===== 页面头部 (Page Header) ===== */
+
+  .page-header {
+    @apply mb-8;
+    animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .header-content {
+    @apply flex items-center justify-between gap-6 mb-4;
+  }
+
+  .page-title {
+    @apply text-[2rem] font-[800] tracking-tight mb-2;
+    background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .page-description {
+    @apply text-sm font-medium text-gray-500 dark:text-gray-400;
+  }
+
+  /* ===== 加载状态 (Loading) ===== */
+
+  .loading-container {
+    @apply flex flex-col items-center gap-6;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .loading-spinner-wrapper {
+    @apply relative w-16 h-16;
+  }
+
+  .loading-spinner-outer,
+  .loading-spinner-inner {
+    @apply absolute inset-0 rounded-full border-[3px] border-transparent;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-spinner-outer {
+    @apply border-t-indigo-500 border-r-purple-500;
+  }
+
+  .loading-spinner-inner {
+    @apply border-b-cyan-500 border-l-emerald-500;
+    animation-duration: 0.75s;
+    animation-direction: reverse;
+  }
+
+  .loading-text {
+    @apply text-base font-semibold text-indigo-900 dark:text-indigo-300;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* ===== 其他全站样式 ===== */
+  
+  .dashboard-content {
+    @apply flex-1;
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards;
+  }
+
+  .dashboard-footer {
+    @apply mt-auto pt-8;
+  }
+
+  /* ===== 登录页面 (Login Page) ===== */
+  
+  .login-page {
+    @apply min-h-screen flex items-center justify-center p-6 overflow-hidden;
+  }
+
+  .login-form-container {
+    @apply w-full;
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 /* ==================== Utilities Layer - 工具类 ==================== */
@@ -426,6 +523,70 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     line-clamp: 3;
+  }
+
+  /* ===== 响应式适配 (Responsive Layout) ===== */
+  
+  @media (max-width: 1024px) {
+    .main-content, .main-content-full {
+      @apply ml-0;
+    }
+    .content-wrapper {
+      @apply p-4;
+    }
+    .page-header {
+      @apply mb-6;
+    }
+    .page-title {
+      @apply text-2xl;
+    }
+    .page-description {
+      @apply text-[0.8125rem];
+    }
+  }
+
+  @media (max-width: 640px) {
+    .content-wrapper {
+      @apply p-3;
+    }
+    .page-header {
+      @apply mb-4;
+    }
+    .page-title {
+      @apply text-xl;
+    }
+    .page-description {
+      @apply text-xs;
+    }
+    .dashboard-footer {
+      @apply pt-6;
+    }
+  }
+
+  /* ===== 动画关键帧 (Animations) ===== */
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 }
 

@@ -112,7 +112,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
           <!-- 模态框容器 - 点击阻止冒泡，避免关闭 -->
           <div 
             v-if="show"
-            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl w-full text-left flex flex-col max-h-[85vh]"
+            class="bg-white dark:bg-gray-900 rounded-3xl border border-gray-300 dark:border-gray-700 shadow-2xl w-full text-left flex flex-col max-h-[85vh]"
             :class="{
               'max-w-sm': size === 'sm',
               'max-w-2xl': size === '2xl',
@@ -138,7 +138,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
             <!-- 按钮区域 -->
             <div
-              class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-200 dark:border-gray-700">
+              class="p-6 pt-4 flex justify-end space-x-3 flex-shrink-0 border-t border-gray-300 dark:border-gray-700">
               <!-- 取消按钮 -->
               <button 
                 @click="emit('update:show', false)"

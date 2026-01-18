@@ -107,7 +107,7 @@ const totalNodeCount = computed(() => {
     <div class="flex-grow"></div>
 
     <!-- 底部操作区 -->
-    <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+    <div class="flex justify-between items-center mt-4 pt-3 border-t border-gray-300 dark:border-gray-700">
       <!-- 启用/禁用开关 -->
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" :checked="profile.enabled"
@@ -123,7 +123,7 @@ const totalNodeCount = computed(() => {
       <!-- 操作按钮组 -->
       <div class="flex items-center gap-2 flex-shrink-0">
         <button @click.stop="emit('showNodes')"
-          class="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 whitespace-nowrap"
+          class="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 border border-gray-300 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800 flex items-center gap-1.5 whitespace-nowrap"
           title="显示节点信息">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24"
             stroke="currentColor" stroke-width="2">
@@ -134,7 +134,7 @@ const totalNodeCount = computed(() => {
           <span>节点</span>
         </button>
         <button @click.stop="emit('copy-link')"
-          class="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-800 flex items-center gap-1.5 whitespace-nowrap">
+          class="text-xs font-medium px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 border border-gray-300 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-800 flex items-center gap-1.5 whitespace-nowrap">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24"
             stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
