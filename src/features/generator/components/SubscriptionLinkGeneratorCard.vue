@@ -113,7 +113,7 @@ const toggleQrcode = async () => {
 
 const previewSubscription = ref<Subscription | null>(null);
 
-/** 打开节点预览 */
+/** 预览节点列表 */
 const openNodePreview = () => {
   if (!subLink.value) return;
 
@@ -129,6 +129,30 @@ const openNodePreview = () => {
     enabled: true
   };
   showNodeDetails.value = true;
+};
+
+/** 一键导入客户端 */
+const importToClient = (client: string) => {
+  if (!subLink.value) return;
+  
+  const encodedUrl = encodeURIComponent(subLink.value);
+  const name = selectedId.value === 'default' ? 'Sub-One' : selectedId.value;
+  
+  const schemes: Record<string, string> = {
+    'Clash': `clash://install-config?url=${encodedUrl}`,
+    'Surge': `surge:///install-config?url=${encodedUrl}`,
+    'Stash': `stash:///install-config?url=${encodedUrl}`,
+    'Shadowrocket': `shadowrocket://add/sub://${btoa(subLink.value)}?remark=${encodeURIComponent(name)}`,
+    'Quantumult X': `quantumult-x:///add-resource?remote-resource={"server_remote":["${subLink.value},tag=${encodeURIComponent(name)}"]}`,
+    'Loon': `loon://import?url=${encodedUrl}`,
+    'V2Ray': `v2rayng://install-config?url=${encodedUrl}`
+  };
+
+  const scheme = schemes[client];
+  if (scheme) {
+    window.location.href = scheme;
+    showToast(`正在唤起 ${client}...`, 'success');
+  }
 };
 
 onUnmounted(() => {
@@ -235,6 +259,20 @@ onUnmounted(() => {
             </Transition>
 
             <NodeDetailsModal v-model:show="showNodeDetails" :subscription="previewSubscription" />
+          </div>
+        </div>
+
+        <!-- 4. 一键导入客户端 -->
+        <div class="mb-2">
+          <label class="block text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">04. 一键导入客户端</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button v-for="client in ['Clash', 'Shadowrocket', 'Quantumult X', 'Surge', 'Stash', 'Loon']" 
+              :key="client"
+              @click="importToClient(client)"
+              class="group flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-gray-800/40 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 dark:hover:border-indigo-600 transition-all duration-300 transform active:scale-95 shadow-sm hover:shadow-md">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 group-hover:animate-pulse"></span>
+              <span class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ client }}</span>
+            </button>
           </div>
         </div>
 
