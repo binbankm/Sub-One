@@ -36,7 +36,8 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "src/**/*.vue",
-        "lib/shared/**/*.ts"
+        "lib/shared/**/*.ts",
+        "lib/backend/**/*.ts"
     ],
     "references": [
         {

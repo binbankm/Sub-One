@@ -1,20 +1,22 @@
 name = "sub-one"
-# main = "functions/[[path]].js" # 对于 Pages 项目，通常不需要指定 main，或通过 _worker.js 指定。此处注释掉以免误导 Wrangler。
+# main = "functions/[[path]].js"
 compatibility_date = "2024-06-13"
 
 # KV 命名空间绑定
-# 这是 wrangler.toml 在Pages项目中最重要的作用
+# 注意：ID 需要用户在自己的 Cloudflare 后台创建 KV 后填写
 [[kv_namespaces]]
 binding = "SUB_ONE_KV"
-id = "9796c49ed5a3405aabbbc066d4686ce3" # 请确保这里是你正确的 KV ID
-preview_id = "db1e91b764d14234b38c0a233878b040" # 请确保这里是你正确的预览 KV ID
+id = "" # 留空,让 Fork 用户自己填写
+preview_id = "" # 留空,让 Fork 用户自己填写
 
-# 你也可以在这里定义环境变量，但更推荐在Cloudflare控制面板设置
-[vars]
-ADMIN_PASSWORD = "admin"
+# D1 数据库绑定（可选，如需使用 D1 作为存储后端请配置）
+# 注意：D1 数据库名称只能使用小写字母、数字、连字符和下划线
+[[d1_databases]]
+binding = "SUB_ONE_D1"
+database_name = "sub-one-d1"
+database_id = "" # 留空，让 Fork 用户自己填写
+
 
 [triggers]
-# "*/30" 表示每30分鐘
-# "0 */6 * * *" 表示每6小時
-# 根據您的需要調整 cron 表達式
+# 定时触发器示例
 crons = ["0 */6 * * *"] 

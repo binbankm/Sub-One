@@ -28,9 +28,13 @@ dist-ssr
 # Misc
 .DS_Store
 .gemini/
-
+/.agent/
+/docs
+/test
 # Test files
 test-*.yaml
 test-*.yml
 *.test.yaml
 *.test.yml
+/data/
+kv.json

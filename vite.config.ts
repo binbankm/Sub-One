@@ -67,7 +67,7 @@ export default defineConfig({
        * 所有以 /api 开头的请求都会被代理到后端服务器
        */
       '/api': {
-        target: 'http://127.0.0.1:8787',  // 目标服务器地址
+        target: 'http://127.0.0.1:3055',  // 目标服务器地址
         changeOrigin: true,  // 改变源地址，解决跨域问题
       },
 
@@ -76,8 +76,32 @@ export default defineConfig({
        * 订阅链接相关请求代理
        */
       '/sub': {
-        target: 'http://127.0.0.1:8787',  // 目标服务器地址
+        target: 'http://127.0.0.1:3055',  // 目标服务器地址
         changeOrigin: true,  // 改变源地址，解决跨域问题
+      }
+    }
+  },
+
+  // ==================== 构建配置 ====================
+
+  build: {
+    /** 
+     * 消除块大小警告 
+     * 默认 500kb -> 1000kb 
+     */
+    chunkSizeWarningLimit: 1000,
+
+    rollupOptions: {
+      output: {
+        /**
+         * 手动分包策略
+         * 将第三方依赖拆分到单独的 vendor chunk 中，利用浏览器缓存
+         */
+        manualChunks: {
+          'vendor-core': ['vue', 'pinia'],
+          'vendor-utils': ['lodash-es', 'js-base64', 'js-yaml', 'qrcode'],
+          'vendor-ui': ['echarts', 'vuedraggable'] // 较大的 UI 库单独打包
+        }
       }
     }
   }
