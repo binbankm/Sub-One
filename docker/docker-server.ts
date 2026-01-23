@@ -68,7 +68,9 @@ class NodeKV {
 
     private async save() {
         try {
-            await fs.writeFile(KV_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
+            const tempFile = `${KV_FILE}.tmp`;
+            await fs.writeFile(tempFile, JSON.stringify(this.data, null, 2), 'utf-8');
+            await fs.rename(tempFile, KV_FILE);
         } catch (err) {
             console.error('KV save error:', err);
         }
