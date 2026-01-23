@@ -36,21 +36,22 @@ import { useSessionStore } from './stores/session';
 import { useThemeStore } from './stores/theme';
 import { useLayoutStore } from './stores/layout';
 import { useUIStore } from './stores/ui';
+import { useDataStore } from './stores/data';
 import { storeToRefs } from 'pinia';
 
 // 类型定义
-import type { InitialData } from './types';
+// import type { InitialData } from './types/index';
 
 // 同步加载的核心组件（立即显示）
-import Dashboard from './components/views/DashboardView.vue';
-import Login from './components/views/LoginView.vue';
+import Dashboard from './pages/DashboardPage.vue';
+import Login from './pages/LoginPage.vue';
 import Sidebar from './components/layout/AppSidebar.vue';
-import Toast from './components/common/Toast.vue';
+import Toast from './components/ui/Toast.vue';
 import Footer from './components/layout/AppFooter.vue';
 
 // 异步加载的模态框组件（按需加载，优化首屏性能）
-const SettingsModal = defineAsyncComponent(() => import('./components/modals/SettingsModal.vue'));
-const HelpModal = defineAsyncComponent(() => import('./components/modals/HelpModal.vue'));
+const SettingsModal = defineAsyncComponent(() => import('./features/settings/SettingsModal.vue'));
+const HelpModal = defineAsyncComponent(() => import('./features/settings/HelpModal.vue'));
 
 // ==================== 会话状态管理 ====================
 
@@ -59,6 +60,8 @@ const HelpModal = defineAsyncComponent(() => import('./components/modals/HelpMod
  * 管理用户登录状态和初始数据
  */
 const sessionStore = useSessionStore();
+const dataStore = useDataStore();
+const { isInitialized, subscriptions, manualNodes, profiles } = storeToRefs(dataStore);
 
 /**
  * 从 Store 中提取响应式状态
@@ -72,40 +75,11 @@ const { sessionState, initialData } = storeToRefs(sessionStore);
  * - checkSession: 检查会话有效性
  * - login: 用户登录
  * - logout: 用户登出
+ * - initializeSystem: 初始化系统
  */
-const { checkSession, login, logout } = sessionStore;
+const { checkSession, login, logout, initializeSystem } = sessionStore;
 
-/**
- * 更新初始数据的方法
- * 
- * 说明：
- * - 供 Dashboard 组件调用
- * - 当数据发生变化时更新全局状态
- * - 支持部分更新（只更新传入的字段）
- * 
- * @param {Partial<InitialData>} newData - 新的数据（部分更新）
- */
-const updateInitialData = (newData: Partial<InitialData>) => {
-  // 确保 initialData 已初始化
-  if (!initialData.value) {
-    initialData.value = {};
-  }
 
-  // 更新订阅列表
-  if (newData.subs) {
-    initialData.value.subs = newData.subs;
-  }
-  
-  // 更新订阅组列表
-  if (newData.profiles) {
-    initialData.value.profiles = newData.profiles;
-  }
-  
-  // 更新配置（合并而不是替换）
-  if (newData.config) {
-    initialData.value.config = { ...initialData.value.config, ...newData.config };
-  }
-};
 
 // ==================== 主题和布局管理 ====================
 
@@ -168,6 +142,7 @@ const HTTP_REGEX = /^https?:\/\//;
  * - 使用计算属性缓存结果，避免重复计算
  */
 const subscriptionsCount = computed(() => {
+  if (isInitialized.value) return subscriptions.value.length;
   return initialData.value?.subs?.filter(item => item.url && HTTP_REGEX.test(item.url))?.length || 0;
 });
 
@@ -176,6 +151,7 @@ const subscriptionsCount = computed(() => {
  * 统计订阅组列表的长度
  */
 const profilesCount = computed(() => {
+  if (isInitialized.value) return profiles.value.length;
   return initialData.value?.profiles?.length || 0;
 });
 
@@ -187,15 +163,8 @@ const profilesCount = computed(() => {
  * - 这些是手动添加的节点链接
  */
 const manualNodesCount = computed(() => {
+  if (isInitialized.value) return manualNodes.value.length;
   return initialData.value?.subs?.filter(item => !item.url || !HTTP_REGEX.test(item.url))?.length || 0;
-});
-
-/**
- * 生成器数量
- * 与订阅组数量相同（每个订阅组可以生成一个链接）
- */
-const generatorCount = computed(() => {
-  return initialData.value?.profiles?.length || 0;
 });
 
 // ==================== 标签页信息配置 ====================
@@ -225,11 +194,6 @@ const tabInfo = computed(() => {
       title: '订阅组',
       description: '创建和管理订阅组合',
       icon: 'profile'
-    },
-    generator: {
-      title: '链接生成',
-      description: '生成适用于不同客户端的订阅链接',
-      icon: 'link'
     },
     nodes: {
       title: '手动节点',
@@ -285,6 +249,12 @@ onMounted(() => {
         <p class="loading-text">正在加载...</p>
       </div>
 
+      <!-- 系统初始化 - 首次使用时显示 -->
+      <div v-else-if="sessionState === 'needsSetup'" class="login-form-container">
+        <!-- Login 组件也用于初始化 - 传入 initializeSystem 方法和 isSetup 标志 -->
+        <Login :login="initializeSystem" :is-setup="true" />
+      </div>
+
       <!-- 登录表单 - 会话检查完成后显示 -->
       <div v-else class="login-form-container">
         <!-- Login 组件 - 传入 login 方法 -->
@@ -302,7 +272,6 @@ onMounted(() => {
         :subscriptions-count="subscriptionsCount" 
         :profiles-count="profilesCount"
         :manual-nodes-count="manualNodesCount" 
-        :generator-count="generatorCount"
         :is-logged-in="sessionState === 'loggedIn'" 
         @logout="logout" 
         @settings="openSettings" 
@@ -341,8 +310,7 @@ onMounted(() => {
             <!-- Dashboard 组件 - 根据 activeTab 显示不同内容 -->
             <Dashboard 
               :data="initialData" 
-              :active-tab="activeTab" 
-              @update-data="updateInitialData" 
+              v-model:active-tab="activeTab" 
             />
           </div>
 
@@ -365,294 +333,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-/* ==================== 应用容器 ==================== */
-.app-container {
-  min-height: 100vh; /* 最小高度占满视口 */
-  position: relative;
-}
 
-/* ==================== 登录页面样式 ==================== */
-
-/* 登录页面容器 - 居中显示 */
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center; /* 垂直居中 */
-  justify-content: center; /* 水平居中 */
-  padding: 1.5rem;
-}
-
-/* 加载状态容器 - 垂直排列加载动画和文字 */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  animation: fadeIn 0.3s ease; /* 淡入动画 */
-}
-
-/* 加载动画包装器 - 固定尺寸容器 */
-.loading-spinner-wrapper {
-  position: relative;
-  width: 64px;
-  height: 64px;
-}
-
-/* 加载圈公共样式 - 双层旋转动画 */
-.loading-spinner-outer,
-.loading-spinner-inner {
-  position: absolute;
-  inset: 0; /* 填充整个父容器 */
-  border-radius: 50%; /* 圆形 */
-  border: 3px solid transparent; /* 透明边框 */
-  animation: spin 1s linear infinite; /* 无限旋转 */
-}
-
-/* 外层加载圈 - 顶部和右侧有颜色 */
-.loading-spinner-outer {
-  border-top-color: hsl(243, 75%, 59%); /* 蓝紫色 */
-  border-right-color: hsl(280, 72%, 54%); /* 紫色 */
-}
-
-/* 内层加载圈 - 底部和左侧有颜色，反向旋转 */
-.loading-spinner-inner {
-  border-bottom-color: hsl(189, 94%, 43%); /* 青色 */
-  border-left-color: hsl(142, 71%, 45%); /* 绿色 */
-  animation-duration: 0.75s; /* 旋转更快 */
-  animation-direction: reverse; /* 反向旋转 */
-}
-
-/* 旋转动画关键帧 */
-@keyframes spin {
-  to {
-    transform: rotate(360deg); /* 旋转一圈 */
-  }
-}
-
-/* 加载文字 - 带脉冲动画 */
-.loading-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: hsl(243, 47%, 40%);
-  animation: pulse 2s ease-in-out infinite; /* 脉冲动画 */
-}
-
-/* 暗黑模式下的加载文字颜色 */
-html.dark .loading-text {
-  color: hsl(243, 87%, 70%);
-}
-
-/* 登录表单容器 - 淡入上移动画 */
-.login-form-container {
-  width: 100%;
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ==================== 仪表盘样式 ==================== */
-
-/* 仪表盘容器 - 侧边栏和主内容并排 */
-.dashboard-container {
-  min-height: 100vh;
-  display: flex;
-}
-
-/* 主内容区域 - 为侧边栏留出空间 */
-.main-content {
-  flex: 1; /* 占据剩余空间 */
-  margin-left: 280px; /* 侧边栏宽度 */
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 平滑过渡 */
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 侧边栏折叠时的主内容区域 */
-.main-content-full {
-  margin-left: 80px; /* 折叠后的侧边栏宽度 */
-}
-
-/* 内容包装器 - 限制最大宽度并居中 */
-.content-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-  max-width: 1600px; /* 最大宽度限制 */
-  width: 100%;
-  margin: 0 auto; /* 居中 */
-}
-
-/* ==================== 页面头部样式 ==================== */
-
-/* 页面头部 - 淡入下移动画 */
-.page-header {
-  margin-bottom: 2rem;
-  animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 头部内容 - 标题和操作按钮并排 */
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-/* 头部文字区域 - 占据剩余空间 */
-.header-text {
-  flex: 1;
-  min-width: 0; /* 允许文字截断 */
-}
-
-/* 页面标题 - 渐变色文字效果 */
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.02em; /* 字距收紧 */
-  /* 渐变色背景 */
-  background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
-  -webkit-background-clip: text; /* WebKit 浏览器背景裁剪 */
-  background-clip: text;
-  -webkit-text-fill-color: transparent; /* 文字透明显示背景 */
-  margin-bottom: 0.5rem;
-}
-
-/* 页面描述 */
-.page-description {
-  font-size: 0.875rem;
-  color: hsl(243, 20%, 50%);
-  font-weight: 500;
-}
-
-/* 暗黑模式下的页面描述颜色 */
-html.dark .page-description {
-  color: hsl(243, 30%, 70%);
-}
-
-/* 头部操作按钮区域 */
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* 快速操作按钮 - 毛玻璃效果 */
-.quick-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.8); /* 半透明白色 */
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.75rem;
-  color: hsl(243, 47%, 40%);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(16px); /* 毛玻璃效果 */
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* 快速操作按钮悬停效果 */
-.quick-action-btn:hover {
-  background: white; /* 不透明白色 */
-  border-color: rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px); /* 上移 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 阴影 */
-}
-
-/* 暗黑模式下的快速操作按钮 */
-html.dark .quick-action-btn {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: hsl(243, 87%, 70%);
-}
-
-/* 暗黑模式下的按钮悬停效果 */
-html.dark .quick-action-btn:hover {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* 头部进度条区域 */
-.header-progress {
-  width: 100%;
-}
-
-/* ==================== 仪表盘内容样式 ==================== */
-
-/* 仪表盘内容 - 淡入上移动画（延迟执行） */
-.dashboard-content {
-  flex: 1;
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards;
-}
-
-/* 仪表盘页脚 */
-.dashboard-footer {
-  margin-top: auto; /* 推到底部 */
-  padding-top: 2rem;
-}
-
-/* ==================== 响应式设计 ==================== */
-
-/* 平板和小型桌面 (≤1024px) */
-@media (max-width: 1024px) {
-  /* 移除主内容左边距（侧边栏变为覆盖层） */
-  .main-content {
-    margin-left: 0;
-  }
-
-  .main-content-full {
-    margin-left: 0;
-  }
-
-  /* 减小内边距 */
-  .content-wrapper {
-    padding: 1rem;
-  }
-
-  /* 减小头部边距 */
-  .page-header {
-    margin-bottom: 1.5rem;
-  }
-
-  /* 缩小标题字号 */
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  /* 缩小描述字号 */
-  .page-description {
-    font-size: 0.8125rem;
-  }
-}
-
-/* 针对小屏手机进一步优化 (≤640px) */
-@media (max-width: 640px) {
-  /* 进一步减小内边距 */
-  .content-wrapper {
-    padding: 0.75rem;
-  }
-
-  /* 进一步减小头部边距 */
-  .page-header {
-    margin-bottom: 1rem;
-  }
-
-  /* 进一步缩小标题 */
-  .page-title {
-    font-size: 1.25rem;
-  }
-
-  /* 进一步缩小描述 */
-  .page-description {
-    font-size: 0.75rem;
-  }
-
-  /* 减小页脚上边距 */
-  .dashboard-footer {
-    padding-top: 1.5rem;
-  }
-}
-</style>
