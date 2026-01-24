@@ -1,8 +1,7 @@
 /**
  * Sub-One Stash Converter
  */
-
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { ClashConverter } from './clash';
 
 export class StashConverter extends ClashConverter {
@@ -16,8 +15,21 @@ export class StashConverter extends ClashConverter {
         if (options.includeUnsupportedProxy) return true;
 
         const supportedTypes = [
-            'ss', 'ssr', 'vmess', 'socks5', 'http', 'snell', 'trojan', 'tuic',
-            'vless', 'wireguard', 'hysteria', 'hysteria2', 'ssh', 'juicity', 'anytls'
+            'ss',
+            'ssr',
+            'vmess',
+            'socks5',
+            'http',
+            'snell',
+            'trojan',
+            'tuic',
+            'vless',
+            'wireguard',
+            'hysteria',
+            'hysteria2',
+            'ssh',
+            'juicity',
+            'anytls'
         ];
 
         if (!supportedTypes.includes(proxy.type)) return false;
@@ -25,12 +37,22 @@ export class StashConverter extends ClashConverter {
         // Shadowsocks cipher validation
         if (proxy.type === 'ss') {
             const stashCiphers = [
-                'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm',
-                'aes-128-cfb', 'aes-192-cfb', 'aes-256-cfb',
-                'aes-128-ctr', 'aes-192-ctr', 'aes-256-ctr',
-                'rc4-md5', 'chacha20-ietf', 'xchacha20',
-                'chacha20-ietf-poly1305', 'xchacha20-ietf-poly1305',
-                '2022-blake3-aes-128-gcm', '2022-blake3-aes-256-gcm'
+                'aes-128-gcm',
+                'aes-192-gcm',
+                'aes-256-gcm',
+                'aes-128-cfb',
+                'aes-192-cfb',
+                'aes-256-cfb',
+                'aes-128-ctr',
+                'aes-192-ctr',
+                'aes-256-ctr',
+                'rc4-md5',
+                'chacha20-ietf',
+                'xchacha20',
+                'chacha20-ietf-poly1305',
+                'xchacha20-ietf-poly1305',
+                '2022-blake3-aes-128-gcm',
+                '2022-blake3-aes-256-gcm'
             ];
             if (!stashCiphers.includes(proxy.cipher || '')) return false;
         }

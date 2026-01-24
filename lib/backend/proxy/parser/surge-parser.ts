@@ -1,14 +1,13 @@
 /**
  * Sub-One Surge Parser
- * 
+ *
  * 增强型 Surge 格式解析器
  * 1. 支持带引号和逗号的名称/参数
  * 2. 支持端口跳跃 (port-hopping)
  * 3. 支持 Direct, Reject 等特殊类型
  */
-
 import type { ProxyNode, ProxyType } from '../types';
-import { randomId, parsePort } from '../utils';
+import { parsePort, randomId } from '../utils';
 
 /**
  * 解析 Surge 代理行
@@ -18,7 +17,9 @@ export function parseSurge(line: string): ProxyNode | null {
 
     try {
         // 1. 处理端口跳跃 (如果存在)
-        const hoppingMatch = line.match(/,\s*?port-hopping\s*?=\s*?["']?\s*?((\d+(-\d+)?)([,;]\d+(-\d+)?)*)\s*?["']?\s*?/i);
+        const hoppingMatch = line.match(
+            /,\s*?port-hopping\s*?=\s*?["']?\s*?((\d+(-\d+)?)([,;]\d+(-\d+)?)*)\s*?["']?\s*?/i
+        );
         let portHopping: string | undefined;
         let cleanLine = line;
         if (hoppingMatch) {
@@ -72,7 +73,10 @@ export function parseSurge(line: string): ProxyNode | null {
             const part = parts[i];
             if (part.includes('=')) {
                 const [key, ...valParts] = part.split('=');
-                params[key.trim().toLowerCase()] = valParts.join('=').trim().replace(/^"(.*)"$/, '$1');
+                params[key.trim().toLowerCase()] = valParts
+                    .join('=')
+                    .trim()
+                    .replace(/^"(.*)"$/, '$1');
             } else {
                 params[part.trim().toLowerCase()] = 'true';
             }
@@ -114,7 +118,7 @@ function smartSplit(str: string): string[] {
         }
     }
     result.push(current.trim());
-    return result.filter(s => s.length > 0);
+    return result.filter((s) => s.length > 0);
 }
 
 function normalizeSurgeType(type: string): ProxyType {
@@ -134,11 +138,13 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
     // TLS
     proxy.tls = params.tls === 'true' || proxy.type === 'https' || !!params.sni;
     if (params.sni) proxy.sni = params.sni;
-    if (params['skip-cert-verify']) proxy['skip-cert-verify'] = params['skip-cert-verify'] === 'true';
+    if (params['skip-cert-verify'])
+        proxy['skip-cert-verify'] = params['skip-cert-verify'] === 'true';
     if (params['client-fingerprint']) proxy['client-fingerprint'] = params['client-fingerprint'];
 
     // TCP / UDP / TFO
-    if (params.tfo || params['fast-open']) proxy.tfo = (params.tfo || params['fast-open']) === 'true';
+    if (params.tfo || params['fast-open'])
+        proxy.tfo = (params.tfo || params['fast-open']) === 'true';
     if (params.udp) proxy.udp = params.udp === 'true';
 
     // 传输层

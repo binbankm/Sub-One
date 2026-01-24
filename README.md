@@ -9,6 +9,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 📝 更新日志 (v2.0)
+
 - **⚡ 内置转换引擎**: 彻底重构转换逻辑，移除对外部后端转换服务的依赖，所有节点解析与转换均在本地/Worker内完成，安全性与稳定性大幅提升。
 - **🔐 认证系统升级**: 改用用户名+密码的登录方式，支持 Token 验证，告别繁琐的环境变量配置。
 - **🔗 短链接生成**: 原生支持生成短链接，方便订阅分发。
@@ -35,27 +36,27 @@
 #### 🔐 登录界面
 
 ![登录界面](images/0.png)
-*简洁的登录界面，支持管理员密码验证*
+_简洁的登录界面，支持管理员密码验证_
 
 #### 📊 仪表盘
 
 ![仪表盘](images/1.png)
-*主仪表盘界面，展示所有功能模块的概览*
+_主仪表盘界面，展示所有功能模块的概览_
 
 #### 📋 订阅管理
 
 ![订阅管理界面](images/2.png)
-*订阅管理界面，支持2行3列布局，包含分页控制*
+_订阅管理界面，支持2行3列布局，包含分页控制_
 
 #### 👥 订阅组
 
 ![订阅组界面](images/3.png)
-*订阅组管理界面，支持组合多个订阅和自定义配置*
+_订阅组管理界面，支持组合多个订阅和自定义配置_
 
 #### ⚙️ 手动节点
 
 ![手动节点管理](images/4.png)
-*手动节点管理界面，支持4列网格布局和搜索功能*
+_手动节点管理界面，支持4列网格布局和搜索功能_
 
 </details>
 
@@ -126,25 +127,30 @@ Sub-One/
 #### 2. 功能模块 (Features)
 
 ##### 📊 仪表盘 (Dashboard)
+
 - **DashboardHome.vue**: 概览首页，展示系统状态、统计信息及快捷入口
 
 ##### 📡 订阅管理 (Subscriptions)
+
 - **SubscriptionsTab.vue**: 订阅源列表主界面
 - **components/SubscriptionCard.vue**: 订阅源展示卡片，支持状态监测
 - **components/SubscriptionEditModal.vue**: 订阅源添加与编辑弹窗
 
 ##### 👥 订阅组 (Profiles)
+
 - **ProfilesTab.vue**: 订阅组管理界面
 - **components/ProfileCard.vue**: 订阅组配置卡片，支持多订阅聚合
 - **components/ProfileModal.vue**: 订阅组高级配置弹窗
 
 ##### 🌐 节点管理 (Nodes)
+
 - **NodesTab.vue**: 手动节点与导入管理
 - **components/ManualNodeCard.vue**: 单个节点信息卡片
 - **components/NodeDetailsModal.vue**: 节点完整信息查看
 - **components/SubscriptionImportModal.vue**: 外部订阅/节点批量导入工具
 
 ##### ⚙️ 系统设置 (Settings)
+
 - **SettingsModal.vue**: 全局设置面板 (包含存储后端切换、用户管理、系统参数)
 - **BackupView.vue**: 数据备份与恢复界面
 - **HelpModal.vue**: 使用帮助文档
@@ -152,14 +158,14 @@ Sub-One/
 #### 3. 核心后端 (Backend Lib)
 
 - **proxy/**: 核心转换引擎
-  - **parser/**: 解析器 (支持 Base64, Clash, Sing-box 等格式)
-  - **converter/**: 转换器 (负责生成目标客户端配置)
+    - **parser/**: 解析器 (支持 Base64, Clash, Sing-box 等格式)
+    - **converter/**: 转换器 (负责生成目标客户端配置)
 - **services/**: 基础服务层
-  - **storage.ts**: 统一存储接口 (适配 KV, D1 和 JSON)
-  - **users.ts**: 用户管理服务
-  - **notification.ts**: 通知服务
+    - **storage.ts**: 统一存储接口 (适配 KV, D1 和 JSON)
+    - **users.ts**: 用户管理服务
+    - **notification.ts**: 通知服务
 - **api/**: API 路由分发与上下文处理
-  - **auth.ts**: 用户认证与 JWT 令牌管理
+    - **auth.ts**: 用户认证与 JWT 令牌管理
 
 </details>
 
@@ -200,35 +206,38 @@ npm run preview
 只需一个 `docker-compose.yml` 文件即可快速启动：
 
 1. 下载 `docker-compose.yml`:
-   ```bash
-   # 使用 curl
-   curl -O https://raw.githubusercontent.com/binbankm/Sub-One/main/docker-compose.yml
 
-   # 或者使用 wget
-   wget https://raw.githubusercontent.com/binbankm/Sub-One/main/docker-compose.yml
-   ```
+    ```bash
+    # 使用 curl
+    curl -O https://raw.githubusercontent.com/binbankm/Sub-One/main/docker-compose.yml
+
+    # 或者使用 wget
+    wget https://raw.githubusercontent.com/binbankm/Sub-One/main/docker-compose.yml
+    ```
 
 2. (可选) 手动创建 `docker-compose.yml`:
-   ```yaml
-   version: '3.8'
-   services:
-     sub-one:
-       image: ghcr.io/binbankm/sub-one:latest
-       container_name: sub-one
-       ports:
-         - "3055:3055"
-       volumes:
-         - ./data:/app/data
-       restart: unless-stopped
-       environment:
-         - PORT=3055
-         - TZ=Asia/Shanghai
-   ```
+
+    ```yaml
+    version: '3.8'
+    services:
+        sub-one:
+            image: ghcr.io/binbankm/sub-one:latest
+            container_name: sub-one
+            ports:
+                - '3055:3055'
+            volumes:
+                - ./data:/app/data
+            restart: unless-stopped
+            environment:
+                - PORT=3055
+                - TZ=Asia/Shanghai
+    ```
 
 3. 启动容器：
-   ```bash
-   docker-compose up -d
-   ```
+
+    ```bash
+    docker-compose up -d
+    ```
 
 4. 访问地址：`http://your-ip:3055`
 
@@ -270,10 +279,10 @@ docker run -d \
 3. 点击 "创建应用程序" → "连接到Git"
 4. 选择你刚刚Fork的Sub-One仓库
 5. 配置构建设置：
-   - **框架预设**: `Vue`
-   - **构建命令**: `npm run build`
-   - **构建输出目录**: `dist`
-   - **根目录**: `/` (留空)
+    - **框架预设**: `Vue`
+    - **构建命令**: `npm run build`
+    - **构建输出目录**: `dist`
+    - **根目录**: `/` (留空)
 
 #### 步骤 3: 用户登录说明
 
@@ -293,41 +302,42 @@ docker run -d \
 
 1. 在 Cloudflare Dashboard：**Workers & Pages** → **KV** → 创建命名空间
 2. 在 Pages 项目设置：**函数** → **KV 命名空间绑定** → 添加绑定
-   - **变量名称**: `SUB_ONE_KV` （⚠️ 必须完全一致）
-   - **KV 命名空间**: 从下拉菜单选择刚创建的命名空间
+    - **变量名称**: `SUB_ONE_KV` （⚠️ 必须完全一致）
+    - **KV 命名空间**: 从下拉菜单选择刚创建的命名空间
 3. 保存并重新部署
 
 ##### 配置 D1 数据库（可选，适合大规模数据）
 
 1. **创建 D1 数据库**：
-   - **Workers & Pages** → **D1** → 创建数据库
-   - **数据库名称**: `sub-one-d1` （⚠️ 必须使用小写，不能用大写字母）
+    - **Workers & Pages** → **D1** → 创建数据库
+    - **数据库名称**: `sub-one-d1` （⚠️ 必须使用小写，不能用大写字母）
 
 2. **初始化表结构**（二选一）：
-   
-   **方式一：使用 init.sql 文件（推荐）**
-   - 点击创建的数据库 → **控制台** 标签页
-   - 复制 `db/init.sql` 文件的全部内容并粘贴到控制台
-   - 点击 **执行** 按钮
-   
-   **方式二：手动输入 SQL**
-   - 如果找不到 init.sql 文件，可以直接复制以下 SQL 到控制台执行：
-   ```sql
-   CREATE TABLE IF NOT EXISTS storage (
-       key TEXT PRIMARY KEY,
-       value TEXT NOT NULL,
-       updated_at INTEGER NOT NULL
-   );
-   CREATE INDEX IF NOT EXISTS idx_updated_at ON storage(updated_at);
-   CREATE INDEX IF NOT EXISTS idx_key_prefix ON storage(key);
-   INSERT OR REPLACE INTO storage (key, value, updated_at)
-   VALUES ('_db_initialized', '"true"', strftime('%s', 'now') * 1000);
-   ```
+
+    **方式一：使用 init.sql 文件（推荐）**
+    - 点击创建的数据库 → **控制台** 标签页
+    - 复制 `db/init.sql` 文件的全部内容并粘贴到控制台
+    - 点击 **执行** 按钮
+
+    **方式二：手动输入 SQL**
+    - 如果找不到 init.sql 文件，可以直接复制以下 SQL 到控制台执行：
+
+    ```sql
+    CREATE TABLE IF NOT EXISTS storage (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_updated_at ON storage(updated_at);
+    CREATE INDEX IF NOT EXISTS idx_key_prefix ON storage(key);
+    INSERT OR REPLACE INTO storage (key, value, updated_at)
+    VALUES ('_db_initialized', '"true"', strftime('%s', 'now') * 1000);
+    ```
 
 3. **绑定到项目**：
-   - Pages 项目设置 → **函数** → **D1 数据库绑定** → 添加绑定
-   - **变量名称**: `SUB_ONE_D1` （⚠️ 必须完全一致）
-   - **D1 数据库**: 从下拉菜单选择 `SUB_ONE_D1`
+    - Pages 项目设置 → **函数** → **D1 数据库绑定** → 添加绑定
+    - **变量名称**: `SUB_ONE_D1` （⚠️ 必须完全一致）
+    - **D1 数据库**: 从下拉菜单选择 `SUB_ONE_D1`
 
 4. 保存并重新部署
 
@@ -336,6 +346,7 @@ docker run -d \
 配置完成后，登录管理后台 → **设置** → **存储后端设置**，即可在 KV 和 D1 之间切换。
 
 **存储对比**：
+
 - **KV**: 简单快速，适合 < 1000 条订阅源
 - **D1**: 支持 SQL 查询，适合 > 1000 条订阅源
 
@@ -360,9 +371,9 @@ https://your-project-name.pages.dev
 1. 打开应用，系统检测到无用户数据
 2. 自动显示 **"创建管理员账号"** 界面
 3. 填写以下信息：
-   - 用户名（自定义）
-   - 密码（至少6位）
-   - 确认密码
+    - 用户名（自定义）
+    - 密码（至少6位）
+    - 确认密码
 4. 点击 **"创建管理员账号"** 按钮
 5. 创建成功后，跳转到登录页面
 6. 使用刚创建的用户名和密码登录
@@ -386,29 +397,29 @@ https://your-project-name.pages.dev
 ### 常见问题
 
 1. **构建失败**
-   - 检查Node.js版本是否为16.0+
-   - 确认`package.json`中的依赖版本正确
-   - 清除`node_modules`并重新安装
+    - 检查Node.js版本是否为16.0+
+    - 确认`package.json`中的依赖版本正确
+    - 清除`node_modules`并重新安装
 
 2. **KV绑定错误**
-   - 确认KV命名空间已创建
-   - 检查变量名称是否为`SUB_ONE_KV`
-   - 重新部署项目
+    - 确认KV命名空间已创建
+    - 检查变量名称是否为`SUB_ONE_KV`
+    - 重新部署项目
 
 3. **环境变量未生效**
-   - 确认变量已添加到生产环境
-   - 重新部署项目
-   - 检查变量名拼写是否正确
+    - 确认变量已添加到生产环境
+    - 重新部署项目
+    - 检查变量名拼写是否正确
 
 4. **登录失败**
-   - 确认用户名和密码输入正确
-   - 如果忘密码，需要通过KV控制台删除 `sub_one_users_v1` 重新初始化
-   - 清除浏览器Cookie后重试
+    - 确认用户名和密码输入正确
+    - 如果忘密码，需要通过KV控制台删除 `sub_one_users_v1` 重新初始化
+    - 清除浏览器Cookie后重试
 
 5. **首次访问未显示初始化界面**
-   - 检查KV命名空间绑定是否正确（变量名必须是 `SUB_ONE_KV`）
-   - 查看浏览器控制台是否有错误信息
-   - 尝试清除浏览器缓存后刷新
+    - 检查KV命名空间绑定是否正确（变量名必须是 `SUB_ONE_KV`）
+    - 查看浏览器控制台是否有错误信息
+    - 尝试清除浏览器缓存后刷新
 
 </details>
 
@@ -446,4 +457,4 @@ https://your-project-name.pages.dev
 
 **Sub-One Manager** - 让订阅管理变得简单高效 🚀
 
-*如果你觉得这个项目对你有帮助，请给我们一个 ⭐ Star！*
+_如果你觉得这个项目对你有帮助，请给我们一个 ⭐ Star！_

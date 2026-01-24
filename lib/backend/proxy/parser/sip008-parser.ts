@@ -1,12 +1,11 @@
 /**
  * Sub-One SIP008 Parser
- * 
+ *
  * 将 SIP008 (Shadowsocks JSON) 格式转换为标准 ProxyNode 列表
  * 参考: https://shadowsocks.org/en/spec/SIP008-Online-Configuration-Delivery.html
  */
-
 import type { ProxyNode } from '../types';
-import { randomId, parsePort } from '../utils';
+import { parsePort, randomId } from '../utils';
 
 /**
  * 解析 SIP008 JSON 内容
@@ -46,7 +45,7 @@ export function parseSIP008Node(s: any): ProxyNode | null {
         password: s.password,
         plugin: s.plugin,
         'plugin-opts': s.plugin_opts || s.plugin_options,
-        udp: true,
+        udp: true
     };
 
     return node;

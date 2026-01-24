@@ -1,6 +1,6 @@
-import { Env } from '../types';
 import { KV_KEY_USERS } from '../config/constants';
 import { User, UserRole } from '../proxy/types';
+import { Env } from '../types';
 import { StorageFactory } from './storage';
 import { getStorageBackendInfo } from './storage-backend';
 
@@ -20,7 +20,7 @@ export async function hashPassword(password: string): Promise<string> {
     const data = encoder.encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -50,7 +50,7 @@ export async function getAllUsers(env: Env): Promise<User[]> {
  */
 export async function getUserByUsername(env: Env, username: string): Promise<User | null> {
     const users = await getAllUsers(env);
-    return users.find(u => u.username === username) || null;
+    return users.find((u) => u.username === username) || null;
 }
 
 /**
@@ -65,7 +65,7 @@ export async function createUser(
     const users = await getAllUsers(env);
 
     // 检查用户名是否已存在
-    if (users.some(u => u.username === username)) {
+    if (users.some((u) => u.username === username)) {
         throw new Error('用户名已存在');
     }
 
@@ -95,7 +95,7 @@ export async function updateUser(
     updates: { password?: string; role?: UserRole }
 ): Promise<User> {
     const users = await getAllUsers(env);
-    const userIndex = users.findIndex(u => u.id === userId);
+    const userIndex = users.findIndex((u) => u.id === userId);
 
     if (userIndex === -1) {
         throw new Error('用户不存在');
@@ -127,7 +127,7 @@ export async function updateUser(
  */
 export async function deleteUser(env: Env, userId: string): Promise<boolean> {
     const users = await getAllUsers(env);
-    const filteredUsers = users.filter(u => u.id !== userId);
+    const filteredUsers = users.filter((u) => u.id !== userId);
 
     if (filteredUsers.length === users.length) {
         return false; // 用户不存在

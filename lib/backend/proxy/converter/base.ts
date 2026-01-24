@@ -1,8 +1,7 @@
 /**
  * Sub-One Converter Base Interfaces
  */
-
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 
 export interface IConverter {
     name: string;

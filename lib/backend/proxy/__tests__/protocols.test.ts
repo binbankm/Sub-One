@@ -1,9 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import { parse } from '../index';
 
 describe('ProxyUtils Protocol Detail Tests', () => {
     it('should parse Hysteria2 correctly', () => {
-        const uri = 'hysteria2://pass@host:1234?insecure=1&obfs=salamander&obfs-password=obfspass&up=100&down=200#Hy2Node';
+        const uri =
+            'hysteria2://pass@host:1234?insecure=1&obfs=salamander&obfs-password=obfspass&up=100&down=200#Hy2Node';
         const nodes = parse(uri);
         expect(nodes.length).toBe(1);
         const node = nodes[0];
@@ -19,7 +21,8 @@ describe('ProxyUtils Protocol Detail Tests', () => {
     });
 
     it('should parse VLESS Reality correctly', () => {
-        const uri = 'vless://uuid@host:443?security=reality&sni=sni.com&fp=chrome&pbk=pubkey&sid=shortid#RealityNode';
+        const uri =
+            'vless://uuid@host:443?security=reality&sni=sni.com&fp=chrome&pbk=pubkey&sid=shortid#RealityNode';
         const nodes = parse(uri);
         expect(nodes.length).toBe(1);
         const node = nodes[0];

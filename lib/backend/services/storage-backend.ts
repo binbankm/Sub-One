@@ -1,4 +1,3 @@
-
 import { Env, StorageBackend } from '../types';
 import { StorageFactory } from './storage';
 
@@ -13,7 +12,9 @@ const STORAGE_BACKEND_KEY = 'storage_backend_config';
 export async function getStorageBackend(env: Env): Promise<StorageBackend> {
     try {
         // 始终从 KV 读取存储后端配置（元数据存储在 KV）
-        const config = await env.SUB_ONE_KV.get(STORAGE_BACKEND_KEY, 'json') as { backend: StorageBackend } | null;
+        const config = (await env.SUB_ONE_KV.get(STORAGE_BACKEND_KEY, 'json')) as {
+            backend: StorageBackend;
+        } | null;
 
         if (config && config.backend) {
             // 验证配置的后端是否可用
@@ -21,7 +22,9 @@ export async function getStorageBackend(env: Env): Promise<StorageBackend> {
             if (available.includes(config.backend)) {
                 return config.backend;
             }
-            console.warn(`[StorageBackend] Configured backend "${config.backend}" is not available, falling back to KV`);
+            console.warn(
+                `[StorageBackend] Configured backend "${config.backend}" is not available, falling back to KV`
+            );
         }
 
         // 默认使用 KV

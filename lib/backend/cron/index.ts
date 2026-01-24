@@ -1,12 +1,11 @@
-
-import { Env } from '../types';
 import { KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
-import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
+import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
+import { parse } from '../proxy';
+import { AppConfig, Subscription, SubscriptionUserInfo } from '../proxy/types';
 import { checkAndNotify } from '../services/notification';
-import { Subscription, AppConfig, SubscriptionUserInfo } from '../proxy/types';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
-import { parse } from '../proxy';
+import { Env } from '../types';
 
 // const subscriptionParser = new SubscriptionParser();
 
@@ -19,40 +18,42 @@ async function getStorage(env: Env) {
 }
 
 export async function handleCronTrigger(env: Env): Promise<Response> {
-    console.log("Cron trigger fired. Checking all subscriptions for traffic and node count...");
+    console.log('Cron trigger fired. Checking all subscriptions for traffic and node count...');
 
     const storage = await getStorage(env);
     const initialSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
     const settings = (await storage.get<AppConfig>(KV_KEY_SETTINGS)) || defaultSettings;
 
     // 存储更新结果: Map<subId, {userInfo, nodeCount}>
-    const updates = new Map<string, { userInfo?: SubscriptionUserInfo, nodeCount?: number }>();
+    const updates = new Map<string, { userInfo?: SubscriptionUserInfo; nodeCount?: number }>();
 
     // 并行执行所有请求以减少总耗时
     const updatePromises = initialSubs.map(async (sub) => {
         if (!sub.url.startsWith('http') || !sub.enabled) return;
 
         try {
-            const singleRequest = fetch(new Request(sub.url, {
-                headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                redirect: "follow",
-                cf: { insecureSkipVerify: true }
-            } as RequestInit));
+            const singleRequest = fetch(
+                new Request(sub.url, {
+                    headers: { 'User-Agent': GLOBAL_USER_AGENT },
+                    redirect: 'follow',
+                    cf: { insecureSkipVerify: true }
+                } as RequestInit)
+            );
 
-            const response = await Promise.race([
+            const response = (await Promise.race([
                 singleRequest,
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ]) as Response;
+            ])) as Response;
 
             if (response.ok) {
-                const updateData: { userInfo?: SubscriptionUserInfo, nodeCount?: number } = {};
+                const updateData: { userInfo?: SubscriptionUserInfo; nodeCount?: number } = {};
                 let hasUpdate = false;
 
                 // 1. 提取流量信息（从headers）
                 const userInfoHeader = response.headers.get('subscription-userinfo');
                 if (userInfoHeader) {
                     const info: Partial<SubscriptionUserInfo> = {};
-                    userInfoHeader.split(';').forEach(part => {
+                    userInfoHeader.split(';').forEach((part) => {
                         const [key, value] = part.trim().split('=');
                         if (key && value) {
                             const numValue = Number(value);
@@ -118,8 +119,8 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
             console.log(`Updated ${updates.size} subscriptions with new info.`);
         }
     } else {
-        console.log("Cron job finished. No changes detected.");
+        console.log('Cron job finished. No changes detected.');
     }
 
-    return new Response("Cron job completed successfully.", { status: 200 });
+    return new Response('Cron job completed successfully.', { status: 200 });
 }

@@ -32,7 +32,7 @@ export const formatExpiry = (expireTimestamp?: number) => {
 
     return {
         date: expiryDate.toLocaleDateString(),
-        daysRemaining: diffDays < 0 ? '已过期' : (diffDays === 0 ? '今天到期' : `${diffDays} 天后`),
+        daysRemaining: diffDays < 0 ? '已过期' : diffDays === 0 ? '今天到期' : `${diffDays} 天后`,
         style: style
     };
 };
@@ -44,6 +44,7 @@ export const formatExpiry = (expireTimestamp?: number) => {
  */
 export const getTrafficColorClass = (percentage: number): string => {
     if (percentage >= 90) return 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30';
-    if (percentage >= 75) return 'bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30';
+    if (percentage >= 75)
+        return 'bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30';
     return 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-blue-500/30';
 };

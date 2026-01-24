@@ -1,8 +1,7 @@
-
-import { Env } from '../types';
 import { KV_KEY_SECRET } from '../config/constants';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
+import { Env } from '../types';
 
 export const COOKIE_NAME = 'auth_session';
 export const SESSION_DURATION = 6 * 60 * 60 * 1000; // 6 hours
@@ -27,7 +26,9 @@ async function getAppSecret(env: Env): Promise<string> {
             // 生成强随机密钥 (64 hex characters)
             const array = new Uint8Array(32);
             crypto.getRandomValues(array);
-            secret = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+            secret = Array.from(array)
+                .map((b) => b.toString(16).padStart(2, '0'))
+                .join('');
 
             // 持久化保存
             await storage.put(KV_KEY_SECRET, secret);
@@ -45,7 +46,9 @@ async function getAppSecret(env: Env): Promise<string> {
         if (!cachedSecret) {
             const array = new Uint8Array(32);
             crypto.getRandomValues(array);
-            cachedSecret = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+            cachedSecret = Array.from(array)
+                .map((b) => b.toString(16).padStart(2, '0'))
+                .join('');
         }
         return cachedSecret!;
     }
@@ -69,24 +72,26 @@ async function getCryptoKey(secret: string): Promise<CryptoKey> {
  * 生成安全的会话Token（带HMAC签名）
  * 格式：userId:username:timestamp:random:signature
  */
-export async function generateSecureToken(env: Env, userId: string, username: string): Promise<string> {
+export async function generateSecureToken(
+    env: Env,
+    userId: string,
+    username: string
+): Promise<string> {
     const timestamp = Date.now();
     const randomBytes = crypto.getRandomValues(new Uint8Array(16));
-    const random = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const random = Array.from(randomBytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
     const message = `${userId}:${username}:${timestamp}:${random}`;
 
     const secret = await getAppSecret(env);
     const key = await getCryptoKey(secret);
 
     const encoder = new TextEncoder();
-    const signature = await crypto.subtle.sign(
-        'HMAC',
-        key,
-        encoder.encode(message)
-    );
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
 
     const sigHex = Array.from(new Uint8Array(signature))
-        .map(b => b.toString(16).padStart(2, '0'))
+        .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
 
     return `${message}:${sigHex}`;
@@ -95,7 +100,10 @@ export async function generateSecureToken(env: Env, userId: string, username: st
 /**
  * 验证Token签名并返回用户信息
  */
-export async function verifySecureToken(token: string, env: Env): Promise<{ valid: boolean; userId?: string; username?: string }> {
+export async function verifySecureToken(
+    token: string,
+    env: Env
+): Promise<{ valid: boolean; userId?: string; username?: string }> {
     try {
         const parts = token.split(':');
         const secret = await getAppSecret(env);
@@ -108,21 +116,17 @@ export async function verifySecureToken(token: string, env: Env): Promise<{ vali
             const timestamp = parseInt(timestampStr, 10);
 
             // 检查过期
-            if (isNaN(timestamp) || (Date.now() - timestamp > SESSION_DURATION)) {
+            if (isNaN(timestamp) || Date.now() - timestamp > SESSION_DURATION) {
                 return { valid: false };
             }
 
             // 验证签名
             const message = `${userId}:${username}:${timestampStr}:${random}`;
 
-            const expectedSig = await crypto.subtle.sign(
-                'HMAC',
-                key,
-                encoder.encode(message)
-            );
+            const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
 
             const expectedSigHex = Array.from(new Uint8Array(expectedSig))
-                .map(b => b.toString(16).padStart(2, '0'))
+                .map((b) => b.toString(16).padStart(2, '0'))
                 .join('');
 
             // 使用常量时间比较（虽然 JS String 比较很难做到绝对常量时间，但优于直接 ===）
@@ -145,9 +149,12 @@ export async function verifySecureToken(token: string, env: Env): Promise<{ vali
 }
 
 // --- 认证中间件 ---
-export async function authMiddleware(request: Request, env: Env): Promise<{ valid: boolean; userId?: string; username?: string }> {
+export async function authMiddleware(
+    request: Request,
+    env: Env
+): Promise<{ valid: boolean; userId?: string; username?: string }> {
     const cookie = request.headers.get('Cookie');
-    const sessionCookie = cookie?.split(';').find(c => c.trim().startsWith(`${COOKIE_NAME}=`));
+    const sessionCookie = cookie?.split(';').find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
     if (!sessionCookie) return { valid: false };
     const token = sessionCookie.split('=')[1];
 

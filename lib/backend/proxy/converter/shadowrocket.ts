@@ -1,18 +1,18 @@
 /**
  * Sub-One Shadowrocket Converter
  */
+import yaml from 'js-yaml';
 
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
-import yaml from 'js-yaml';
 
 export class ShadowrocketConverter extends BaseConverter {
     name = 'Shadowrocket';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         // Shadowrocket can import Clash-like YAML
-        const processedNodes = nodes.map(node => this.processNode(node)).filter(Boolean);
+        const processedNodes = nodes.map((node) => this.processNode(node)).filter(Boolean);
 
         const config = {
             proxies: processedNodes

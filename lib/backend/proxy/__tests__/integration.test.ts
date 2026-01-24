@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { parse, process, convert } from '../index';
+import { describe, expect, it } from 'vitest';
+
+import { convert, parse, process } from '../index';
 
 describe('Proxy Integration Tests', () => {
     const rawData = `
@@ -42,7 +43,9 @@ ss://YWVzLTEyOC1nY206cGFzc3dvcmRAc2VydmVyOjQ0Mw#Node1-Dup
     });
 
     it('should handle Base64 encoded subscription data', async () => {
-        const base64Data = Buffer.from('ss://YWVzLTEyOC1nY206cGFzc3dvcmRAc2VydmVyOjQ0Mw#NodeB64').toString('base64');
+        const base64Data = Buffer.from(
+            'ss://YWVzLTEyOC1nY206cGFzc3dvcmRAc2VydmVyOjQ0Mw#NodeB64'
+        ).toString('base64');
         const nodes = parse(base64Data);
         expect(nodes.length).toBe(1);
         expect(nodes[0].name).toBe('NodeB64');

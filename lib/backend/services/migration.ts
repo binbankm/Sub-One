@@ -1,14 +1,7 @@
-
+import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_USERS } from '../config/constants';
 import { Env } from '../types';
-import { KVStorage, D1Storage } from './storage';
+import { D1Storage, KVStorage } from './storage';
 import { getStorageBackend } from './storage-backend';
-
-import {
-    KV_KEY_SUBS,
-    KV_KEY_PROFILES,
-    KV_KEY_SETTINGS,
-    KV_KEY_USERS
-} from '../config/constants';
 
 /**
  * 数据迁移服务
@@ -16,10 +9,10 @@ import {
 
 // 需要迁移的 KV 键列表
 const MIGRATION_KEYS = [
-    KV_KEY_SUBS,      // 订阅源数据
-    KV_KEY_PROFILES,  // 订阅组数据
-    KV_KEY_SETTINGS,  // 系统设置
-    KV_KEY_USERS      // 用户数据
+    KV_KEY_SUBS, // 订阅源数据
+    KV_KEY_PROFILES, // 订阅组数据
+    KV_KEY_SETTINGS, // 系统设置
+    KV_KEY_USERS // 用户数据
 ];
 
 /**
@@ -70,9 +63,10 @@ export async function migrateKVtoD1(env: Env): Promise<{
 
     return {
         success: failed.length === 0,
-        message: failed.length === 0
-            ? `成功迁移 ${migrated.length} 项数据到 D1`
-            : `迁移完成，成功 ${migrated.length} 项，失败 ${failed.length} 项`,
+        message:
+            failed.length === 0
+                ? `成功迁移 ${migrated.length} 项数据到 D1`
+                : `迁移完成，成功 ${migrated.length} 项，失败 ${failed.length} 项`,
         details: {
             migrated,
             failed,
@@ -129,9 +123,10 @@ export async function migrateD1toKV(env: Env): Promise<{
 
     return {
         success: failed.length === 0,
-        message: failed.length === 0
-            ? `成功迁移 ${migrated.length} 项数据到 KV`
-            : `迁移完成，成功 ${migrated.length} 项，失败 ${failed.length} 项`,
+        message:
+            failed.length === 0
+                ? `成功迁移 ${migrated.length} 项数据到 KV`
+                : `迁移完成，成功 ${migrated.length} 项，失败 ${failed.length} 项`,
         details: {
             migrated,
             failed,
@@ -143,7 +138,10 @@ export async function migrateD1toKV(env: Env): Promise<{
 /**
  * 自动迁移：根据目标存储后端自动选择迁移方向
  */
-export async function autoMigrate(env: Env, targetBackend: 'kv' | 'd1'): Promise<{
+export async function autoMigrate(
+    env: Env,
+    targetBackend: 'kv' | 'd1'
+): Promise<{
     success: boolean;
     message: string;
     details?: {

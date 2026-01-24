@@ -1,15 +1,14 @@
 /**
  * Sub-One Processor Engine
- * 
+ *
  * 负责执行各种预处理、操作符和后处理逻辑
  */
-
-import type { ProxyNode, ProcessOptions } from '../types';
-import { getNodeFingerprint, buildRegex, isNotEmpty } from '../utils';
+import type { ProcessOptions, ProxyNode } from '../types';
+import { buildRegex, getNodeFingerprint, isNotEmpty } from '../utils';
 
 /**
  * 处理代理节点列表
- * 
+ *
  * 流程:
  * 1. 基础过滤 (Filter)
  * 2. 基础去重 (Deduplicate)
@@ -34,7 +33,7 @@ export async function process(
 
     // 4. 重命名逻辑
     if (options.prependSubName && isNotEmpty(subscriptionName)) {
-        result.forEach(node => {
+        result.forEach((node) => {
             if (!node.name.startsWith(subscriptionName)) {
                 node.name = `${subscriptionName} - ${node.name}`;
             }
@@ -52,8 +51,11 @@ function handleFiltering(nodes: ProxyNode[], options: ProcessOptions): ProxyNode
     const excludeRules = options.excludeRules || [];
 
     if (options.exclude) {
-        const legacyRules = options.exclude.split('\n').map(r => r.trim()).filter(r => r);
-        legacyRules.forEach(r => {
+        const legacyRules = options.exclude
+            .split('\n')
+            .map((r) => r.trim())
+            .filter((r) => r);
+        legacyRules.forEach((r) => {
             if (r.startsWith('keep:')) {
                 includeRules.push(r.replace(/^keep:/, ''));
             } else {
@@ -64,12 +66,12 @@ function handleFiltering(nodes: ProxyNode[], options: ProcessOptions): ProxyNode
 
     if (includeRules.length === 0 && excludeRules.length === 0) return nodes;
 
-    return nodes.filter(node => {
+    return nodes.filter((node) => {
         if (excludeRules.length > 0) {
-            if (excludeRules.some(rule => matchRule(node, rule))) return false;
+            if (excludeRules.some((rule) => matchRule(node, rule))) return false;
         }
         if (includeRules.length > 0) {
-            if (!includeRules.some(rule => matchRule(node, rule))) return false;
+            if (!includeRules.some((rule) => matchRule(node, rule))) return false;
         }
         return true;
     });
@@ -96,7 +98,7 @@ function matchRule(node: ProxyNode, rule: string): boolean {
  */
 function handleDeduplicate(nodes: ProxyNode[]): ProxyNode[] {
     const fingerprintMap = new Map<string, ProxyNode>();
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
         const fp = getNodeFingerprint(node);
         const existing = fingerprintMap.get(fp);
         if (!existing || node.name.length < existing.name.length) {

@@ -1,7 +1,6 @@
 /**
  * Sub-One Processor Base Classes
  */
-
 import type { ProxyNode } from '../types';
 
 export interface ProcessingContext {

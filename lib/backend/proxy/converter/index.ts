@@ -1,36 +1,35 @@
 /**
  * Sub-One Converters Entrance
  */
-
-import { URIConverter } from './uri';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { ClashConverter } from './clash';
-import { SingboxConverter } from './singbox';
-import { SurgeConverter } from './surge';
 import { LoonConverter } from './loon';
 import { QuantumultXConverter } from './quantumultx';
 import { ShadowrocketConverter } from './shadowrocket';
+import { SingboxConverter } from './singbox';
 import { StashConverter } from './stash';
 import { SurfboardConverter } from './surfboard';
-import type { ProxyNode, ConvertOptions } from '../types';
+import { SurgeConverter } from './surge';
+import { URIConverter } from './uri';
 
 const converters: Record<string, any> = {
-    'URI': new URIConverter(),
-    'Clash': new ClashConverter(true), // Default to Meta as standard Clash is deprecated
-    'ClashMeta': new ClashConverter(true),
-    'Mihomo': new ClashConverter(true),
-    'Singbox': new SingboxConverter(),
-    'Surge': new SurgeConverter(),
-    'Loon': new LoonConverter(),
-    'QX': new QuantumultXConverter(),
-    'QuantumultX': new QuantumultXConverter(),
-    'Shadowrocket': new ShadowrocketConverter(),
-    'Stash': new StashConverter(),
-    'Surfboard': new SurfboardConverter(),
+    URI: new URIConverter(),
+    Clash: new ClashConverter(true), // Default to Meta as standard Clash is deprecated
+    ClashMeta: new ClashConverter(true),
+    Mihomo: new ClashConverter(true),
+    Singbox: new SingboxConverter(),
+    Surge: new SurgeConverter(),
+    Loon: new LoonConverter(),
+    QX: new QuantumultXConverter(),
+    QuantumultX: new QuantumultXConverter(),
+    Shadowrocket: new ShadowrocketConverter(),
+    Stash: new StashConverter(),
+    Surfboard: new SurfboardConverter()
 };
 
 /**
  * 核心转换函数
- * 
+ *
  * @param nodes 标准节点列表
  * @param platform 目标平台
  * @param options 转换选项
@@ -86,4 +85,3 @@ export {
     QuantumultXConverter,
     ShadowrocketConverter
 };
-

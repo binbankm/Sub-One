@@ -1,12 +1,10 @@
-
 import { AppConfig, Subscription } from '../proxy/types';
-
 import { formatBytes } from '../utils/common';
 
 // --- TG 通知函式 ---
 export async function sendTgNotification(settings: AppConfig, message: string): Promise<boolean> {
     if (!settings.BotToken || !settings.ChatID) {
-        console.log("TG BotToken or ChatID not set, skipping notification.");
+        console.log('TG BotToken or ChatID not set, skipping notification.');
         return false;
     }
     // 为所有消息添加时间戳
@@ -28,15 +26,15 @@ export async function sendTgNotification(settings: AppConfig, message: string): 
             body: JSON.stringify(payload)
         });
         if (response.ok) {
-            console.log("TG 通知已成功发送。");
+            console.log('TG 通知已成功发送。');
             return true;
         } else {
             const errorData = await response.json();
-            console.error("发送 TG 通知失败：", response.status, errorData);
+            console.error('发送 TG 通知失败：', response.status, errorData);
             return false;
         }
     } catch (error) {
-        console.error("发送 TG 通知时出错：", error);
+        console.error('发送 TG 通知时出错：', error);
         return false;
     }
 }
@@ -58,7 +56,7 @@ export async function checkAndNotify(sub: Subscription, settings: AppConfig): Pr
         // 检查是否满足通知条件：剩余天数 <= 阈值
         if (daysRemaining <= (settings.NotifyThresholdDays || 7)) {
             // 检查上次通知时间，防止24小时内重复通知
-            if (!sub.lastNotifiedExpire || (now - sub.lastNotifiedExpire > ONE_DAY_MS)) {
+            if (!sub.lastNotifiedExpire || now - sub.lastNotifiedExpire > ONE_DAY_MS) {
                 const message = `🗓️ *订阅临期提醒* 🗓️\n\n*订阅名称:* \`${sub.name || '未命名'}\`\n*状态:* \`${daysRemaining < 0 ? '已过期' : `仅剩 ${daysRemaining} 天到期`}\`\n*到期日期:* \`${expiryDate.toLocaleDateString('zh-CN')}\``;
                 const sent = await sendTgNotification(settings, message);
                 if (sent) {
@@ -77,7 +75,7 @@ export async function checkAndNotify(sub: Subscription, settings: AppConfig): Pr
         // 检查是否满足通知条件：已用百分比 >= 阈值
         if (usagePercent >= (settings.NotifyThresholdPercent || 90)) {
             // 检查上次通知时间，防止24小时内重复通知
-            if (!sub.lastNotifiedTraffic || (now - sub.lastNotifiedTraffic > ONE_DAY_MS)) {
+            if (!sub.lastNotifiedTraffic || now - sub.lastNotifiedTraffic > ONE_DAY_MS) {
                 const message = `📈 *流量预警提醒* 📈\n\n*订阅名称:* \`${sub.name || '未命名'}\`\n*状态:* \`已使用 ${usagePercent}%\`\n*详情:* \`${formatBytes(used)} / ${formatBytes(total)}\``;
                 const sent = await sendTgNotification(settings, message);
                 if (sent) {

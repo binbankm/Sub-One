@@ -1,12 +1,11 @@
-
-import { Env } from '../types';
-import { KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_PROFILES } from '../config/constants';
-import { defaultSettings, GLOBAL_USER_AGENT } from '../config/defaults';
+import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
+import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
+import { ProxyNode, convert, parse, process } from '../proxy';
+import { AppConfig, Profile, SubConfig, Subscription } from '../proxy/types';
 import { sendTgNotification } from '../services/notification';
-import { Subscription, Profile, AppConfig, SubConfig } from '../proxy/types';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
-import { parse, process, convert, ProxyNode } from '../proxy';
+import { Env } from '../types';
 
 // 去除旧的单例
 // const subscriptionParser = new SubscriptionParser();
@@ -25,44 +24,54 @@ async function generateCombinedNodeList(
     subs: Subscription[]
 ): Promise<ProxyNode[]> {
     // 1. 处理手动节点
-    const manualNodes = subs.filter(sub => {
+    const manualNodes = subs.filter((sub) => {
         const url = sub.url || '';
         return !url.toLowerCase().startsWith('http');
     });
     // 直接解析手动节点文本
-    const manualContent = manualNodes.map(n => n.url).join('\n');
+    const manualContent = manualNodes.map((n) => n.url).join('\n');
     let processedManualNodes = parse(manualContent);
-    processedManualNodes = await process(processedManualNodes, {
-        prependSubName: config.prependSubName,
-        dedupe: config.dedupe
-    }, '手动节点');
+    processedManualNodes = await process(
+        processedManualNodes,
+        {
+            prependSubName: config.prependSubName,
+            dedupe: config.dedupe
+        },
+        '手动节点'
+    );
 
     // 2. 处理 HTTP 订阅
-    const httpSubs = subs.filter(sub => {
+    const httpSubs = subs.filter((sub) => {
         const url = sub.url || '';
         return url.toLowerCase().startsWith('http');
     });
     const subPromises = httpSubs.map(async (sub) => {
         try {
-            const response = await Promise.race([
-                fetch(new Request(sub.url, {
-                    headers: { 'User-Agent': userAgent },
-                    redirect: "follow",
-                    cf: { insecureSkipVerify: true }
-                })),
+            const response = (await Promise.race([
+                fetch(
+                    new Request(sub.url, {
+                        headers: { 'User-Agent': userAgent },
+                        redirect: 'follow',
+                        cf: { insecureSkipVerify: true }
+                    })
+                ),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ]) as Response;
+            ])) as Response;
 
             if (!response.ok) return [];
             const text = await response.text();
 
             // 使用统一解析流水线
             let nodes = parse(text);
-            return await process(nodes, {
-                exclude: sub.exclude,
-                prependSubName: config.prependSubName,
-                dedupe: config.dedupe
-            }, sub.name);
+            return await process(
+                nodes,
+                {
+                    exclude: sub.exclude,
+                    prependSubName: config.prependSubName,
+                    dedupe: config.dedupe
+                },
+                sub.name
+            );
         } catch (e) {
             console.error(`Failed to fetch/parse sub ${sub.name}:`, e);
             return [];
@@ -75,10 +84,12 @@ async function generateCombinedNodeList(
     return allNodes;
 }
 
-export async function handleSubRequest(context: EventContext<Env, string, unknown>): Promise<Response> {
+export async function handleSubRequest(
+    context: EventContext<Env, string, unknown>
+): Promise<Response> {
     const { request, env } = context;
     const url = new URL(request.url);
-    const userAgentHeader = request.headers.get('User-Agent') || "Unknown";
+    const userAgentHeader = request.headers.get('User-Agent') || 'Unknown';
 
     const storage = await getStorage(env);
 
@@ -94,7 +105,10 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
 
     let token: string | null = '';
     let profileIdentifier: string | null = null;
-    const pathSegments = url.pathname.replace(/^\/sub\//, '/').split('/').filter(Boolean);
+    const pathSegments = url.pathname
+        .replace(/^\/sub\//, '/')
+        .split('/')
+        .filter(Boolean);
 
     if (pathSegments.length > 0) {
         token = pathSegments[0];
@@ -115,7 +129,7 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
         if (!token || token !== config.profileToken) {
             return new Response('Invalid Profile Token', { status: 403 });
         }
-        const profile = allProfiles.find(p => p.customId === profileIdentifier);
+        const profile = allProfiles.find((p) => p.customId === profileIdentifier);
         if (profile && profile.enabled) {
             if (profile.expiresAt) {
                 const expiryDate = new Date(profile.expiresAt);
@@ -129,16 +143,27 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
             if (isProfileExpired) {
                 subName = profile.name;
                 // create a temporary expired subscription object
-                targetSubs = [{ id: 'expired-node', url: DEFAULT_EXPIRED_NODE, name: '您的订阅已到期', customId: '', enabled: true, nodeCount: 0 } as Subscription];
+                targetSubs = [
+                    {
+                        id: 'expired-node',
+                        url: DEFAULT_EXPIRED_NODE,
+                        name: '您的订阅已到期',
+                        customId: '',
+                        enabled: true,
+                        nodeCount: 0
+                    } as Subscription
+                ];
             } else {
                 subName = profile.name;
                 const profileSubIds = new Set(profile.subscriptions || []);
                 const profileNodeIds = new Set(profile.manualNodes || []);
-                targetSubs = allSubs.filter(item => {
+                targetSubs = allSubs.filter((item) => {
                     const url = item.url || '';
                     const isSubscription = url.startsWith('http');
                     const isManualNode = !isSubscription;
-                    const belongsToProfile = (isSubscription && profileSubIds.has(item.id)) || (isManualNode && profileNodeIds.has(item.id));
+                    const belongsToProfile =
+                        (isSubscription && profileSubIds.has(item.id)) ||
+                        (isManualNode && profileNodeIds.has(item.id));
                     if (!item.enabled || !belongsToProfile) {
                         return false;
                     }
@@ -152,12 +177,25 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
         if (!token || token !== config.mytoken) {
             return new Response('Invalid Token', { status: 403 });
         }
-        targetSubs = allSubs.filter(s => s.enabled);
+        targetSubs = allSubs.filter((s) => s.enabled);
     }
 
     let targetFormat = url.searchParams.get('target');
     if (!targetFormat) {
-        const supportedFormats = ['clash', 'mihomo', 'singbox', 'surge', 'stash', 'surfboard', 'loon', 'base64', 'v2ray', 'quantumultx', 'shadowrocket', 'uri'];
+        const supportedFormats = [
+            'clash',
+            'mihomo',
+            'singbox',
+            'surge',
+            'stash',
+            'surfboard',
+            'loon',
+            'base64',
+            'v2ray',
+            'quantumultx',
+            'shadowrocket',
+            'uri'
+        ];
         for (const format of supportedFormats) {
             if (url.searchParams.has(format)) {
                 targetFormat = format;
@@ -172,16 +210,16 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
             ['clash-verge', 'mihomo'],
             ['clash-meta', 'mihomo'],
             ['clash.meta', 'mihomo'],
-            ['mihomo', 'mihomo'],               // Mihomo (新版 Clash Meta)
-            ['flclash', 'mihomo'],              // FlClash
-            ['clash party', 'mihomo'],          // Clash Party
+            ['mihomo', 'mihomo'], // Mihomo (新版 Clash Meta)
+            ['flclash', 'mihomo'], // FlClash
+            ['clash party', 'mihomo'], // Clash Party
             ['clashparty', 'mihomo'],
             ['mihomo party', 'mihomo'],
             ['mihomoparty', 'mihomo'],
             ['clashmi', 'mihomo'],
-            ['stash', 'stash'],                // Stash (iOS Clash)
-            ['nekoray', 'mihomo'],              // Nekoray (通常兼容 Clash)
-            ['clash', 'clash'],                // 通用匹配
+            ['stash', 'stash'], // Stash (iOS Clash)
+            ['nekoray', 'mihomo'], // Nekoray (通常兼容 Clash)
+            ['clash', 'clash'], // 通用匹配
 
             // 其他客户端
             ['sing-box', 'singbox'],
@@ -205,7 +243,9 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
             }
         }
     }
-    if (!targetFormat) { targetFormat = 'base64'; }
+    if (!targetFormat) {
+        targetFormat = 'base64';
+    }
 
     if (!url.searchParams.has('callback_token')) {
         const clientIp = request.headers.get('CF-Connecting-IP') || 'N/A';
@@ -215,9 +255,14 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
 
         if (profileIdentifier) {
             message += `\n*订阅组:* \`${subName}\``;
-            const profile = allProfiles.find(p => (p.customId && p.customId === profileIdentifier) || p.id === profileIdentifier);
+            const profile = allProfiles.find(
+                (p) =>
+                    (p.customId && p.customId === profileIdentifier) || p.id === profileIdentifier
+            );
             if (profile && profile.expiresAt) {
-                const expiryDateStr = new Date(profile.expiresAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+                const expiryDateStr = new Date(profile.expiresAt).toLocaleString('zh-CN', {
+                    timeZone: 'Asia/Shanghai'
+                });
                 message += `\n*到期时间:* \`${expiryDateStr}\``;
             }
         }
@@ -231,7 +276,7 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
     let totalBytes = 0;
     let earliestExpire: number | undefined;
 
-    targetSubs.forEach(sub => {
+    targetSubs.forEach((sub) => {
         if (sub.enabled && sub.userInfo) {
             if (sub.userInfo.upload) totalUpload += sub.userInfo.upload;
             if (sub.userInfo.download) totalDownload += sub.userInfo.download;
@@ -252,13 +297,9 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
     const combinedNodes = await generateCombinedNodeList(config, upstreamUserAgent, targetSubs);
 
     try {
-        const convertedContent = await convert(
-            combinedNodes,
-            targetFormat,
-            {
-                filename: subName
-            }
-        );
+        const convertedContent = await convert(combinedNodes, targetFormat, {
+            filename: subName
+        });
 
         const responseHeaders = new Headers({
             'Content-Type': 'text/plain; charset=utf-8',
@@ -287,7 +328,6 @@ export async function handleSubRequest(context: EventContext<Env, string, unknow
             status: 200,
             headers: responseHeaders
         });
-
     } catch (conversionError) {
         const error = conversionError as Error;
         console.error('[Internal Converter Error]', error);

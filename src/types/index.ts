@@ -1,11 +1,22 @@
+// ==================== 2. 需要扩展的基础类型导入 ====================
+import type {
+    ProxyType,
+    // Add this line
+    AppConfig as SharedAppConfig,
+    Profile as SharedProfile,
+    ProxyNode as SharedProxyNode,
+    Subscription as SharedSubscription,
+    SubscriptionUserInfo as SharedUserInfo
+} from '../../lib/backend/proxy/types';
+
 /**
  * ==================== TypeScript 类型定义文件 ====================
- * 
+ *
  * 功能说明：
  * - 应用核心类型定义入口
  * - 聚合 Shared 类型并进行前端扩展
  * - 统一导出所有节点具体类型
- * 
+ *
  * =================================================================
  */
 
@@ -37,20 +48,10 @@ export type {
     UserRole
 } from '../../lib/backend/proxy/types';
 
-// ==================== 2. 需要扩展的基础类型导入 ====================
-import type {
-    ProxyNode as SharedProxyNode,
-    Subscription as SharedSubscription,
-    Profile as SharedProfile,
-    AppConfig as SharedAppConfig,
-    SubscriptionUserInfo as SharedUserInfo,
-    ProxyType // Add this line
-} from '../../lib/backend/proxy/types';
-
 // ==================== 3. 类型扩展定义 ====================
 
-/** 
- * 支持的代理协议类型 
+/**
+ * 支持的代理协议类型
  * 扩展共享定义，优先使用已知类型，同时兼容字符串
  */
 export type ProtocolType = ProxyType | string;

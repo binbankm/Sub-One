@@ -1,12 +1,11 @@
 /**
  * Sub-One Quantumult X Parser
- * 
+ *
  * 解析 Quantumult X 格式的代理行
  * 参考 qx.peg 逻辑进行 1:1 甚至超集还原
  */
-
 import type { ProxyNode, ProxyType } from '../types';
-import { randomId, parsePort } from '../utils';
+import { parsePort, randomId } from '../utils';
 
 /**
  * 解析 Quantumult X 代理行
@@ -33,17 +32,17 @@ export function parseQX(line: string): ProxyNode | null {
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
             server,
-            port,
+            port
         };
 
         // QX 类型映射
         const typeMap: Record<string, ProxyType> = {
-            'shadowsocks': 'ss',
-            'vmess': 'vmess',
-            'vless': 'vless',
-            'trojan': 'trojan',
-            'http': 'http',
-            'socks5': 'socks5'
+            shadowsocks: 'ss',
+            vmess: 'vmess',
+            vless: 'vless',
+            trojan: 'trojan',
+            http: 'http',
+            socks5: 'socks5'
         };
         proxy.type = typeMap[rawType] || (rawType as ProxyType);
 
@@ -53,12 +52,17 @@ export function parseQX(line: string): ProxyNode | null {
             const part = parts[i];
             if (part.includes('=')) {
                 const [key, ...valParts] = part.split('=');
-                params[key.trim().toLowerCase()] = valParts.join('=').trim().replace(/^"(.*)"$/, '$1');
+                params[key.trim().toLowerCase()] = valParts
+                    .join('=')
+                    .trim()
+                    .replace(/^"(.*)"$/, '$1');
             }
         }
 
         // QX 默认名称逻辑 (tag)
-        proxy.name = params.tag ? decodeURIComponent(params.tag) : `${proxy.type.toUpperCase()} ${server}:${port}`;
+        proxy.name = params.tag
+            ? decodeURIComponent(params.tag)
+            : `${proxy.type.toUpperCase()} ${server}:${port}`;
 
         mapQXParams(proxy, params);
 
@@ -87,7 +91,7 @@ function smartSplit(str: string): string[] {
         }
     }
     result.push(current.trim());
-    return result.filter(s => s.length > 0);
+    return result.filter((s) => s.length > 0);
 }
 
 function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) {
@@ -106,7 +110,7 @@ function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) 
     if (params['tls-verification'] === 'false') proxy['skip-cert-verify'] = true;
     if (params['tls-host']) proxy.sni = params['tls-host'];
     if (params['tls-cert-sha256']) proxy['tls-fingerprint'] = params['tls-cert-sha256'];
-    if (params['tls-alpn']) proxy.alpn = params['tls-alpn'].split(',').map(s => s.trim());
+    if (params['tls-alpn']) proxy.alpn = params['tls-alpn'].split(',').map((s) => s.trim());
 
     // QX 特有的 TLS 选项
     if (params['tls-no-session-ticket'] === 'true') proxy['tls-no-session-ticket'] = true;
