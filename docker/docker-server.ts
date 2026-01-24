@@ -126,13 +126,18 @@ class NodeKV {
         }
         return { keys, list_complete: true };
     }
+
+    async getWithMetadata(key: string, options?: any): Promise<any> {
+        const value = await this.get(key, options?.type || 'text');
+        return { value, metadata: null };
+    }
 }
 
 const kv = new NodeKV();
 const env = {
-    SUB_ONE_KV: kv,
+    SUB_ONE_KV: kv as any, // Cast to any to bypass strict KVNamespace type check
     // 模拟 D1 (暂时不实现完整 SQL 支持，重定向到 KV 以保持兼容)
-    SUB_ONE_D1: null,
+    SUB_ONE_D1: null as any,
 };
 
 // 解析 Body
@@ -213,5 +218,21 @@ ensureDataDir().then(() => {
     app.listen(port, () => {
         console.log(`Sub-One Docker Server running at http://localhost:${port}`);
         console.log(`Data directory: ${DATA_DIR}`);
+
+        // --- Docker 内置定时任务 (Cron) ---
+        // 每 6 小时执行一次 (6 * 60 * 60 * 1000)
+        // 使用 handleCronTrigger 直接调用逻辑
+        console.log('⏰ Starting internal cron scheduler (every 6 hours)...');
+        setInterval(async () => {
+            console.log('⏰ Internal cron scheduler triggered.');
+            try {
+                // 构造模拟的 Env 对象
+                const cronEnv = { ...env };
+                // 调用 Cron 逻辑
+                await import('../lib/backend/cron/index').then(m => m.handleCronTrigger(cronEnv));
+            } catch (e) {
+                console.error('❌ Internal cron failed:', e);
+            }
+        }, 6 * 60 * 60 * 1000);
     });
 });

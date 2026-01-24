@@ -477,13 +477,32 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     }
                 });
 
+
                 const results = await Promise.allSettled(updatePromises);
                 const updateResults = results.map(result =>
                     result.status === 'fulfilled' ? result.value : { success: false, error: 'Promise rejected' }
                 );
 
-                // 使用批量写入管理器保存更新后的数据
-                await storage.put(KV_KEY_SUBS, allSubs);
+                // Re-fetch latest data to minimize race condition window
+                // 重新读取最新的订阅列表，以防止覆盖在 fetch 期间发生的其他更改
+                const latestSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
+                let hasChanges = false;
+
+                updateResults.forEach((res: any) => {
+                    if (res.success) {
+                        const targetSub = latestSubs.find(s => s.id === res.id);
+                        if (targetSub) {
+                            targetSub.nodeCount = res.nodeCount;
+                            targetSub.userInfo = res.userInfo;
+                            hasChanges = true;
+                        }
+                    }
+                });
+
+                if (hasChanges) {
+                    await storage.put(KV_KEY_SUBS, latestSubs);
+                }
+
 
                 console.log(`[Batch Update] Completed batch update, ${updateResults.filter(r => (r as any).success).length} successful`);
 
