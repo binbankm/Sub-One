@@ -18,11 +18,6 @@ import { HTTP_REGEX } from '../../utils/constants';
 import { createSubscription } from '../../utils/importer';
 import Card from './components/SubscriptionCard.vue';
 
-// 异步加载模态框
-const SubscriptionEditModal = defineAsyncComponent(
-    () => import('./components/SubscriptionEditModal.vue')
-);
-
 const props = defineProps<{
     // Tab Action from parent (for cross-tab interaction)
     tabAction?: { action: string; payload?: any } | null;
@@ -32,6 +27,11 @@ const emit = defineEmits<{
     (e: 'show-nodes', sub: Subscription): void;
     (e: 'action-handled'): void;
 }>();
+
+// 异步加载模态框
+const SubscriptionEditModal = defineAsyncComponent(
+    () => import('./components/SubscriptionEditModal.vue')
+);
 
 // State
 const itemsPerPage = 6; // Grid-cols-3 friendly
@@ -294,16 +294,16 @@ watch(
                 <!-- 主要操作按钮 -->
                 <div class="flex flex-wrap items-center gap-2">
                     <button
-                        @click="handleAddSubscription"
                         class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                        @click="handleAddSubscription"
                     >
                         新增
                     </button>
 
                     <button
-                        @click="handleUpdateAllSubscriptions"
                         :disabled="isUpdatingAllSubs"
                         class="btn-modern-enhanced btn-update flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                        @click="handleUpdateAllSubscriptions"
                     >
                         <svg
                             v-if="isUpdatingAllSubs"
@@ -333,8 +333,8 @@ watch(
 
                     <button
                         v-if="isSortingSubs && hasUnsavedSortChanges"
-                        @click="handleSortSave"
                         class="btn-modern-enhanced btn-primary flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                        @click="handleSortSave"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -353,12 +353,12 @@ watch(
                         <span class="hidden sm:inline">保存排序</span>
                     </button>
                     <button
-                        @click="handleToggleSort"
                         :class="
                             isSortingSubs
                                 ? 'btn-modern-enhanced btn-sort sorting flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
                                 : 'btn-modern-enhanced btn-sort flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
                         "
+                        @click="handleToggleSort"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -381,10 +381,10 @@ watch(
                     </button>
                 </div>
 
-                <div class="relative" ref="subsMoreMenuRef">
+                <div ref="subsMoreMenuRef" class="relative">
                     <button
-                        @click="showSubsMoreMenu = !showSubsMoreMenu"
                         class="hover-lift rounded-2xl p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 sm:p-4"
+                        @click="showSubsMoreMenu = !showSubsMoreMenu"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -403,18 +403,18 @@ watch(
                             class="absolute right-0 z-50 mt-2 w-40 rounded-2xl border border-gray-300 bg-white shadow-2xl ring-2 ring-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700"
                         >
                             <button
-                                @click="handleToggleBatchDeleteMode"
                                 class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                                @click="handleToggleBatchDeleteMode"
                             >
                                 批量删除
                             </button>
                             <div class="my-1 border-t border-gray-300 dark:border-gray-700"></div>
                             <button
+                                class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                                 @click="
                                     showDeleteAllSubsModal = true;
                                     showSubsMoreMenu = false;
                                 "
-                                class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                             >
                                 清空所有
                             </button>
@@ -457,27 +457,27 @@ watch(
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button
-                            @click="selectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="selectAll"
                         >
                             全选
                         </button>
                         <button
-                            @click="invertSelection"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="invertSelection"
                         >
                             反选
                         </button>
                         <button
-                            @click="deselectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deselectAll"
                         >
                             清空选择
                         </button>
                         <button
-                            @click="deleteSelected"
                             :disabled="selectedCount === 0"
                             class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deleteSelected"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -494,8 +494,8 @@ watch(
                             删除选中 ({{ selectedCount }})
                         </button>
                         <button
-                            @click="handleToggleBatchDeleteMode"
                             class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="handleToggleBatchDeleteMode"
                         >
                             取消
                         </button>
@@ -508,9 +508,9 @@ watch(
         <div v-if="subscriptions.length > 0">
             <draggable
                 v-if="isSortingSubs"
+                v-model="localSubscriptions"
                 tag="div"
                 class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8"
-                v-model="localSubscriptions"
                 :item-key="(item: Subscription) => item.id"
                 animation="300"
                 :delay="200"
@@ -521,14 +521,14 @@ watch(
                     <div class="cursor-move">
                         <Card
                             :sub="subscription"
-                            :isBatchMode="isBatchDeleteMode"
-                            :isSelected="isSelected(subscription.id)"
+                            :is-batch-mode="isBatchDeleteMode"
+                            :is-selected="isSelected(subscription.id)"
                             @delete="handleDeleteSubscriptionWithCleanup(subscription.id)"
                             @change="handleSubscriptionToggle(subscription)"
                             @update="handleSubscriptionUpdate(subscription.id)"
                             @edit="handleEditSubscription(subscription.id)"
-                            @showNodes="$emit('show-nodes', subscription)"
-                            @toggleSelect="toggleSelection(subscription.id)"
+                            @show-nodes="$emit('show-nodes', subscription)"
+                            @toggle-select="toggleSelection(subscription.id)"
                         />
                     </div>
                 </template>
@@ -540,22 +540,22 @@ watch(
                 <div v-for="subscription in paginatedSubscriptions" :key="subscription.id">
                     <Card
                         :sub="subscription"
-                        :isBatchMode="isBatchDeleteMode"
-                        :isSelected="isSelected(subscription.id)"
+                        :is-batch-mode="isBatchDeleteMode"
+                        :is-selected="isSelected(subscription.id)"
                         @delete="handleDeleteSubscriptionWithCleanup(subscription.id)"
                         @change="handleSubscriptionToggle(subscription)"
                         @update="handleSubscriptionUpdate(subscription.id)"
                         @edit="handleEditSubscription(subscription.id)"
-                        @showNodes="$emit('show-nodes', subscription)"
-                        @toggleSelect="toggleSelection(subscription.id)"
+                        @show-nodes="$emit('show-nodes', subscription)"
+                        @toggle-select="toggleSelection(subscription.id)"
                     />
                 </div>
             </div>
             <Pagination
+                v-if="!isSortingSubs"
                 :current-page="currentPage"
                 :total-pages="totalPages"
                 @change-page="changePage"
-                v-if="!isSortingSubs"
             />
         </div>
         <EmptyState
@@ -596,17 +596,17 @@ watch(
 
     <ConfirmModal
         v-model:show="showDeleteAllSubsModal"
-        @confirm="handleDeleteAllSubscriptionsWithCleanup"
         title="确认清空订阅"
         message="您确定要删除所有<strong>订阅</strong>吗？此操作将标记为待保存，不会影响手动节点。"
         type="danger"
+        @confirm="handleDeleteAllSubscriptionsWithCleanup"
     />
 
     <ConfirmModal
         v-model:show="showDeleteSingleSubModal"
-        @confirm="handleConfirmDeleteSingleSub"
         title="确认删除订阅"
         message="您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。"
         type="danger"
+        @confirm="handleConfirmDeleteSingleSub"
     />
 </template>

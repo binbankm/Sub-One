@@ -254,8 +254,8 @@ onUnmounted(() => {
     <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
     <button
         class="fixed left-4 top-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl border border-gray-300 bg-white/95 text-gray-800 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-xl dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-900 lg:hidden"
-        @click="toggleMobileMenu"
         :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
+        @click="toggleMobileMenu"
     >
         <svg
             xmlns="http://www.w3.org/2000/svg"

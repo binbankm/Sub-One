@@ -96,9 +96,7 @@ export function detectFormat(content: string): ContentFormat {
 function isPlatformFormat(str: string): boolean {
     const lines = str
         .split(/\r?\n/)
-        .filter(
-            (l) => l.trim().length > 0 && !l.startsWith('#') && !l.startsWith('//')
-        );
+        .filter((l) => l.trim().length > 0 && !l.startsWith('#') && !l.startsWith('//'));
     if (lines.length === 0) return false;
 
     // 取第一行检测

@@ -154,12 +154,12 @@ watch(
 <template>
     <Modal
         :show="show"
-        @update:show="emit('update:show', $event)"
-        @confirm="handleSave"
         :is-saving="isSaving"
         :confirm-disabled="hasWhitespace"
         confirm-button-title="输入内容包含空格，无法保存"
         size="4xl"
+        @update:show="emit('update:show', $event)"
+        @confirm="handleSave"
     >
         <template #title>
             <div class="flex items-center gap-3">
@@ -201,35 +201,35 @@ watch(
                 <div class="border-b border-gray-300 dark:border-gray-700">
                     <nav class="-mb-px flex gap-2" aria-label="Tabs">
                         <button
-                            @click="activeTab = 'general'"
                             :class="[
                                 'whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors',
                                 activeTab === 'general'
                                     ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
+                            @click="activeTab = 'general'"
                         >
                             常规设置
                         </button>
                         <button
-                            @click="activeTab = 'advanced'"
                             :class="[
                                 'whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors',
                                 activeTab === 'advanced'
                                     ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
+                            @click="activeTab = 'advanced'"
                         >
                             高级设置
                         </button>
                         <button
-                            @click="activeTab = 'storage'"
                             :class="[
                                 'whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors',
                                 activeTab === 'storage'
                                     ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
+                            @click="activeTab = 'storage'"
                         >
                             存储与备份
                         </button>
@@ -269,9 +269,9 @@ watch(
                                         >自定义订阅文件名</label
                                     >
                                     <input
-                                        type="text"
                                         id="fileName"
                                         v-model="settings.FileName"
+                                        type="text"
                                         class="input-modern-enhanced w-full"
                                         placeholder="例如：my_subscription"
                                     />
@@ -283,9 +283,9 @@ watch(
                                         >自定义订阅Token</label
                                     >
                                     <input
-                                        type="text"
                                         id="myToken"
                                         v-model="settings.mytoken"
+                                        type="text"
                                         class="input-modern-enhanced w-full"
                                         placeholder="用于访问订阅链接的Token"
                                     />
@@ -323,9 +323,9 @@ watch(
                                         >订阅组分享Token</label
                                     >
                                     <input
-                                        type="text"
                                         id="profileToken"
                                         v-model="settings.profileToken"
+                                        type="text"
                                         class="input-modern-enhanced w-full"
                                         placeholder="例如：my（必须与订阅Token不同）"
                                     />
@@ -377,8 +377,8 @@ watch(
                                             class="relative inline-flex flex-shrink-0 cursor-pointer items-center"
                                         >
                                             <input
-                                                type="checkbox"
                                                 v-model="settings.prependSubName"
+                                                type="checkbox"
                                                 class="peer sr-only"
                                             />
                                             <div
@@ -413,8 +413,8 @@ watch(
                                             class="relative inline-flex flex-shrink-0 cursor-pointer items-center"
                                         >
                                             <input
-                                                type="checkbox"
                                                 v-model="settings.dedupe"
+                                                type="checkbox"
                                                 class="peer sr-only"
                                             />
                                             <div
@@ -459,9 +459,9 @@ watch(
                                         >Bot Token</label
                                     >
                                     <input
-                                        type="text"
                                         id="tgBotToken"
                                         v-model="settings.BotToken"
+                                        type="text"
                                         class="input-modern-enhanced w-full"
                                         placeholder="从 @BotFather 获取的Bot Token"
                                     />
@@ -473,9 +473,9 @@ watch(
                                         >Chat ID</label
                                     >
                                     <input
-                                        type="text"
                                         id="tgChatID"
                                         v-model="settings.ChatID"
+                                        type="text"
                                         class="input-modern-enhanced w-full"
                                         placeholder="接收通知的聊天ID"
                                     />
@@ -514,9 +514,9 @@ watch(
                                         到期提醒阈值（天）
                                     </label>
                                     <input
-                                        type="number"
                                         id="notifyThresholdDays"
                                         v-model.number="settings.NotifyThresholdDays"
+                                        type="number"
                                         min="1"
                                         max="30"
                                         class="input-modern-enhanced w-full"
@@ -536,9 +536,9 @@ watch(
                                         流量提醒阈值（%）
                                     </label>
                                     <input
-                                        type="number"
                                         id="notifyThresholdPercent"
                                         v-model.number="settings.NotifyThresholdPercent"
+                                        type="number"
                                         min="50"
                                         max="100"
                                         class="input-modern-enhanced w-full"

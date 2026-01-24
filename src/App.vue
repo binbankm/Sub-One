@@ -309,7 +309,7 @@ onMounted(() => {
                     <!-- 仪表盘内容区域 -->
                     <div class="dashboard-content">
                         <!-- Dashboard 组件 - 根据 activeTab 显示不同内容 -->
-                        <Dashboard :data="initialData" v-model:active-tab="activeTab" />
+                        <Dashboard v-model:active-tab="activeTab" :data="initialData" />
                     </div>
 
                     <!-- 页脚 -->

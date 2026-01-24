@@ -36,9 +36,9 @@ const emit = defineEmits<{
 <template>
     <Modal
         :show="show"
+        size="6xl"
         @update:show="emit('update:show', $event)"
         @confirm="emit('update:show', false)"
-        size="6xl"
     >
         <template #title>
             <div class="flex items-center gap-3">

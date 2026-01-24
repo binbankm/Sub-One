@@ -62,7 +62,7 @@ async function generateCombinedNodeList(
             const text = await response.text();
 
             // 使用统一解析流水线
-            let nodes = parse(text);
+            const nodes = parse(text);
             return await process(
                 nodes,
                 {

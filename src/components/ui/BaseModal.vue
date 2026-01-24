@@ -147,17 +147,17 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         >
                             <!-- 取消按钮 -->
                             <button
-                                @click="emit('update:show', false)"
                                 class="rounded-xl bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-md dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                @click="emit('update:show', false)"
                             >
                                 取消
                             </button>
                             <!-- 确认按钮 -->
                             <button
-                                @click="handleConfirm"
                                 :disabled="confirmDisabled"
                                 :title="confirmDisabled ? confirmButtonTitle : '确认'"
                                 class="btn-modern px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
+                                @click="handleConfirm"
                             >
                                 确认
                             </button>

@@ -449,9 +449,9 @@ const extractHost = (url: string) => {
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button
-                                            @click="refreshNodes"
                                             :disabled="isLoading"
                                             class="btn-modern px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                                            @click="refreshNodes"
                                         >
                                             <svg
                                                 v-if="isLoading"
@@ -477,9 +477,9 @@ const extractHost = (url: string) => {
                                         </button>
 
                                         <button
-                                            @click="copySelectedNodes"
                                             :disabled="selectedNodes.size === 0"
                                             class="transform rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                                            @click="copySelectedNodes"
                                         >
                                             复制选中
                                         </button>
@@ -523,8 +523,8 @@ const extractHost = (url: string) => {
                                                     selectedNodes.size > 0 &&
                                                     selectedNodes.size < filteredNodes.length
                                                 "
-                                                @change="toggleSelectAll"
                                                 class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                                                @change="toggleSelectAll"
                                             />
                                             <span
                                                 class="ml-2 text-sm text-gray-700 dark:text-gray-300"
@@ -543,7 +543,6 @@ const extractHost = (url: string) => {
                                         <div
                                             v-for="node in filteredNodes"
                                             :key="node.id"
-                                            @click="toggleNodeSelection(node.id)"
                                             class="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-300 bg-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10 dark:border-gray-700 dark:bg-gray-800/50"
                                             :class="{
                                                 'border-indigo-500/50 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900':
@@ -551,6 +550,7 @@ const extractHost = (url: string) => {
                                                 'border-gray-300 dark:border-gray-700':
                                                     !selectedNodes.has(node.id)
                                             }"
+                                            @click="toggleNodeSelection(node.id)"
                                         >
                                             <!-- 顶部彩色条 -->
                                             <div
@@ -576,10 +576,10 @@ const extractHost = (url: string) => {
                                                                     :checked="
                                                                         selectedNodes.has(node.id)
                                                                     "
+                                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
                                                                     @change="
                                                                         toggleNodeSelection(node.id)
                                                                     "
-                                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
                                                                 />
                                                                 <svg
                                                                     class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
@@ -689,9 +689,9 @@ const extractHost = (url: string) => {
                                                     </div>
 
                                                     <button
-                                                        @click.stop="handleCopySingle(node.url)"
                                                         class="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 font-medium text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                                                         title="复制链接"
+                                                        @click.stop="handleCopySingle(node.url)"
                                                     >
                                                         <span class="hidden sm:inline">复制</span>
                                                         <svg
@@ -743,8 +743,8 @@ const extractHost = (url: string) => {
                             class="flex flex-shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
                         >
                             <button
-                                @click="emit('update:show', false)"
                                 class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                @click="emit('update:show', false)"
                             >
                                 关闭
                             </button>

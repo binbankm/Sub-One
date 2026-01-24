@@ -185,9 +185,9 @@ async function handleImport() {
                     </p>
                 </div>
                 <button
-                    @click="handleExport"
                     :disabled="isExporting"
                     class="flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    @click="handleExport"
                 >
                     <svg
                         v-if="!isExporting"
@@ -245,8 +245,8 @@ async function handleImport() {
                         ref="fileInput"
                         type="file"
                         accept=".json"
-                        @change="handleFileSelect"
                         class="hidden"
+                        @change="handleFileSelect"
                     />
 
                     <div
@@ -312,8 +312,8 @@ async function handleImport() {
                                 </div>
                             </div>
                             <button
-                                @click="selectedBackup = null"
                                 class="p-1 text-gray-400 transition-colors hover:text-red-500"
+                                @click="selectedBackup = null"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -391,8 +391,8 @@ async function handleImport() {
                                 "
                             >
                                 <input
-                                    type="radio"
                                     v-model="restoreMode"
+                                    type="radio"
                                     value="merge"
                                     class="sr-only"
                                 />
@@ -431,8 +431,8 @@ async function handleImport() {
                                 "
                             >
                                 <input
-                                    type="radio"
                                     v-model="restoreMode"
+                                    type="radio"
                                     value="overwrite"
                                     class="sr-only"
                                 />
@@ -467,9 +467,9 @@ async function handleImport() {
                     <!-- 操作按钮 -->
                     <div class="flex gap-3 pt-2">
                         <button
-                            @click="handleImport"
                             :disabled="isImporting"
                             class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            @click="handleImport"
                         >
                             <svg
                                 v-if="!isImporting"
@@ -493,8 +493,8 @@ async function handleImport() {
                             {{ isImporting ? '恢复数据中...' : '确认开始恢复' }}
                         </button>
                         <button
-                            @click="selectedBackup = null"
                             class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                            @click="selectedBackup = null"
                         >
                             取消
                         </button>

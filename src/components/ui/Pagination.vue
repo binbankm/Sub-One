@@ -15,9 +15,9 @@ defineEmits<{
         class="mt-10 flex items-center justify-center gap-2 text-base font-medium sm:gap-4"
     >
         <button
-            @click="$emit('change-page', currentPage - 1)"
             :disabled="currentPage === 1"
             class="hover-lift flex min-w-[70px] items-center justify-center rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:min-w-[100px] sm:rounded-2xl sm:px-6 sm:py-3 sm:text-base"
+            @click="$emit('change-page', currentPage - 1)"
         >
             &laquo;<span class="xs:inline ml-1 hidden">上一页</span>
         </button>
@@ -29,9 +29,9 @@ defineEmits<{
         </span>
 
         <button
-            @click="$emit('change-page', currentPage + 1)"
             :disabled="currentPage === totalPages"
             class="hover-lift flex min-w-[70px] items-center justify-center rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:min-w-[100px] sm:rounded-2xl sm:px-6 sm:py-3 sm:text-base"
+            @click="$emit('change-page', currentPage + 1)"
         >
             <span class="xs:inline mr-1 hidden">下一页</span>&raquo;
         </button>

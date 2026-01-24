@@ -15,6 +15,12 @@ import NodeChart from '../../components/charts/NodeChart.vue';
 import { useDataStore } from '../../stores/data';
 import { useToastStore } from '../../stores/toast';
 
+defineEmits<{
+    (e: 'add-subscription'): void;
+    (e: 'update-all-subscriptions'): void;
+    (e: 'add-node'): void;
+    (e: 'add-profile'): void;
+}>();
 const { showToast } = useToastStore();
 const dataStore = useDataStore();
 const { activeSubscriptions, manualNodes, profiles, totalNodeCount, activeNodeCount } =
@@ -39,13 +45,6 @@ const handleUpdateAll = async () => {
         showToast(result.message || '更新失败', 'error');
     }
 };
-
-defineEmits<{
-    (e: 'add-subscription'): void;
-    (e: 'update-all-subscriptions'): void;
-    (e: 'add-node'): void;
-    (e: 'add-profile'): void;
-}>();
 
 /** 励志语录数据库 */
 const quotes = [
@@ -163,10 +162,10 @@ onMounted(() => {
                         </span>
 
                         <button
-                            @click="refreshQuote"
                             :disabled="isRefreshing"
                             class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white/30 text-gray-700 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/50 active:scale-95 disabled:opacity-50 dark:border-gray-600 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
                             title="换一条"
+                            @click="refreshQuote"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -298,9 +297,9 @@ onMounted(() => {
             <!-- 智能更新卡片 -->
             <div class="flex flex-col gap-4 lg:gap-6">
                 <button
-                    @click="handleUpdateAll"
                     :disabled="isUpdatingAllSubs"
                     class="card-glass group relative flex flex-1 flex-col justify-between overflow-hidden rounded-3xl p-6 text-left shadow-lg transition-all duration-300 hover:shadow-xl"
+                    @click="handleUpdateAll"
                 >
                     <div
                         class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-blue-900/10 dark:to-transparent"
@@ -408,8 +407,8 @@ onMounted(() => {
 
             <!-- 快捷操作按钮 (3个) -->
             <button
-                @click="$emit('add-subscription')"
                 class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-indigo-200 hover:shadow-md dark:hover:border-indigo-800"
+                @click="$emit('add-subscription')"
             >
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-indigo-500 group-hover:text-white dark:bg-gray-700"
@@ -440,8 +439,8 @@ onMounted(() => {
             </button>
 
             <button
-                @click="$emit('add-node')"
                 class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-md dark:hover:border-emerald-800"
+                @click="$emit('add-node')"
             >
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-emerald-500 group-hover:text-white dark:bg-gray-700"
@@ -472,8 +471,8 @@ onMounted(() => {
             </button>
 
             <button
-                @click="$emit('add-profile')"
                 class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md dark:hover:border-purple-800"
+                @click="$emit('add-profile')"
             >
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-purple-500 group-hover:text-white dark:bg-gray-700"

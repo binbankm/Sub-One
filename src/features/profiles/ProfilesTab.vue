@@ -12,9 +12,6 @@ import { useToastStore } from '../../stores/toast';
 import type { Profile } from '../../types/index';
 import ProfileCard from './components/ProfileCard.vue';
 
-// Async components
-const ProfileModal = defineAsyncComponent(() => import('./components/ProfileModal.vue'));
-
 const props = defineProps<{
     tabAction?: { action: string } | null;
 }>();
@@ -23,6 +20,9 @@ const emit = defineEmits<{
     (e: 'show-nodes', profile: Profile): void;
     (e: 'action-handled'): void;
 }>();
+
+// Async components
+const ProfileModal = defineAsyncComponent(() => import('./components/ProfileModal.vue'));
 
 // Utils
 const { showToast } = useToastStore();
@@ -211,15 +211,15 @@ onUnmounted(() => {
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <div class="flex flex-wrap items-center gap-2">
                     <button
-                        @click="handleAddProfile"
                         class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                        @click="handleAddProfile"
                     >
                         新增
                     </button>
-                    <div class="relative" ref="profilesMoreMenuRef">
+                    <div ref="profilesMoreMenuRef" class="relative">
                         <button
-                            @click="showProfilesMoreMenu = !showProfilesMoreMenu"
                             class="hover-lift rounded-2xl p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 sm:p-4"
+                            @click="showProfilesMoreMenu = !showProfilesMoreMenu"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -238,8 +238,8 @@ onUnmounted(() => {
                                 class="absolute right-0 z-50 mt-2 w-36 rounded-2xl border border-gray-300 bg-white shadow-2xl ring-2 ring-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700"
                             >
                                 <button
-                                    @click="handleToggleBatchDeleteMode"
                                     class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                                    @click="handleToggleBatchDeleteMode"
                                 >
                                     批量删除
                                 </button>
@@ -247,11 +247,11 @@ onUnmounted(() => {
                                     class="my-1 border-t border-gray-300 dark:border-gray-700"
                                 ></div>
                                 <button
+                                    class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                                     @click="
                                         showDeleteAllProfilesModal = true;
                                         showProfilesMoreMenu = false;
                                     "
-                                    class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                                 >
                                     清空所有
                                 </button>
@@ -295,27 +295,27 @@ onUnmounted(() => {
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button
-                            @click="selectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="selectAll"
                         >
                             全选
                         </button>
                         <button
-                            @click="invertSelection"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="invertSelection"
                         >
                             反选
                         </button>
                         <button
-                            @click="deselectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deselectAll"
                         >
                             清空选择
                         </button>
                         <button
-                            @click="deleteSelected"
                             :disabled="selectedCount === 0"
                             class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deleteSelected"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -332,8 +332,8 @@ onUnmounted(() => {
                             删除选中 ({{ selectedCount }})
                         </button>
                         <button
-                            @click="handleToggleBatchDeleteMode"
                             class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="handleToggleBatchDeleteMode"
                         >
                             取消
                         </button>
@@ -351,14 +351,14 @@ onUnmounted(() => {
                 :key="profile.id"
                 :profile="profile"
                 :all-subscriptions="subscriptions"
-                :isBatchMode="isBatchDeleteMode"
-                :isSelected="isSelected(profile.id)"
+                :is-batch-mode="isBatchDeleteMode"
+                :is-selected="isSelected(profile.id)"
                 @edit="handleEditProfile(profile.id)"
                 @delete="handleDeleteProfile(profile.id)"
                 @change="handleToggleProfile"
                 @copy-link="handleCopyLink(profile.id)"
-                @showNodes="$emit('show-nodes', profile)"
-                @toggleSelect="toggleSelection(profile.id)"
+                @show-nodes="$emit('show-nodes', profile)"
+                @toggle-select="toggleSelection(profile.id)"
             />
         </div>
         <Pagination
@@ -399,24 +399,24 @@ onUnmounted(() => {
             :is-new="isNewProfile"
             :all-subscriptions="subscriptions"
             :all-manual-nodes="manualNodes"
-            @save="handleSaveProfile"
             size="2xl"
+            @save="handleSaveProfile"
         />
 
         <ConfirmModal
             v-model:show="showDeleteSingleProfileModal"
-            @confirm="handleConfirmDeleteSingleProfile"
             title="确认删除订阅组"
             message="您确定要删除此订阅组吗？此操作不可逆。"
             type="danger"
+            @confirm="handleConfirmDeleteSingleProfile"
         />
 
         <ConfirmModal
             v-model:show="showDeleteAllProfilesModal"
-            @confirm="handleDeleteAllProfiles"
             title="确认清空订阅组"
             message="您确定要删除所有<strong>订阅组</strong>吗？此操作不可逆。"
             type="danger"
+            @confirm="handleDeleteAllProfiles"
         />
 
         <!-- Export Modal -->

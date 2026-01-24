@@ -12,7 +12,9 @@
         "test:watch": "vitest",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest run --coverage",
-        "test:proxy": "vitest lib/backend/proxy/__tests__/*.test.ts"
+        "test:proxy": "vitest lib/backend/proxy/__tests__/*.test.ts",
+        "lint": "eslint . --ext .vue,.js,jsx,cjs,mjs,ts,tsx,cts,mts --fix",
+        "format": "prettier --write ."
     },
     "dependencies": {
         "@types/lodash-es": "^4.17.12",
@@ -37,7 +39,12 @@
         "@vitejs/plugin-vue": "^5.0.4",
         "@vitest/ui": "^4.0.16",
         "@vue/typescript-plugin": "^3.0.5",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
         "autoprefixer": "^10.4.19",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-vue": "^9.22.0",
         "miniflare": "^4.20250604.1",
         "postcss": "^8.4.38",
         "prettier": "^3.8.1",
@@ -47,6 +54,7 @@
         "typescript": "^5.9.2",
         "vite": "^5.2.11",
         "vitest": "^4.0.16",
+        "vue-eslint-parser": "^9.4.2",
         "vue-tsc": "^3.1.5"
     }
 }

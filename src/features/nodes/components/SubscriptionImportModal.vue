@@ -256,10 +256,10 @@ const importSubscription = async () => {
 <template>
     <Modal
         :show="show"
-        @update:show="emit('update:show', $event)"
-        @confirm="importSubscription"
         confirm-text="导入"
         :confirm-disabled="isLoading"
+        @update:show="emit('update:show', $event)"
+        @confirm="importSubscription"
     >
         <template #title>
             <div class="flex flex-col gap-1">
@@ -295,12 +295,12 @@ const importSubscription = async () => {
                         >订阅链接</label
                     >
                     <input
-                        type="text"
                         v-model="subscriptionUrl"
+                        v-focus
+                        type="text"
                         placeholder="https://example.com/api/v1/client/subscribe?token=..."
                         class="input-modern w-full"
                         @keyup.enter="importSubscription"
-                        v-focus
                     />
                 </div>
 
@@ -324,8 +324,8 @@ const importSubscription = async () => {
                     @click="triggerFileInput"
                 >
                     <input
-                        type="file"
                         ref="fileInputRef"
+                        type="file"
                         class="hidden"
                         accept=".yaml,.yml,.txt,.json,.conf"
                         @change="handleFileSelect"

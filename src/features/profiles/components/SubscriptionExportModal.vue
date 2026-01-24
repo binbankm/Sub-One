@@ -130,8 +130,8 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         </p>
                     </div>
                     <button
-                        @click="close"
                         class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                        @click="close"
                     >
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
@@ -193,9 +193,9 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         <div class="flex items-center gap-1">
                             <!-- Copy Button -->
                             <button
-                                @click="handleCopy(option)"
                                 class="rounded-lg p-2.5 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 active:scale-95 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                                 title="复制链接"
+                                @click="handleCopy(option)"
                             >
                                 <svg
                                     class="h-5 w-5"
@@ -220,8 +220,8 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                     class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-gray-800 dark:bg-gray-900/50"
                 >
                     <button
-                        @click="emit('update:show', false)"
                         class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        @click="emit('update:show', false)"
                     >
                         取消
                     </button>

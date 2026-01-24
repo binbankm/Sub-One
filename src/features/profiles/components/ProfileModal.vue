@@ -168,9 +168,9 @@ const handleDeselectAll = (
 <template>
     <Modal
         :show="show"
+        size="2xl"
         @update:show="emit('update:show', $event)"
         @confirm="handleConfirm"
-        size="2xl"
     >
         <template #title>
             <h3 class="text-xl font-bold text-gray-800 dark:text-white">
@@ -190,9 +190,9 @@ const handleDeselectAll = (
                             订阅组名称
                         </label>
                         <input
-                            type="text"
                             id="profile-name"
                             v-model="localProfile.name"
+                            type="text"
                             placeholder="例如：家庭共享"
                             class="input-modern-enhanced"
                         />
@@ -208,17 +208,17 @@ const handleDeselectAll = (
                         </label>
                         <div class="flex gap-2">
                             <input
-                                type="text"
                                 id="profile-custom-id"
                                 v-model="localProfile.customId"
+                                type="text"
                                 placeholder="如: home, game (限字母、数字、-、_)"
                                 class="input-modern-enhanced flex-1"
                             />
                             <button
-                                @click="handleGenerateShortId"
                                 type="button"
                                 class="rounded-xl bg-gray-100 px-3 py-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                                 title="生成随机短 ID"
+                                @click="handleGenerateShortId"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -254,9 +254,9 @@ const handleDeselectAll = (
                         </label>
                         <div class="relative">
                             <input
-                                type="date"
                                 id="profile-expires-at"
                                 v-model="localProfile.expiresAt"
+                                type="date"
                                 class="input-modern-enhanced"
                             />
                         </div>
@@ -276,16 +276,16 @@ const handleDeselectAll = (
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    @click="handleSelectAll('subscriptions', filteredSubscriptions)"
                                     class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    @click="handleSelectAll('subscriptions', filteredSubscriptions)"
                                 >
                                     全选
                                 </button>
                                 <button
+                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
                                     @click="
                                         handleDeselectAll('subscriptions', filteredSubscriptions)
                                     "
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
                                 >
                                     全不选
                                 </button>
@@ -294,8 +294,8 @@ const handleDeselectAll = (
 
                         <div class="relative mb-3">
                             <input
-                                type="text"
                                 v-model="subscriptionSearchTerm"
+                                type="text"
                                 placeholder="搜索订阅..."
                                 class="search-input-unified"
                             />
@@ -335,8 +335,8 @@ const handleDeselectAll = (
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.subscriptions?.includes(sub.id)"
-                                            @change="toggleSelection('subscriptions', sub.id)"
                                             class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            @change="toggleSelection('subscriptions', sub.id)"
                                         />
                                         <span
                                             class="select-none truncate text-sm font-medium text-gray-700 dark:text-gray-200"
@@ -382,14 +382,14 @@ const handleDeselectAll = (
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    @click="handleSelectAll('manualNodes', filteredManualNodes)"
                                     class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    @click="handleSelectAll('manualNodes', filteredManualNodes)"
                                 >
                                     全选
                                 </button>
                                 <button
-                                    @click="handleDeselectAll('manualNodes', filteredManualNodes)"
                                     class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    @click="handleDeselectAll('manualNodes', filteredManualNodes)"
                                 >
                                     全不选
                                 </button>
@@ -398,8 +398,8 @@ const handleDeselectAll = (
 
                         <div class="relative mb-3">
                             <input
-                                type="text"
                                 v-model="nodeSearchTerm"
+                                type="text"
                                 placeholder="搜索节点..."
                                 class="search-input-unified"
                             />
@@ -439,8 +439,8 @@ const handleDeselectAll = (
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.manualNodes?.includes(node.id)"
-                                            @change="toggleSelection('manualNodes', node.id)"
                                             class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            @change="toggleSelection('manualNodes', node.id)"
                                         />
                                         <span
                                             class="select-none truncate text-sm font-medium text-gray-700 dark:text-gray-200"

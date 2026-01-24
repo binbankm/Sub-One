@@ -144,8 +144,8 @@ const handleTestLatency = async () => {
                         <input
                             type="checkbox"
                             :checked="isSelected"
-                            @change="emit('toggleSelect')"
                             class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-indigo-600 dark:border-gray-600 dark:bg-gray-700"
+                            @change="emit('toggleSelect')"
                         />
                     </label>
                 </div>
@@ -209,9 +209,9 @@ const handleTestLatency = async () => {
                     class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
                 >
                     <button
-                        @click.stop="emit('edit')"
                         class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
                         title="编辑"
+                        @click.stop="emit('edit')"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -229,9 +229,9 @@ const handleTestLatency = async () => {
                         </svg>
                     </button>
                     <button
-                        @click.stop="emit('delete')"
                         class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
                         title="删除"
+                        @click.stop="emit('delete')"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -266,9 +266,9 @@ const handleTestLatency = async () => {
                     />
                     <div class="mt-2 flex items-center gap-2 sm:mt-3">
                         <button
-                            @click.stop="toggleUrlVisibility"
                             class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-orange-500/20 hover:text-orange-600 dark:text-gray-300 dark:hover:text-orange-400 sm:gap-2 sm:px-4 sm:py-2"
                             :title="showUrl ? '隐藏链接' : '显示链接'"
+                            @click.stop="toggleUrlVisibility"
                         >
                             <svg
                                 v-if="showUrl"
@@ -308,9 +308,9 @@ const handleTestLatency = async () => {
                         </button>
                         <button
                             v-if="showUrl"
-                            @click.stop="copyUrl"
                             class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 dark:text-gray-300 dark:hover:text-yellow-400 sm:gap-2 sm:px-4 sm:py-2"
                             title="复制链接"
+                            @click.stop="copyUrl"
                         >
                             <svg
                                 class="h-3 w-3"
@@ -398,8 +398,8 @@ const handleTestLatency = async () => {
                         <input
                             type="checkbox"
                             :checked="sub.enabled"
-                            @change="emit('change')"
                             class="peer sr-only"
+                            @change="emit('change')"
                         />
                         <div
                             class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] group-hover/toggle:shadow-md peer-checked:bg-indigo-500 peer-checked:after:translate-x-4 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
@@ -412,7 +412,6 @@ const handleTestLatency = async () => {
 
                 <div class="flex items-center gap-2">
                     <button
-                        @click.stop="handleTestLatency"
                         :disabled="isTestingLatency"
                         class="rounded-lg p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                         :class="{
@@ -432,6 +431,7 @@ const handleTestLatency = async () => {
                                       : '不可用'
                                   : '测试连接'
                         "
+                        @click.stop="handleTestLatency"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -451,8 +451,8 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
-                        @click.stop="emit('showNodes')"
                         class="group/btn flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                        @click.stop="emit('showNodes')"
                     >
                         <span
                             class="h-1.5 w-1.5 rounded-full"
@@ -476,10 +476,10 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
-                        @click.stop="emit('update')"
                         :disabled="sub.isUpdating"
                         class="rounded-lg p-1.5 text-gray-600 transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                         :title="sub.isUpdating ? '更新中...' : '更新订阅'"
+                        @click.stop="emit('update')"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

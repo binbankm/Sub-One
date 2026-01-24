@@ -65,8 +65,8 @@ const totalNodeCount = computed(() => {
                     <input
                         type="checkbox"
                         :checked="isSelected"
-                        @change="emit('toggleSelect')"
                         class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-purple-600 dark:border-gray-600 dark:bg-gray-700"
+                        @change="emit('toggleSelect')"
                     />
                 </label>
             </div>
@@ -110,9 +110,9 @@ const totalNodeCount = computed(() => {
                 class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
             >
                 <button
-                    @click.stop="emit('edit')"
                     class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
                     title="编辑"
+                    @click.stop="emit('edit')"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -130,9 +130,9 @@ const totalNodeCount = computed(() => {
                     </svg>
                 </button>
                 <button
-                    @click.stop="emit('delete')"
                     class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
                     title="删除"
+                    @click.stop="emit('delete')"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -163,13 +163,13 @@ const totalNodeCount = computed(() => {
                 <input
                     type="checkbox"
                     :checked="profile.enabled"
+                    class="peer sr-only"
                     @change="
                         $emit('change', {
                             ...profile,
                             enabled: ($event.target as HTMLInputElement).checked
                         })
                     "
-                    class="peer sr-only"
                 />
                 <div
                     class="peer h-6 w-11 rounded-full bg-gray-200 from-indigo-500 to-purple-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-gradient-to-r peer-checked:after:translate-x-5 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
@@ -183,9 +183,9 @@ const totalNodeCount = computed(() => {
             <!-- 操作按钮组 -->
             <div class="flex flex-shrink-0 items-center gap-2">
                 <button
-                    @click.stop="emit('showNodes')"
                     class="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                     title="显示节点信息"
+                    @click.stop="emit('showNodes')"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -209,8 +209,8 @@ const totalNodeCount = computed(() => {
                     <span>节点</span>
                 </button>
                 <button
-                    @click.stop="emit('copy-link')"
                     class="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-purple-800 dark:hover:bg-purple-900/30 dark:hover:text-purple-400"
+                    @click.stop="emit('copy-link')"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

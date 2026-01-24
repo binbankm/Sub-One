@@ -103,9 +103,9 @@ const handleCancel = () => {
 <template>
     <Modal
         :show="props.show"
+        :confirm-text="props.confirmText"
         @update:show="handleCancel"
         @confirm="handleConfirm"
-        :confirm-text="props.confirmText"
     >
         <template #title>
             <div class="flex items-center gap-3">

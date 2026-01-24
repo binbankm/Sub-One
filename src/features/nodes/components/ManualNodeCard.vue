@@ -81,8 +81,8 @@ const handleCopy = async (url: string) => {
                             <input
                                 type="checkbox"
                                 :checked="isSelected"
-                                @change="emit('toggleSelect')"
                                 class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-emerald-500 checked:bg-emerald-500 dark:border-gray-600"
+                                @change="emit('toggleSelect')"
                             />
                             <svg
                                 class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
@@ -128,9 +128,9 @@ const handleCopy = async (url: string) => {
                     @click.stop
                 >
                     <button
-                        @click="emit('edit')"
                         class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
                         title="编辑"
+                        @click="emit('edit')"
                     >
                         <svg
                             class="h-4 w-4"
@@ -147,9 +147,9 @@ const handleCopy = async (url: string) => {
                         </svg>
                     </button>
                     <button
-                        @click="emit('delete')"
                         class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/40 dark:hover:text-rose-400"
                         title="删除"
+                        @click="emit('delete')"
                     >
                         <svg
                             class="h-4 w-4"
@@ -207,9 +207,9 @@ const handleCopy = async (url: string) => {
                     <!-- 复制链接按钮 -->
                     <button
                         v-if="node.url"
-                        @click.stop="handleCopy(node.url)"
                         class="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 font-medium text-gray-500 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                         title="复制完整链接"
+                        @click.stop="handleCopy(node.url)"
                     >
                         <span class="hidden sm:inline">复制</span>
                         <svg

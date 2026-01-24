@@ -147,9 +147,9 @@ onMounted(() => {
             </div>
             <button
                 class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700"
-                @click="loadBackendInfo"
                 :disabled="loading"
                 title="刷新状态"
+                @click="loadBackendInfo"
             >
                 <svg
                     v-if="loading"
@@ -405,12 +405,12 @@ onMounted(() => {
     <!-- 确认切换对话框 -->
     <ConfirmModal
         :show="showConfirm"
-        @update:show="showConfirm = $event"
-        @confirm="confirmSwitch"
         title="切换存储后端"
         type="warning"
         confirm-text="确认切换"
         cancel-text="再想想"
+        @update:show="showConfirm = $event"
+        @confirm="confirmSwitch"
     >
         <template #body>
             <div class="space-y-4">

@@ -395,13 +395,13 @@ const confirmClear = () => {
             >
                 <!-- 排除模式 (黑名单) -->
                 <button
-                    @click="mode = 'exclude'"
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'exclude'
                             ? 'scale-105 transform bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
+                    @click="mode = 'exclude'"
                 >
                     <span>🚫</span>
                     <span>排除模式</span>
@@ -409,13 +409,13 @@ const confirmClear = () => {
                 </button>
                 <!-- 保留模式 (白名单) -->
                 <button
-                    @click="mode = 'keep'"
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'keep'
                             ? 'scale-105 transform bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
+                    @click="mode = 'keep'"
                 >
                     <span>✅</span>
                     <span>保留模式</span>
@@ -432,8 +432,8 @@ const confirmClear = () => {
                     {{ ruleCount }} 条规则
                 </span>
                 <button
-                    @click="clearAll"
                     class="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                    @click="clearAll"
                 >
                     🗑️ 清空
                 </button>
@@ -457,13 +457,13 @@ const confirmClear = () => {
                 <button
                     v-for="p in protocols"
                     :key="p.value"
-                    @click="toggleProtocol(p.value)"
                     class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedProtocols.includes(p.value)
                             ? 'border-indigo-300 bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/50 dark:border-indigo-700'
                             : 'border-gray-300 bg-white text-gray-700 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-600'
                     "
+                    @click="toggleProtocol(p.value)"
                 >
                     <span class="mr-1">{{ p.icon }}</span>
                     {{ p.label }}
@@ -488,13 +488,13 @@ const confirmClear = () => {
                 <button
                     v-for="r in regions"
                     :key="r.value"
-                    @click="toggleRegion(r.value)"
                     class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedRegions.includes(r.value)
                             ? 'border-emerald-300 bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/50 dark:border-emerald-700'
                             : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-600'
                     "
+                    @click="toggleRegion(r.value)"
                 >
                     <span class="mr-1.5">{{ r.flag }}</span>
                     {{ r.label }}
@@ -521,13 +521,13 @@ const confirmClear = () => {
                 <button
                     v-for="k in commonKeywords"
                     :key="k.value"
-                    @click="toggleKeyword(k.value)"
                     class="transform rounded-lg border-2 border-dashed px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:scale-105"
                     :class="
                         customKeywords.includes(k.value)
                             ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-sm dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
                             : 'border-gray-300 bg-white text-gray-600 hover:border-amber-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-amber-500'
                     "
+                    @click="toggleKeyword(k.value)"
                 >
                     {{ k.value }}
                 </button>
@@ -537,14 +537,14 @@ const confirmClear = () => {
             <div class="flex gap-2">
                 <input
                     v-model="newKeyword"
-                    @keyup.enter="addKeyword"
                     type="text"
                     placeholder="✍️ 输入关键词后回车添加..."
                     class="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800"
+                    @keyup.enter="addKeyword"
                 />
                 <button
-                    @click="addKeyword"
                     class="transform rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                    @click="addKeyword"
                 >
                     ➕ 添加
                 </button>
@@ -562,8 +562,8 @@ const confirmClear = () => {
                 >
                     <span>{{ k }}</span>
                     <button
-                        @click="removeKeyword(k)"
                         class="ml-2 text-lg font-bold leading-none text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+                        @click="removeKeyword(k)"
                     >
                         ×
                     </button>
@@ -581,15 +581,14 @@ const confirmClear = () => {
                     {{ isManualMode ? '手动编辑' : '规则预览' }}
                 </label>
                 <button
-                    @click="isManualMode = !isManualMode"
                     class="transform rounded-lg bg-purple-100 px-4 py-1.5 text-xs font-medium text-purple-600 transition-all hover:scale-105 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-800/50"
+                    @click="isManualMode = !isManualMode"
                 >
                     {{ isManualMode ? '📊 可视化模式' : '⌨️ 手动编辑' }}
                 </button>
             </div>
             <textarea
                 :value="modelValue"
-                @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
                 :readonly="!isManualMode"
                 rows="4"
                 :placeholder="isManualMode ? '在此手动编辑过滤规则...' : '规则将自动生成在这里'"
@@ -598,6 +597,7 @@ const confirmClear = () => {
                     'cursor-not-allowed opacity-60': !isManualMode,
                     'focus:border-purple-500': isManualMode
                 }"
+                @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
             ></textarea>
 
             <p

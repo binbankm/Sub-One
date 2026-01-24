@@ -234,9 +234,9 @@ const handleShowProfileNodeDetails = (profile: Profile) => {
     <!-- 节点详情模态框 -->
     <NodeDetailsModal
         :show="showNodeDetailsModal"
-        @update:show="showNodeDetailsModal = $event"
         :subscription="selectedSubscription"
         :profile="selectedProfile"
+        @update:show="showNodeDetailsModal = $event"
     />
 </template>
 

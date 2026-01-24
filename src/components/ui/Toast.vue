@@ -110,8 +110,8 @@ const getToastStyle = (type: string) => {
 
                 <!-- 关闭按钮 -->
                 <button
-                    @click="toastStore.removeToast(toast.id)"
                     class="-mr-1 -mt-1 flex-shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-700"
+                    @click="toastStore.removeToast(toast.id)"
                 >
                     <svg
                         class="h-4 w-4"

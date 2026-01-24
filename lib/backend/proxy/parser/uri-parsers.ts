@@ -40,7 +40,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
 
     try {
         let content = uri.split('ss://')[1];
-        let name = uri.split('#')[1];
+        const name = uri.split('#')[1];
 
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
@@ -52,7 +52,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
         const serverMatch = content.match(/@([^/?]*)(\/|\?|$)/);
         let query = '';
 
-        let rawUserInfoStr = decodeURIComponent(content.split('@')[0]);
+        const rawUserInfoStr = decodeURIComponent(content.split('@')[0]);
         let userInfoStr: string;
 
         if (rawUserInfoStr?.startsWith('2022-blake3-')) {
@@ -212,7 +212,7 @@ export function parseShadowsocksR(uri: string): ProxyNode | null {
     if (!uri.startsWith('ssr://')) return null;
 
     try {
-        let line = Base64.decode(uri.split('ssr://')[1]);
+        const line = Base64.decode(uri.split('ssr://')[1]);
 
         let splitIdx = line.indexOf(':origin');
         if (splitIdx === -1) {
@@ -228,7 +228,7 @@ export function parseShadowsocksR(uri: string): ProxyNode | null {
             .split('/?')[0]
             .split(':');
 
-        let proxy: Partial<ProxyNode> = {
+        const proxy: Partial<ProxyNode> = {
             id: randomId(),
             type: 'ssr',
             server,
@@ -465,7 +465,7 @@ export function parseVMess(uri: string): ProxyNode | null {
     if (!uri.startsWith('vmess://')) return null;
 
     try {
-        let line = uri.split('vmess://')[1];
+        const line = uri.split('vmess://')[1];
         let content = Base64.decode(line.replace(/\?.*?$/, ''));
 
         if (/=\s*vmess/.test(content)) {

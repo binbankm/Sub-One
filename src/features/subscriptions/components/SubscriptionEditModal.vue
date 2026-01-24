@@ -162,11 +162,11 @@ const toggleAdvanced = () => {
 <template>
     <Modal
         :show="show"
-        @update:show="handleCancel"
-        @confirm="handleSave"
         :confirm-text="saveButtonText"
         :confirm-disabled="!canSave"
         size="4xl"
+        @update:show="handleCancel"
+        @confirm="handleSave"
     >
         <template #title>
             <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -241,8 +241,8 @@ const toggleAdvanced = () => {
                 <!-- 高级选项 -->
                 <div class="border-t border-gray-300 pt-4 dark:border-gray-700">
                     <button
-                        @click="toggleAdvanced"
                         class="flex items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+                        @click="toggleAdvanced"
                     >
                         <svg
                             class="h-4 w-4 transition-transform duration-200"

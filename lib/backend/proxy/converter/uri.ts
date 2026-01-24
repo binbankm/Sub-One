@@ -64,7 +64,7 @@ export class URIConverter extends BaseConverter {
             ? `${encodeURIComponent(node.cipher || '')}:${encodeURIComponent(node.password || '')}`
             : Base64.encode(`${node.cipher || ''}:${node.password || ''}`, true);
 
-        let uri = `ss://${userinfo}@${node.server}:${node.port}`;
+        const uri = `ss://${userinfo}@${node.server}:${node.port}`;
         const params = new URLSearchParams();
 
         if (node.plugin) {

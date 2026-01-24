@@ -186,10 +186,10 @@ const handleCancel = () => {
 <template>
     <Modal
         :show="show"
-        @update:show="handleCancel"
-        @confirm="handleSave"
         :confirm-text="saveButtonText"
         :confirm-disabled="!canSave"
+        @update:show="handleCancel"
+        @confirm="handleSave"
     >
         <template #title>
             <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -209,9 +209,9 @@ const handleCancel = () => {
                         <span class="ml-1 text-xs text-gray-400">(可选)</span>
                     </label>
                     <input
+                        id="node-name"
                         v-model="localNode.name"
                         type="text"
-                        id="node-name"
                         placeholder="留空时自动从链接提取"
                         class="input-modern w-full"
                         @input="handleNameInput"
@@ -231,8 +231,8 @@ const handleCancel = () => {
                         <span class="text-red-500">*</span>
                     </label>
                     <textarea
-                        v-model="localNode.url"
                         id="node-url"
+                        v-model="localNode.url"
                         rows="4"
                         placeholder="vmess://... 或 ss://... 等节点分享链接"
                         class="input-modern w-full resize-none font-mono text-sm"

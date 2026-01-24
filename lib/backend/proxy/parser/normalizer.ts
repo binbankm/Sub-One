@@ -105,7 +105,7 @@ function normalizeNetwork(proxy: ProxyNode) {
  */
 function formatPath(path: any): string {
     if (typeof path === 'string' || typeof path === 'number') {
-        let p = String(path).trim();
+        const p = String(path).trim();
         if (p === '') return '/';
         return p.startsWith('/') ? p : '/' + p;
     }

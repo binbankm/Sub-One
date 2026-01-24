@@ -15,19 +15,9 @@ import type { Node } from '../../types/index';
 import { createNode, parseImportText } from '../../utils/importer';
 import ManualNodeCard from './components/ManualNodeCard.vue';
 
-// Async Components
-const NodeEditModal = defineAsyncComponent(() => import('./components/NodeEditModal.vue'));
-const BulkImportModal = defineAsyncComponent(
-    () => import('../../components/ui/BulkImportModal.vue')
-);
-const SubscriptionImportModal = defineAsyncComponent(
-    () => import('./components/SubscriptionImportModal.vue')
-);
-
 const props = defineProps<{
     tabAction?: { action: string } | null;
 }>();
-
 const emit = defineEmits<{
     (e: 'save-sort'): void;
     (e: 'toggle-sort'): void;
@@ -45,6 +35,14 @@ const emit = defineEmits<{
     // Manual sort is local or store?
     // Store has `manualNodes` which we modify. Sorting is just reordering the array.
 }>();
+// Async Components
+const NodeEditModal = defineAsyncComponent(() => import('./components/NodeEditModal.vue'));
+const BulkImportModal = defineAsyncComponent(
+    () => import('../../components/ui/BulkImportModal.vue')
+);
+const SubscriptionImportModal = defineAsyncComponent(
+    () => import('./components/SubscriptionImportModal.vue')
+);
 
 // Utils
 const { showToast } = useToastStore();
@@ -285,8 +283,8 @@ onUnmounted(() => {
                 <!-- 搜索框 -->
                 <div class="relative mb-2 w-full flex-shrink-0 sm:mb-0 sm:w-56">
                     <input
-                        type="text"
                         v-model="searchTerm"
+                        type="text"
                         placeholder="搜索节点..."
                         class="search-input-unified w-full text-base"
                     />
@@ -310,23 +308,23 @@ onUnmounted(() => {
                     <!-- 主要操作按钮 -->
                     <div class="flex flex-wrap items-center gap-2">
                         <button
-                            @click="handleAddNode"
                             class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                            @click="handleAddNode"
                         >
                             新增
                         </button>
 
                         <button
-                            @click="showSubscriptionImportModal = true"
                             class="btn-modern-enhanced btn-import transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                            @click="showSubscriptionImportModal = true"
                         >
                             导入节点
                         </button>
 
                         <button
                             v-if="isSortingNodes && hasUnsavedSortChanges"
-                            @click="handleSaveSort"
                             class="btn-modern-enhanced btn-primary flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                            @click="handleSaveSort"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -345,12 +343,12 @@ onUnmounted(() => {
                             <span class="hidden sm:inline">保存排序</span>
                         </button>
                         <button
-                            @click="handleToggleSort"
                             :class="
                                 isSortingNodes
                                     ? 'btn-modern-enhanced btn-sort sorting flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
                                     : 'btn-modern-enhanced btn-sort flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
                             "
+                            @click="handleToggleSort"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -374,10 +372,10 @@ onUnmounted(() => {
                     </div>
 
                     <!-- 更多菜单 -->
-                    <div class="relative" ref="nodesMoreMenuRef">
+                    <div ref="nodesMoreMenuRef" class="relative">
                         <button
-                            @click="showNodesMoreMenu = !showNodesMoreMenu"
                             class="hover-lift rounded-2xl p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 sm:p-4"
+                            @click="showNodesMoreMenu = !showNodesMoreMenu"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -396,26 +394,26 @@ onUnmounted(() => {
                                 class="absolute right-0 z-50 mt-2 w-40 rounded-2xl border border-gray-300 bg-white shadow-2xl ring-2 ring-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700"
                             >
                                 <button
+                                    class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
                                     @click="
                                         handleAutoSort();
                                         showNodesMoreMenu = false;
                                     "
-                                    class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
                                 >
                                     一键排序
                                 </button>
                                 <button
+                                    class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
                                     @click="
                                         handleDeduplicate();
                                         showNodesMoreMenu = false;
                                     "
-                                    class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
                                 >
                                     一键去重
                                 </button>
                                 <button
-                                    @click="handleToggleBatchDeleteMode"
                                     class="w-full px-5 py-3 text-left text-base text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                                    @click="handleToggleBatchDeleteMode"
                                 >
                                     批量删除
                                 </button>
@@ -423,11 +421,11 @@ onUnmounted(() => {
                                     class="my-1 border-t border-gray-300 dark:border-gray-700"
                                 ></div>
                                 <button
+                                    class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                                     @click="
                                         showDeleteNodesModal = true;
                                         showNodesMoreMenu = false;
                                     "
-                                    class="w-full px-5 py-3 text-left text-base text-red-500 transition-colors hover:text-red-600 dark:hover:text-red-400"
                                 >
                                     清空所有
                                 </button>
@@ -471,27 +469,27 @@ onUnmounted(() => {
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button
-                            @click="selectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="selectAll"
                         >
                             全选
                         </button>
                         <button
-                            @click="invertSelection"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="invertSelection"
                         >
                             反选
                         </button>
                         <button
-                            @click="deselectAll"
                             class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deselectAll"
                         >
                             清空选择
                         </button>
                         <button
-                            @click="deleteSelected"
                             :disabled="selectedCount === 0"
                             class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="deleteSelected"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -508,8 +506,8 @@ onUnmounted(() => {
                             删除选中 ({{ selectedCount }})
                         </button>
                         <button
-                            @click="handleToggleBatchDeleteMode"
                             class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                            @click="handleToggleBatchDeleteMode"
                         >
                             取消
                         </button>
@@ -522,9 +520,9 @@ onUnmounted(() => {
         <div v-if="manualNodes.length > 0">
             <draggable
                 v-if="isSortingNodes"
+                v-model="localManualNodes"
                 tag="div"
                 class="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8"
-                v-model="localManualNodes"
                 :item-key="(item: Node) => item.id"
                 animation="300"
                 :delay="200"
@@ -535,11 +533,11 @@ onUnmounted(() => {
                     <div class="cursor-move">
                         <ManualNodeCard
                             :node="node"
-                            :isBatchMode="isBatchDeleteMode"
-                            :isSelected="isSelected(node.id)"
+                            :is-batch-mode="isBatchDeleteMode"
+                            :is-selected="isSelected(node.id)"
                             @edit="handleEditNode(node.id)"
                             @delete="handleDeleteNode(node.id)"
-                            @toggleSelect="toggleSelection(node.id)"
+                            @toggle-select="toggleSelection(node.id)"
                         />
                     </div>
                 </template>
@@ -551,20 +549,20 @@ onUnmounted(() => {
                 <div v-for="node in paginatedNodes" :key="node.id">
                     <ManualNodeCard
                         :node="node"
-                        :isBatchMode="isBatchDeleteMode"
-                        :isSelected="isSelected(node.id)"
+                        :is-batch-mode="isBatchDeleteMode"
+                        :is-selected="isSelected(node.id)"
                         @edit="handleEditNode(node.id)"
                         @delete="handleDeleteNode(node.id)"
-                        @toggleSelect="toggleSelection(node.id)"
+                        @toggle-select="toggleSelection(node.id)"
                     />
                 </div>
             </div>
 
             <Pagination
+                v-if="!isSortingNodes"
                 :current-page="currentPage"
                 :total-pages="totalPages"
                 @change-page="changePage"
-                v-if="!isSortingNodes"
             />
         </div>
         <EmptyState
@@ -597,18 +595,18 @@ onUnmounted(() => {
 
         <ConfirmModal
             v-model:show="showDeleteNodesModal"
-            @confirm="handleDeleteAllNodes"
             title="确认清空节点"
             message="您确定要删除所有<strong>手动节点</strong>吗？此操作将标记为待保存，不会影响订阅。"
             type="danger"
+            @confirm="handleDeleteAllNodes"
         />
 
         <ConfirmModal
             v-model:show="showDeleteSingleNodeModal"
-            @confirm="handleConfirmDeleteSingleNode"
             title="确认删除节点"
             message="您确定要删除此手动节点吗？此操作将标记为待保存，不会影响订阅。"
             type="danger"
+            @confirm="handleConfirmDeleteSingleNode"
         />
 
         <NodeEditModal
