@@ -293,11 +293,23 @@
 
   /* 响应式 */
   @media (max-width: 640px) {
-    .form-input-login {
+    .form-input-login,
+    .form-input,
+    .input-modern,
+    .input-modern-enhanced,
+    .search-input-unified {
       /* 移除 text-sm，使用基础的 15px (0.9375rem) 或更大 */
       /* iOS Safari 在字体 < 16px 时会自动放大，所以这里使用 16px */
-      @apply px-3.5 pr-10 py-3;
       font-size: 16px !important; /* 强制 16px，防止自动缩放 */
+    }
+
+    .form-input-login {
+      @apply px-3.5 pr-10 py-3;
+    }
+
+    /* 搜索框在移动端可能需要微调内边距以保持美观，但在 16px 字体下通常没问题 */
+    .search-input-unified {
+      @apply py-2.5; 
     }
 
     .login-button {
