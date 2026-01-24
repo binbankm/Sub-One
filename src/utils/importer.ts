@@ -1,19 +1,18 @@
 /**
  * ==================== 订阅和节点导入模块 ====================
- * 
+ *
  * 功能说明：
  * - 解析用户输入的文本内容
  * - 自动识别订阅链接（HTTP）和节点链接（协议://）
  * - 创建标准化的订阅和节点对象
  * - 支持批量导入和文本解析
- * 
+ *
  * ==========================================================
  */
-
-import { extractNodeName, extractHostAndPort, generateUUID } from './utils';
-import type { Subscription, Node, ProxyType } from '../types';
+import type { Node, ProxyType, Subscription } from '../types';
 import { HTTP_REGEX, NODE_PROTOCOL_REGEX } from './constants';
 import { getProtocol } from './protocols';
+import { extractHostAndPort, extractNodeName, generateUUID } from './utils';
 
 // ==================== 接口定义 ====================
 
@@ -32,12 +31,12 @@ export interface ImportResult {
 
 /**
  * 创建标准的订阅对象
- * 
+ *
  * 说明：
  * - 根据 URL 和可选的名称创建订阅对象
  * - 自动生成唯一 ID（UUID）
  * - 设置默认属性值
- * 
+ *
  * @param {string} url - 订阅链接地址
  * @param {string} [name] - 订阅名称（可选，默认从 URL 提取或使用"未命名"）
  * @returns {Subscription} 标准化的订阅对象
@@ -65,12 +64,12 @@ export function createSubscription(url: string, name?: string): Subscription {
 
 /**
  * 创建标准的节点对象
- * 
+ *
  * 说明：
  * - 根据 URL 和可选的名称创建节点对象
  * - 自动生成唯一 ID（UUID）
  * - 设置默认属性值
- * 
+ *
  * @param {string} url - 节点链接地址（如：vmess://xxx, ss://xxx）
  * @param {string} [name] - 节点名称（可选，默认从 URL 提取或使用"未命名"）
  * @returns {Node} 标准化的节点对象
@@ -101,16 +100,16 @@ export function createNode(url: string, name?: string): Node {
 
 /**
  * 解析导入文本为订阅和节点列表
- * 
+ *
  * 说明：
  * - 自动识别文本中的订阅链接和节点链接
  * - 订阅链接：以 http:// 或 https:// 开头
  * - 节点链接：以特定协议开头（如 vmess://, ss://, trojan:// 等）
  * - 支持多行文本，自动过滤空行
- * 
+ *
  * @param {string} importText - 要解析的文本内容（可包含多行）
  * @returns {ImportResult} 包含订阅列表和节点列表的对象
- * 
+ *
  * @example
  * ```typescript
  * const text = `

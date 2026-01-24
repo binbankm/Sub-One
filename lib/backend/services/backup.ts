@@ -1,20 +1,14 @@
 /**
  * 备份恢复服务模块
- * 
+ *
  * 功能：
  * - 导出所有数据为 JSON 格式
  * - 导入备份数据并恢复
  * - 验证备份文件的完整性
  * - 支持覆盖和合并两种恢复模式
  */
-
+import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_USERS } from '../config/constants';
 import { IStorageService } from './storage';
-import {
-    KV_KEY_SUBS,
-    KV_KEY_PROFILES,
-    KV_KEY_SETTINGS,
-    KV_KEY_USERS
-} from '../config/constants';
 
 /**
  * 备份文件格式版本
@@ -82,12 +76,12 @@ async function generateChecksum(data: string): Promise<string> {
     const dataBuffer = encoder.encode(data);
     const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
  * 导出所有数据
- * 
+ *
  * @param storage - 存储服务实例
  * @param storageBackend - 当前存储后端类型
  * @param username - 执行导出的用户名
@@ -101,11 +95,11 @@ export async function exportAllData(
     try {
         // 1. 读取所有数据
         const [subscriptions, profiles, manualNodes, settings, users] = await Promise.all([
-            storage.get(KV_KEY_SUBS).then(res => res || []),
-            storage.get(KV_KEY_PROFILES).then(res => res || []),
-            storage.get(KV_KEY_MANUAL_NODES).then(res => res || []),
-            storage.get(KV_KEY_SETTINGS).then(res => res || {}),
-            storage.get(KV_KEY_USERS).then(res => res || {})
+            storage.get(KV_KEY_SUBS).then((res) => res || []),
+            storage.get(KV_KEY_PROFILES).then((res) => res || []),
+            storage.get(KV_KEY_MANUAL_NODES).then((res) => res || []),
+            storage.get(KV_KEY_SETTINGS).then((res) => res || {}),
+            storage.get(KV_KEY_USERS).then((res) => res || {})
         ]);
 
         // 2. 构建元数据
@@ -151,7 +145,6 @@ export async function exportAllData(
         });
 
         return backupData;
-
     } catch (error) {
         console.error('[Backup Export] 导出失败:', error);
         throw new Error(`导出备份失败: ${error instanceof Error ? error.message : String(error)}`);
@@ -160,7 +153,7 @@ export async function exportAllData(
 
 /**
  * 验证备份文件
- * 
+ *
  * @param backupData - 备份数据对象
  * @returns 验证结果
  */
@@ -230,7 +223,6 @@ export async function validateBackup(backupData: unknown): Promise<{
             valid: true,
             metadata: backupContent.metadata
         };
-
     } catch (error: unknown) {
         console.error('[Backup Validate] 验证失败:', error);
         return {
@@ -242,7 +234,7 @@ export async function validateBackup(backupData: unknown): Promise<{
 
 /**
  * 导入备份数据
- * 
+ *
  * @param storage - 存储服务实例
  * @param backupData - 备份数据对象
  * @param mode - 导入模式（覆盖 / 合并）
@@ -281,43 +273,74 @@ export async function importAllData(
 
         if (mode === 'merge') {
             // 合并模式：保留现有数据，仅添加不存在的项
-            const [existingSubs, existingProfiles, existingNodes, existingSettings, existingUsers] = await Promise.all([
-                storage.get(KV_KEY_SUBS),
-                storage.get(KV_KEY_PROFILES),
-                storage.get(KV_KEY_MANUAL_NODES),
-                storage.get(KV_KEY_SETTINGS),
-                storage.get(KV_KEY_USERS)
-            ]);
+            const [existingSubs, existingProfiles, existingNodes, existingSettings, existingUsers] =
+                await Promise.all([
+                    storage.get(KV_KEY_SUBS),
+                    storage.get(KV_KEY_PROFILES),
+                    storage.get(KV_KEY_MANUAL_NODES),
+                    storage.get(KV_KEY_SETTINGS),
+                    storage.get(KV_KEY_USERS)
+                ]);
 
             // 合并订阅源（基于 ID 或 URL）
             if (Array.isArray(existingSubs) && existingSubs.length > 0) {
-                const existingIds = new Set(existingSubs.map((s) => (s as { id: string; url: string }).id || (s as { id: string; url: string }).url));
-                const newSubs = data.subscriptions.filter((s) => !existingIds.has((s as { id: string; url: string }).id || (s as { id: string; url: string }).url));
+                const existingIds = new Set(
+                    existingSubs.map(
+                        (s) =>
+                            (s as { id: string; url: string }).id ||
+                            (s as { id: string; url: string }).url
+                    )
+                );
+                const newSubs = data.subscriptions.filter(
+                    (s) =>
+                        !existingIds.has(
+                            (s as { id: string; url: string }).id ||
+                                (s as { id: string; url: string }).url
+                        )
+                );
                 finalSubscriptions = [...existingSubs, ...newSubs];
             }
 
             // 合并订阅组（基于 ID）
             if (Array.isArray(existingProfiles) && existingProfiles.length > 0) {
                 const existingIds = new Set(existingProfiles.map((p) => (p as { id: string }).id));
-                const newProfiles = data.profiles.filter((p) => !existingIds.has((p as { id: string }).id));
+                const newProfiles = data.profiles.filter(
+                    (p) => !existingIds.has((p as { id: string }).id)
+                );
                 finalProfiles = [...existingProfiles, ...newProfiles];
             }
 
             // 合并手动节点（基于 ID）
             if (Array.isArray(existingNodes) && existingNodes.length > 0) {
                 const existingIds = new Set(existingNodes.map((n) => (n as { id: string }).id));
-                const newNodes = (data.manualNodes || []).filter((n) => !existingIds.has((n as { id: string }).id));
+                const newNodes = (data.manualNodes || []).filter(
+                    (n) => !existingIds.has((n as { id: string }).id)
+                );
                 finalManualNodes = [...existingNodes, ...newNodes];
             }
 
             // 设置：合并对象
-            if (existingSettings && typeof existingSettings === 'object' && !Array.isArray(existingSettings)) {
-                finalSettings = { ...(existingSettings as Record<string, unknown>), ...(data.settings as Record<string, unknown>) };
+            if (
+                existingSettings &&
+                typeof existingSettings === 'object' &&
+                !Array.isArray(existingSettings)
+            ) {
+                finalSettings = {
+                    ...(existingSettings as Record<string, unknown>),
+                    ...(data.settings as Record<string, unknown>)
+                };
             }
 
             // 用户：合并对象
-            if (existingUsers && typeof existingUsers === 'object' && !Array.isArray(existingUsers)) {
-                finalUsers = { ...(existingUsers as Record<string, unknown>), ...(data.users as Record<string, unknown>) };
+            if (
+                existingUsers &&
+                typeof existingUsers === 'object' &&
+                !Array.isArray(existingUsers)
+            ) {
+                finalUsers = {
+                    ...(existingUsers as Record<string, unknown>),
+                    ...(data.users as Record<string, unknown>)
+                };
             }
         }
 
@@ -341,13 +364,13 @@ export async function importAllData(
             success: true,
             message: mode === 'overwrite' ? '数据已完全恢复' : '数据已合并导入',
             details: {
-                imported: (Array.isArray(finalSubscriptions) ? finalSubscriptions.length : 0) +
+                imported:
+                    (Array.isArray(finalSubscriptions) ? finalSubscriptions.length : 0) +
                     (Array.isArray(finalProfiles) ? finalProfiles.length : 0) +
                     (Array.isArray(finalManualNodes) ? finalManualNodes.length : 0),
                 skipped: 0
             }
         };
-
     } catch (error) {
         console.error('[Backup Import] 导入失败:', error);
         return {

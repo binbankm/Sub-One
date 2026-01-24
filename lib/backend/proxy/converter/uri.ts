@@ -1,16 +1,16 @@
 /**
  * Sub-One URI Converter
  */
-
 import { Base64 } from 'js-base64';
-import type { ProxyNode, ConvertOptions } from '../types';
+
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 
 export class URIConverter extends BaseConverter {
     name = 'URI';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const uris = nodes.map(node => this.convertSingle(node)).filter(Boolean);
+        const uris = nodes.map((node) => this.convertSingle(node)).filter(Boolean);
         return uris.join('\n');
     }
 
@@ -22,21 +22,35 @@ export class URIConverter extends BaseConverter {
             }
 
             switch (p.type) {
-                case 'ss': return this.ss(p);
-                case 'ssr': return this.ssr(p);
-                case 'vmess': return this.vmess(p);
-                case 'vless': return this.vless(p);
-                case 'trojan': return this.trojan(p);
-                case 'hysteria': return this.hysteria(p);
-                case 'hysteria2': return this.hysteria2(p);
-                case 'tuic': return this.tuic(p);
-                case 'wireguard': return this.wireguard(p);
-                case 'socks5': return this.socks5(p);
+                case 'ss':
+                    return this.ss(p);
+                case 'ssr':
+                    return this.ssr(p);
+                case 'vmess':
+                    return this.vmess(p);
+                case 'vless':
+                    return this.vless(p);
+                case 'trojan':
+                    return this.trojan(p);
+                case 'hysteria':
+                    return this.hysteria(p);
+                case 'hysteria2':
+                    return this.hysteria2(p);
+                case 'tuic':
+                    return this.tuic(p);
+                case 'wireguard':
+                    return this.wireguard(p);
+                case 'socks5':
+                    return this.socks5(p);
                 case 'http':
-                case 'https': return this.http(p);
-                case 'anytls': return this.anytls(p);
-                case 'naive': return this.naive(p);
-                default: return '';
+                case 'https':
+                    return this.http(p);
+                case 'anytls':
+                    return this.anytls(p);
+                case 'naive':
+                    return this.naive(p);
+                default:
+                    return '';
             }
         } catch (e) {
             console.error(`[URIConverter] Failed to produce URI for ${node.name}:`, e);
@@ -50,7 +64,7 @@ export class URIConverter extends BaseConverter {
             ? `${encodeURIComponent(node.cipher || '')}:${encodeURIComponent(node.password || '')}`
             : Base64.encode(`${node.cipher || ''}:${node.password || ''}`, true);
 
-        let uri = `ss://${userinfo}@${node.server}:${node.port}`;
+        const uri = `ss://${userinfo}@${node.server}:${node.port}`;
         const params = new URLSearchParams();
 
         if (node.plugin) {
@@ -82,7 +96,8 @@ export class URIConverter extends BaseConverter {
         const params = new URLSearchParams();
         params.set('remarks', Base64.encode(node.name || '', true));
         if (node['obfs-param']) params.set('obfsparam', Base64.encode(node['obfs-param'], true));
-        if (node['protocol-param']) params.set('protoparam', Base64.encode(node['protocol-param'], true));
+        if (node['protocol-param'])
+            params.set('protoparam', Base64.encode(node['protocol-param'], true));
 
         const full = `${main}/?${params.toString()}`;
         return `ssr://${Base64.encode(full, true)}`;
@@ -103,7 +118,7 @@ export class URIConverter extends BaseConverter {
             path: '',
             tls: node.tls ? 'tls' : '',
             sni: node.sni || '',
-            alpn: Array.isArray(node.alpn) ? node.alpn.join(',') : (node.alpn || ''),
+            alpn: Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn || '',
             fp: node['client-fingerprint'] || ''
         };
 
@@ -191,7 +206,8 @@ export class URIConverter extends BaseConverter {
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
         if (node['skip-cert-verify']) params.set('allow_insecure', '1');
         if (node.tfo) params.set('fast_open', '1');
-        if (node['congestion-controller']) params.set('congestion_control', node['congestion-controller']);
+        if (node['congestion-controller'])
+            params.set('congestion_control', node['congestion-controller']);
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -214,7 +230,9 @@ export class URIConverter extends BaseConverter {
     }
 
     private socks5(node: ProxyNode): string {
-        const auth = node.username ? Base64.encode(`${node.username}:${node.password || ''}`, true) : '';
+        const auth = node.username
+            ? Base64.encode(`${node.username}:${node.password || ''}`, true)
+            : '';
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
         return `socks://${auth ? auth + '@' : ''}${node.server}:${node.port}${hash}`;
     }
@@ -238,7 +256,9 @@ export class URIConverter extends BaseConverter {
     private naive(node: ProxyNode): string {
         const params = new URLSearchParams();
         if (node.sni) params.set('sni', node.sni);
-        const auth = node.username ? `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password || '')}@` : '';
+        const auth = node.username
+            ? `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password || '')}@`
+            : '';
         const scheme = node.tls === false ? 'naive+http' : 'naive+https';
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -252,7 +272,11 @@ export class URIConverter extends BaseConverter {
         const opts = (node[`${node.network}-opts`] || {}) as any;
         if (opts) {
             if (opts.path) params.set('path', Array.isArray(opts.path) ? opts.path[0] : opts.path);
-            if (opts.headers?.Host) params.set('host', Array.isArray(opts.headers.Host) ? opts.headers.Host[0] : opts.headers.Host);
+            if (opts.headers?.Host)
+                params.set(
+                    'host',
+                    Array.isArray(opts.headers.Host) ? opts.headers.Host[0] : opts.headers.Host
+                );
             if (node.network === 'grpc') {
                 if (opts['service-name']) params.set('serviceName', opts['service-name']);
                 if (opts['_grpc-type']) params.set('mode', opts['_grpc-type']);
@@ -272,7 +296,8 @@ export class URIConverter extends BaseConverter {
         // 兼容旧版本的简化写法
         if (node.network === 'kcp') {
             if (node.seed && !opts?.seed) params.set('seed', node.seed);
-            if (node.headerType && !opts?.['header-type']) params.set('headerType', node.headerType);
+            if (node.headerType && !opts?.['header-type'])
+                params.set('headerType', node.headerType);
         }
     }
 
@@ -281,7 +306,8 @@ export class URIConverter extends BaseConverter {
         params.set('security', node['reality-opts'] ? 'reality' : 'tls');
         if (node.sni) params.set('sni', node.sni);
         if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
-        if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn);
+        if (node.alpn)
+            params.set('alpn', Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn);
         if (node['reality-opts']) {
             const r = node['reality-opts'];
             if (r['public-key']) params.set('pbk', r['public-key']);

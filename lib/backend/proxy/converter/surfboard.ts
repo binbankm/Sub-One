@@ -1,8 +1,7 @@
 /**
  * Sub-One Surfboard Converter
  */
-
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { Result } from './utils';
 
@@ -10,7 +9,7 @@ export class SurfboardConverter extends BaseConverter {
     name = 'Surfboard';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const lines = nodes.map(node => this.convertSingle(node)).filter(Boolean);
+        const lines = nodes.map((node) => this.convertSingle(node)).filter(Boolean);
         return lines.join('\n');
     }
 
@@ -21,26 +20,37 @@ export class SurfboardConverter extends BaseConverter {
             const p = { ...proxy, name: safeName };
 
             switch (p.type) {
-                case 'ss': return this.ss(p);
-                case 'trojan': return this.trojan(p);
-                case 'vmess': return this.vmess(p);
+                case 'ss':
+                    return this.ss(p);
+                case 'trojan':
+                    return this.trojan(p);
+                case 'vmess':
+                    return this.vmess(p);
                 case 'http':
-                case 'https': return this.http(p);
-                case 'socks5': return this.socks5(p);
-                case 'wireguard': return this.wireguard(p);
+                case 'https':
+                    return this.http(p);
+                case 'socks5':
+                    return this.socks5(p);
+                case 'wireguard':
+                    return this.wireguard(p);
                 default:
                     console.warn(`[SurfboardConverter] Unsupported proxy type: ${p.type}`);
                     return '';
             }
         } catch (e) {
-            console.error(`[SurfboardConverter] Failed to produce Surfboard config for ${proxy.name}:`, e);
+            console.error(
+                `[SurfboardConverter] Failed to produce Surfboard config for ${proxy.name}:`,
+                e
+            );
             return '';
         }
     }
 
     private ss(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=ss,${proxy.server},${proxy.port},encrypt-method=${proxy.cipher}`);
+        result.append(
+            `${proxy.name}=ss,${proxy.server},${proxy.port},encrypt-method=${proxy.cipher}`
+        );
         result.appendIfPresent(`,password=${proxy.password}`, 'password');
 
         if (proxy.plugin === 'obfs') {
@@ -56,11 +66,16 @@ export class SurfboardConverter extends BaseConverter {
 
     private trojan(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=trojan,${proxy.server},${proxy.port},password=${proxy.password}`);
+        result.append(
+            `${proxy.name}=trojan,${proxy.server},${proxy.port},password=${proxy.password}`
+        );
         this.appendTransport(result, proxy);
         result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
         result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,skip-cert-verify=${proxy['skip-cert-verify']}`, 'skip-cert-verify');
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
         result.appendIfPresent(`,tfo=${proxy.tfo}`, 'tfo');
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         return result.toString();
@@ -70,10 +85,13 @@ export class SurfboardConverter extends BaseConverter {
         const result = new Result(proxy);
         result.append(`${proxy.name}=vmess,${proxy.server},${proxy.port},username=${proxy.uuid}`);
         this.appendTransport(result, proxy);
-        result.append(`,vmess-aead=${proxy.aead !== undefined ? proxy.aead : (proxy.alterId === 0)}`);
+        result.append(`,vmess-aead=${proxy.aead !== undefined ? proxy.aead : proxy.alterId === 0}`);
         result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
         result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,skip-cert-verify=${proxy['skip-cert-verify']}`, 'skip-cert-verify');
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         return result.toString();
     }
@@ -85,7 +103,10 @@ export class SurfboardConverter extends BaseConverter {
         result.appendIfPresent(`,${proxy.username}`, 'username');
         result.appendIfPresent(`,${proxy.password}`, 'password');
         result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,skip-cert-verify=${proxy['skip-cert-verify']}`, 'skip-cert-verify');
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         return result.toString();
     }
@@ -97,7 +118,10 @@ export class SurfboardConverter extends BaseConverter {
         result.appendIfPresent(`,${proxy.username}`, 'username');
         result.appendIfPresent(`,${proxy.password}`, 'password');
         result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,skip-cert-verify=${proxy['skip-cert-verify']}`, 'skip-cert-verify');
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         return result.toString();
     }

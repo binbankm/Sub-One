@@ -1,17 +1,11 @@
 /**
  * Sub-One Proxy Node Normalizer
- * 
+ *
  * 节点标准化与属性补全
  * 确保节点属性格式统一、填充默认值、校验基本合法性
  */
-
-import type { ProxyNode, NetworkType } from '../types';
-import {
-    parsePort,
-    isValidPort,
-    isNotEmpty,
-    randomId
-} from '../utils';
+import type { NetworkType, ProxyNode } from '../types';
+import { isNotEmpty, isValidPort, parsePort, randomId } from '../utils';
 
 /**
  * 标准化节点对象
@@ -43,10 +37,7 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
 
     // 5. 服务器地址清洗
     if (proxy.server) {
-        proxy.server = String(proxy.server)
-            .trim()
-            .replace(/^\[/, '')
-            .replace(/\]$/, ''); // 移除 IPv6 的方括号
+        proxy.server = String(proxy.server).trim().replace(/^\[/, '').replace(/\]$/, ''); // 移除 IPv6 的方括号
     }
 
     // 6. 传输层 (Network) 默认值与结构标准化
@@ -79,7 +70,7 @@ function normalizeNetwork(proxy: ProxyNode) {
         if (!proxy['ws-opts']) {
             proxy['ws-opts'] = {
                 path: (proxy as any)['ws-path'] || '/',
-                headers: (proxy as any)['ws-headers'] || {},
+                headers: (proxy as any)['ws-headers'] || {}
             };
         }
         // 清理旧字段
@@ -114,7 +105,7 @@ function normalizeNetwork(proxy: ProxyNode) {
  */
 function formatPath(path: any): string {
     if (typeof path === 'string' || typeof path === 'number') {
-        let p = String(path).trim();
+        const p = String(path).trim();
         if (p === '') return '/';
         return p.startsWith('/') ? p : '/' + p;
     }

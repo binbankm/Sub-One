@@ -1,4 +1,3 @@
-
 import { AppConfig } from '../proxy/types';
 
 export const defaultSettings: AppConfig = {

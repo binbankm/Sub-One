@@ -1,11 +1,11 @@
 /**
  * Sub-One Clash Converter
  */
+import yaml from 'js-yaml';
 
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
-import yaml from 'js-yaml';
 
 export class ClashConverter extends BaseConverter {
     name = 'Clash';
@@ -19,8 +19,8 @@ export class ClashConverter extends BaseConverter {
 
     async convert(nodes: ProxyNode[], options: ConvertOptions = {}): Promise<string> {
         const list = nodes
-            .filter(node => this.filterNode(node, options))
-            .map(node => this.processNode(node, options))
+            .filter((node) => this.filterNode(node, options))
+            .map((node) => this.processNode(node, options))
             .filter(Boolean);
 
         const config = {
@@ -39,21 +39,61 @@ export class ClashConverter extends BaseConverter {
         if (options.includeUnsupportedProxy) return true;
 
         const supportedTypes = this.isMeta
-            ? ['ss', 'ssr', 'vmess', 'vless', 'socks5', 'http', 'snell', 'trojan', 'wireguard', 'hysteria', 'hysteria2', 'tuic', 'anytls']
-            : ['ss', 'ssr', 'vmess', 'vless', 'socks5', 'http', 'snell', 'trojan', 'wireguard', 'anytls'];
+            ? [
+                  'ss',
+                  'ssr',
+                  'vmess',
+                  'vless',
+                  'socks5',
+                  'http',
+                  'snell',
+                  'trojan',
+                  'wireguard',
+                  'hysteria',
+                  'hysteria2',
+                  'tuic',
+                  'anytls'
+              ]
+            : [
+                  'ss',
+                  'ssr',
+                  'vmess',
+                  'vless',
+                  'socks5',
+                  'http',
+                  'snell',
+                  'trojan',
+                  'wireguard',
+                  'anytls'
+              ];
 
         if (!supportedTypes.includes(proxy.type)) return false;
 
         // Shadowsocks cipher validation
         if (proxy.type === 'ss') {
             const standardCiphers = [
-                'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm',
-                'aes-128-cfb', 'aes-192-cfb', 'aes-256-cfb',
-                'aes-128-ctr', 'aes-192-ctr', 'aes-256-ctr',
-                'rc4-md5', 'chacha20-ietf', 'xchacha20',
-                'chacha20-ietf-poly1305', 'xchacha20-ietf-poly1305'
+                'aes-128-gcm',
+                'aes-192-gcm',
+                'aes-256-gcm',
+                'aes-128-cfb',
+                'aes-192-cfb',
+                'aes-256-cfb',
+                'aes-128-ctr',
+                'aes-192-ctr',
+                'aes-256-ctr',
+                'rc4-md5',
+                'chacha20-ietf',
+                'xchacha20',
+                'chacha20-ietf-poly1305',
+                'xchacha20-ietf-poly1305'
             ];
-            const metaCiphers = [...standardCiphers, '2022-blake3-aes-128-gcm', '2022-blake3-aes-256-gcm', '2022-blake3-chacha20-poly1305', 'none'];
+            const metaCiphers = [
+                ...standardCiphers,
+                '2022-blake3-aes-128-gcm',
+                '2022-blake3-aes-256-gcm',
+                '2022-blake3-chacha20-poly1305',
+                'none'
+            ];
 
             if (this.isMeta) {
                 if (!metaCiphers.includes(proxy.cipher || '')) return false;
@@ -135,12 +175,18 @@ export class ClashConverter extends BaseConverter {
                     node['ws-opts'].headers = node['ws-opts'].headers || {};
                     node['ws-opts'].headers.Host = host;
                 }
-            } else if ((node.type === 'vmess' || node.type === 'vless') && node.network === 'http') {
+            } else if (
+                (node.type === 'vmess' || node.type === 'vless') &&
+                node.network === 'http'
+            ) {
                 node['http-opts'] = node['http-opts'] || {};
                 if (node['http-opts'].path && !Array.isArray(node['http-opts'].path)) {
                     node['http-opts'].path = [node['http-opts'].path];
                 }
-                if (node['http-opts'].headers?.Host && !Array.isArray(node['http-opts'].headers.Host)) {
+                if (
+                    node['http-opts'].headers?.Host &&
+                    !Array.isArray(node['http-opts'].headers.Host)
+                ) {
                     node['http-opts'].headers.Host = [node['http-opts'].headers.Host];
                 }
             } else if (node.network === 'kcp') {
@@ -172,7 +218,7 @@ export class ClashConverter extends BaseConverter {
                     'v4-only': 'ipv4',
                     'v6-only': 'ipv6',
                     'prefer-v4': 'ipv4-prefer',
-                    'prefer-v6': 'ipv6-prefer',
+                    'prefer-v6': 'ipv6-prefer'
                 };
                 node['ip-version'] = ipVersions[node['ip-version']] || node['ip-version'];
             }
@@ -198,19 +244,30 @@ export class ClashConverter extends BaseConverter {
             // 按优先级添加其他字段
             const priorityFields = [
                 // 认证信息
-                'password', 'uuid', 'username',
+                'password',
+                'uuid',
+                'username',
                 // 加密
-                'cipher', 'alterId',
+                'cipher',
+                'alterId',
                 // TLS
-                'tls', 'servername', 'alpn', 'skip-cert-verify', 'client-fingerprint',
+                'tls',
+                'servername',
+                'alpn',
+                'skip-cert-verify',
+                'client-fingerprint',
                 // 传输层
-                'network', 'flow',
+                'network',
+                'flow',
                 // Reality
                 'reality-opts',
                 // WebSocket
-                'ws-opts', 'ws-path', 'ws-headers',
+                'ws-opts',
+                'ws-path',
+                'ws-headers',
                 // gRPC
-                'grpc-opts', 'grpc-service-name',
+                'grpc-opts',
+                'grpc-service-name',
                 // HTTP
                 'http-opts',
                 // KCP
@@ -218,26 +275,53 @@ export class ClashConverter extends BaseConverter {
                 // QUIC
                 'quic-opts',
                 // 协议特定
-                'auth', 'auth-str', 'obfs', 'obfs-password', 'obfs-opts',
-                'up', 'down', 'up-mbps', 'down-mbps',
-                'plugin', 'plugin-opts',
-                'recv-window', 'recv-window-conn',
-                'disable-mtu-discovery', 'fast-open',
+                'auth',
+                'auth-str',
+                'obfs',
+                'obfs-password',
+                'obfs-opts',
+                'up',
+                'down',
+                'up-mbps',
+                'down-mbps',
+                'plugin',
+                'plugin-opts',
+                'recv-window',
+                'recv-window-conn',
+                'disable-mtu-discovery',
+                'fast-open',
                 // TUIC
-                'token', 'congestion-controller', 'udp-relay-mode',
-                'reduce-rtt', 'max-udp-relay-packet-size',
+                'token',
+                'congestion-controller',
+                'udp-relay-mode',
+                'reduce-rtt',
+                'max-udp-relay-packet-size',
                 // WireGuard
-                'private-key', 'public-key', 'pre-shared-key',
-                'reserved', 'mtu', 'ip', 'ipv6', 'peers',
-                'keepalive', 'persistent-keepalive',
+                'private-key',
+                'public-key',
+                'pre-shared-key',
+                'reserved',
+                'mtu',
+                'ip',
+                'ipv6',
+                'peers',
+                'keepalive',
+                'persistent-keepalive',
                 // Snell
                 'version',
                 // UDP/TCP
-                'udp', 'udp-relay', 'tfo', 'mptcp',
+                'udp',
+                'udp-relay',
+                'tfo',
+                'mptcp',
                 // 其他
-                'ip-version', 'interface', 'routing-mark',
-                'dialer-proxy', 'underlying-proxy',
-                'test-url', 'test-timeout'
+                'ip-version',
+                'interface',
+                'routing-mark',
+                'dialer-proxy',
+                'underlying-proxy',
+                'test-url',
+                'test-timeout'
             ];
 
             // 按优先顺序添加存在的字段

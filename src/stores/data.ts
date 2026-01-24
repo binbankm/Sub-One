@@ -1,10 +1,12 @@
+import { computed, ref } from 'vue';
+
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { Subscription, Profile, Node, AppConfig } from '../types/index';
+
+import type { AppConfig, Node, Profile, Subscription } from '../types/index';
 import * as api from '../utils/api';
-import { useToastStore } from './toast';
 import { HTTP_REGEX } from '../utils/constants';
 import { generateShortId, generateUUID } from '../utils/utils';
+import { useToastStore } from './toast';
 
 // Data Store: Manages global business data (Subscriptions, Nodes, Profiles, Config)
 export const useDataStore = defineStore('data', () => {
@@ -36,9 +38,7 @@ export const useDataStore = defineStore('data', () => {
 
         // Notifications
         NotifyThresholdDays: 3,
-        NotifyThresholdPercent: 90,
-
-
+        NotifyThresholdPercent: 90
     });
 
     const isInitialized = ref(false);
@@ -46,13 +46,13 @@ export const useDataStore = defineStore('data', () => {
     const hasUnsavedChanges = ref(false);
 
     // ==================== Getters ====================
-    const activeSubscriptions = computed(() => subscriptions.value.filter(s => s.enabled));
-    const activeManualNodes = computed(() => manualNodes.value.filter(n => n.enabled));
+    const activeSubscriptions = computed(() => subscriptions.value.filter((s) => s.enabled));
+    const activeManualNodes = computed(() => manualNodes.value.filter((n) => n.enabled));
 
     // Total nodes (subs nodes + manual nodes)
     const totalNodeCount = computed(() => {
         let count = manualNodes.value.length;
-        subscriptions.value.forEach(sub => {
+        subscriptions.value.forEach((sub) => {
             if (sub.nodeCount) count += sub.nodeCount;
         });
         return count;
@@ -60,8 +60,8 @@ export const useDataStore = defineStore('data', () => {
 
     // Active nodes count
     const activeNodeCount = computed(() => {
-        let count = manualNodes.value.filter(n => n.enabled).length;
-        subscriptions.value.forEach(sub => {
+        let count = manualNodes.value.filter((n) => n.enabled).length;
+        subscriptions.value.forEach((sub) => {
             if (sub.enabled && sub.nodeCount) count += sub.nodeCount;
         });
         return count;
@@ -70,18 +70,19 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Initialization ====================
 
     // Initialize store with fetched data
-    function initData(data: { subs?: any[], profiles?: Profile[], config?: AppConfig }) {
+    function initData(data: { subs?: any[]; profiles?: Profile[]; config?: AppConfig }) {
         if (!data) return;
 
         // Split subs into subscriptions (http) and manual nodes (others)
         const allSubs = data.subs || [];
 
         subscriptions.value = allSubs
-            .filter(item => item.url && HTTP_REGEX.test(item.url))
-            .map(item => ({ ...item, isUpdating: false })) as Subscription[];
+            .filter((item) => item.url && HTTP_REGEX.test(item.url))
+            .map((item) => ({ ...item, isUpdating: false })) as Subscription[];
 
-        manualNodes.value = allSubs
-            .filter(item => !item.url || !HTTP_REGEX.test(item.url)) as Node[];
+        manualNodes.value = allSubs.filter(
+            (item) => !item.url || !HTTP_REGEX.test(item.url)
+        ) as Node[];
 
         profiles.value = data.profiles || [];
 
@@ -95,11 +96,17 @@ export const useDataStore = defineStore('data', () => {
     // ==================== Actions: Persistence ====================
 
     // Save all data to backend
-    async function saveData(reason: string = '数据变动', showSuccessToast: boolean = true): Promise<boolean> {
+    async function saveData(
+        reason: string = '数据变动',
+        showSuccessToast: boolean = true
+    ): Promise<boolean> {
         if (isLoading.value) return false; // 防止重叠保存
 
         // Merge subs and nodes back into one list
-        const combinedSubs = [...subscriptions.value, ...manualNodes.value] as unknown as Subscription[];
+        const combinedSubs = [
+            ...subscriptions.value,
+            ...manualNodes.value
+        ] as unknown as Subscription[];
 
         const payload = {
             subs: combinedSubs,
@@ -141,7 +148,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function updateSubscription(sub: Subscription) {
-        const index = subscriptions.value.findIndex(s => s.id === sub.id);
+        const index = subscriptions.value.findIndex((s) => s.id === sub.id);
         if (index !== -1) {
             subscriptions.value[index] = { ...sub }; // Reactive replacement
             await saveData('更新订阅');
@@ -149,7 +156,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function deleteSubscription(id: string) {
-        subscriptions.value = subscriptions.value.filter(s => s.id !== id);
+        subscriptions.value = subscriptions.value.filter((s) => s.id !== id);
         // Also remove from profiles
         removeIdFromProfiles(id, 'subscriptions');
         await saveData('删除订阅');
@@ -170,7 +177,7 @@ export const useDataStore = defineStore('data', () => {
 
     // Update logic is more complex, might need api call
     async function updateSubscriptionNodes(id: string): Promise<boolean> {
-        const sub = subscriptions.value.find(s => s.id === id);
+        const sub = subscriptions.value.find((s) => s.id === id);
         if (!sub) return false;
 
         if (!sub.url || !HTTP_REGEX.test(sub.url)) return false;
@@ -199,15 +206,17 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function updateAllEnabledSubscriptions() {
-        const enabled = subscriptions.value.filter(s => s.enabled && s.url && HTTP_REGEX.test(s.url));
+        const enabled = subscriptions.value.filter(
+            (s) => s.enabled && s.url && HTTP_REGEX.test(s.url)
+        );
         if (enabled.length === 0) return { success: true, count: 0, message: '没有启用的订阅' };
 
-        const ids = enabled.map(s => s.id);
+        const ids = enabled.map((s) => s.id);
 
         try {
             // Set local loading states
-            ids.forEach(id => {
-                const s = subscriptions.value.find(sub => sub.id === id);
+            ids.forEach((id) => {
+                const s = subscriptions.value.find((sub) => sub.id === id);
                 if (s) s.isUpdating = true;
             });
 
@@ -224,7 +233,7 @@ export const useDataStore = defineStore('data', () => {
                 let successCount = 0;
 
                 updates.forEach((update: any) => {
-                    const sub = subscriptions.value.find(s => s.id === update.id);
+                    const sub = subscriptions.value.find((s) => s.id === update.id);
                     if (sub) {
                         sub.isUpdating = false;
                         if (update.success) {
@@ -239,18 +248,21 @@ export const useDataStore = defineStore('data', () => {
                 });
 
                 // Cleanup others just in case
-                subscriptions.value.forEach(s => { if (s.isUpdating) s.isUpdating = false; });
+                subscriptions.value.forEach((s) => {
+                    if (s.isUpdating) s.isUpdating = false;
+                });
 
                 return { success: true, count: successCount };
             } else {
                 throw new Error(result.message);
             }
         } catch (e: any) {
-            subscriptions.value.forEach(s => { if (s.isUpdating) s.isUpdating = false; });
+            subscriptions.value.forEach((s) => {
+                if (s.isUpdating) s.isUpdating = false;
+            });
             return { success: false, count: 0, message: e.message };
         }
     }
-
 
     // ==================== Actions: Manual Nodes ====================
 
@@ -260,7 +272,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function updateNode(node: Node) {
-        const idx = manualNodes.value.findIndex(n => n.id === node.id);
+        const idx = manualNodes.value.findIndex((n) => n.id === node.id);
         if (idx !== -1) {
             manualNodes.value[idx] = { ...node };
             await saveData('更新节点');
@@ -268,7 +280,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function deleteNode(id: string) {
-        manualNodes.value = manualNodes.value.filter(n => n.id !== id);
+        manualNodes.value = manualNodes.value.filter((n) => n.id !== id);
         removeIdFromProfiles(id, 'manualNodes');
         await saveData('删除节点');
     }
@@ -281,8 +293,8 @@ export const useDataStore = defineStore('data', () => {
 
     async function batchDeleteNodes(ids: string[]) {
         const idSet = new Set(ids);
-        manualNodes.value = manualNodes.value.filter(n => !idSet.has(n.id + ''));
-        ids.forEach(id => removeIdFromProfiles(id, 'manualNodes'));
+        manualNodes.value = manualNodes.value.filter((n) => !idSet.has(n.id + ''));
+        ids.forEach((id) => removeIdFromProfiles(id, 'manualNodes'));
         await saveData('批量删除节点');
     }
 
@@ -295,7 +307,7 @@ export const useDataStore = defineStore('data', () => {
 
     async function deduplicateNodes() {
         const unique = new Map();
-        manualNodes.value.forEach(node => {
+        manualNodes.value.forEach((node) => {
             // Use stable key generation
             const key = node.url || `${node.server}|${node.port}|${node.type}`;
             if (!unique.has(key)) {
@@ -315,7 +327,6 @@ export const useDataStore = defineStore('data', () => {
         await saveData('自动排序');
     }
 
-
     // ==================== Actions: Profiles ====================
 
     async function addProfile(profile: Profile): Promise<boolean> {
@@ -330,7 +341,7 @@ export const useDataStore = defineStore('data', () => {
         }
 
         // Duplicate check (Custom ID)
-        if (profiles.value.some(p => p.customId === newProfile.customId)) {
+        if (profiles.value.some((p) => p.customId === newProfile.customId)) {
             // Try to append random suffix if auto-generated? Or just fail?
             // If user provided it, fail.
             // If auto-generated, we could retry, but rarity is high.
@@ -343,7 +354,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function updateProfile(profile: Profile): Promise<boolean> {
-        const idx = profiles.value.findIndex(p => p.id === profile.id);
+        const idx = profiles.value.findIndex((p) => p.id === profile.id);
         if (idx === -1) return false;
 
         // Check customId conflict if changed
@@ -353,7 +364,9 @@ export const useDataStore = defineStore('data', () => {
                 showToast('自定义ID不能为空', 'error');
                 return false;
             }
-            if (profiles.value.some(p => p.id !== profile.id && p.customId === profile.customId)) {
+            if (
+                profiles.value.some((p) => p.id !== profile.id && p.customId === profile.customId)
+            ) {
                 showToast('自定义ID已存在', 'error');
                 return false;
             }
@@ -364,7 +377,7 @@ export const useDataStore = defineStore('data', () => {
     }
 
     async function deleteProfile(id: string) {
-        profiles.value = profiles.value.filter(p => p.id !== id);
+        profiles.value = profiles.value.filter((p) => p.id !== id);
         await saveData('删除订阅组');
     }
 
@@ -375,12 +388,12 @@ export const useDataStore = defineStore('data', () => {
 
     async function batchDeleteProfiles(ids: string[]) {
         const idSet = new Set(ids);
-        profiles.value = profiles.value.filter(p => !idSet.has(p.id));
+        profiles.value = profiles.value.filter((p) => !idSet.has(p.id));
         await saveData('批量删除订阅组');
     }
 
     async function toggleProfile(id: string, enabled: boolean) {
-        const p = profiles.value.find(p => p.id === id);
+        const p = profiles.value.find((p) => p.id === id);
         if (p) {
             p.enabled = enabled;
             await saveData('切换订阅组状态', false); // Optional: don't show toast for toggle
@@ -389,7 +402,7 @@ export const useDataStore = defineStore('data', () => {
 
     // Helper: Remove subscription/node ID from all profiles
     function removeIdFromProfiles(id: string, type: 'subscriptions' | 'manualNodes') {
-        profiles.value.forEach(p => {
+        profiles.value.forEach((p) => {
             if (type === 'subscriptions' && p.subscriptions) {
                 p.subscriptions = p.subscriptions.filter((sid: string) => sid !== id);
             } else if (type === 'manualNodes' && p.manualNodes) {
@@ -400,19 +413,18 @@ export const useDataStore = defineStore('data', () => {
 
     // Helper: Clear field from all profiles
     function clearProfilesField(type: 'subscriptions' | 'manualNodes') {
-        profiles.value.forEach(p => {
+        profiles.value.forEach((p) => {
             if (type === 'subscriptions') p.subscriptions = [];
             if (type === 'manualNodes') p.manualNodes = [];
         });
     }
-
 
     // ==================== Actions: Config ====================
     function updateConfig(newConfig: Partial<AppConfig>) {
         config.value = { ...config.value, ...newConfig };
         // Config saving is usually handled by Settings component individually using api.saveSettings
         // But if we update via store, we might want to sync?
-        // Let's leave it as is, or add persistence if needed. 
+        // Let's leave it as is, or add persistence if needed.
         // Based on SettingsModal.vue, it calls api.saveSettings then store.updateConfig.
         // So store.updateConfig is just for local sync. No need to saveData here.
     }

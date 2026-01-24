@@ -1,7 +1,7 @@
 /**
  * Sub-One ProxyUtils Type Definitions
- * 
- * 
+ *
+ *
  */
 
 // ============================================================================
@@ -9,25 +9,25 @@
 // ============================================================================
 
 export type ProxyType =
-    | 'ss'           // Shadowsocks
-    | 'ssr'          // ShadowsocksR
-    | 'vmess'        // VMess
-    | 'vless'        // VLESS
-    | 'trojan'       // Trojan
-    | 'hysteria'     // Hysteria
-    | 'hysteria2'    // Hysteria2
-    | 'tuic'         // TUIC
-    | 'wireguard'    // WireGuard
-    | 'socks5'       // SOCKS5
-    | 'http'         // HTTP
-    | 'https'        // HTTPS
-    | 'snell'        // Snell
-    | 'anytls'       // AnyTLS
-    | 'naive'        // NaiveProxy
-    | 'ssh'          // SSH
-    | 'external'     // Surge External
-    | 'direct'       // Direct
-    | 'reject';      // Reject
+    | 'ss' // Shadowsocks
+    | 'ssr' // ShadowsocksR
+    | 'vmess' // VMess
+    | 'vless' // VLESS
+    | 'trojan' // Trojan
+    | 'hysteria' // Hysteria
+    | 'hysteria2' // Hysteria2
+    | 'tuic' // TUIC
+    | 'wireguard' // WireGuard
+    | 'socks5' // SOCKS5
+    | 'http' // HTTP
+    | 'https' // HTTPS
+    | 'snell' // Snell
+    | 'anytls' // AnyTLS
+    | 'naive' // NaiveProxy
+    | 'ssh' // SSH
+    | 'external' // Surge External
+    | 'direct' // Direct
+    | 'reject'; // Reject
 
 // ============================================================================
 // 传输层类型
@@ -35,12 +35,12 @@ export type ProxyType =
 
 export type NetworkType =
     | 'tcp'
-    | 'ws'           // WebSocket
-    | 'grpc'         // gRPC
-    | 'h2'           // HTTP/2
-    | 'http'         // HTTP
-    | 'kcp'          // KCP
-    | 'quic';        // QUIC
+    | 'ws' // WebSocket
+    | 'grpc' // gRPC
+    | 'h2' // HTTP/2
+    | 'http' // HTTP
+    | 'kcp' // KCP
+    | 'quic'; // QUIC
 
 // ============================================================================
 // 平台类型
@@ -64,7 +64,7 @@ export type PlatformType =
 /**
  * ProxyNode - 所有解析器的标准输出格式
  * 统一所有协议的节点表示
- * 
+ *
  * 字段顺序按照 Clash 标准排列：
  * 1. name, type, server, port (核心字段)
  * 2. 认证信息
@@ -74,28 +74,28 @@ export type PlatformType =
  */
 export interface ProxyNode {
     // === 核心字段 (Clash 标准顺序) ===
-    name: string;                  // 节点名称 (第1位)
-    type: ProxyType;               // 协议类型 (第2位)
-    server: string;                // 服务器地址 (第3位)
-    port: number;                  // 端口 (第4位)
+    name: string; // 节点名称 (第1位)
+    type: ProxyType; // 协议类型 (第2位)
+    server: string; // 服务器地址 (第3位)
+    port: number; // 端口 (第4位)
 
     // === 认证信息 ===
-    password?: string;             // 密码 (SS/Trojan/Snell/Hysteria2)
-    uuid?: string;                 // UUID (VMess/VLESS/TUIC)
-    username?: string;             // 用户名 (SOCKS5/HTTP)
+    password?: string; // 密码 (SS/Trojan/Snell/Hysteria2)
+    uuid?: string; // UUID (VMess/VLESS/TUIC)
+    username?: string; // 用户名 (SOCKS5/HTTP)
 
     // === 加密信息 ===
-    cipher?: string;               // 加密方法 (SS)
-    method?: string;               // 加密方法别名
-    alterId?: number;              // AlterId (VMess)
-    'alter-id'?: number;           // AlterId 别名
+    cipher?: string; // 加密方法 (SS)
+    method?: string; // 加密方法别名
+    alterId?: number; // AlterId (VMess)
+    'alter-id'?: number; // AlterId 别名
 
     // === 传输层配置 ===
-    network?: NetworkType;         // 传输协议
-    tls?: boolean;                 // 是否启用TLS
-    sni?: string;                  // SNI
-    alpn?: string[];               // ALPN
-    'skip-cert-verify'?: boolean;  // 跳过证书验证
+    network?: NetworkType; // 传输协议
+    tls?: boolean; // 是否启用TLS
+    sni?: string; // SNI
+    alpn?: string[]; // ALPN
+    'skip-cert-verify'?: boolean; // 跳过证书验证
 
     // === WebSocket 选项 ===
     'ws-opts'?: {
@@ -104,14 +104,14 @@ export interface ProxyNode {
         'max-early-data'?: number;
         'early-data-header-name'?: string;
     };
-    'ws-path'?: string;            // 兼容简化写法
+    'ws-path'?: string; // 兼容简化写法
     'ws-headers'?: Record<string, string>;
 
     // === gRPC 选项 ===
     'grpc-opts'?: {
         'service-name'?: string;
     };
-    'grpc-service-name'?: string;  // 兼容简化写法
+    'grpc-service-name'?: string; // 兼容简化写法
 
     // === HTTP/2 选项 ===
     'h2-opts'?: {
@@ -124,8 +124,8 @@ export interface ProxyNode {
         seed?: string;
         'header-type'?: string;
     };
-    seed?: string;                 // mKCP seed (兼容简化写法)
-    headerType?: string;           // mKCP 伪装头部类型 (none/srtp/utp/wechat-video/dtls/wireguard)
+    seed?: string; // mKCP seed (兼容简化写法)
+    headerType?: string; // mKCP 伪装头部类型 (none/srtp/utp/wechat-video/dtls/wireguard)
 
     // === QUIC 选项 ===
     'quic-opts'?: {
@@ -143,59 +143,60 @@ export interface ProxyNode {
     };
 
     // === UDP/TCP 选项 ===
-    udp?: boolean;                 // 是否支持UDP
-    'udp-relay'?: boolean;         // UDP中继
-    tfo?: boolean;                 // TCP Fast Open
-    'fast-open'?: boolean;         // TCP Fast Open 别名
-    mptcp?: boolean;               // Multipath TCP
-    ports?: string | number;       // 端口跳跃 (Port Hopping)
-    'udp-over-tcp'?: boolean;      // UDP Over TCP
+    udp?: boolean; // 是否支持UDP
+    'udp-relay'?: boolean; // UDP中继
+    tfo?: boolean; // TCP Fast Open
+    'fast-open'?: boolean; // TCP Fast Open 别名
+    mptcp?: boolean; // Multipath TCP
+    ports?: string | number; // 端口跳跃 (Port Hopping)
+    'udp-over-tcp'?: boolean; // UDP Over TCP
     'udp-over-tcp-version'?: number;
 
     // === VMess 特有 ===
-    aead?: boolean;                // VMess AEAD
-    'vmess-aead'?: boolean;        // 别名
+    aead?: boolean; // VMess AEAD
+    'vmess-aead'?: boolean; // 别名
 
     // === VLESS 特有 ===
-    flow?: string;                 // VLESS flow (xtls-rprx-*)
-    encryption?: string;           // VLESS encryption
+    flow?: string; // VLESS flow (xtls-rprx-*)
+    encryption?: string; // VLESS encryption
 
     // === Hysteria/Hysteria2 特有 ===
-    'auth'?: string;               // Hysteria auth
-    'auth-str'?: string;           // Hysteria2 auth
-    obfs?: string;                 // 混淆类型
-    'obfs-password'?: string;      // 混淆密码
-    protocol?: string;             // 协议类型
-    up?: string | number;          // 上传速度
-    down?: string | number;        // 下载速度
-    'up-mbps'?: number;            // 上传速度 (Mbps)
-    'down-mbps'?: number;          // 下载速度 (Mbps)
-    'recv-window'?: number;        // 接收窗口
-    'recv-window-conn'?: number;   // 连接接收窗口
+    auth?: string; // Hysteria auth
+    'auth-str'?: string; // Hysteria2 auth
+    obfs?: string; // 混淆类型
+    'obfs-password'?: string; // 混淆密码
+    protocol?: string; // 协议类型
+    up?: string | number; // 上传速度
+    down?: string | number; // 下载速度
+    'up-mbps'?: number; // 上传速度 (Mbps)
+    'down-mbps'?: number; // 下载速度 (Mbps)
+    'recv-window'?: number; // 接收窗口
+    'recv-window-conn'?: number; // 连接接收窗口
     'disable-mtu-discovery'?: boolean; // 禁用MTU发现
 
     // === TUIC 特有 ===
-    token?: string;                // TUIC token
+    token?: string; // TUIC token
     'congestion-controller'?: string; // 拥塞控制
-    'udp-relay-mode'?: string;     // UDP中继模式
-    'reduce-rtt'?: boolean;        // 减少RTT
-    'request-timeout'?: number;    // 请求超时
+    'udp-relay-mode'?: string; // UDP中继模式
+    'reduce-rtt'?: boolean; // 减少RTT
+    'request-timeout'?: number; // 请求超时
     'max-udp-relay-packet-size'?: number;
-    'max-open-streams'?: number;   // 最大打开流数
+    'max-open-streams'?: number; // 最大打开流数
 
     // === WireGuard 特有 ===
-    'private-key'?: string;        // 私钥
-    privateKey?: string;           // 别名 (兼容旧版)
-    'public-key'?: string;         // 公钥
-    publicKey?: string;            // 别名 (兼容旧版)
-    'pre-shared-key'?: string;     // 预共享密钥
-    'preshared-key'?: string;      // 别名
-    preSharedKey?: string;         // 别名 (兼容旧版)
-    reserved?: string | number[];  // 保留字段
-    mtu?: number;                  // MTU
-    ip?: string;                   // IPv4地址
-    ipv6?: string;                 // IPv6地址
-    peers?: Array<{                // WireGuard peers
+    'private-key'?: string; // 私钥
+    privateKey?: string; // 别名 (兼容旧版)
+    'public-key'?: string; // 公钥
+    publicKey?: string; // 别名 (兼容旧版)
+    'pre-shared-key'?: string; // 预共享密钥
+    'preshared-key'?: string; // 别名
+    preSharedKey?: string; // 别名 (兼容旧版)
+    reserved?: string | number[]; // 保留字段
+    mtu?: number; // MTU
+    ip?: string; // IPv4地址
+    ipv6?: string; // IPv6地址
+    peers?: Array<{
+        // WireGuard peers
         endpoint?: string;
         'public-key'?: string;
         'pre-shared-key'?: string;
@@ -204,52 +205,53 @@ export interface ProxyNode {
     }>;
 
     // === Snell 特有 ===
-    version?: number;              // Snell 版本
+    version?: number; // Snell 版本
     'obfs-opts'?: {
         mode?: string;
         host?: string;
     };
 
     // === Shadowsocks 插件 ===
-    plugin?: string;               // 插件名称
+    plugin?: string; // 插件名称
     'plugin-opts'?: Record<string, any>; // 插件选项
 
     // === 平台特定选项 ===
-    interface?: string;            // 出站接口
-    'routing-mark'?: number;       // 路由标记
-    'ip-version'?: string;         // IP版本 (dual/ipv4/ipv6/ipv4-prefer/ipv6-prefer)
+    interface?: string; // 出站接口
+    'routing-mark'?: number; // 路由标记
+    'ip-version'?: string; // IP版本 (dual/ipv4/ipv6/ipv4-prefer/ipv6-prefer)
     'client-fingerprint'?: string; // 客户端指纹
-    'tls-fingerprint'?: string;    // TLS 指纹 (用于 Hysteria2 pinSHA256)
+    'tls-fingerprint'?: string; // TLS 指纹 (用于 Hysteria2 pinSHA256)
 
     // === 内部工具 / 扩展字段 ===
-    exec?: string;                 // Surge External exec
+    exec?: string; // Surge External exec
     'local-port'?: string | number; // Surge External local-port
-    localPort?: string | number;    // 别名
-    args?: string[];               // Surge External args
-    addresses?: string[];          // Surge External addresses
-    'test-url'?: string;           // 测速地址
-    'test-timeout'?: number;       // 测速超时
-    'underlying-proxy'?: string;    // 底层代理
-    'dialer-proxy'?: string;       // 拨号代理 (Clash Meta)
-    keepalive?: number;            // Keepalive
+    localPort?: string | number; // 别名
+    args?: string[]; // Surge External args
+    addresses?: string[]; // Surge External addresses
+    'test-url'?: string; // 测速地址
+    'test-timeout'?: number; // 测速超时
+    'underlying-proxy'?: string; // 底层代理
+    'dialer-proxy'?: string; // 拨号代理 (Clash Meta)
+    keepalive?: number; // Keepalive
     'persistent-keepalive'?: number; // 持久 Keepalive (WireGuard)
 
     // === 元数据 (下划线开头的内部字段) ===
-    _subName?: string;             // 所属订阅名称
-    _subDisplayName?: string;      // 订阅显示名
-    _collectionName?: string;      // 所属订阅组
-    _geo?: {                       // 地理位置信息
+    _subName?: string; // 所属订阅名称
+    _subDisplayName?: string; // 订阅显示名
+    _collectionName?: string; // 所属订阅组
+    _geo?: {
+        // 地理位置信息
         country?: string;
         countryCode?: string;
         region?: string;
     };
-    _unavailable?: boolean;        // 是否不可用
-    _uptime?: number;              // 正常运行时间
-    _resolved?: boolean;           // 是否已解析域名
+    _unavailable?: boolean; // 是否不可用
+    _uptime?: number; // 正常运行时间
+    _resolved?: boolean; // 是否已解析域名
 
     // === 原始数据 ===
-    url?: string;                  // 原始 URL
-    rawConfig?: any;               // 原始配置对象
+    url?: string; // 原始 URL
+    rawConfig?: any; // 原始配置对象
 
     // === 平台支持标记 ===
     supported?: {
@@ -257,8 +259,8 @@ export interface ProxyNode {
     };
 
     // === 内部标识符 (放在最后) ===
-    id: string;                    // 唯一ID (内部使用,不输出到配置文件)
-    subName?: string;              // 订阅名称 (兼容旧代码,已废弃,使用 _subName)
+    id: string; // 唯一ID (内部使用,不输出到配置文件)
+    subName?: string; // 订阅名称 (兼容旧代码,已废弃,使用 _subName)
 
     // 允许其他自定义字段
     [key: string]: any;
@@ -269,12 +271,12 @@ export interface ProxyNode {
 // ============================================================================
 
 export interface ProcessOptions {
-    subscriptionName?: string;     // 订阅名称
-    exclude?: string;              // 排除规则 (旧版正则字符串)
-    prependSubName?: boolean;      // 是否在节点名前添加订阅名
-    dedupe?: boolean;              // 是否去重
-    includeRules?: string[];       // 包含规则列表
-    excludeRules?: string[];       // 排除规则列表
+    subscriptionName?: string; // 订阅名称
+    exclude?: string; // 排除规则 (旧版正则字符串)
+    prependSubName?: boolean; // 是否在节点名前添加订阅名
+    dedupe?: boolean; // 是否去重
+    includeRules?: string[]; // 包含规则列表
+    excludeRules?: string[]; // 排除规则列表
 }
 
 // ============================================================================
@@ -282,10 +284,10 @@ export interface ProcessOptions {
 // ============================================================================
 
 export interface ConvertOptions {
-    filename?: string;             // 文件名
+    filename?: string; // 文件名
     'include-unsupported-proxy'?: boolean; // 是否包含不支持的代理
-    useMihomoExternal?: boolean;   // 是否使用 Mihomo External
-    [key: string]: any;            // 其他平台特定选项
+    useMihomoExternal?: boolean; // 是否使用 Mihomo External
+    [key: string]: any; // 其他平台特定选项
 }
 
 // ============================================================================
@@ -304,12 +306,8 @@ export interface Parser {
 
 export interface Converter {
     name: string;
-    type: 'SINGLE' | 'ALL';        // SINGLE: 逐个生成, ALL: 批量生成
-    convert(
-        proxies: ProxyNode | ProxyNode[],
-        type?: string,
-        opts?: ConvertOptions
-    ): string;
+    type: 'SINGLE' | 'ALL'; // SINGLE: 逐个生成, ALL: 批量生成
+    convert(proxies: ProxyNode | ProxyNode[], type?: string, opts?: ConvertOptions): string;
 }
 
 // ============================================================================
@@ -427,9 +425,9 @@ export interface Profile {
     name: string;
     enabled: boolean;
     subscriptions: string[]; // Subscription IDs
-    manualNodes: string[];   // ProxyNode IDs
+    manualNodes: string[]; // ProxyNode IDs
     customId?: string;
-    expiresAt?: string;      // ISO Date String
-    type?: string;           // Output format (e.g., 'base64')
+    expiresAt?: string; // ISO Date String
+    type?: string; // Output format (e.g., 'base64')
     updatedAt?: number;
 }

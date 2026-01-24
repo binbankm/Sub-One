@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 /**
  * 具有唯一标识符的对象接口
@@ -10,10 +10,10 @@ export interface Identifiable {
 
 /**
  * 批量选择逻辑的 Composable
- * 
+ *
  * 提供一套完整的批量选择状态管理，包括进入/退出批量模式、全选、反选、单选等功能。
  * 适用于需要批量操作（如删除）的列表场景。
- * 
+ *
  * @param itemsRef - 响应式的列表数据源（Ref 或 Computed），用于全选/反选操作时获取当前列表项
  * @returns 包含状态和操作方法的对象
  */

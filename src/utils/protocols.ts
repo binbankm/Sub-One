@@ -8,7 +8,8 @@ export const getProtocol = (url?: string): string => {
         if (!url) return 'unknown';
         const lowerUrl = url.trim().toLowerCase();
         if (lowerUrl.startsWith('anytls://')) return 'anytls';
-        if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://')) return 'hysteria2';
+        if (lowerUrl.startsWith('hysteria2://') || lowerUrl.startsWith('hy2://'))
+            return 'hysteria2';
         if (lowerUrl.startsWith('hysteria://') || lowerUrl.startsWith('hy://')) return 'hysteria';
         if (lowerUrl.startsWith('ssr://')) return 'ssr';
         if (lowerUrl.startsWith('tuic://')) return 'tuic';
@@ -21,7 +22,6 @@ export const getProtocol = (url?: string): string => {
         if (lowerUrl.startsWith('snell://')) return 'snell';
         if (lowerUrl.startsWith('naive') || lowerUrl.startsWith('naive+')) return 'naive';
         if (lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) return 'http';
-
     } catch {
         return 'unknown';
     }

@@ -27,27 +27,26 @@
 
 <script setup lang="ts">
 // ==================== 导入依赖 ====================
-
 // Vue 核心功能
-import { onMounted, ref, computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
 
-// Pinia 状态管理
-import { useSessionStore } from './stores/session';
-import { useThemeStore } from './stores/theme';
-import { useLayoutStore } from './stores/layout';
-import { useUIStore } from './stores/ui';
-import { useDataStore } from './stores/data';
 import { storeToRefs } from 'pinia';
 
+import Footer from './components/layout/AppFooter.vue';
+import Sidebar from './components/layout/AppSidebar.vue';
+import Toast from './components/ui/Toast.vue';
 // 类型定义
 // import type { InitialData } from './types/index';
 
 // 同步加载的核心组件（立即显示）
 import Dashboard from './pages/DashboardPage.vue';
 import Login from './pages/LoginPage.vue';
-import Sidebar from './components/layout/AppSidebar.vue';
-import Toast from './components/ui/Toast.vue';
-import Footer from './components/layout/AppFooter.vue';
+import { useDataStore } from './stores/data';
+import { useLayoutStore } from './stores/layout';
+// Pinia 状态管理
+import { useSessionStore } from './stores/session';
+import { useThemeStore } from './stores/theme';
+import { useUIStore } from './stores/ui';
 
 // 异步加载的模态框组件（按需加载，优化首屏性能）
 const SettingsModal = defineAsyncComponent(() => import('./features/settings/SettingsModal.vue'));
@@ -78,8 +77,6 @@ const { sessionState, initialData } = storeToRefs(sessionStore);
  * - initializeSystem: 初始化系统
  */
 const { checkSession, login, logout, initializeSystem } = sessionStore;
-
-
 
 // ==================== 主题和布局管理 ====================
 
@@ -112,14 +109,14 @@ const showHelpModal = ref(false);
  * 使用 uiStore 统一管理状态
  */
 const openSettings = () => {
-  uiStore.show();
+    uiStore.show();
 };
 
 /**
  * 打开帮助模态框
  */
 const openHelp = () => {
-  showHelpModal.value = true;
+    showHelpModal.value = true;
 };
 
 // ==================== 性能优化 ====================
@@ -135,15 +132,18 @@ const HTTP_REGEX = /^https?:\/\//;
 
 /**
  * 订阅数量
- * 
+ *
  * 说明：
  * - 统计所有 HTTP/HTTPS 开头的项目
  * - 这些是有效的订阅链接
  * - 使用计算属性缓存结果，避免重复计算
  */
 const subscriptionsCount = computed(() => {
-  if (isInitialized.value) return subscriptions.value.length;
-  return initialData.value?.subs?.filter(item => item.url && HTTP_REGEX.test(item.url))?.length || 0;
+    if (isInitialized.value) return subscriptions.value.length;
+    return (
+        initialData.value?.subs?.filter((item) => item.url && HTTP_REGEX.test(item.url))?.length ||
+        0
+    );
 });
 
 /**
@@ -151,186 +151,182 @@ const subscriptionsCount = computed(() => {
  * 统计订阅组列表的长度
  */
 const profilesCount = computed(() => {
-  if (isInitialized.value) return profiles.value.length;
-  return initialData.value?.profiles?.length || 0;
+    if (isInitialized.value) return profiles.value.length;
+    return initialData.value?.profiles?.length || 0;
 });
 
 /**
  * 手动节点数量
- * 
+ *
  * 说明：
  * - 统计所有非 HTTP/HTTPS 开头的项目
  * - 这些是手动添加的节点链接
  */
 const manualNodesCount = computed(() => {
-  if (isInitialized.value) return manualNodes.value.length;
-  return initialData.value?.subs?.filter(item => !item.url || !HTTP_REGEX.test(item.url))?.length || 0;
+    if (isInitialized.value) return manualNodes.value.length;
+    return (
+        initialData.value?.subs?.filter((item) => !item.url || !HTTP_REGEX.test(item.url))
+            ?.length || 0
+    );
 });
 
 // ==================== 标签页信息配置 ====================
 
 /**
  * 标签页信息
- * 
+ *
  * 说明：
  * - 根据当前激活的标签页返回对应的信息
  * - 包括标题、描述和图标
  * - 用于页面头部显示
  */
 const tabInfo = computed(() => {
-  /** 标签页配置对象 */
-  const tabs = {
-    dashboard: {
-      title: '仪表盘',
-      description: '概览您的订阅和节点状态',
-      icon: 'dashboard'
-    },
-    subscriptions: {
-      title: '订阅管理',
-      description: '管理您的所有机场订阅链接',
-      icon: 'subscription'
-    },
-    profiles: {
-      title: '订阅组',
-      description: '创建和管理订阅组合',
-      icon: 'profile'
-    },
-    nodes: {
-      title: '手动节点',
-      description: '添加和管理单个节点链接',
-      icon: 'node'
-    }
-  };
-  
-  // 返回当前标签页的信息，如果未找到则返回 dashboard
-  return tabs[activeTab.value as keyof typeof tabs] || tabs.dashboard;
+    /** 标签页配置对象 */
+    const tabs = {
+        dashboard: {
+            title: '仪表盘',
+            description: '概览您的订阅和节点状态',
+            icon: 'dashboard'
+        },
+        subscriptions: {
+            title: '订阅管理',
+            description: '管理您的所有机场订阅链接',
+            icon: 'subscription'
+        },
+        profiles: {
+            title: '订阅组',
+            description: '创建和管理订阅组合',
+            icon: 'profile'
+        },
+        nodes: {
+            title: '手动节点',
+            description: '添加和管理单个节点链接',
+            icon: 'node'
+        }
+    };
+
+    // 返回当前标签页的信息，如果未找到则返回 dashboard
+    return tabs[activeTab.value as keyof typeof tabs] || tabs.dashboard;
 });
 
 // ==================== 生命周期钩子 ====================
 
 /**
  * 组件挂载时执行
- * 
+ *
  * 执行顺序：
  * 1. 初始化主题（从 localStorage 读取用户偏好）
  * 2. 初始化布局（从 localStorage 读取侧边栏状态）
  * 3. 检查会话（验证用户登录状态）
  */
 onMounted(() => {
-  // 初始化主题（应用保存的明亮/暗黑模式）
-  themeStore.initTheme();
+    // 初始化主题（应用保存的明亮/暗黑模式）
+    themeStore.initTheme();
 
-  // 初始化布局（应用保存的侧边栏折叠状态）
-  layoutStore.init();
+    // 初始化布局（应用保存的侧边栏折叠状态）
+    layoutStore.init();
 
-  // 检查会话（如果已登录则自动获取数据）
-  checkSession();
+    // 检查会话（如果已登录则自动获取数据）
+    checkSession();
 });
 </script>
 
 <template>
-  <!-- 应用主容器 -->
-  <div class="app-container">
-    
-    <!-- ==================== 登录页面 ==================== -->
-    <!-- 当用户未登录时显示 -->
-    <div v-if="sessionState !== 'loggedIn'" class="login-page">
-      
-      <!-- 加载状态 - 正在检查会话 -->
-      <div v-if="sessionState === 'loading'" class="loading-container">
-        <!-- 双层旋转加载动画 -->
-        <div class="loading-spinner-wrapper">
-          <!-- 外层加载圈（顺时针旋转） -->
-          <div class="loading-spinner-outer"></div>
-          <!-- 内层加载圈（逆时针旋转） -->
-          <div class="loading-spinner-inner"></div>
-        </div>
-        <!-- 加载提示文本 -->
-        <p class="loading-text">正在加载...</p>
-      </div>
-
-      <!-- 系统初始化 - 首次使用时显示 -->
-      <div v-else-if="sessionState === 'needsSetup'" class="login-form-container">
-        <!-- Login 组件也用于初始化 - 传入 initializeSystem 方法和 isSetup 标志 -->
-        <Login :login="initializeSystem" :is-setup="true" />
-      </div>
-
-      <!-- 登录表单 - 会话检查完成后显示 -->
-      <div v-else class="login-form-container">
-        <!-- Login 组件 - 传入 login 方法 -->
-        <Login :login="login" />
-      </div>
-    </div>
-
-    <!-- ==================== 仪表盘主界面 ==================== -->
-    <!-- 用户已登录时显示 -->
-    <div v-else class="dashboard-container">
-      
-      <!-- 侧边导航栏 -->
-      <Sidebar 
-        v-model="activeTab" 
-        :subscriptions-count="subscriptionsCount" 
-        :profiles-count="profilesCount"
-        :manual-nodes-count="manualNodesCount" 
-        :is-logged-in="sessionState === 'loggedIn'" 
-        @logout="logout" 
-        @settings="openSettings" 
-        @help="openHelp" 
-      />
-
-      <!-- 主内容区域 -->
-      <!-- 根据侧边栏折叠状态应用不同的类名 -->
-      <main class="main-content" :class="{ 'main-content-full': layoutStore.sidebarCollapsed }">
-        
-        <!-- 内容包装器 - 限制最大宽度并居中 -->
-        <div class="content-wrapper">
-          
-          <!-- 页面头部 - 显示当前页面标题和描述 -->
-          <header class="page-header">
-            <div class="header-content">
-              <!-- 头部文字区域 -->
-              <div class="header-text">
-                <!-- 页面标题 - 渐变色文字效果 -->
-                <h1 class="page-title">
-                  {{ tabInfo.title }}
-                </h1>
-                <!-- 页面描述 -->
-                <p class="page-description">
-                  {{ tabInfo.description }}
-                </p>
-              </div>
-
-              <!-- 快速操作区域 -->
-              <!-- 已移除未使用的刷新按钮 -->
+    <!-- 应用主容器 -->
+    <div class="app-container">
+        <!-- ==================== 登录页面 ==================== -->
+        <!-- 当用户未登录时显示 -->
+        <div v-if="sessionState !== 'loggedIn'" class="login-page">
+            <!-- 加载状态 - 正在检查会话 -->
+            <div v-if="sessionState === 'loading'" class="loading-container">
+                <!-- 双层旋转加载动画 -->
+                <div class="loading-spinner-wrapper">
+                    <!-- 外层加载圈（顺时针旋转） -->
+                    <div class="loading-spinner-outer"></div>
+                    <!-- 内层加载圈（逆时针旋转） -->
+                    <div class="loading-spinner-inner"></div>
+                </div>
+                <!-- 加载提示文本 -->
+                <p class="loading-text">正在加载...</p>
             </div>
-          </header>
 
-          <!-- 仪表盘内容区域 -->
-          <div class="dashboard-content">
-            <!-- Dashboard 组件 - 根据 activeTab 显示不同内容 -->
-            <Dashboard 
-              :data="initialData" 
-              v-model:active-tab="activeTab" 
-            />
-          </div>
+            <!-- 系统初始化 - 首次使用时显示 -->
+            <div v-else-if="sessionState === 'needsSetup'" class="login-form-container">
+                <!-- Login 组件也用于初始化 - 传入 initializeSystem 方法和 isSetup 标志 -->
+                <Login :login="initializeSystem" :is-setup="true" />
+            </div>
 
-          <!-- 页脚 -->
-          <Footer class="dashboard-footer" />
+            <!-- 登录表单 - 会话检查完成后显示 -->
+            <div v-else class="login-form-container">
+                <!-- Login 组件 - 传入 login 方法 -->
+                <Login :login="login" />
+            </div>
         </div>
-      </main>
+
+        <!-- ==================== 仪表盘主界面 ==================== -->
+        <!-- 用户已登录时显示 -->
+        <div v-else class="dashboard-container">
+            <!-- 侧边导航栏 -->
+            <Sidebar
+                v-model="activeTab"
+                :subscriptions-count="subscriptionsCount"
+                :profiles-count="profilesCount"
+                :manual-nodes-count="manualNodesCount"
+                :is-logged-in="sessionState === 'loggedIn'"
+                @logout="logout"
+                @settings="openSettings"
+                @help="openHelp"
+            />
+
+            <!-- 主内容区域 -->
+            <!-- 根据侧边栏折叠状态应用不同的类名 -->
+            <main
+                class="main-content"
+                :class="{ 'main-content-full': layoutStore.sidebarCollapsed }"
+            >
+                <!-- 内容包装器 - 限制最大宽度并居中 -->
+                <div class="content-wrapper">
+                    <!-- 页面头部 - 显示当前页面标题和描述 -->
+                    <header class="page-header">
+                        <div class="header-content">
+                            <!-- 头部文字区域 -->
+                            <div class="header-text">
+                                <!-- 页面标题 - 渐变色文字效果 -->
+                                <h1 class="page-title">
+                                    {{ tabInfo.title }}
+                                </h1>
+                                <!-- 页面描述 -->
+                                <p class="page-description">
+                                    {{ tabInfo.description }}
+                                </p>
+                            </div>
+
+                            <!-- 快速操作区域 -->
+                            <!-- 已移除未使用的刷新按钮 -->
+                        </div>
+                    </header>
+
+                    <!-- 仪表盘内容区域 -->
+                    <div class="dashboard-content">
+                        <!-- Dashboard 组件 - 根据 activeTab 显示不同内容 -->
+                        <Dashboard v-model:active-tab="activeTab" :data="initialData" />
+                    </div>
+
+                    <!-- 页脚 -->
+                    <Footer class="dashboard-footer" />
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================== 全局组件 ==================== -->
+
+        <!-- 全局 Toast 提示组件 -->
+        <Toast />
+
+        <!-- 设置模态框 - 按需显示（异步加载，使用 uiStore 管理状态） -->
+        <SettingsModal v-model:show="uiStore.isSettingsModalVisible" />
+
+        <!-- 帮助模态框 - 按需显示（异步加载） -->
+        <HelpModal v-if="showHelpModal" v-model:show="showHelpModal" />
     </div>
-
-    <!-- ==================== 全局组件 ==================== -->
-    
-    <!-- 全局 Toast 提示组件 -->
-    <Toast />
-
-    <!-- 设置模态框 - 按需显示（异步加载，使用 uiStore 管理状态） -->
-    <SettingsModal v-model:show="uiStore.isSettingsModalVisible" />
-
-    <!-- 帮助模态框 - 按需显示（异步加载） -->
-    <HelpModal v-if="showHelpModal" v-model:show="showHelpModal" />
-  </div>
 </template>
-
-

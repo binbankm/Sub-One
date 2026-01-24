@@ -1,12 +1,12 @@
 /**
  * Sub-One Clash Parser
- * 
+ *
  * 将 Clash 配置格式转换为标准 ProxyNode 列表
  */
-
 import yaml from 'js-yaml';
-import type { ProxyNode, ProxyType, NetworkType } from '../types';
-import { randomId, parsePort } from '../utils';
+
+import type { NetworkType, ProxyNode, ProxyType } from '../types';
+import { parsePort, randomId } from '../utils';
 
 /**
  * 解析 Clash YAML 内容
@@ -14,11 +14,20 @@ import { randomId, parsePort } from '../utils';
 export function parseClash(content: string): ProxyNode[] {
     try {
         const doc = yaml.load(content) as any;
-        if (!doc || !Array.isArray(doc.proxies)) {
+        if (!doc) return [];
+
+        let proxies: any[] = [];
+        if (Array.isArray(doc)) {
+            // 情况 1：内容直接是一个节点数组
+            proxies = doc;
+        } else if (doc && Array.isArray(doc.proxies)) {
+            // 情况 2：标准 Clash 配置文件
+            proxies = doc.proxies;
+        } else {
             return [];
         }
 
-        return doc.proxies
+        return proxies
             .map((p: any) => parseClashNode(p))
             .filter((p: ProxyNode | null): p is ProxyNode => p !== null);
     } catch (e) {
@@ -43,15 +52,16 @@ export function parseClashNode(p: any): ProxyNode | null {
         server: p.server,
         port: parsePort(p.port),
         udp: p.udp !== false, // Clash 默认 true
-        tfo: p.tfo || p['fast-open'] || false,
+        tfo: p.tfo || p['fast-open'] || false
     };
 
     // 1. TLS 通用处理
-    node.tls = p.tls || p.ssl || (p.type === 'https') || false;
+    node.tls = p.tls || p.ssl || p.type === 'https' || false;
     node.sni = p.servername || p.sni;
     node.alpn = p.alpn;
     node['skip-cert-verify'] = p['skip-cert-verify'] || p['allowInsecure'] || false;
-    node['client-fingerprint'] = p['client-fingerprint'] || p.fingerprint || p['server-cert-fingerprint'];
+    node['client-fingerprint'] =
+        p['client-fingerprint'] || p.fingerprint || p['server-cert-fingerprint'];
 
     // 各种别名映射
     if (p['dialer-proxy']) node['underlying-proxy'] = p['dialer-proxy'];
@@ -67,18 +77,18 @@ export function parseClashNode(p: any): ProxyNode | null {
             const wsOpts = p['ws-opts'] || {};
             node['ws-opts'] = {
                 path: wsOpts.path || p['ws-path'] || '/',
-                headers: wsOpts.headers || p['ws-headers'] || {},
+                headers: wsOpts.headers || p['ws-headers'] || {}
             };
         } else if (node.network === 'grpc') {
             const grpcOpts = p['grpc-opts'] || {};
             node['grpc-opts'] = {
-                'grpc-service-name': grpcOpts['grpc-service-name'] || '',
+                'grpc-service-name': grpcOpts['grpc-service-name'] || ''
             } as any;
         } else if (['h2', 'http'].includes(node.network)) {
-            const h2Opts = (p['h2-opts'] || p['http-opts'] || {});
+            const h2Opts = p['h2-opts'] || p['http-opts'] || {};
             node[`${node.network}-opts`] = {
                 path: h2Opts.path || '/',
-                headers: h2Opts.headers || {},
+                headers: h2Opts.headers || {}
             } as any;
         }
     }
@@ -114,7 +124,7 @@ export function parseClashNode(p: any): ProxyNode | null {
             if (p['reality-opts']) {
                 node['reality-opts'] = {
                     'public-key': p['reality-opts']['public-key'],
-                    'short-id': p['reality-opts']['short-id'],
+                    'short-id': p['reality-opts']['short-id']
                 };
             }
             break;

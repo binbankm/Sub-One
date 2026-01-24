@@ -1,6 +1,6 @@
 /**
  * Sub-One Proxy Utilities
- * 
+ *
  * 基础工具函数集合
  */
 
@@ -12,7 +12,8 @@
  * 验证是否为有效的 IPv4 地址
  */
 export function isIPv4(ip: string): boolean {
-    const ipv4Pattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    const ipv4Pattern =
+        /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     return ipv4Pattern.test(ip);
 }
 
@@ -21,7 +22,8 @@ export function isIPv4(ip: string): boolean {
  */
 export function isIPv6(ip: string): boolean {
     // IPv6 正则表达式
-    const ipv6Pattern = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+    const ipv6Pattern =
+        /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
     return ipv6Pattern.test(ip);
 }
 
@@ -247,7 +249,7 @@ export function parsePort(port: string | number): number {
 
 /**
  * 解析速度值（支持单位：mbps, kbps, gbps）
- * 
+ *
  * @param speed - 速度字符串，如 "100mbps", "10gbps"
  * @returns 标准化的数值（单位 mbps）
  */
@@ -290,12 +292,7 @@ export function getNodeFingerprint(node: {
     network?: string;
     [key: string]: any;
 }): string {
-    const parts = [
-        node.type,
-        node.server,
-        String(node.port),
-        node.uuid || node.password || '',
-    ];
+    const parts = [node.type, node.server, String(node.port), node.uuid || node.password || ''];
 
     // 添加传输方式
     if (node.network) {
@@ -320,8 +317,9 @@ export function getNodeFingerprint(node: {
  * 生成随机 ID
  */
 export function randomId(): string {
-    return Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15);
+    return (
+        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    );
 }
 
 /**
@@ -342,11 +340,7 @@ export function generateUUID(): string {
 /**
  * 安全执行函数，捕获错误
  */
-export function tryCatch<T>(
-    fn: () => T,
-    defaultValue: T,
-    errorMsg?: string
-): T {
+export function tryCatch<T>(fn: () => T, defaultValue: T, errorMsg?: string): T {
     try {
         return fn();
     } catch (e) {

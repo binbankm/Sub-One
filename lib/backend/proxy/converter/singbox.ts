@@ -1,8 +1,7 @@
 /**
  * Sub-One Sing-box Converter
  */
-
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -10,7 +9,7 @@ export class SingboxConverter extends BaseConverter {
     name = 'Singbox';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const outbounds = nodes.map(node => this.toOutbound(node)).filter(Boolean);
+        const outbounds = nodes.map((node) => this.toOutbound(node)).filter(Boolean);
         return JSON.stringify(outbounds, null, 2);
     }
 
@@ -68,7 +67,9 @@ export class SingboxConverter extends BaseConverter {
                     break;
                 case 'vless':
                     if (node.encryption && node.encryption !== 'none') {
-                        throw new Error(`[SingboxConverter] VLESS encryption is not supported: ${node.encryption}`);
+                        throw new Error(
+                            `[SingboxConverter] VLESS encryption is not supported: ${node.encryption}`
+                        );
                     }
                     outbound.uuid = node.uuid;
                     outbound.flow = node.flow || '';
@@ -96,7 +97,11 @@ export class SingboxConverter extends BaseConverter {
                     break;
                 case 'hysteria2':
                     outbound.password = node.password;
-                    if (node.obfs) outbound.obfs = { type: 'salamander', password: node['obfs-password'] || node.obfs };
+                    if (node.obfs)
+                        outbound.obfs = {
+                            type: 'salamander',
+                            password: node['obfs-password'] || node.obfs
+                        };
                     this.appendTLS(outbound, node);
                     break;
                 case 'tuic':
@@ -108,7 +113,9 @@ export class SingboxConverter extends BaseConverter {
                     this.appendTLS(outbound, node);
                     break;
                 case 'wireguard':
-                    outbound.local_address = Array.isArray(node.ip) ? node.ip : [node.ip].filter(Boolean);
+                    outbound.local_address = Array.isArray(node.ip)
+                        ? node.ip
+                        : [node.ip].filter(Boolean);
                     if (node.ipv6) outbound.local_address.push(node.ipv6);
                     outbound.private_key = node['private-key'] || node.privateKey;
                     outbound.peer_public_key = node['public-key'] || node.publicKey;
@@ -120,7 +127,8 @@ export class SingboxConverter extends BaseConverter {
 
             // Common opts
             if (node.tfo) outbound.tcp_fast_open = true;
-            if (node['underlying-proxy'] || node['dialer-proxy']) outbound.detour = node['underlying-proxy'] || node['dialer-proxy'];
+            if (node['underlying-proxy'] || node['dialer-proxy'])
+                outbound.detour = node['underlying-proxy'] || node['dialer-proxy'];
 
             return outbound;
         } catch (e) {
@@ -134,7 +142,7 @@ export class SingboxConverter extends BaseConverter {
             enabled: true,
             server_name: node.sni || node.server,
             insecure: node['skip-cert-verify'] || false,
-            alpn: Array.isArray(node.alpn) ? node.alpn : (node.alpn ? [node.alpn] : undefined)
+            alpn: Array.isArray(node.alpn) ? node.alpn : node.alpn ? [node.alpn] : undefined
         };
 
         if (node['client-fingerprint']) {
@@ -175,10 +183,12 @@ export class SingboxConverter extends BaseConverter {
             transport.headers = node['ws-headers'] || node['ws-opts']?.headers || {};
             if (node['ws-opts']?.['max-early-data']) {
                 transport.max_early_data = node['ws-opts']['max-early-data'];
-                transport.early_data_header_name = node['ws-opts']['early-data-header-name'] || 'Sec-WebSocket-Protocol';
+                transport.early_data_header_name =
+                    node['ws-opts']['early-data-header-name'] || 'Sec-WebSocket-Protocol';
             }
         } else if (node.network === 'grpc') {
-            transport.service_name = node['grpc-service-name'] || node['grpc-opts']?.['service-name'] || '';
+            transport.service_name =
+                node['grpc-service-name'] || node['grpc-opts']?.['service-name'] || '';
             transport.idle_timeout = (node['grpc-opts'] as any)?.idle_timeout || '15s';
         } else if (node.network === 'h2' || node.network === 'http') {
             transport.type = 'http';

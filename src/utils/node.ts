@@ -1,19 +1,18 @@
 /**
  * 生成节点的唯一标识键
- * 
+ *
  * 功能说明：
  * - 生成节点的指纹字符串，用于去重和唯一性判断
  * - 核心原则：只保留影响连通性的关键配置，忽略别名、备注等元数据
- * 
+ *
  * 优化点：
  * 1. 修复了 VMess 协议误删 id(UUID) 导致不同节点被误判重复的严重 Bug
  * 2. 增强了 JSON 解析的健壮性
  * 3. 统一了其他协议的处理逻辑
- * 
+ *
  * @param url 节点 URL
  * @returns 唯一标识键 (Fingerprint)
  */
-
 import { Base64 } from 'js-base64';
 
 export const getUniqueKey = (url: string): string => {
@@ -43,13 +42,12 @@ export const getUniqueKey = (url: string): string => {
 
                 // 4. 生成规范化指纹
                 // 对 Keys 排序以保证 JSON 序列化的确定性 (Deterministic)
-                const sortedConfig = Object.keys(nodeConfig).sort().reduce(
-                    (obj: Record<string, unknown>, key) => {
+                const sortedConfig = Object.keys(nodeConfig)
+                    .sort()
+                    .reduce((obj: Record<string, unknown>, key) => {
                         obj[key] = nodeConfig[key];
                         return obj;
-                    },
-                    {}
-                );
+                    }, {});
 
                 return 'vmess://' + JSON.stringify(sortedConfig);
             } catch (e) {
@@ -67,7 +65,6 @@ export const getUniqueKey = (url: string): string => {
         }
 
         return trimmedUrl;
-
     } catch (e) {
         // 兜底逻辑：发生任何未知错误，直接使用原始 URL 作为 Key
         // 宁可不去重，也不能错误去重

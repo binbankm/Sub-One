@@ -1,8 +1,8 @@
-
 import express from 'express';
-import path from 'path';
 import fs from 'fs/promises';
+import path from 'path';
 import { fileURLToPath } from 'url';
+
 import { handleApiRequest } from '../lib/backend/api/handlers';
 import { handleSubRequest } from '../lib/backend/subscription/handler';
 
@@ -84,7 +84,11 @@ class NodeKV {
         // 如果请求 JSON 格式
         if (type === 'json') {
             if (typeof val === 'string') {
-                try { return JSON.parse(val); } catch { return val; }
+                try {
+                    return JSON.parse(val);
+                } catch {
+                    return val;
+                }
             }
             return val;
         }
@@ -120,19 +124,24 @@ class NodeKV {
 
     async list(options: any = {}) {
         if (!this.initialized) await this.init();
-        let keys = Object.keys(this.data).map(k => ({ name: k }));
+        let keys = Object.keys(this.data).map((k) => ({ name: k }));
         if (options.prefix) {
-            keys = keys.filter(k => k.name.startsWith(options.prefix));
+            keys = keys.filter((k) => k.name.startsWith(options.prefix));
         }
         return { keys, list_complete: true };
+    }
+
+    async getWithMetadata(key: string, options?: any): Promise<any> {
+        const value = await this.get(key, options?.type || 'text');
+        return { value, metadata: null };
     }
 }
 
 const kv = new NodeKV();
 const env = {
-    SUB_ONE_KV: kv,
+    SUB_ONE_KV: kv as any, // Cast to any to bypass strict KVNamespace type check
     // 模拟 D1 (暂时不实现完整 SQL 支持，重定向到 KV 以保持兼容)
-    SUB_ONE_D1: null,
+    SUB_ONE_D1: null as any
 };
 
 // 解析 Body
@@ -153,7 +162,9 @@ async function cloudflareAdapter(req: express.Request, res: express.Response, ha
             request: standardRequest,
             env: env,
             waitUntil: (p: Promise<any>) => p.catch(console.error),
-            next: () => { throw new Error('next() not supported in docker mode'); }
+            next: () => {
+                throw new Error('next() not supported in docker mode');
+            }
         };
 
         const response = await handler(standardRequest, env, context);
@@ -172,8 +183,12 @@ async function cloudflareAdapter(req: express.Request, res: express.Response, ha
 }
 
 // 路由
-app.all('/api/*', (req: express.Request, res: express.Response) => cloudflareAdapter(req, res, handleApiRequest));
-app.all('/sub/*', (req: express.Request, res: express.Response) => cloudflareAdapter(req, res, (req: Request, env: any, ctx: any) => handleSubRequest(ctx)));
+app.all('/api/*', (req: express.Request, res: express.Response) =>
+    cloudflareAdapter(req, res, handleApiRequest)
+);
+app.all('/sub/*', (req: express.Request, res: express.Response) =>
+    cloudflareAdapter(req, res, (req: Request, env: any, ctx: any) => handleSubRequest(ctx))
+);
 
 // 静态资源处理
 const distPath = path.resolve(__dirname, '../dist');
@@ -213,5 +228,26 @@ ensureDataDir().then(() => {
     app.listen(port, () => {
         console.log(`Sub-One Docker Server running at http://localhost:${port}`);
         console.log(`Data directory: ${DATA_DIR}`);
+
+        // --- Docker 内置定时任务 (Cron) ---
+        // 每 6 小时执行一次 (6 * 60 * 60 * 1000)
+        // 使用 handleCronTrigger 直接调用逻辑
+        console.log('⏰ Starting internal cron scheduler (every 6 hours)...');
+        setInterval(
+            async () => {
+                console.log('⏰ Internal cron scheduler triggered.');
+                try {
+                    // 构造模拟的 Env 对象
+                    const cronEnv = { ...env };
+                    // 调用 Cron 逻辑
+                    await import('../lib/backend/cron/index').then((m) =>
+                        m.handleCronTrigger(cronEnv)
+                    );
+                } catch (e) {
+                    console.error('❌ Internal cron failed:', e);
+                }
+            },
+            6 * 60 * 60 * 1000
+        );
     });
 });

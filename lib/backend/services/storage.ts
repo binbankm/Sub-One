@@ -1,4 +1,3 @@
-
 import { Env, StorageBackend } from '../types';
 
 /**
@@ -15,10 +14,10 @@ export interface IStorageService {
  * KV 存储实现
  */
 export class KVStorage implements IStorageService {
-    constructor(private kv: KVNamespace) { }
+    constructor(private kv: KVNamespace) {}
 
     async get<T = unknown>(key: string): Promise<T | null> {
-        return await this.kv.get(key, 'json') as T | null;
+        return (await this.kv.get(key, 'json')) as T | null;
     }
 
     async put(key: string, value: unknown): Promise<void> {
@@ -36,10 +35,13 @@ export class KVStorage implements IStorageService {
 
         while (hasMore) {
             const result = await this.kv.list({ prefix, cursor });
-            keys.push(...result.keys.map(k => k.name));
+            keys.push(...result.keys.map((k) => k.name));
             hasMore = !result.list_complete;
             // KV API 会在最后一批 incomplete 时提供最后一个 key 的 name 作为 cursor
-            cursor = hasMore && result.keys.length > 0 ? result.keys[result.keys.length - 1].name : undefined;
+            cursor =
+                hasMore && result.keys.length > 0
+                    ? result.keys[result.keys.length - 1].name
+                    : undefined;
         }
 
         return keys;
@@ -59,18 +61,26 @@ export class D1Storage implements IStorageService {
      */
     private async initDatabase(): Promise<void> {
         try {
-            await this.db.prepare(`
+            await this.db
+                .prepare(
+                    `
                 CREATE TABLE IF NOT EXISTS storage (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL,
                     updated_at INTEGER NOT NULL
                 )
-            `).run();
+            `
+                )
+                .run();
 
             // 创建索引以提高查询性能
-            await this.db.prepare(`
+            await this.db
+                .prepare(
+                    `
                 CREATE INDEX IF NOT EXISTS idx_updated_at ON storage(updated_at)
-            `).run();
+            `
+                )
+                .run();
         } catch (error) {
             console.error('[D1Storage] Failed to initialize database:', error);
         }
@@ -98,13 +108,15 @@ export class D1Storage implements IStorageService {
             const timestamp = Date.now();
 
             await this.db
-                .prepare(`
+                .prepare(
+                    `
                     INSERT INTO storage (key, value, updated_at)
                     VALUES (?, ?, ?)
                     ON CONFLICT(key) DO UPDATE SET
                         value = excluded.value,
                         updated_at = excluded.updated_at
-                `)
+                `
+                )
                 .bind(key, jsonValue, timestamp)
                 .run();
         } catch (error) {
@@ -115,10 +127,7 @@ export class D1Storage implements IStorageService {
 
     async delete(key: string): Promise<void> {
         try {
-            await this.db
-                .prepare('DELETE FROM storage WHERE key = ?')
-                .bind(key)
-                .run();
+            await this.db.prepare('DELETE FROM storage WHERE key = ?').bind(key).run();
         } catch (error) {
             console.error(`[D1Storage] Failed to delete key "${key}":`, error);
             throw error;
@@ -137,7 +146,7 @@ export class D1Storage implements IStorageService {
 
             const result = await stmt.all<{ key: string }>();
 
-            return result.results ? result.results.map(r => r.key) : [];
+            return result.results ? result.results.map((r) => r.key) : [];
         } catch (error) {
             console.error('[D1Storage] Failed to list keys:', error);
             return [];

@@ -1,12 +1,11 @@
 /**
  * Sub-One Loon Parser
- * 
+ *
  * 解析 Loon 格式的代理行
  * 包含对 WireGuard 复杂格式的支持
  */
-
 import type { ProxyNode, ProxyType } from '../types';
-import { randomId, parsePort } from '../utils';
+import { parsePort, randomId } from '../utils';
 
 /**
  * 解析 Loon 代理行
@@ -38,7 +37,7 @@ export function parseLoon(line: string): ProxyNode | null {
             id: randomId(),
             name,
             server,
-            port,
+            port
         };
 
         // Loon 协议/位置参数映射
@@ -72,7 +71,10 @@ export function parseLoon(line: string): ProxyNode | null {
             const part = parts[i];
             if (part.includes('=')) {
                 const [key, ...valParts] = part.split('=');
-                params[key.trim().toLowerCase()] = valParts.join('=').trim().replace(/^"(.*)"$/, '$1');
+                params[key.trim().toLowerCase()] = valParts
+                    .join('=')
+                    .trim()
+                    .replace(/^"(.*)"$/, '$1');
             }
         }
 
@@ -133,7 +135,7 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
         ip,
         ipv6,
         mtu: mtu ? parseInt(mtu, 10) : undefined,
-        udp: true,
+        udp: true
     };
 
     if (reservedStr) {
@@ -144,18 +146,20 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
             // 尝试正则解析 [1, 2, 3]
             const m = reservedStr.match(/\[(.*?)\]/);
             if (m) {
-                proxy.reserved = m[1].split(',').map(n => parseInt(n.trim(), 10));
+                proxy.reserved = m[1].split(',').map((n) => parseInt(n.trim(), 10));
             }
         }
     }
 
     // 构造标准的 peers 数组
-    proxy.peers = [{
-        endpoint,
-        'public-key': publicKey,
-        'pre-shared-key': psk,
-        reserved: proxy.reserved as number[]
-    }];
+    proxy.peers = [
+        {
+            endpoint,
+            'public-key': publicKey,
+            'pre-shared-key': psk,
+            reserved: proxy.reserved as number[]
+        }
+    ];
 
     return proxy;
 }
@@ -180,17 +184,19 @@ function smartSplit(str: string): string[] {
         }
     }
     result.push(current.trim());
-    return result.filter(s => s.length > 0);
+    return result.filter((s) => s.length > 0);
 }
 
 function mapLoonParams(proxy: Partial<ProxyNode>, params: Record<string, string>) {
     if (params.password) proxy.password = params.password;
     if (params.username) proxy.username = params.username;
-    if (params.encrypt || params['encrypt-method']) proxy.cipher = params.encrypt || params['encrypt-method'];
+    if (params.encrypt || params['encrypt-method'])
+        proxy.cipher = params.encrypt || params['encrypt-method'];
 
     proxy.tls = params.tls === 'true' || proxy.type === 'https';
     if (params.sni) proxy.sni = params.sni;
-    if (params['skip-cert-verify']) proxy['skip-cert-verify'] = params['skip-cert-verify'] === 'true';
+    if (params['skip-cert-verify'])
+        proxy['skip-cert-verify'] = params['skip-cert-verify'] === 'true';
     if (params.udp) proxy.udp = params.udp === 'true';
     if (params['fast-open']) proxy.tfo = params['fast-open'] === 'true';
 

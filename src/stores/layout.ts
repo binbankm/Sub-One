@@ -1,17 +1,17 @@
 /**
  * ==================== 布局管理 Store ====================
- * 
+ *
  * 功能说明：
  * - 管理侧边栏的展开/折叠状态
  * - 处理桌面端和移动端的侧边栏显示逻辑
  * - 持久化保存侧边栏状态到 localStorage
  * - 提供响应式的布局相关计算属性
- * 
+ *
  * ========================================================
  */
+import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
 
 /**
  * 布局 Store
@@ -24,7 +24,7 @@ export const useLayoutStore = defineStore('layout', () => {
      * 侧边栏折叠状态（桌面端）
      * true - 折叠（显示简化版）
      * false - 展开（显示完整版）
-     * 
+     *
      * 从 localStorage 读取初始值
      */
     const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true');
@@ -44,7 +44,7 @@ export const useLayoutStore = defineStore('layout', () => {
      * - 折叠时：5rem (80px)
      * - 展开时：18rem (288px)
      */
-    const sidebarWidth = computed(() => sidebarCollapsed.value ? '5rem' : '18rem');
+    const sidebarWidth = computed(() => (sidebarCollapsed.value ? '5rem' : '18rem'));
 
     /**
      * 主内容区域的左边距
@@ -52,13 +52,13 @@ export const useLayoutStore = defineStore('layout', () => {
      * - 折叠时：lg:pl-20 (左边距 80px)
      * - 展开时：lg:pl-72 (左边距 288px)
      */
-    const mainPaddingLeft = computed(() => sidebarCollapsed.value ? 'lg:pl-20' : 'lg:pl-72');
+    const mainPaddingLeft = computed(() => (sidebarCollapsed.value ? 'lg:pl-20' : 'lg:pl-72'));
 
     // ==================== 方法定义 ====================
 
     /**
      * 切换侧边栏折叠状态（桌面端）
-     * 
+     *
      * 说明：
      * - 在折叠和展开之间切换
      * - 自动保存状态到 localStorage
@@ -73,7 +73,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
     /**
      * 切换移动端侧边栏显示状态
-     * 
+     *
      * 说明：
      * - 在打开和关闭之间切换
      * - 用于移动端的汉堡菜单按钮
@@ -84,7 +84,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
     /**
      * 关闭移动端侧边栏
-     * 
+     *
      * 说明：
      * - 显式关闭移动端侧边栏
      * - 用于点击遮罩层或导航后自动关闭
@@ -95,7 +95,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
     /**
      * 初始化布局设置
-     * 
+     *
      * 说明：
      * - 从 localStorage 读取保存的侧边栏状态
      * - 应用启动时调用

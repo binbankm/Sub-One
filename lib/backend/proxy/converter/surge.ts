@@ -1,8 +1,7 @@
 /**
  * Sub-One Surge Converter
  */
-
-import type { ProxyNode, ConvertOptions } from '../types';
+import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { Result, isPresent } from './utils';
 
@@ -11,14 +10,14 @@ const ipVersions: Record<string, string> = {
     ipv4: 'v4-only',
     ipv6: 'v6-only',
     'ipv4-prefer': 'prefer-v4',
-    'ipv6-prefer': 'prefer-v6',
+    'ipv6-prefer': 'prefer-v6'
 };
 
 export class SurgeConverter extends BaseConverter {
     name = 'Surge';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const lines = nodes.map(node => this.convertSingle(node, _options)).filter(Boolean);
+        const lines = nodes.map((node) => this.convertSingle(node, _options)).filter(Boolean);
         return lines.join('\n');
     }
 
@@ -29,22 +28,36 @@ export class SurgeConverter extends BaseConverter {
             const p = { ...proxy, name: safeName };
 
             switch (p.type) {
-                case 'ss': return this.ss(p);
-                case 'trojan': return this.trojan(p);
-                case 'vmess': return this.vmess(p);
-                case 'vless': return this.vless(p);
+                case 'ss':
+                    return this.ss(p);
+                case 'trojan':
+                    return this.trojan(p);
+                case 'vmess':
+                    return this.vmess(p);
+                case 'vless':
+                    return this.vless(p);
                 case 'http':
-                case 'https': return this.http(p);
-                case 'socks5': return this.socks5(p);
-                case 'snell': return this.snell(p);
-                case 'tuic': return this.tuic(p);
-                case 'hysteria': return this.hysteria(p);
-                case 'hysteria2': return this.hysteria2(p);
-                case 'wireguard': return this.wireguard(p);
-                case 'ssh': return this.ssh(p);
-                case 'external': return this.external(p);
+                case 'https':
+                    return this.http(p);
+                case 'socks5':
+                    return this.socks5(p);
+                case 'snell':
+                    return this.snell(p);
+                case 'tuic':
+                    return this.tuic(p);
+                case 'hysteria':
+                    return this.hysteria(p);
+                case 'hysteria2':
+                    return this.hysteria2(p);
+                case 'wireguard':
+                    return this.wireguard(p);
+                case 'ssh':
+                    return this.ssh(p);
+                case 'external':
+                    return this.external(p);
                 case 'direct':
-                case 'reject': return `${p.name}=${p.type}`;
+                case 'reject':
+                    return `${p.name}=${p.type}`;
                 default:
                     if (opts.includeUnsupportedProxy) {
                         return this.anytls(p);
@@ -60,7 +73,9 @@ export class SurgeConverter extends BaseConverter {
 
     private ss(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=ss,${proxy.server},${proxy.port},encrypt-method=${proxy.cipher || 'none'}`);
+        result.append(
+            `${proxy.name}=ss,${proxy.server},${proxy.port},encrypt-method=${proxy.cipher || 'none'}`
+        );
         result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
 
         if (proxy.plugin === 'obfs') {
@@ -87,7 +102,9 @@ export class SurgeConverter extends BaseConverter {
 
     private trojan(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=trojan,${proxy.server},${proxy.port},password=\"${proxy.password}\"`);
+        result.append(
+            `${proxy.name}=trojan,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+        );
         this.appendTransport(result, proxy);
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
@@ -98,7 +115,7 @@ export class SurgeConverter extends BaseConverter {
         const result = new Result(proxy);
         result.append(`${proxy.name}=vmess,${proxy.server},${proxy.port},username=${proxy.uuid}`);
         this.appendTransport(result, proxy);
-        result.append(`,vmess-aead=${proxy.aead !== undefined ? proxy.aead : (proxy.alterId === 0)}`);
+        result.append(`,vmess-aead=${proxy.aead !== undefined ? proxy.aead : proxy.alterId === 0}`);
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -132,14 +149,16 @@ export class SurgeConverter extends BaseConverter {
 
     private snell(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=snell,${proxy.server},${proxy.port},psk=${proxy.password},version=${proxy.version || 3}`);
+        result.append(
+            `${proxy.name}=snell,${proxy.server},${proxy.port},psk=${proxy.password},version=${proxy.version || 3}`
+        );
         this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private tuic(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        const type = (!proxy.token || proxy.token.length === 0) ? 'tuic-v5' : 'tuic';
+        const type = !proxy.token || proxy.token.length === 0 ? 'tuic-v5' : 'tuic';
         result.append(`${proxy.name}=${type},${proxy.server},${proxy.port}`);
         result.appendIfPresent(`,uuid=${proxy.uuid}`, 'uuid');
         result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
@@ -157,13 +176,17 @@ export class SurgeConverter extends BaseConverter {
 
     private hysteria(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=external,exec=hysteria,args=client,args=-c,args=/path/to/config.json,local-port=0`);
+        result.append(
+            `${proxy.name}=external,exec=hysteria,args=client,args=-c,args=/path/to/config.json,local-port=0`
+        );
         return result.toString();
     }
 
     private hysteria2(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=hysteria2,${proxy.server},${proxy.port},password=\"${proxy.password}\"`);
+        result.append(
+            `${proxy.name}=hysteria2,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+        );
         if (proxy.ports) {
             result.append(`,port-hopping=\"${String(proxy.ports).replace(/,/g, ';')}\"`);
         }
@@ -195,12 +218,16 @@ export class SurgeConverter extends BaseConverter {
 
         const result = new Result(p);
         const sectionName = p.name;
-        result.append(`# > WireGuard Proxy ${p.name}\n# ${p.name}=wireguard,section-name=${sectionName}`);
+        result.append(
+            `# > WireGuard Proxy ${p.name}\n# ${p.name}=wireguard,section-name=${sectionName}`
+        );
         this.appendCommon(result, p);
 
         const ipVersion = ipVersions[p['ip-version'] || ''] || p['ip-version'];
 
-        result.append(`\n\n# > WireGuard Section ${p.name}\n[WireGuard ${sectionName}]\nprivate-key = ${p['private-key'] || p.privateKey}`);
+        result.append(
+            `\n\n# > WireGuard Section ${p.name}\n[WireGuard ${sectionName}]\nprivate-key = ${p['private-key'] || p.privateKey}`
+        );
         if (p.ip) result.append(`\nself-ip = ${p.ip}`);
         if (p.ipv6) result.append(`\nself-ip-v6 = ${p.ipv6}`);
         if (p.dns) {
@@ -210,7 +237,9 @@ export class SurgeConverter extends BaseConverter {
         result.appendIfPresent(`\nmtu = ${p.mtu}`, 'mtu');
         if (ipVersion === 'prefer-v6') result.append('\nprefer-ipv6 = true');
 
-        const allowedIps = Array.isArray(p['allowed-ips']) ? p['allowed-ips'].join(',') : p['allowed-ips'];
+        const allowedIps = Array.isArray(p['allowed-ips'])
+            ? p['allowed-ips'].join(',')
+            : p['allowed-ips'];
         const reserved = Array.isArray(p.reserved) ? p.reserved.join('/') : p.reserved;
         const presharedKey = p['preshared-key'] || p['pre-shared-key'];
 
@@ -218,7 +247,9 @@ export class SurgeConverter extends BaseConverter {
             `public-key = ${p['public-key'] || p.publicKey}`,
             allowedIps ? `allowed-ips = \"${allowedIps}\"` : '',
             `endpoint = ${p.server}:${p.port}`,
-            (p['persistent-keepalive'] || p.keepalive) ? `keepalive = ${p['persistent-keepalive'] || p.keepalive}` : '',
+            p['persistent-keepalive'] || p.keepalive
+                ? `keepalive = ${p['persistent-keepalive'] || p.keepalive}`
+                : '',
             reserved ? `client-id = ${reserved}` : '',
             presharedKey ? `preshared-key = ${presharedKey}` : ''
         ].filter(Boolean);
@@ -230,21 +261,30 @@ export class SurgeConverter extends BaseConverter {
 
     private ssh(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=ssh,${proxy.server},${proxy.port},username=\"${proxy.username}\",password=\"${proxy.password}\"`);
-        result.appendIfPresent(`,server-fingerprint=\"${proxy['server-fingerprint']}\"`, 'server-fingerprint');
+        result.append(
+            `${proxy.name}=ssh,${proxy.server},${proxy.port},username=\"${proxy.username}\",password=\"${proxy.password}\"`
+        );
+        result.appendIfPresent(
+            `,server-fingerprint=\"${proxy['server-fingerprint']}\"`,
+            'server-fingerprint'
+        );
         this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private external(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=external,exec=${proxy.exec || 'echo'},args=${(proxy.args || []).join(',args=')}`);
+        result.append(
+            `${proxy.name}=external,exec=${proxy.exec || 'echo'},args=${(proxy.args || []).join(',args=')}`
+        );
         return result.toString();
     }
 
     private anytls(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`${proxy.name}=anytls,${proxy.server},${proxy.port},password=\"${proxy.password}\"`);
+        result.append(
+            `${proxy.name}=anytls,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+        );
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -267,7 +307,10 @@ export class SurgeConverter extends BaseConverter {
         if (proxy.tls) {
             result.append(`,tls=true`);
             result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-            result.appendIfPresent(`,skip-cert-verify=${proxy['skip-cert-verify']}`, 'skip-cert-verify');
+            result.appendIfPresent(
+                `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+                'skip-cert-verify'
+            );
             if (proxy['tls-fingerprint']) {
                 result.append(`,server-cert-fingerprint-sha256=${proxy['tls-fingerprint']}`);
             }
@@ -282,6 +325,9 @@ export class SurgeConverter extends BaseConverter {
             result.append(`,ip-version=${val}`);
         }
         result.appendIfPresent(`,test-url=${proxy['test-url']}`, 'test-url');
-        result.appendIfPresent(`,underlying-proxy=${proxy['underlying-proxy'] || proxy['dialer-proxy']}`, 'underlying-proxy');
+        result.appendIfPresent(
+            `,underlying-proxy=${proxy['underlying-proxy'] || proxy['dialer-proxy']}`,
+            'underlying-proxy'
+        );
     }
 }
