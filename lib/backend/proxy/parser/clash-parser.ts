@@ -14,11 +14,20 @@ import { parsePort, randomId } from '../utils';
 export function parseClash(content: string): ProxyNode[] {
     try {
         const doc = yaml.load(content) as any;
-        if (!doc || !Array.isArray(doc.proxies)) {
+        if (!doc) return [];
+
+        let proxies: any[] = [];
+        if (Array.isArray(doc)) {
+            // 情况 1：内容直接是一个节点数组
+            proxies = doc;
+        } else if (doc && Array.isArray(doc.proxies)) {
+            // 情况 2：标准 Clash 配置文件
+            proxies = doc.proxies;
+        } else {
             return [];
         }
 
-        return doc.proxies
+        return proxies
             .map((p: any) => parseClashNode(p))
             .filter((p: ProxyNode | null): p is ProxyNode => p !== null);
     } catch (e) {

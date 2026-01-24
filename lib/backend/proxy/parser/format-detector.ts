@@ -37,10 +37,29 @@ export function detectFormat(content: string): ContentFormat {
     }
 
     // 3. Clash YAML 检测
-    // 特征：包含 proxies: 列表且符合 YAML 对象列表结构
+    // 特征 1：包含 proxies: 列表且符合 YAML 对象列表结构
+    const hasProxiesKey = trimmed.includes('proxies:');
+    const hasNodeMarkers =
+        trimmed.includes('  - name:') ||
+        trimmed.includes('- {') ||
+        trimmed.includes('  - type:') ||
+        trimmed.includes('  - server:');
+
+    if (hasProxiesKey && hasNodeMarkers) {
+        return 'clash';
+    }
+
+    // 特征 2：顶层就是一个 YAML 列表，且包含节点关键字段
+    // 兼容带注释的情况，寻找第一个非空且非注释的行
+    const firstEffectiveLine = trimmed
+        .split('\n')
+        .map((l) => l.trim())
+        .find((l) => l.length > 0 && !l.startsWith('#') && !l.startsWith('//'));
+
     if (
-        trimmed.includes('proxies:') &&
-        (trimmed.includes('  - name:') || trimmed.includes('- {'))
+        firstEffectiveLine?.startsWith('-') &&
+        (trimmed.includes('type:') || trimmed.includes('server:')) &&
+        (trimmed.includes('name:') || trimmed.includes('port:'))
     ) {
         return 'clash';
     }
