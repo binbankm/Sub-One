@@ -21,7 +21,7 @@ import Modal from '../../components/ui/BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
 
-const props = defineProps<{
+defineProps<{
     show: boolean;
 }>();
 
@@ -108,7 +108,7 @@ const features = [
         <template #title>
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg"
+                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -133,7 +133,7 @@ const features = [
         </template>
 
         <template #body>
-            <div class="min-h-[300px]">
+            <div class="min-h-75">
                 <!-- Tab Navigation -->
                 <div class="mb-8 flex justify-center border-b border-gray-300 dark:border-gray-700">
                     <nav class="-mb-px flex space-x-8">
@@ -163,13 +163,13 @@ const features = [
                         <div class="relative space-y-8">
                             <!-- 连线 -->
                             <div
-                                class="absolute left-[27px] top-8 h-[calc(100%-60px)] w-0.5 bg-gray-200 dark:bg-gray-700"
+                                class="absolute left-6.75 top-8 h-[calc(100%-60px)] w-0.5 bg-gray-200 dark:bg-gray-700"
                             ></div>
 
                             <!-- 步骤 1 -->
                             <div class="relative flex gap-6 group">
                                 <div
-                                    class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xl font-bold text-blue-600 ring-4 ring-white transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg dark:bg-blue-900/30 dark:text-blue-400 dark:ring-gray-900 dark:group-hover:bg-blue-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xl font-bold text-blue-600 ring-4 ring-white transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg dark:bg-blue-900/30 dark:text-blue-400 dark:ring-gray-900 dark:group-hover:bg-blue-500 dark:group-hover:text-white"
                                 >
                                     1
                                 </div>
@@ -190,7 +190,7 @@ const features = [
                             <!-- 步骤 2 -->
                             <div class="relative flex gap-6 group">
                                 <div
-                                    class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-xl font-bold text-purple-600 ring-4 ring-white transition-all duration-300 group-hover:bg-purple-600 group-hover:text-white group-hover:shadow-lg dark:bg-purple-900/30 dark:text-purple-400 dark:ring-gray-900 dark:group-hover:bg-purple-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-xl font-bold text-purple-600 ring-4 ring-white transition-all duration-300 group-hover:bg-purple-600 group-hover:text-white group-hover:shadow-lg dark:bg-purple-900/30 dark:text-purple-400 dark:ring-gray-900 dark:group-hover:bg-purple-500 dark:group-hover:text-white"
                                 >
                                     2
                                 </div>
@@ -211,7 +211,7 @@ const features = [
                             <!-- 步骤 3 -->
                             <div class="relative flex gap-6 group">
                                 <div
-                                    class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-xl font-bold text-emerald-600 ring-4 ring-white transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white group-hover:shadow-lg dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-gray-900 dark:group-hover:bg-emerald-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-xl font-bold text-emerald-600 ring-4 ring-white transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white group-hover:shadow-lg dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-gray-900 dark:group-hover:bg-emerald-500 dark:group-hover:text-white"
                                 >
                                     3
                                 </div>
@@ -243,7 +243,7 @@ const features = [
 
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md transition-transform duration-300 group-hover:scale-110"
+                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-md transition-transform duration-300 group-hover:scale-110"
                                         :class="feat.color"
                                     >
                                         <svg
@@ -297,7 +297,7 @@ const features = [
                                         <div
                                             class="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-300 text-gray-500 transition-colors dark:bg-gray-700 dark:text-gray-400"
                                             :class="{
-                                                '!bg-indigo-100 !text-indigo-600 dark:!bg-indigo-900/30 dark:!text-indigo-400':
+                                                'bg-indigo-100! text-indigo-600! dark:bg-indigo-900/30! dark:text-indigo-400!':
                                                     activeFaqIndex === index
                                             }"
                                         >

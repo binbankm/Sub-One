@@ -196,7 +196,7 @@ onMounted(() => {
             class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
         >
             <svg
-                class="mt-0.5 h-5 w-5 flex-shrink-0"
+                class="mt-0.5 h-5 w-5 shrink-0"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

@@ -42,15 +42,15 @@ const currentYear = computed(() => new Date().getFullYear());
             <div class="mb-4 flex items-center justify-center space-x-4">
                 <!-- 左侧渐变线 -->
                 <div
-                    class="h-px w-8 bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
+                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
                 ></div>
                 <!-- 中心装饰点 - 渐变色圆点 -->
                 <div
-                    class="h-2 w-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600"
+                    class="h-2 w-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600"
                 ></div>
                 <!-- 右侧渐变线 -->
                 <div
-                    class="h-px w-8 bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
+                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
                 ></div>
             </div>
 

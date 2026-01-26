@@ -255,7 +255,7 @@ const handleCancel = () => {
                 >
                     <div class="flex items-start gap-3">
                         <svg
-                            class="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                            class="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >

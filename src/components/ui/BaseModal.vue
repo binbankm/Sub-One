@@ -105,7 +105,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
             <!-- 遮罩层 - 点击关闭 -->
             <div
                 v-if="show"
-                class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 p-4"
+                class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4"
                 @click="emit('update:show', false)"
             >
                 <!-- 模态框内容过渡 -->
@@ -124,7 +124,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         @click.stop
                     >
                         <!-- 标题区域 -->
-                        <div class="flex-shrink-0 p-6 pb-4">
+                        <div class="shrink-0 p-6 pb-4">
                             <slot name="title">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">
                                     确认操作
@@ -133,7 +133,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         </div>
 
                         <!-- 内容区域 - 可滚动 -->
-                        <div class="flex-grow overflow-y-auto px-6 pb-6">
+                        <div class="grow overflow-y-auto px-6 pb-6">
                             <slot name="body">
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                     你确定要继续吗？
@@ -143,7 +143,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
                         <!-- 按钮区域 -->
                         <div
-                            class="flex flex-shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
+                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
                         >
                             <!-- 取消按钮 -->
                             <button

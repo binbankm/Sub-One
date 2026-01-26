@@ -281,7 +281,7 @@ onUnmounted(() => {
 
             <div class="flex w-full flex-wrap items-center gap-2">
                 <!-- 搜索框 -->
-                <div class="relative mb-2 w-full flex-shrink-0 sm:mb-0 sm:w-56">
+                <div class="relative mb-2 w-full shrink-0 sm:mb-0 sm:w-56">
                     <input
                         v-model="searchTerm"
                         type="text"
@@ -440,7 +440,7 @@ onUnmounted(() => {
         <Transition name="slide-fade">
             <div
                 v-if="isBatchDeleteMode"
-                class="mb-6 rounded-2xl border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50 p-4 shadow-lg dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20"
+                class="mb-6 rounded-2xl border-2 border-emerald-200 bg-linear-to-r from-emerald-50 to-green-50 p-4 shadow-lg dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20"
             >
                 <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                     <div
@@ -569,7 +569,7 @@ onUnmounted(() => {
             v-else
             title="没有手动节点"
             description="添加分享链接或单个节点。"
-            bg-gradient-class="bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+            bg-gradient-class="bg-linear-to-br from-green-500/20 to-emerald-500/20"
             icon-color-class="text-green-500"
         >
             <template #icon>

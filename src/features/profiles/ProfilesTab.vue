@@ -265,7 +265,7 @@ onUnmounted(() => {
         <Transition name="slide-fade">
             <div
                 v-if="isBatchDeleteMode"
-                class="mb-6 rounded-2xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 shadow-lg dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20"
+                class="mb-6 rounded-2xl border-2 border-purple-200 bg-linear-to-r from-purple-50 to-pink-50 p-4 shadow-lg dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20"
             >
                 <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                     <div
@@ -369,7 +369,7 @@ onUnmounted(() => {
             v-if="profiles.length === 0"
             title="没有订阅组"
             description="创建一个订阅组来组合你的节点吧！"
-            bg-gradient-class="bg-gradient-to-br from-purple-500/20 to-pink-500/20"
+            bg-gradient-class="bg-linear-to-br from-purple-500/20 to-pink-500/20"
             icon-color-class="text-purple-500"
         >
             <template #icon>

@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Database from 'better-sqlite3';
 
 import { handleApiRequest } from '../lib/backend/api/handlers';
 import { handleSubRequest } from '../lib/backend/subscription/handler';
@@ -13,18 +14,110 @@ const app = express();
 const port = process.env.PORT || 3055;
 const DATA_DIR = path.resolve(process.cwd(), './data');
 const KV_FILE = path.join(DATA_DIR, 'kv.json');
+const DB_FILE = path.join(DATA_DIR, 'database.sqlite');
 
 // 确保数据目录存在
 async function ensureDataDir() {
     try {
         await fs.mkdir(DATA_DIR, { recursive: true });
+        // KV File
         try {
             await fs.access(KV_FILE);
         } catch {
             await fs.writeFile(KV_FILE, JSON.stringify({}));
         }
+        // SQLite File
+        if (!db) {
+            db = new Database(DB_FILE);
+            console.log(`SQLite database initialized at: ${DB_FILE}`);
+        }
     } catch (err) {
         console.error('Failed to initialize data directory:', err);
+    }
+}
+
+let db: Database.Database;
+
+// 模拟 Cloudflare D1
+class NodeD1PreparedStatement {
+    constructor(
+        private db: Database.Database,
+        private query: string,
+        private params: any[] = []
+    ) { }
+
+    bind(...params: any[]) {
+        return new NodeD1PreparedStatement(this.db, this.query, params);
+    }
+
+    async first<T = any>(colName?: string): Promise<T | null> {
+        try {
+            const stmt = this.db.prepare(this.query);
+            const result = stmt.get(...this.params);
+            if (!result) return null;
+            return colName ? (result as any)[colName] : (result as T);
+        } catch (err) {
+            console.error('D1 first error:', err);
+            throw err;
+        }
+    }
+
+    async run() {
+        try {
+            const stmt = this.db.prepare(this.query);
+            const info = stmt.run(...this.params);
+            return { success: true, meta: { changes: info.changes, last_row_id: info.lastInsertRowid } };
+        } catch (err) {
+            console.error('D1 run error:', err);
+            throw err;
+        }
+    }
+
+    async all<T = any>() {
+        try {
+            const stmt = this.db.prepare(this.query);
+            const results = stmt.all(...this.params);
+            return { success: true, results: results as T[] };
+        } catch (err) {
+            console.error('D1 all error:', err);
+            throw err;
+        }
+    }
+
+    async raw<T = any>() {
+        try {
+            const stmt = this.db.prepare(this.query);
+            return stmt.raw().all(...this.params) as T[];
+        } catch (err) {
+            console.error('D1 raw error:', err);
+            throw err;
+        }
+    }
+}
+
+class NodeD1 {
+    constructor(private db: Database.Database) { }
+
+    prepare(query: string) {
+        return new NodeD1PreparedStatement(this.db, query);
+    }
+
+    async exec(query: string) {
+        try {
+            this.db.exec(query);
+            return { success: true };
+        } catch (err) {
+            console.error('D1 exec error:', err);
+            throw err;
+        }
+    }
+
+    async batch(statements: NodeD1PreparedStatement[]) {
+        const results = [];
+        for (const stmt of statements) {
+            results.push(await stmt.run());
+        }
+        return results;
     }
 }
 
@@ -185,8 +278,8 @@ class NodeKV {
 const kv = new NodeKV();
 const env = {
     SUB_ONE_KV: kv as any, // Cast to any to bypass strict KVNamespace type check
-    // 模拟 D1 (暂时不实现完整 SQL 支持，重定向到 KV 以保持兼容)
-    SUB_ONE_D1: null as any
+    // 模拟 D1
+    SUB_ONE_D1: new NodeD1(null as any) as any // Placeholder, will be replaced after db init
 };
 
 // 解析 Body
@@ -270,6 +363,11 @@ app.get('*', (req: express.Request, res: express.Response) => {
 });
 
 ensureDataDir().then(() => {
+    // 重新连接 D1 实例
+    if (db) {
+        env.SUB_ONE_D1 = new NodeD1(db) as any;
+    }
+
     app.listen(port, () => {
         console.log(`Sub-One Docker Server running at http://localhost:${port}`);
         console.log(`Data directory: ${DATA_DIR}`);

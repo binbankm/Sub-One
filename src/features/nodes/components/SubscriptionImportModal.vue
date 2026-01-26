@@ -389,7 +389,7 @@ const importSubscription = async () => {
                 class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
             >
                 <svg
-                    class="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

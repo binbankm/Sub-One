@@ -421,7 +421,7 @@ watch(
         <Transition name="slide-fade">
             <div
                 v-if="isBatchDeleteMode"
-                class="mb-6 rounded-2xl border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 shadow-lg dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20"
+                class="mb-6 rounded-2xl border-2 border-indigo-200 bg-linear-to-r from-indigo-50 to-purple-50 p-4 shadow-lg dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20"
             >
                 <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                     <div
@@ -555,7 +555,7 @@ watch(
             v-else
             title="没有订阅"
             description="从添加你的第一个订阅开始。"
-            bg-gradient-class="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+            bg-gradient-class="bg-linear-to-br from-indigo-500/20 to-purple-500/20"
             icon-color-class="text-indigo-500"
         >
             <template #icon>

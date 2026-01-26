@@ -404,7 +404,7 @@ const confirmClear = () => {
 <template>
     <!-- 编辑器容器 -->
     <div
-        class="space-y-5 rounded-2xl border border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 p-5 shadow-lg dark:border-gray-700 dark:from-gray-900 dark:to-gray-800"
+        class="space-y-5 rounded-2xl border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-5 shadow-lg dark:border-gray-700 dark:from-gray-900 dark:to-gray-800"
     >
         <!-- 顶部：模式切换和统计 -->
         <div class="flex items-center justify-between">
@@ -417,7 +417,7 @@ const confirmClear = () => {
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'exclude'
-                            ? 'scale-105 transform bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md'
+                            ? 'scale-105 transform bg-linear-to-r from-red-500 to-rose-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
                     @click="mode = 'exclude'"
@@ -431,7 +431,7 @@ const confirmClear = () => {
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'keep'
-                            ? 'scale-105 transform bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md'
+                            ? 'scale-105 transform bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
                     @click="mode = 'keep'"
@@ -479,7 +479,7 @@ const confirmClear = () => {
                     class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedProtocols.includes(p.value)
-                            ? 'border-indigo-300 bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/50 dark:border-indigo-700'
+                            ? 'border-indigo-300 bg-linear-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/50 dark:border-indigo-700'
                             : 'border-gray-300 bg-white text-gray-700 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-600'
                     "
                     @click="toggleProtocol(p.value)"
@@ -510,7 +510,7 @@ const confirmClear = () => {
                     class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedRegions.includes(r.value)
-                            ? 'border-emerald-300 bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/50 dark:border-emerald-700'
+                            ? 'border-emerald-300 bg-linear-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/50 dark:border-emerald-700'
                             : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-600'
                     "
                     @click="toggleRegion(r.value)"
@@ -562,7 +562,7 @@ const confirmClear = () => {
                     @keyup.enter="addKeyword"
                 />
                 <button
-                    class="transform rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                    class="transform rounded-xl bg-linear-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
                     @click="addKeyword"
                 >
                     ➕ 添加
@@ -577,7 +577,7 @@ const confirmClear = () => {
                 <span
                     v-for="k in customKeywords"
                     :key="k"
-                    class="group inline-flex items-center rounded-lg border border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-red-400 dark:border-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 dark:hover:border-red-500"
+                    class="group inline-flex items-center rounded-lg border border-gray-300 bg-linear-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-red-400 dark:border-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 dark:hover:border-red-500"
                 >
                     <span>{{ k }}</span>
                     <button
@@ -633,7 +633,7 @@ const confirmClear = () => {
         <template #title>
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
                 >
                     <svg
                         class="h-5 w-5 text-amber-600 dark:text-amber-400"

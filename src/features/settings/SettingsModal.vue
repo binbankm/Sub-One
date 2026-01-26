@@ -340,7 +340,7 @@ watch(
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="mt-0.5 h-3 w-3 flex-shrink-0"
+                                            class="mt-0.5 h-3 w-3 shrink-0"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             stroke="currentColor"
@@ -365,7 +365,7 @@ watch(
                                         >节点名前缀</label
                                     >
                                     <div
-                                        class="flex h-[88px] items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
                                     >
                                         <div>
                                             <p
@@ -380,7 +380,7 @@ watch(
                                             </p>
                                         </div>
                                         <label
-                                            class="relative inline-flex flex-shrink-0 cursor-pointer items-center"
+                                            class="relative inline-flex shrink-0 cursor-pointer items-center"
                                         >
                                             <input
                                                 v-model="settings.prependSubName"
@@ -388,7 +388,7 @@ watch(
                                                 class="peer sr-only"
                                             />
                                             <div
-                                                class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
                                             ></div>
                                         </label>
                                     </div>
@@ -401,7 +401,7 @@ watch(
                                         >节点去重</label
                                     >
                                     <div
-                                        class="flex h-[88px] items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
                                     >
                                         <div>
                                             <p
@@ -416,7 +416,7 @@ watch(
                                             </p>
                                         </div>
                                         <label
-                                            class="relative inline-flex flex-shrink-0 cursor-pointer items-center"
+                                            class="relative inline-flex shrink-0 cursor-pointer items-center"
                                         >
                                             <input
                                                 v-model="settings.dedupe"
@@ -424,7 +424,7 @@ watch(
                                                 class="peer sr-only"
                                             />
                                             <div
-                                                class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
                                             ></div>
                                         </label>
                                     </div>

@@ -9,6 +9,7 @@
  *
  * ======================================================
  */
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig } from 'vite';
@@ -27,8 +28,9 @@ export default defineConfig({
     /**
      * 插件列表
      * - vue(): Vue 3 单文件组件支持
+     * - tailwindcss(): Tailwind CSS v4 支持
      */
-    plugins: [vue()],
+    plugins: [vue(), tailwindcss()],
 
     // ==================== 模块解析配置 ====================
 

@@ -70,7 +70,7 @@ const getToastStyle = (type: string) => {
 <template>
     <!-- Toast 容器 - 固定在页面顶部居中 -->
     <div
-        class="pointer-events-none fixed left-1/2 top-5 z-[100] flex w-full max-w-sm -translate-x-1/2 flex-col gap-3 px-4"
+        class="pointer-events-none fixed left-1/2 top-5 z-100 flex w-full max-w-sm -translate-x-1/2 flex-col gap-3 px-4"
     >
         <!-- Toast 列表 - 带过渡动画 -->
         <TransitionGroup name="toast-list">
@@ -82,7 +82,7 @@ const getToastStyle = (type: string) => {
                 :class="[getToastStyle(toast.type).bg, getToastStyle(toast.type).border]"
             >
                 <!-- 图标 -->
-                <div class="mt-0.5 flex-shrink-0" :class="getToastStyle(toast.type).iconColor">
+                <div class="mt-0.5 shrink-0" :class="getToastStyle(toast.type).iconColor">
                     <svg
                         class="h-5 w-5"
                         fill="none"
@@ -110,7 +110,7 @@ const getToastStyle = (type: string) => {
 
                 <!-- 关闭按钮 -->
                 <button
-                    class="-mr-1 -mt-1 flex-shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-700"
+                    class="-mr-1 -mt-1 shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-700"
                     @click="toastStore.removeToast(toast.id)"
                 >
                     <svg

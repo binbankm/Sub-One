@@ -126,7 +126,7 @@ const handleTestLatency = async () => {
 
 <template>
     <div
-        class="card-glass group relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-2xl hover:scale-[1.02] sm:min-h-[240px]"
+        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-2xl hover:scale-[1.02] sm:min-h-60"
         :class="{
             'opacity-50': !sub.enabled,
             'ring-2 ring-indigo-500/50': sub.isNew,
@@ -139,7 +139,7 @@ const handleTestLatency = async () => {
         <div class="relative z-10 flex flex-1 flex-col p-5">
             <!-- 头部 -->
             <div class="mb-4 flex items-start justify-between gap-3 sm:mb-6">
-                <div v-if="isBatchMode" class="flex-shrink-0 pt-1" @click.stop>
+                <div v-if="isBatchMode" class="shrink-0 pt-1" @click.stop>
                     <label class="relative inline-flex cursor-pointer items-center">
                         <input
                             type="checkbox"
@@ -153,7 +153,7 @@ const handleTestLatency = async () => {
                 <div class="w-full truncate">
                     <div class="flex items-center gap-3">
                         <div
-                            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg transition-all duration-300 group-hover:shadow-xl"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg transition-all duration-300 group-hover:shadow-xl"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -179,12 +179,12 @@ const handleTestLatency = async () => {
                             </p>
                             <div
                                 v-if="sub.exclude && sub.exclude.trim()"
-                                class="mt-1.5 flex w-fit animate-pulse-slow items-center gap-1.5 rounded-lg border border-orange-300/50 bg-gradient-to-r from-orange-500/15 to-amber-500/15 px-2.5 py-1 dark:border-orange-500/30 dark:from-orange-500/20 dark:to-amber-500/20"
+                                class="mt-1.5 flex w-fit animate-pulse-slow items-center gap-1.5 rounded-lg border border-orange-300/50 bg-linear-to-r from-orange-500/15 to-amber-500/15 px-2.5 py-1 dark:border-orange-500/30 dark:from-orange-500/20 dark:to-amber-500/20"
                                 :title="`已启用规则过滤: ${sub.exclude}`"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-3.5 w-3.5 flex-shrink-0 text-orange-600 dark:text-orange-400"
+                                    class="h-3.5 w-3.5 shrink-0 text-orange-600 dark:text-orange-400"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -206,7 +206,7 @@ const handleTestLatency = async () => {
                 </div>
 
                 <div
-                    class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                    class="flex shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
                 >
                     <button
                         class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
@@ -252,7 +252,7 @@ const handleTestLatency = async () => {
             </div>
 
             <!-- URL区域 -->
-            <div class="flex flex-grow flex-col justify-start space-y-3 sm:space-y-4">
+            <div class="flex grow flex-col justify-start space-y-3 sm:space-y-4">
                 <div class="relative">
                     <label class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
                         >订阅链接</label
@@ -370,7 +370,7 @@ const handleTestLatency = async () => {
                             :style="{ width: trafficInfo.percentage + '%' }"
                         >
                             <div
-                                class="absolute inset-0 animate-[shimmer_2s_infinite] bg-white/20"
+                                class="absolute inset-0 animate-shimmer bg-white/20"
                             ></div>
                         </div>
                     </div>
@@ -402,7 +402,7 @@ const handleTestLatency = async () => {
                             @change="emit('change')"
                         />
                         <div
-                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] group-hover/toggle:shadow-md peer-checked:bg-indigo-500 peer-checked:after:translate-x-4 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] group-hover/toggle:shadow-md peer-checked:bg-indigo-500 peer-checked:after:translate-x-4 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
                         ></div>
                     </label>
                     <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{
