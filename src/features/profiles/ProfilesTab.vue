@@ -95,7 +95,7 @@ watch(
 
 const handleAddProfile = () => {
     if (!config.value.profileToken?.trim()) {
-        return showToast('请先在"设置"中配置"订阅组分享Token"', 'error');
+        return showToast('⚠️ 请先在"设置"中配置"订阅组分享Token"', 'error');
     }
     isNewProfile.value = true;
     editingProfile.value = {
@@ -120,7 +120,7 @@ const handleEditProfile = (profileId: string) => {
 };
 
 const handleSaveProfile = async (profileData: Profile) => {
-    if (!profileData?.name) return showToast('订阅组名称不能为空', 'error');
+    if (!profileData?.name) return showToast('⚠️ 订阅组名称不能为空', 'error');
 
     const success = await (isNewProfile.value
         ? dataStore.addProfile(profileData)
@@ -162,8 +162,7 @@ const handleBatchDelete = async (ids: string[]) => {
 };
 
 const handleToggleProfile = async (profile: Profile) => {
-    dataStore.toggleProfile(profile.id, profile.enabled);
-    await dataStore.saveData(`${profile.name || '订阅组'} 状态`);
+    await dataStore.toggleProfile(profile.id, profile.enabled);
 };
 
 const handleCopyLink = (id: string) => {

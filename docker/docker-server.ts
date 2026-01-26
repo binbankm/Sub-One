@@ -66,14 +66,59 @@ class NodeKV {
         }
     }
 
+    private savePromise: Promise<void> = Promise.resolve();
+    private debounceTimer: NodeJS.Timeout | null = null;
+    private pendingResolves: Array<() => void> = [];
+    private pendingRejects: Array<(err: any) => void> = [];
+
     private async save() {
-        try {
-            const tempFile = `${KV_FILE}.tmp`;
-            await fs.writeFile(tempFile, JSON.stringify(this.data, null, 2), 'utf-8');
-            await fs.rename(tempFile, KV_FILE);
-        } catch (err) {
-            console.error('KV save error:', err);
+        // 防抖：如果在 1000ms 内有新的写入请求，取消上一次的计划
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
         }
+
+        return new Promise<void>((resolve, reject) => {
+            // 将当前的 resolve/reject 加入队列
+            this.pendingResolves.push(resolve);
+            this.pendingRejects.push(reject);
+
+            this.debounceTimer = setTimeout(() => {
+                // 将实际写入逻辑放入队列，防止并发
+                this.savePromise = this.savePromise
+                    .then(async () => {
+                        try {
+                            const tempFile = `${KV_FILE}.tmp`;
+                            await fs.writeFile(
+                                tempFile,
+                                JSON.stringify(this.data, null, 2),
+                                'utf-8'
+                            );
+                            await fs.rename(tempFile, KV_FILE);
+
+                            // 写入成功：解决所有等待的 Promise
+                            const resolves = [...this.pendingResolves];
+                            this.pendingResolves = [];
+                            this.pendingRejects = [];
+                            resolves.forEach((r) => r());
+                        } catch (err) {
+                            console.error('KV save error:', err);
+
+                            // 写入失败：拒绝所有等待的 Promise
+                            const rejects = [...this.pendingRejects];
+                            this.pendingResolves = [];
+                            this.pendingRejects = [];
+                            rejects.forEach((r) => r(err));
+                        }
+                    })
+                    .catch((err) => {
+                        // 捕获 savePromise 链本身的异常
+                        const rejects = [...this.pendingRejects];
+                        this.pendingResolves = [];
+                        this.pendingRejects = [];
+                        rejects.forEach((r) => r(err));
+                    });
+            }, 1000); // 延迟 1秒 写入
+        });
     }
 
     async get(key: string, type: string = 'text') {

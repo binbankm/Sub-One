@@ -37,12 +37,12 @@ const handleUpdateAll = async () => {
 
     if (result.success) {
         if (result.count && result.count > 0) {
-            showToast(`成功更新 ${result.count} 个订阅`, 'success');
+            showToast(`✅ 成功更新 ${result.count} 个订阅`, 'success');
         } else {
-            showToast('所有订阅已是最新状态', 'success');
+            showToast('✅ 所有订阅已是最新状态', 'success');
         }
     } else {
-        showToast(result.message || '更新失败', 'error');
+        showToast('❌ ' + (result.message || '更新失败'), 'error');
     }
 };
 

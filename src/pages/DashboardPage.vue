@@ -153,7 +153,7 @@ onMounted(() => {
         initializeState();
     } catch (error) {
         console.error('初始化数据失败:', error);
-        showToast('初始化数据失败', 'error');
+        showToast('❌ 初始化数据失败', 'error');
     } finally {
         isLoading.value = false;
     }

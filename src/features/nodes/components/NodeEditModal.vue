@@ -146,7 +146,7 @@ const handleSave = () => {
 
     // 验证
     if (!validateUrl()) {
-        toastStore.showToast('请修正错误后再保存', 'error');
+        toastStore.showToast('⚠️ 请修正错误后再保存', 'error');
         return;
     }
 

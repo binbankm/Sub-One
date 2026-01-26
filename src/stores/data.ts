@@ -23,8 +23,6 @@ export const useDataStore = defineStore('data', () => {
         mytoken: 'auto',
         profileToken: '',
 
-        // UI & Display
-        theme: 'dark',
 
         FileName: 'Sub-One',
 
@@ -123,17 +121,17 @@ export const useDataStore = defineStore('data', () => {
 
             if (response.success) {
                 if (showSuccessToast) {
-                    showToast(`${reason} 已保存`, 'success');
+                    showToast(`✅ ${reason} 已保存`, 'success');
                 }
                 hasUnsavedChanges.value = false;
                 return true;
             } else {
-                showToast(`保存失败: ${response.message}`, 'error');
+                showToast(`❌ 保存失败: ${response.message}`, 'error');
                 return false;
             }
         } catch (error) {
             console.error('Save failed:', error);
-            showToast('保存数据时发生未知错误', 'error');
+            showToast('❌ 保存数据时发生未知错误', 'error');
             return false;
         } finally {
             isLoading.value = false;
@@ -147,11 +145,11 @@ export const useDataStore = defineStore('data', () => {
         return await saveData('新增订阅');
     }
 
-    async function updateSubscription(sub: Subscription) {
+    async function updateSubscription(sub: Subscription, silent: boolean = false) {
         const index = subscriptions.value.findIndex((s) => s.id === sub.id);
         if (index !== -1) {
             subscriptions.value[index] = { ...sub }; // Reactive replacement
-            await saveData('更新订阅');
+            await saveData('更新订阅', !silent);
         }
     }
 
@@ -345,7 +343,7 @@ export const useDataStore = defineStore('data', () => {
             // Try to append random suffix if auto-generated? Or just fail?
             // If user provided it, fail.
             // If auto-generated, we could retry, but rarity is high.
-            showToast('自定义ID已存在，请修改', 'error');
+            showToast('⚠️ 自定义ID已存在，请修改', 'error');
             return false;
         }
 
@@ -361,13 +359,13 @@ export const useDataStore = defineStore('data', () => {
         if (profile.customId !== profiles.value[idx].customId) {
             // If new customId is empty, generate one? Or allow user to clear it (not recommended for profiles)?
             if (!profile.customId?.trim()) {
-                showToast('自定义ID不能为空', 'error');
+                showToast('⚠️ 自定义ID不能为空', 'error');
                 return false;
             }
             if (
                 profiles.value.some((p) => p.id !== profile.id && p.customId === profile.customId)
             ) {
-                showToast('自定义ID已存在', 'error');
+                showToast('⚠️ 自定义ID已存在', 'error');
                 return false;
             }
         }

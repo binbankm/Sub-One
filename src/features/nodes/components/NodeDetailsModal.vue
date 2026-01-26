@@ -132,7 +132,7 @@ const fetchNodes = async () => {
         console.error('获取节点信息失败:', error);
         const msg = error instanceof Error ? error.message : String(error);
         errorMessage.value = `获取节点信息失败: ${msg}`;
-        toastStore.showToast('获取节点信息失败', 'error');
+        toastStore.showToast('❌ 获取节点信息失败', 'error');
     } finally {
         isLoading.value = false;
     }
@@ -230,7 +230,7 @@ const fetchProfileNodes = async () => {
         console.error('获取订阅组节点信息失败:', error);
         const msg = error instanceof Error ? error.message : String(error);
         errorMessage.value = `获取节点信息失败: ${msg}`;
-        toastStore.showToast('获取节点信息失败', 'error');
+        toastStore.showToast('❌ 获取节点信息失败', 'error');
     } finally {
         isLoading.value = false;
     }
@@ -261,15 +261,15 @@ const copySelectedNodes = async () => {
         .map((node) => node.url);
 
     if (selectedNodeUrls.length === 0) {
-        toastStore.showToast('请先选择要复制的节点', 'warning');
+        toastStore.showToast('⚠️ 请先选择要复制的节点', 'warning');
         return;
     }
 
     const success = await copyToClipboard(selectedNodeUrls.join('\n'));
     if (success) {
-        toastStore.showToast(`已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
+        toastStore.showToast(`📋 已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast('❌ 复制失败', 'error');
     }
 };
 
@@ -277,16 +277,16 @@ const copySelectedNodes = async () => {
 const handleCopySingle = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('已复制节点链接', 'success');
+        toastStore.showToast('📋 已复制节点链接', 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast('❌ 复制失败', 'error');
     }
 };
 
 // 刷新节点信息
 const refreshNodes = async () => {
     await fetchNodes();
-    toastStore.showToast('节点信息已刷新', 'success');
+    toastStore.showToast('🔄 节点信息已刷新', 'success');
 };
 
 // 键盘事件处理 - ESC 键关闭

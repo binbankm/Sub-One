@@ -98,7 +98,7 @@ const loadSettings = async () => {
         }
     } catch (error) {
         console.error('加载设置出错:', error);
-        showToast('加载设置失败，将使用默认值', 'error');
+        showToast('⚠️ 加载设置失败，将使用默认值', 'warning');
     } finally {
         isLoading.value = false;
     }
@@ -106,7 +106,7 @@ const loadSettings = async () => {
 
 const handleSave = async () => {
     if (hasWhitespace.value) {
-        showToast('输入项中不能包含空格，请检查后再试。', 'error');
+        showToast('⚠️ 输入项中不能包含空格，请检查后再试。', 'error');
         return;
     }
 
@@ -115,21 +115,27 @@ const handleSave = async () => {
         const result = await saveSettings(settings.value);
         if (result.success) {
             // 弹出成功提示
-            showToast('设置已保存，页面将自动刷新...', 'success');
+            showToast('✅ 设置已保存', 'success');
 
             // 同步到 Store，防止在此期间的其他操作覆盖配置
             dataStore.updateConfig(settings.value);
 
-            // 【核心新增】在短暂延迟后刷新页面，让用户能看到提示
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500); // 延迟1.5秒
+            // 仅在非存储标签页（常规/高级设置）保存时刷新页面
+            if (activeTab.value !== 'storage') {
+                showToast('✅ 设置已保存，页面将自动刷新...', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // 如果是在存储页点确认，仅关闭弹窗
+                emit('update:show', false);
+            }
         } else {
             throw new Error(result.message || '保存失败');
         }
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
-        showToast(msg, 'error');
+        showToast('❌ ' + msg, 'error');
         isSaving.value = false; // 只有失败时才需要重置保存状态
     }
 };

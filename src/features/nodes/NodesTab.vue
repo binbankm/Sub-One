@@ -159,7 +159,7 @@ const handleEditNode = (nodeId: string) => {
 
 const handleSaveNode = async (updatedNode?: Node) => {
     const nodeToSave = updatedNode || editingNode.value;
-    if (!nodeToSave?.url) return showToast('节点链接不能为空', 'error');
+    if (!nodeToSave?.url) return showToast('⚠️ 节点链接不能为空', 'error');
 
     if (isNewNode.value) {
         dataStore.addNode(nodeToSave);
@@ -210,7 +210,7 @@ const handleBulkImport = async (importText: string) => {
     }
 
     await dataStore.saveData('批量导入');
-    showToast(`成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`, 'success');
+    showToast(`✅ 成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`, 'success');
     showBulkImportModal.value = false;
 };
 

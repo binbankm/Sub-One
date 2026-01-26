@@ -98,7 +98,7 @@ export default defineConfig({
                  */
                 manualChunks: {
                     'vendor-core': ['vue', 'pinia'],
-                    'vendor-utils': ['lodash-es', 'js-base64', 'js-yaml', 'qrcode'],
+                    'vendor-utils': ['js-base64', 'js-yaml'],
                     'vendor-ui': ['echarts', 'vuedraggable'] // 较大的 UI 库单独打包
                 }
             }

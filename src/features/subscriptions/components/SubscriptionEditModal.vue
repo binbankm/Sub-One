@@ -32,7 +32,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'update:show', value: boolean): void;
-    (e: 'save', subscription: Subscription): void;
+    (e: 'save', subscription: Subscription, silent?: boolean): void;
 }>();
 
 // ==================== 状态 ====================
@@ -130,7 +130,7 @@ const handleSave = () => {
 
     // 验证
     if (!validateUrl()) {
-        toastStore.showToast('请修正错误后再保存', 'error');
+        toastStore.showToast('⚠️ 请修正错误后再保存', 'error');
         return;
     }
 

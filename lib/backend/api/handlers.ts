@@ -2,7 +2,17 @@ import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, OLD_KV_KEY } from '../co
 import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
 import { ProxyNode, convert, parse, process } from '../proxy';
 import { AppConfig, Profile, Subscription, SubscriptionUserInfo } from '../proxy/types';
-import { ImportMode, exportAllData, importAllData, validateBackup } from '../services/backup';
+import {
+    ImportMode,
+    exportAllData,
+    importAllData,
+    validateBackup,
+    createServerSnapshot,
+    listServerSnapshots,
+    deleteServerSnapshot,
+    batchDeleteServerSnapshots,
+    restoreFromServerSnapshot
+} from '../services/backup';
 import { autoMigrate } from '../services/migration';
 import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { IStorageService, StorageFactory } from '../services/storage';
@@ -492,15 +502,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 // 只有在至少获取到一个有效信息时，才更新数据库
                 if (result.userInfo || result.count > 0) {
                     const storage = await getStorage(env);
-                    const originalSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
-                    const allSubs = JSON.parse(JSON.stringify(originalSubs)) as Subscription[]; // 深拷贝
-                    const subToUpdate = allSubs.find((s) => s.url === subUrl);
+                    // 重新获取最新数据以减少竞争冲突
+                    const latestSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
+                    const subToUpdate = latestSubs.find((s) => s.url === subUrl);
 
                     if (subToUpdate) {
                         subToUpdate.nodeCount = result.count;
-                        subToUpdate.userInfo = result.userInfo as SubscriptionUserInfo;
+                        if (result.userInfo) {
+                            subToUpdate.userInfo = result.userInfo as SubscriptionUserInfo;
+                        }
 
-                        await storage.put(KV_KEY_SUBS, allSubs);
+                        await storage.put(KV_KEY_SUBS, latestSubs);
                     }
                 }
             } catch (e) {
@@ -599,25 +611,23 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 });
 
                 const results = await Promise.allSettled(updatePromises);
-                const updateResults = results.map((result) =>
-                    result.status === 'fulfilled'
-                        ? result.value
-                        : { success: false, error: 'Promise rejected' }
-                );
-
-                // Re-fetch latest data to minimize race condition window
-                // 重新读取最新的订阅列表，以防止覆盖在 fetch 期间发生的其他更改
+                // 批量更新后保存回 KV (重新获取最新数据以减少竞争冲突)
                 const latestSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
                 let hasChanges = false;
-
-                updateResults.forEach((res: any) => {
-                    if (res.success) {
-                        const targetSub = latestSubs.find((s) => s.id === res.id);
-                        if (targetSub) {
-                            targetSub.nodeCount = res.nodeCount;
-                            targetSub.userInfo = res.userInfo;
-                            hasChanges = true;
+                const updateResultsArray = results.map((result, index) => {
+                    if (result.status === 'fulfilled') {
+                        const val = result.value;
+                        if (val.success) {
+                            const targetSub = latestSubs.find((s) => s.id === val.id);
+                            if (targetSub) {
+                                targetSub.nodeCount = val.nodeCount;
+                                targetSub.userInfo = val.userInfo;
+                                hasChanges = true;
+                            }
                         }
+                        return val;
+                    } else {
+                        return { id: subsToUpdate[index].id, success: false, error: 'Promise rejected' };
                     }
                 });
 
@@ -626,14 +636,15 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 }
 
                 console.log(
-                    `[Batch Update] Completed batch update, ${updateResults.filter((r) => (r as any).success).length} successful`
+                    `[Batch Update] Completed batch update, ${updateResultsArray.filter((r) => r.success).length} successful`
                 );
 
                 return new Response(
                     JSON.stringify({
                         success: true,
                         message: '批量更新完成',
-                        results: updateResults
+                        count: updateResultsArray.length,
+                        results: updateResultsArray
                     }),
                     { headers: { 'Content-Type': 'application/json' } }
                 );
@@ -1050,6 +1061,121 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             }
 
             return new Response('Method Not Allowed', { status: 405 });
+        }
+
+        case '/backup/snapshot/create': {
+            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const { name } = (await request.json()) as { name?: string };
+                const storage = await getStorage(env);
+                const backendInfo = await getStorageBackendInfo(env);
+
+                const snapshot = await createServerSnapshot(
+                    storage,
+                    backendInfo.current,
+                    authResult.username!,
+                    name || ''
+                );
+
+                return new Response(JSON.stringify({ success: true, data: snapshot }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error: any) {
+                console.error('[API Error /backup/snapshot/create]', error);
+                return new Response(
+                    JSON.stringify({ success: false, error: '创建快照失败', message: error.message }),
+                    { status: 500 }
+                );
+            }
+        }
+
+        case '/backup/snapshot/list': {
+            if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const storage = await getStorage(env);
+                const snapshots = await listServerSnapshots(storage);
+
+                return new Response(JSON.stringify({ success: true, data: snapshots }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error: any) {
+                console.error('[API Error /backup/snapshot/list]', error);
+                return new Response(
+                    JSON.stringify({ success: false, error: '获取快照列表失败', message: error.message }),
+                    { status: 500 }
+                );
+            }
+        }
+
+        case '/backup/snapshot/batch_delete': {
+            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const { ids } = (await request.json()) as { ids: string[] };
+                if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                    return new Response(JSON.stringify({ error: '请提供要删除的快照ID列表' }), {
+                        status: 400
+                    });
+                }
+
+                const storage = await getStorage(env);
+                const result = await batchDeleteServerSnapshots(storage, ids);
+
+                return new Response(JSON.stringify(result), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error: any) {
+                console.error('[API Error /backup/snapshot/batch_delete]', error);
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        error: '批量删除快照失败',
+                        message: error.message
+                    }),
+                    { status: 500 }
+                );
+            }
+        }
+
+        case '/backup/snapshot/delete': {
+            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const { id } = (await request.json()) as { id: string };
+                if (!id) return new Response(JSON.stringify({ error: '缺少快照ID' }), { status: 400 });
+
+                const storage = await getStorage(env);
+                const success = await deleteServerSnapshot(storage, id);
+
+                return new Response(JSON.stringify({ success }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error: any) {
+                console.error('[API Error /backup/snapshot/delete]', error);
+                return new Response(
+                    JSON.stringify({ success: false, error: '删除快照失败', message: error.message }),
+                    { status: 500 }
+                );
+            }
+        }
+
+        case '/backup/snapshot/restore': {
+            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const { id, mode } = (await request.json()) as { id: string; mode?: ImportMode };
+                if (!id) return new Response(JSON.stringify({ error: '缺少快照ID' }), { status: 400 });
+
+                const storage = await getStorage(env);
+                const result = await restoreFromServerSnapshot(storage, id, mode || 'overwrite');
+
+                return new Response(JSON.stringify(result), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error: any) {
+                console.error('[API Error /backup/snapshot/restore]', error);
+                return new Response(
+                    JSON.stringify({ success: false, error: '恢复快照失败', message: error.message }),
+                    { status: 500 }
+                );
+            }
         }
     }
 

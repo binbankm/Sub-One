@@ -222,7 +222,12 @@ const ruleCount = computed(() => {
  * 将规则字符串解析为可视化选项
  */
 const parseValue = (val: string) => {
-    if (!val) return;
+    if (!val) {
+        selectedProtocols.value = [];
+        selectedRegions.value = [];
+        customKeywords.value = [];
+        return;
+    }
 
     const lines = val
         .split('\n')
@@ -237,40 +242,43 @@ const parseValue = (val: string) => {
     // 移除 keep: 前缀
     const cleanLines = lines.map((l) => l.replace(/^keep:/, ''));
 
-    let foundProtocols: string[] = [];
-    let foundRegions: string[] = [];
-    let foundKeywords: string[] = [];
+    const foundProtocols = new Set<string>();
+    const foundRegions = new Set<string>();
+    const foundKeywords = new Set<string>();
 
-    // 解析每一行
     cleanLines.forEach((line) => {
         if (line.startsWith('proto:')) {
-            // 协议规则
-            const protos = line.replace('proto:', '').split(',');
-            foundProtocols.push(...protos);
+            line.replace('proto:', '')
+                .split(',')
+                .forEach((p) => foundProtocols.add(p));
         } else {
-            // 地区或关键词规则
-            let matchedRegion = false;
-            for (const r of regions) {
-                if (line === `(${r.value})` || line === r.value) {
-                    foundRegions.push(r.value);
-                    matchedRegion = true;
-                    break;
-                }
-            }
+            const cleanStr = line.replace(/^\(/, '').replace(/\)$/, '');
+            // 这里的 parts 是正则中的各个分支
+            const parts = cleanStr.split('|').map(p => p.trim()).filter(p => p);
 
-            if (!matchedRegion) {
-                // 作为关键词处理
-                const cleanKey = line.replace(/^\(/, '').replace(/\)$/, '');
-                const keys = cleanKey.split('|');
-                foundKeywords.push(...keys);
-            }
+            // 识别地区：如果 parts 中包含了该地区的任何一个别名
+            regions.forEach((r) => {
+                const regionAliases = r.value.split('|');
+                if (regionAliases.some(alias => parts.includes(alias))) {
+                    foundRegions.add(r.value);
+                }
+            });
+
+            // 识别关键词：从 parts 中提取那些不属于任何已定义地区的片段
+            parts.forEach((part) => {
+                const isPartofAnyRegion = regions.some((r) => 
+                    r.value.split('|').includes(part)
+                );
+                if (!isPartofAnyRegion) {
+                    foundKeywords.add(part);
+                }
+            });
         }
     });
 
-    // 去重并赋值
-    selectedProtocols.value = [...new Set(foundProtocols)];
-    selectedRegions.value = [...new Set(foundRegions)];
-    customKeywords.value = [...new Set(foundKeywords)];
+    selectedProtocols.value = Array.from(foundProtocols);
+    selectedRegions.value = Array.from(foundRegions);
+    customKeywords.value = Array.from(foundKeywords);
 };
 
 /**
@@ -322,6 +330,17 @@ onMounted(() => {
         parseValue(props.modelValue);
     }
 });
+
+/** 监听外部 props 变化 */
+watch(
+    () => props.modelValue,
+    (newVal) => {
+        // 只有当外部值与当前生成的字符串不一致时才解析，避免循环触发
+        if (newVal !== generateString()) {
+            parseValue(newVal || '');
+        }
+    }
+);
 
 // ==================== 操作方法 ====================
 

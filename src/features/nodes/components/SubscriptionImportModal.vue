@@ -87,7 +87,7 @@ const readFileContent = (file: File) => {
         if (typeof result === 'string') {
             textContent.value = result;
             errorMessage.value = ''; // 清除之前的错误
-            toastStore.showToast(`已读取文件: ${file.name}`, 'success');
+            toastStore.showToast(`📄 已读取文件: ${file.name}`, 'success');
         }
     };
     reader.onerror = () => {
@@ -166,7 +166,7 @@ const importSubscription = async () => {
                     await props.onImportSuccess();
                 }
 
-                toastStore.showToast(`导入成功！共添加 ${newNodes.length} 个节点`, 'success');
+                toastStore.showToast(`🚀 导入成功！共添加 ${newNodes.length} 个节点`, 'success');
                 emit('update:show', false);
             } else {
                 errorMessage.value = '未能解析出任何节点，请检查链接是否正确。';
@@ -199,7 +199,7 @@ const importSubscription = async () => {
                     await props.onImportSuccess();
                 }
 
-                toastStore.showToast(`导入成功！共添加 ${nodes.length} 个节点`, 'success');
+                toastStore.showToast(`🚀 导入成功！共添加 ${nodes.length} 个节点`, 'success');
                 emit('update:show', false);
             } else if (subs.length > 0) {
                 // 如果只有订阅链接，提示用户
@@ -236,7 +236,7 @@ const importSubscription = async () => {
                         await props.onImportSuccess();
                     }
 
-                    toastStore.showToast(`导入成功！共添加 ${newNodes.length} 个节点`, 'success');
+                    toastStore.showToast(`🚀 导入成功！共添加 ${newNodes.length} 个节点`, 'success');
                     emit('update:show', false);
                 } else {
                     errorMessage.value = '未能解析出任何节点，请检查内容格式是否正确。';
