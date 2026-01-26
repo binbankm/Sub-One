@@ -33,7 +33,7 @@ async function loadBackendInfo() {
     } catch (err: any) {
         console.error('Failed to load backend info:', err);
         error.value = err.message || '加载存储后端信息失败';
-        showToast(error.value, 'error');
+        showToast('❌ ' + error.value, 'error');
     } finally {
         loading.value = false;
     }
@@ -58,7 +58,7 @@ async function confirmSwitch() {
     // 关闭确认框
     showConfirm.value = false;
 
-    showToast('正在迁移数据并切换存储后端...', 'info', 5000);
+    showToast('⏳ 正在迁移数据并切换存储后端...', 'info', 5000);
 
     try {
         // 第一步：执行数据迁移
@@ -109,7 +109,7 @@ async function confirmSwitch() {
             const migratedKeys = migrateData.details?.migrated || [];
             const count = migratedKeys.length;
 
-            showToast(`切换成功！已自动迁移 ${count} 项数据`, 'success');
+            showToast(`✅ 切换成功！已自动迁移 ${count} 项数据`, 'success');
 
             // 延迟刷新页面以展示成功提示
             setTimeout(() => {
@@ -121,7 +121,7 @@ async function confirmSwitch() {
     } catch (err: any) {
         console.error('Failed to migrate and switch backend:', err);
         error.value = err.message || '迁移或切换存储后端失败';
-        showToast(`操作失败：${error.value}`, 'error', 5000);
+        showToast(`❌ 操作失败：${error.value}`, 'error', 5000);
     } finally {
         switching.value = false;
         targetBackend.value = null;
@@ -196,7 +196,7 @@ onMounted(() => {
             class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
         >
             <svg
-                class="mt-0.5 h-5 w-5 flex-shrink-0"
+                class="mt-0.5 h-5 w-5 shrink-0"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"

@@ -112,7 +112,7 @@ const handleCancel = () => {
                 <!-- 图标 -->
                 <div
                     v-if="props.showIcon"
-                    class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full"
+                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
                     :class="colorClasses[props.type].iconBg"
                 >
                     <svg

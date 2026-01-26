@@ -37,12 +37,12 @@ const handleUpdateAll = async () => {
 
     if (result.success) {
         if (result.count && result.count > 0) {
-            showToast(`成功更新 ${result.count} 个订阅`, 'success');
+            showToast(`✅ 成功更新 ${result.count} 个订阅`, 'success');
         } else {
-            showToast('所有订阅已是最新状态', 'success');
+            showToast('✅ 所有订阅已是最新状态', 'success');
         }
     } else {
-        showToast(result.message || '更新失败', 'error');
+        showToast('❌ ' + (result.message || '更新失败'), 'error');
     }
 };
 
@@ -212,7 +212,7 @@ onMounted(() => {
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
             <!-- 核心统计图表 (占2列) -->
             <div
-                class="card-glass group relative flex min-h-[300px] flex-col overflow-hidden rounded-3xl p-6 shadow-xl md:col-span-2"
+                class="card-glass group relative flex min-h-75 flex-col overflow-hidden rounded-3xl p-6 shadow-xl md:col-span-2"
             >
                 <div class="relative z-10 mb-6 flex items-center justify-between">
                     <div>
@@ -241,7 +241,7 @@ onMounted(() => {
 
                 <div class="relative z-10 flex flex-1 flex-col items-center gap-6 sm:flex-row">
                     <!-- 图表区域 -->
-                    <div class="h-[220px] w-full sm:w-1/2">
+                    <div class="h-55 w-full sm:w-1/2">
                         <NodeChart
                             :subscribed-nodes="totalNodeCount - manualNodes.length"
                             :manual-nodes="manualNodes.length"
@@ -302,7 +302,7 @@ onMounted(() => {
                     @click="handleUpdateAll"
                 >
                     <div
-                        class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-blue-900/10 dark:to-transparent"
+                        class="absolute inset-0 bg-linear-to-br from-blue-50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-blue-900/10 dark:to-transparent"
                     ></div>
                     <div class="relative z-10">
                         <div
@@ -407,7 +407,7 @@ onMounted(() => {
 
             <!-- 快捷操作按钮 (3个) -->
             <button
-                class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-indigo-200 hover:shadow-md dark:hover:border-indigo-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-indigo-200 hover:shadow-md dark:hover:border-indigo-800"
                 @click="$emit('add-subscription')"
             >
                 <div
@@ -439,7 +439,7 @@ onMounted(() => {
             </button>
 
             <button
-                class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-md dark:hover:border-emerald-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-md dark:hover:border-emerald-800"
                 @click="$emit('add-node')"
             >
                 <div
@@ -471,7 +471,7 @@ onMounted(() => {
             </button>
 
             <button
-                class="card-glass group flex min-h-[120px] items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md dark:hover:border-purple-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md dark:hover:border-purple-800"
                 @click="$emit('add-profile')"
             >
                 <div

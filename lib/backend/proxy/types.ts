@@ -370,7 +370,6 @@ export interface AppConfig {
     NotifyThresholdPercent: number;
 
     // 其他
-    theme?: string;
     [key: string]: any; // 允许扩展
 }
 

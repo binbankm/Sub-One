@@ -132,7 +132,7 @@ const fetchNodes = async () => {
         console.error('获取节点信息失败:', error);
         const msg = error instanceof Error ? error.message : String(error);
         errorMessage.value = `获取节点信息失败: ${msg}`;
-        toastStore.showToast('获取节点信息失败', 'error');
+        toastStore.showToast('❌ 获取节点信息失败', 'error');
     } finally {
         isLoading.value = false;
     }
@@ -230,7 +230,7 @@ const fetchProfileNodes = async () => {
         console.error('获取订阅组节点信息失败:', error);
         const msg = error instanceof Error ? error.message : String(error);
         errorMessage.value = `获取节点信息失败: ${msg}`;
-        toastStore.showToast('获取节点信息失败', 'error');
+        toastStore.showToast('❌ 获取节点信息失败', 'error');
     } finally {
         isLoading.value = false;
     }
@@ -261,15 +261,15 @@ const copySelectedNodes = async () => {
         .map((node) => node.url);
 
     if (selectedNodeUrls.length === 0) {
-        toastStore.showToast('请先选择要复制的节点', 'warning');
+        toastStore.showToast('⚠️ 请先选择要复制的节点', 'warning');
         return;
     }
 
     const success = await copyToClipboard(selectedNodeUrls.join('\n'));
     if (success) {
-        toastStore.showToast(`已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
+        toastStore.showToast(`📋 已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast('❌ 复制失败', 'error');
     }
 };
 
@@ -277,16 +277,16 @@ const copySelectedNodes = async () => {
 const handleCopySingle = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('已复制节点链接', 'success');
+        toastStore.showToast('📋 已复制节点链接', 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast('❌ 复制失败', 'error');
     }
 };
 
 // 刷新节点信息
 const refreshNodes = async () => {
     await fetchNodes();
-    toastStore.showToast('节点信息已刷新', 'success');
+    toastStore.showToast('🔄 节点信息已刷新', 'success');
 };
 
 // 键盘事件处理 - ESC 键关闭
@@ -358,7 +358,7 @@ const extractHost = (url: string) => {
         <Transition name="fade">
             <div
                 v-if="show"
-                class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 p-4"
+                class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4"
                 @click="emit('update:show', false)"
             >
                 <Transition name="scale-fade-bounce">
@@ -368,12 +368,12 @@ const extractHost = (url: string) => {
                         @click.stop
                     >
                         <!-- 标题 -->
-                        <div class="flex-shrink-0 p-6 pb-4">
+                        <div class="shrink-0 p-6 pb-4">
                             <h3 class="gradient-text text-xl font-bold">节点详情</h3>
                         </div>
 
                         <!-- 内容 -->
-                        <div class="flex-grow overflow-y-auto px-6 pb-6">
+                        <div class="grow overflow-y-auto px-6 pb-6">
                             <div class="space-y-4">
                                 <!-- 订阅/订阅组信息头部 -->
                                 <div
@@ -409,7 +409,7 @@ const extractHost = (url: string) => {
                                                 >
                                             </p>
                                         </div>
-                                        <div class="flex-shrink-0 text-right">
+                                        <div class="shrink-0 text-right">
                                             <p class="text-sm text-gray-600 dark:text-gray-300">
                                                 共 {{ nodes.length }} 个节点
                                             </p>
@@ -478,7 +478,7 @@ const extractHost = (url: string) => {
 
                                         <button
                                             :disabled="selectedNodes.size === 0"
-                                            class="transform rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                                            class="transform rounded-xl bg-linear-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                                             @click="copySelectedNodes"
                                         >
                                             复制选中
@@ -554,7 +554,7 @@ const extractHost = (url: string) => {
                                         >
                                             <!-- 顶部彩色条 -->
                                             <div
-                                                class="h-1 bg-gradient-to-r opacity-80"
+                                                class="h-1 bg-linear-to-r opacity-80"
                                                 :class="getProtocolInfo(node.protocol).gradient"
                                             ></div>
 
@@ -567,7 +567,7 @@ const extractHost = (url: string) => {
                                                         class="flex items-center gap-3 overflow-hidden"
                                                     >
                                                         <!-- 选择框 -->
-                                                        <div class="flex-shrink-0" @click.stop>
+                                                        <div class="shrink-0" @click.stop>
                                                             <div
                                                                 class="relative flex h-5 w-5 items-center justify-center"
                                                             >
@@ -652,7 +652,7 @@ const extractHost = (url: string) => {
                                                 <!-- 节点名称 -->
                                                 <div class="mb-3 pl-8">
                                                     <h4
-                                                        class="break-words text-base font-bold leading-snug text-gray-800 dark:text-gray-100"
+                                                        class="wrap-break-word text-base font-bold leading-snug text-gray-800 dark:text-gray-100"
                                                     >
                                                         {{ node.name }}
                                                     </h4>
@@ -667,7 +667,7 @@ const extractHost = (url: string) => {
                                                         title="服务器地址"
                                                     >
                                                         <svg
-                                                            class="h-3.5 w-3.5 flex-shrink-0"
+                                                            class="h-3.5 w-3.5 shrink-0"
                                                             fill="none"
                                                             viewBox="0 0 24 24"
                                                             stroke="currentColor"
@@ -740,7 +740,7 @@ const extractHost = (url: string) => {
 
                         <!-- 底部按钮 -->
                         <div
-                            class="flex flex-shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
+                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
                         >
                             <button
                                 class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"

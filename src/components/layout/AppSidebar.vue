@@ -246,7 +246,7 @@ onUnmounted(() => {
     <Transition name="fade">
         <div
             v-if="isMobileMenuOpen"
-            class="fixed inset-0 z-[39] bg-black/50 backdrop-blur-sm lg:hidden"
+            class="fixed inset-0 z-39 bg-black/50 backdrop-blur-sm lg:hidden"
             @click="closeMobileMenu"
         ></div>
     </Transition>
@@ -285,7 +285,7 @@ onUnmounted(() => {
     <aside
         class="fixed bottom-0 left-0 top-0 z-40 flex flex-col overflow-hidden bg-transparent shadow-none backdrop-blur-xl transition-all duration-300 lg:translate-x-0"
         :class="[
-            isCollapsed ? 'w-20' : 'w-[280px]',
+            isCollapsed ? 'w-20' : 'w-70',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         ]"
     >
@@ -295,7 +295,7 @@ onUnmounted(() => {
             <div class="mb-4 flex items-center gap-4">
                 <!-- Logo 图标 -->
                 <div
-                    class="flex h-12 w-12 flex-shrink-0 animate-pulse items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 shadow-lg shadow-primary-500/40"
+                    class="flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-2xl bg-linear-to-br from-primary-500 to-secondary-500 shadow-lg shadow-primary-500/40"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -392,7 +392,7 @@ onUnmounted(() => {
                         :class="[
                             isCollapsed ? 'justify-center p-4' : 'p-3',
                             modelValue === item.id
-                                ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white`
+                                ? `bg-linear-to-br ${item.gradient} ${item.shadow} text-white`
                                 : 'hover:translate-x-1 lg:group-hover:translate-x-1 lg:group-hover:scale-105'
                         ]"
                         :title="isCollapsed ? item.label : ''"
@@ -400,9 +400,9 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
                             :class="[
-                                `bg-gradient-to-br ${item.gradient}`,
+                                `bg-linear-to-br ${item.gradient}`,
                                 modelValue === item.id ? 'bg-white/20 shadow-inner' : ''
                             ]"
                         >
@@ -496,7 +496,7 @@ onUnmounted(() => {
                                 <!-- 数量徽章（有数量时显示） -->
                                 <div
                                     v-if="item.count && item.count > 0"
-                                    class="flex h-6 min-w-[24px] flex-shrink-0 items-center justify-center rounded-full px-2 text-[0.6875rem] font-bold transition-all duration-300"
+                                    class="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-2 text-[0.6875rem] font-bold transition-all duration-300"
                                     :class="
                                         modelValue === item.id
                                             ? 'bg-white/25 text-white'
@@ -529,7 +529,7 @@ onUnmounted(() => {
                         :class="[
                             isCollapsed ? 'justify-center p-4' : 'p-3',
                             modelValue === item.id
-                                ? `bg-gradient-to-br ${item.gradient} ${item.shadow} text-white`
+                                ? `bg-linear-to-br ${item.gradient} ${item.shadow} text-white`
                                 : 'hover:translate-x-1 lg:group-hover:scale-105'
                         ]"
                         :title="isCollapsed ? item.label : ''"
@@ -537,8 +537,8 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
-                            :class="`bg-gradient-to-br ${item.gradient}`"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            :class="`bg-linear-to-br ${item.gradient}`"
                         >
                             <!-- Help 图标 -->
                             <svg

@@ -116,14 +116,14 @@ const handleSubmit = async () => {
     <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-3 sm:p-6">
         <!-- ==================== 登录卡片 ==================== -->
         <div
-            class="relative isolate mx-auto w-full max-w-full animate-scale-in rounded-2xl border border-white/30 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-gray-900 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] sm:max-w-[420px] sm:rounded-3xl sm:p-10"
+            class="relative isolate mx-auto w-full max-w-full animate-scale-in rounded-2xl border border-white/30 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-gray-900 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)] sm:max-w-105 sm:rounded-3xl sm:p-10"
         >
             <!-- Logo 区域 -->
             <div class="mb-4 animate-fade-in-down text-center sm:mb-6">
                 <!-- Logo 图标容器 -->
                 <div class="mb-3 flex justify-center sm:mb-5">
                     <div
-                        class="flex h-14 w-14 animate-bounce items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 shadow-glow-primary sm:h-16 sm:w-16"
+                        class="flex h-14 w-14 animate-bounce items-center justify-center rounded-2xl bg-linear-to-br from-primary-500 to-secondary-500 shadow-glow-primary sm:h-16 sm:w-16"
                     >
                         <!-- 闪电图标 SVG -->
                         <svg
@@ -319,7 +319,7 @@ const handleSubmit = async () => {
                             <!-- 警告图标 -->
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-3.5 w-3.5 flex-shrink-0 sm:h-4 sm:w-4"
+                                class="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"

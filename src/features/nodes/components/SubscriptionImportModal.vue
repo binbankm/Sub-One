@@ -87,7 +87,7 @@ const readFileContent = (file: File) => {
         if (typeof result === 'string') {
             textContent.value = result;
             errorMessage.value = ''; // 清除之前的错误
-            toastStore.showToast(`已读取文件: ${file.name}`, 'success');
+            toastStore.showToast(`📄 已读取文件: ${file.name}`, 'success');
         }
     };
     reader.onerror = () => {
@@ -166,7 +166,7 @@ const importSubscription = async () => {
                     await props.onImportSuccess();
                 }
 
-                toastStore.showToast(`导入成功！共添加 ${newNodes.length} 个节点`, 'success');
+                toastStore.showToast(`🚀 导入成功！共添加 ${newNodes.length} 个节点`, 'success');
                 emit('update:show', false);
             } else {
                 errorMessage.value = '未能解析出任何节点，请检查链接是否正确。';
@@ -199,7 +199,7 @@ const importSubscription = async () => {
                     await props.onImportSuccess();
                 }
 
-                toastStore.showToast(`导入成功！共添加 ${nodes.length} 个节点`, 'success');
+                toastStore.showToast(`🚀 导入成功！共添加 ${nodes.length} 个节点`, 'success');
                 emit('update:show', false);
             } else if (subs.length > 0) {
                 // 如果只有订阅链接，提示用户
@@ -236,7 +236,7 @@ const importSubscription = async () => {
                         await props.onImportSuccess();
                     }
 
-                    toastStore.showToast(`导入成功！共添加 ${newNodes.length} 个节点`, 'success');
+                    toastStore.showToast(`🚀 导入成功！共添加 ${newNodes.length} 个节点`, 'success');
                     emit('update:show', false);
                 } else {
                     errorMessage.value = '未能解析出任何节点，请检查内容格式是否正确。';
@@ -389,7 +389,7 @@ const importSubscription = async () => {
                 class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
             >
                 <svg
-                    class="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

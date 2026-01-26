@@ -547,3 +547,90 @@ export async function validateBackupFile(backupData: unknown): Promise<{
         };
     }
 }
+
+/**
+ * 创建服务器快照
+ */
+export async function createSnapshot(name: string): Promise<ApiResponse & { data?: any }> {
+    try {
+        const response = await fetch('/api/backup/snapshot/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('创建快照失败:', error);
+        return { success: false, message: '网络请求失败' };
+    }
+}
+
+/**
+ * 获取服务器快照列表
+ */
+export async function fetchSnapshots(): Promise<{ success: boolean; data: any[] }> {
+    try {
+        const response = await fetch('/api/backup/snapshot/list');
+        return await response.json();
+    } catch (error) {
+        console.error('获取快照列表失败:', error);
+        return { success: false, data: [] };
+    }
+}
+
+/**
+ * 删除服务器快照
+ */
+export async function deleteSnapshot(id: string): Promise<boolean> {
+    try {
+        const response = await fetch('/api/backup/snapshot/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const result = (await response.json()) as { success: boolean };
+        return result.success;
+    } catch (error) {
+        console.error('删除快照失败:', error);
+        return false;
+    }
+}
+
+/**
+ * 批量删除服务器快照
+ */
+export async function batchDeleteSnapshots(
+    ids: string[]
+): Promise<{ success: boolean; deletedCount?: number; message?: string }> {
+    try {
+        const response = await fetch('/api/backup/snapshot/batch_delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('批量删除快照失败:', error);
+        return { success: false, message: '网络请求失败' };
+    }
+}
+
+/**
+ * 恢复服务器快照
+ */
+export async function restoreSnapshot(
+    id: string,
+    mode: 'overwrite' | 'merge' = 'overwrite'
+): Promise<ApiResponse> {
+    try {
+        const response = await fetch('/api/backup/snapshot/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, mode })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('恢复快照失败:', error);
+        return { success: false, message: '网络请求失败' };
+    }
+}

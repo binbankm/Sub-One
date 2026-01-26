@@ -330,7 +330,7 @@ const handleDeselectAll = (
                                     >
                                         <div
                                             v-if="localProfile.subscriptions?.includes(sub.id)"
-                                            class="absolute bottom-0 left-0 top-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500"
+                                            class="absolute bottom-0 left-0 top-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
                                         ></div>
                                         <input
                                             type="checkbox"
@@ -434,7 +434,7 @@ const handleDeselectAll = (
                                     >
                                         <div
                                             v-if="localProfile.manualNodes?.includes(node.id)"
-                                            class="absolute bottom-0 left-0 top-0 w-1 bg-gradient-to-b from-indigo-500 to-purple-500"
+                                            class="absolute bottom-0 left-0 top-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
                                         ></div>
                                         <input
                                             type="checkbox"

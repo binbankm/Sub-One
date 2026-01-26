@@ -9,6 +9,7 @@
  *
  * ======================================================
  */
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import { defineConfig } from 'vite';
@@ -27,8 +28,9 @@ export default defineConfig({
     /**
      * 插件列表
      * - vue(): Vue 3 单文件组件支持
+     * - tailwindcss(): Tailwind CSS v4 支持
      */
-    plugins: [vue()],
+    plugins: [vue(), tailwindcss()],
 
     // ==================== 模块解析配置 ====================
 
@@ -98,7 +100,7 @@ export default defineConfig({
                  */
                 manualChunks: {
                     'vendor-core': ['vue', 'pinia'],
-                    'vendor-utils': ['lodash-es', 'js-base64', 'js-yaml', 'qrcode'],
+                    'vendor-utils': ['js-base64', 'js-yaml'],
                     'vendor-ui': ['echarts', 'vuedraggable'] // 较大的 UI 库单独打包
                 }
             }

@@ -50,7 +50,7 @@ const totalNodeCount = computed(() => {
 
 <template>
     <div
-        class="card-glass group relative flex min-h-[140px] flex-col overflow-hidden rounded-2xl p-4 hover:scale-[1.02]"
+        class="card-glass group relative flex min-h-35 flex-col overflow-hidden rounded-2xl p-4 hover:scale-[1.02]"
         :class="{
             'opacity-50': !profile.enabled,
             'ring-2 ring-purple-600 dark:ring-purple-400': isBatchMode && isSelected,
@@ -60,7 +60,7 @@ const totalNodeCount = computed(() => {
     >
         <div class="relative z-10 flex items-start justify-between gap-3">
             <!-- 批量模式复选框 -->
-            <div v-if="isBatchMode" class="flex-shrink-0" @click.stop>
+            <div v-if="isBatchMode" class="shrink-0" @click.stop>
                 <label class="relative inline-flex cursor-pointer items-center">
                     <input
                         type="checkbox"
@@ -75,7 +75,7 @@ const totalNodeCount = computed(() => {
             <div class="min-w-0 flex-1">
                 <div class="mb-2 flex items-center gap-2">
                     <div
-                        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-600"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-600"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +99,7 @@ const totalNodeCount = computed(() => {
                         {{ profile.name }}
                     </p>
                 </div>
-                <p class="break-words text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                <p class="wrap-break-word text-sm leading-relaxed text-gray-700 dark:text-gray-300">
                     包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ totalNodeCount }}
                     个节点
                 </p>
@@ -107,7 +107,7 @@ const totalNodeCount = computed(() => {
 
             <!-- 操作按钮 -->
             <div
-                class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                class="flex shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
             >
                 <button
                     class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
@@ -152,7 +152,7 @@ const totalNodeCount = computed(() => {
             </div>
         </div>
 
-        <div class="flex-grow"></div>
+        <div class="grow"></div>
 
         <!-- 底部操作区 -->
         <div
@@ -172,7 +172,7 @@ const totalNodeCount = computed(() => {
                     "
                 />
                 <div
-                    class="peer h-6 w-11 rounded-full bg-gray-200 from-indigo-500 to-purple-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-gradient-to-r peer-checked:after:translate-x-5 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                    class="peer h-6 w-11 rounded-full bg-gray-200 from-indigo-500 to-purple-600 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-linear-to-r peer-checked:after:translate-x-5 peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
                 ></div>
                 <span
                     class="ml-3 whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-300"
@@ -181,7 +181,7 @@ const totalNodeCount = computed(() => {
             </label>
 
             <!-- 操作按钮组 -->
-            <div class="flex flex-shrink-0 items-center gap-2">
+            <div class="flex shrink-0 items-center gap-2">
                 <button
                     class="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
                     title="显示节点信息"
@@ -189,7 +189,7 @@ const totalNodeCount = computed(() => {
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-3 w-3 flex-shrink-0"
+                        class="h-3 w-3 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -214,7 +214,7 @@ const totalNodeCount = computed(() => {
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-3 w-3 flex-shrink-0"
+                        class="h-3 w-3 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"

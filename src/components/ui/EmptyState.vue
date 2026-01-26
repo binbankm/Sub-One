@@ -13,7 +13,7 @@ defineProps<{
     >
         <div
             class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl"
-            :class="bgGradientClass || 'bg-gradient-to-br from-gray-500/20 to-gray-400/20'"
+            :class="bgGradientClass || 'bg-linear-to-br from-gray-500/20 to-gray-400/20'"
         >
             <slot name="icon">
                 <!-- Default Icon if none provided -->

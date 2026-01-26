@@ -144,7 +144,7 @@ watch(
 
 <template>
     <div class="relative flex h-full w-full flex-col">
-        <div ref="chartRef" class="min-h-[180px] flex-1"></div>
+        <div ref="chartRef" class="min-h-45 flex-1"></div>
         <!-- 中心指示器 -->
         <div
             class="pointer-events-none absolute left-1/2 top-[42%] -translate-x-1/2 -translate-y-1/2 text-center"

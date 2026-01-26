@@ -95,7 +95,7 @@ watch(
 
 const handleAddProfile = () => {
     if (!config.value.profileToken?.trim()) {
-        return showToast('请先在"设置"中配置"订阅组分享Token"', 'error');
+        return showToast('⚠️ 请先在"设置"中配置"订阅组分享Token"', 'error');
     }
     isNewProfile.value = true;
     editingProfile.value = {
@@ -120,7 +120,7 @@ const handleEditProfile = (profileId: string) => {
 };
 
 const handleSaveProfile = async (profileData: Profile) => {
-    if (!profileData?.name) return showToast('订阅组名称不能为空', 'error');
+    if (!profileData?.name) return showToast('⚠️ 订阅组名称不能为空', 'error');
 
     const success = await (isNewProfile.value
         ? dataStore.addProfile(profileData)
@@ -162,8 +162,7 @@ const handleBatchDelete = async (ids: string[]) => {
 };
 
 const handleToggleProfile = async (profile: Profile) => {
-    dataStore.toggleProfile(profile.id, profile.enabled);
-    await dataStore.saveData(`${profile.name || '订阅组'} 状态`);
+    await dataStore.toggleProfile(profile.id, profile.enabled);
 };
 
 const handleCopyLink = (id: string) => {
@@ -266,7 +265,7 @@ onUnmounted(() => {
         <Transition name="slide-fade">
             <div
                 v-if="isBatchDeleteMode"
-                class="mb-6 rounded-2xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-4 shadow-lg dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20"
+                class="mb-6 rounded-2xl border-2 border-purple-200 bg-linear-to-r from-purple-50 to-pink-50 p-4 shadow-lg dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20"
             >
                 <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                     <div
@@ -370,7 +369,7 @@ onUnmounted(() => {
             v-if="profiles.length === 0"
             title="没有订阅组"
             description="创建一个订阅组来组合你的节点吧！"
-            bg-gradient-class="bg-gradient-to-br from-purple-500/20 to-pink-500/20"
+            bg-gradient-class="bg-linear-to-br from-purple-500/20 to-pink-500/20"
             icon-color-class="text-purple-500"
         >
             <template #icon>

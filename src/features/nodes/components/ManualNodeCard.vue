@@ -45,9 +45,9 @@ const protocolInfo = computed(() => getProtocolInfo(protocol.value));
 const handleCopy = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('已复制节点链接', 'success');
+        toastStore.showToast('📋 已复制节点链接', 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast('❌ 复制失败', 'error');
     }
 };
 </script>
@@ -65,7 +65,7 @@ const handleCopy = async (url: string) => {
         @click="isBatchMode ? emit('toggleSelect') : null"
     >
         <!-- 顶部彩色条 (更细致的渐变) -->
-        <div class="h-1.5 w-full bg-gradient-to-r opacity-80" :class="protocolInfo.gradient"></div>
+        <div class="h-1.5 w-full bg-linear-to-r opacity-80" :class="protocolInfo.gradient"></div>
 
         <div class="flex flex-1 flex-col p-5">
             <!-- 头部：复选框 + 协议标签 + 操作按钮 -->
@@ -74,7 +74,7 @@ const handleCopy = async (url: string) => {
                     <!-- 批量模式复选框 -->
                     <div
                         v-if="isBatchMode"
-                        class="animate-in fade-in zoom-in flex-shrink-0 duration-200"
+                        class="animate-in fade-in zoom-in shrink-0 duration-200"
                         @click.stop
                     >
                         <div class="relative flex h-5 w-5 items-center justify-center">
@@ -171,7 +171,7 @@ const handleCopy = async (url: string) => {
             <!-- 节点名称 -->
             <div class="mb-4">
                 <h4
-                    class="line-clamp-2 break-words text-base font-bold leading-snug text-gray-800 transition-all duration-300 hover:line-clamp-none dark:text-gray-100"
+                    class="line-clamp-2 wrap-break-word text-base font-bold leading-snug text-gray-800 transition-all duration-300 hover:line-clamp-none dark:text-gray-100"
                     :title="node.name || '未命名节点'"
                 >
                     {{ node.name || '未命名节点' }}
@@ -187,7 +187,7 @@ const handleCopy = async (url: string) => {
                         title="服务器地址"
                     >
                         <svg
-                            class="h-3.5 w-3.5 flex-shrink-0"
+                            class="h-3.5 w-3.5 shrink-0"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"

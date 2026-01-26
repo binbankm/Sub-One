@@ -32,7 +32,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'update:show', value: boolean): void;
-    (e: 'save', subscription: Subscription): void;
+    (e: 'save', subscription: Subscription, silent?: boolean): void;
 }>();
 
 // ==================== 状态 ====================
@@ -130,7 +130,7 @@ const handleSave = () => {
 
     // 验证
     if (!validateUrl()) {
-        toastStore.showToast('请修正错误后再保存', 'error');
+        toastStore.showToast('⚠️ 请修正错误后再保存', 'error');
         return;
     }
 
@@ -292,7 +292,7 @@ const toggleAdvanced = () => {
                 >
                     <div class="flex items-start gap-3">
                         <svg
-                            class="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400"
+                            class="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >

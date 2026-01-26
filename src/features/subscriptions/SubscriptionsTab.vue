@@ -141,9 +141,9 @@ const handleEditSubscription = (subId: string) => {
 
 const handleSaveSubscription = async (updatedSub: Subscription) => {
     // 验证
-    if (!updatedSub.url) return showToast('订阅链接不能为空', 'error');
+    if (!updatedSub.url) return showToast('⚠️ 订阅链接不能为空', 'error');
     if (!HTTP_REGEX.test(updatedSub.url))
-        return showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error');
+        return showToast('⚠️ 请输入有效的 http:// 或 https:// 订阅链接', 'error');
 
     if (isNewSubscription.value) {
         const newSubId = crypto.randomUUID();
@@ -167,10 +167,7 @@ const handleSaveSubscription = async (updatedSub: Subscription) => {
 const handleSubscriptionToggle = async (subscription: Subscription) => {
     if (subscription) {
         subscription.enabled = !subscription.enabled;
-        // We modify the object directly (which is a ref from store), so simple update
-        // But to be safe/explicit:
-        dataStore.updateSubscription(subscription);
-        await dataStore.saveData(`${subscription.name || '订阅'} 状态`);
+        await dataStore.updateSubscription(subscription, true);
     }
 };
 
@@ -180,10 +177,10 @@ const handleSubscriptionUpdate = async (subscriptionId: string, silent: boolean 
 
     const success = await dataStore.updateSubscriptionNodes(subscriptionId);
     if (success) {
-        if (!silent) showToast(`${sub.name || '订阅'} 已更新`, 'success');
+        if (!silent) showToast(`✅ ${sub.name || '订阅'} 已更新`, 'success');
         await dataStore.saveData('订阅节点更新', false);
     } else {
-        showToast(`更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
+        showToast(`❌ 更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
     }
 };
 
@@ -193,13 +190,13 @@ const handleUpdateAllSubscriptions = async () => {
     try {
         const result = await dataStore.updateAllEnabledSubscriptions();
         if (result.success) {
-            showToast(`成功更新了 ${result.count} 个订阅`, 'success');
+            showToast(`✅ 成功更新了 ${result.count} 个订阅`, 'success');
             await dataStore.saveData('批量更新', false);
         } else {
-            showToast(`更新失败: ${result.message}`, 'error');
+            showToast(`❌ 更新失败: ${result.message}`, 'error');
         }
     } catch (e) {
-        showToast('批量更新失败', 'error');
+        showToast('❌ 批量更新失败', 'error');
     } finally {
         isUpdatingAllSubs.value = false;
     }
@@ -214,25 +211,21 @@ const handleDeleteSubscriptionWithCleanup = (subId: string) => {
 
 const handleConfirmDeleteSingleSub = async () => {
     if (!deletingItemId.value) return;
-    dataStore.deleteSubscription(deletingItemId.value);
-    await dataStore.saveData('删除订阅');
+    await dataStore.deleteSubscription(deletingItemId.value);
     showDeleteSingleSubModal.value = false;
 };
 
+
 const handleDeleteAllSubscriptionsWithCleanup = async () => {
     dataStore.deleteAllSubscriptions();
-    await dataStore.saveData('清空订阅');
     showDeleteAllSubsModal.value = false;
 };
 
 const handleBatchDeleteSubs = async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
-
-    // Store doesn't have batch delete subs yet? We can loop or add one.
-    // Let's loop for now or add to store.
-    // Step 95 store has `deleteSubscription`.
-    ids.forEach((id) => dataStore.deleteSubscription(id));
-    await dataStore.saveData(`批量删除 ${ids.length} 个订阅`);
+    for (const id of ids) {
+        await dataStore.deleteSubscription(id);
+    }
 };
 
 // Override toggle to also close menu
@@ -428,7 +421,7 @@ watch(
         <Transition name="slide-fade">
             <div
                 v-if="isBatchDeleteMode"
-                class="mb-6 rounded-2xl border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-4 shadow-lg dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20"
+                class="mb-6 rounded-2xl border-2 border-indigo-200 bg-linear-to-r from-indigo-50 to-purple-50 p-4 shadow-lg dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20"
             >
                 <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
                     <div
@@ -562,7 +555,7 @@ watch(
             v-else
             title="没有订阅"
             description="从添加你的第一个订阅开始。"
-            bg-gradient-class="bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+            bg-gradient-class="bg-linear-to-br from-indigo-500/20 to-purple-500/20"
             icon-color-class="text-indigo-500"
         >
             <template #icon>
