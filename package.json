@@ -17,7 +17,7 @@
         "format": "prettier --write ."
     },
     "dependencies": {
-        "better-sqlite3": "^11.5.0",
+        "better-sqlite3": "^12.6.2",
         "echarts": "^6.0.0",
         "express": "^4.19.2",
         "js-base64": "^3.7.8",
@@ -30,7 +30,7 @@
         "@cloudflare/workers-types": "^4.20251205.0",
         "@tailwindcss/vite": "^4.1.18",
         "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-        "@types/better-sqlite3": "^11.3.0",
+        "@types/better-sqlite3": "^7.6.13",
         "@types/express": "^4.17.21",
         "@types/js-yaml": "^4.0.9",
         "@types/node": "^22.10.1",
