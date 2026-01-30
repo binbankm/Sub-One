@@ -334,17 +334,17 @@ async function confirmImport() {
                     </p>
                 </div>
                 <!-- 快速创建 -->
-                <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <input
                         v-model="snapshotName"
                         type="text"
                         placeholder="快照名称 (可选)"
-                        class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
+                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
                         @keyup.enter="handleCreateSnapshot"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
-                        class="flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                        class="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
                         @click="handleCreateSnapshot"
                     >
                         <svg v-if="!isCreatingSnapshot" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
