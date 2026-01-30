@@ -334,17 +334,17 @@ async function confirmImport() {
                     </p>
                 </div>
                 <!-- 快速创建 -->
-                <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <input
                         v-model="snapshotName"
                         type="text"
                         placeholder="快照名称 (可选)"
-                        class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
+                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
                         @keyup.enter="handleCreateSnapshot"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
-                        class="flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+                        class="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
                         @click="handleCreateSnapshot"
                     >
                         <svg v-if="!isCreatingSnapshot" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -412,12 +412,12 @@ async function confirmImport() {
                     <div
                         v-for="snapshot in snapshots"
                         :key="snapshot.id"
-                        class="group relative flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white dark:border-gray-700/50 dark:bg-gray-700/20 dark:hover:border-indigo-900/50 dark:hover:bg-gray-700/40"
+                        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white dark:border-gray-700/50 dark:bg-gray-700/20 dark:hover:border-indigo-900/50 dark:hover:bg-gray-700/40"
                         @click="batch.isBatchDeleteMode.value && batch.toggleSelection(snapshot.id)"
                     >
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
                             <!-- 批量选择框 -->
-                            <div v-if="batch.isBatchDeleteMode.value" class="flex items-center" @click.stop>
+                            <div v-if="batch.isBatchDeleteMode.value" class="flex items-center shrink-0" @click.stop>
                                 <input
                                     type="checkbox"
                                     :checked="batch.isSelected(snapshot.id)"
@@ -426,26 +426,26 @@ async function confirmImport() {
                                 />
                             </div>
 
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <div>
-                                <h4 class="text-sm font-bold text-gray-800 dark:text-white">{{ snapshot.name }}</h4>
-                                <div class="mt-0.5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                    <span>{{ formatTimestamp(snapshot.timestamp) }}</span>
-                                    <span>·</span>
-                                    <span>{{ snapshot.metadata?.itemCount?.subscriptions || 0 }} 订阅</span>
-                                    <span>·</span>
-                                    <span>{{ snapshot.metadata?.itemCount?.manualNodes || 0 }} 手动节点</span>
-                                    <span>·</span>
-                                    <span>{{ snapshot.metadata?.itemCount?.proxyCount || 0 }} 总节点</span>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-sm font-bold text-gray-800 dark:text-white truncate">{{ snapshot.name }}</h4>
+                                <div class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+                                    <span class="shrink-0">{{ formatTimestamp(snapshot.timestamp) }}</span>
+                                    <span class="shrink-0">·</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.subscriptions || 0 }} 订阅</span>
+                                    <span class="shrink-0">·</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.manualNodes || 0 }} 手动</span>
+                                    <span class="shrink-0">·</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.proxyCount || 0 }} 总节点</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 opacity-100 transition-opacity">
+                        <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <button
                                 class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-700"
                                 @click.stop="handleRestoreFromSnapshot(snapshot.id)"
