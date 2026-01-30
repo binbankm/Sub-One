@@ -123,7 +123,7 @@ const handleCopy = async (url: string) => {
                     :class="
                         isBatchMode
                             ? 'opacity-100'
-                            : 'translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
+                            : 'opacity-100 lg:translate-x-2 lg:opacity-0 lg:group-hover:translate-x-0 lg:group-hover:opacity-100'
                     "
                     @click.stop
                 >

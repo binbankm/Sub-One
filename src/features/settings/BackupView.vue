@@ -445,7 +445,7 @@ async function confirmImport() {
                             </div>
                         </div>
 
-                        <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100 lg:opacity-100">
+                        <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 opacity-100 transition-opacity">
                             <button
                                 class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-700"
                                 @click.stop="handleRestoreFromSnapshot(snapshot.id)"

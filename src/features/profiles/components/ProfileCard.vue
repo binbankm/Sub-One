@@ -107,7 +107,7 @@ const totalNodeCount = computed(() => {
 
             <!-- 操作按钮 -->
             <div
-                class="flex shrink-0 items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
                 <button
                     class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
