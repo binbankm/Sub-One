@@ -84,6 +84,92 @@ async function generateCombinedNodeList(
     return allNodes;
 }
 
+/**
+ * 使用外部API进行订阅转换（混合模式）
+ * 工作流程：后端处理节点 → 转URI格式 → base64编码 → 外部API转换
+ * 
+ * @param externalApiUrl 外部转换API地址
+ * @param targetSubs 要转换的订阅列表
+ * @param targetFormat 目标格式
+ * @param filename 文件名
+ * @param config 应用配置
+ * @param userAgent User-Agent字符串
+ * @returns 转换后的内容
+ */
+async function convertViaExternalApi(
+    externalApiUrl: string,
+    targetSubs: Subscription[],
+    targetFormat: string,
+    filename: string,
+    config: SubConfig,
+    userAgent: string
+): Promise<string> {
+    console.log('Using hybrid mode: backend processing + external API conversion');
+
+    // 1. 先用后端处理所有节点（获取、解析、去重、前缀、手动节点等）
+    const combinedNodes = await generateCombinedNodeList(config, userAgent, targetSubs);
+
+    if (combinedNodes.length === 0) {
+        throw new Error('处理后没有可用节点');
+    }
+
+    // 2. 将处理后的节点转换为标准URI格式
+    const { URIConverter } = await import('../proxy/converter/uri');
+    const uriConverter = new URIConverter();
+    const nodeUris: string[] = [];
+
+    for (const node of combinedNodes) {
+        try {
+            const uri = uriConverter.convertSingle(node);
+            if (uri) {
+                nodeUris.push(uri);
+            }
+        } catch (err) {
+            console.warn(`Failed to convert node ${node.name} to URI:`, err);
+        }
+    }
+
+    if (nodeUris.length === 0) {
+        throw new Error('无法将节点转换为URI格式');
+    }
+
+    // 3. 将URI列表转换为base64（标准订阅格式）
+    const base64Content = btoa(nodeUris.join('\n'));
+
+    // 4. 使用 data URI scheme 传递给外部API
+    const subscriptionUrl = `data:text/plain;base64,${base64Content}`;
+
+    console.log(`Processed ${nodeUris.length} nodes through backend, sending to external API`);
+
+    // 5. 构建外部API请求URL
+    const apiUrl = new URL(externalApiUrl);
+
+    // 基础参数
+    apiUrl.searchParams.set('target', targetFormat);
+    apiUrl.searchParams.set('url', subscriptionUrl);
+    apiUrl.searchParams.set('filename', filename);
+
+    // 添加通用参数
+    apiUrl.searchParams.set('emoji', 'true'); // 大多数用户喜欢emoji
+
+    console.log(`Calling external converter API: ${apiUrl.toString().substring(0, 200)}...`);
+
+    // 6. 调用外部API
+    const response = await fetch(apiUrl.toString(), {
+        method: 'GET',
+        headers: {
+            'User-Agent': GLOBAL_USER_AGENT
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`外部转换API返回错误: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.text();
+}
+
+
 export async function handleSubRequest(
     context: EventContext<Env, string, unknown>
 ): Promise<Response> {
@@ -294,12 +380,35 @@ export async function handleSubRequest(
     const upstreamUserAgent = GLOBAL_USER_AGENT;
     console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
 
-    const combinedNodes = await generateCombinedNodeList(config, upstreamUserAgent, targetSubs);
-
     try {
-        const convertedContent = await convert(combinedNodes, targetFormat, {
-            filename: subName
-        });
+        let convertedContent: string;
+
+        // 判断是否使用外部转换API
+        if (
+            config.useExternalConverter &&
+            config.externalConverterUrl &&
+            config.externalConverterUrl.trim()
+        ) {
+            console.log('Using external converter API');
+            convertedContent = await convertViaExternalApi(
+                config.externalConverterUrl.trim(),
+                targetSubs,
+                targetFormat,
+                subName,
+                config,
+                upstreamUserAgent
+            );
+        } else {
+            console.log('Using built-in converter');
+            const combinedNodes = await generateCombinedNodeList(
+                config,
+                upstreamUserAgent,
+                targetSubs
+            );
+            convertedContent = await convert(combinedNodes, targetFormat, {
+                filename: subName
+            });
+        }
 
         const responseHeaders = new Headers({
             'Content-Type': 'text/plain; charset=utf-8',

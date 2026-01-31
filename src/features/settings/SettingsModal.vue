@@ -50,6 +50,10 @@ const defaultSettings: AppConfig = {
     prependSubName: false,
     dedupe: false, // 默认关闭去重，保留所有节点
 
+    // 转换配置
+    useExternalConverter: false, // 默认使用后端自带转换
+    externalConverterUrl: 'https://api.example.com/sub', // 外部转换API示例地址
+
     // Telegram 通知配置
     BotToken: '',
     ChatID: '',
@@ -428,6 +432,79 @@ watch(
                                             ></div>
                                         </label>
                                     </div>
+                                </div>
+
+                                <!-- 开关组：使用外部转换API -->
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        >订阅转换方式</label
+                                    >
+                                    <div
+                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                    >
+                                        <div>
+                                            <p
+                                                class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                                            >
+                                                使用外部转换API
+                                            </p>
+                                            <p
+                                                class="mr-2 mt-1 text-xs text-gray-500 dark:text-gray-400"
+                                            >
+                                                关闭时使用后端自带转换
+                                            </p>
+                                        </div>
+                                        <label
+                                            class="relative inline-flex shrink-0 cursor-pointer items-center"
+                                        >
+                                            <input
+                                                v-model="settings.useExternalConverter"
+                                                type="checkbox"
+                                                class="peer sr-only"
+                                            />
+                                            <div
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700"
+                                            ></div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- 外部API地址 (仅当启用外部转换时显示) -->
+                                <div v-if="settings.useExternalConverter" class="group md:col-span-2">
+                                    <label
+                                        for="externalConverterUrl"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        >外部转换API地址</label
+                                    >
+                                    <input
+                                        id="externalConverterUrl"
+                                        v-model="settings.externalConverterUrl"
+                                        type="text"
+                                        class="input-modern-enhanced w-full"
+                                        placeholder="例如：https://api.dler.io/sub"
+                                    />
+                                    <p
+                                        class="mt-2 flex items-start gap-1 text-xs text-blue-600 dark:text-blue-400"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="mt-0.5 h-3 w-3 shrink-0"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                        </svg>
+                                        <span
+                                            >提示：输入第三方订阅转换API的基础地址，例如 subconverter 或其他兼容服务。系统会自动拼接参数。</span
+                                        >
+                                    </p>
                                 </div>
                             </div>
                         </section>

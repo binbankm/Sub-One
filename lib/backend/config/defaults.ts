@@ -9,6 +9,10 @@ export const defaultSettings: AppConfig = {
     prependSubName: false,
     dedupe: false,
 
+    // 转换配置
+    useExternalConverter: false,
+    externalConverterUrl: '',
+
     // Telegram 通知
     BotToken: '',
     ChatID: '',
