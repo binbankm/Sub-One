@@ -103,6 +103,21 @@ async function convertViaExternalApi(
         finalApiUrl = 'https://' + finalApiUrl;
     }
 
+    // --- 目标格式映射 (针对外部 API 的兼容性) ---
+    // 很多外部 API (subconverter) 不认识 mihomo 或 stash，需要映射为标准名称
+    let apiTarget = targetFormat.toLowerCase();
+    const targetMapping: Record<string, string> = {
+        'mihomo': 'clash',
+        'stash': 'clash',
+        'quantumultx': 'quanx',
+        'v2ray': 'v2ray',
+        'shadowrocket': 'ss' // 某些老的 API 可能需要这一层映射，或者保持 shadowrocket
+    };
+
+    if (targetMapping[apiTarget]) {
+        apiTarget = targetMapping[apiTarget];
+    }
+
     try {
         let apiUrl = new URL(finalApiUrl);
 
@@ -114,7 +129,13 @@ async function convertViaExternalApi(
         }
 
         // 基础参数
-        apiUrl.searchParams.set('target', targetFormat);
+        apiUrl.searchParams.set('target', apiTarget);
+        
+        // 针对 Surge 的特殊处理：添加版本参数
+        if (apiTarget === 'surge') {
+            apiUrl.searchParams.set('ver', '4');
+        }
+
         apiUrl.searchParams.set('url', subscriptionUrl); // 这里传递的是 Sub-One 的回调链接
         apiUrl.searchParams.set('filename', filename);
         apiUrl.searchParams.set('emoji', 'true');
@@ -251,7 +272,7 @@ export async function handleSubRequest(
             'loon',
             'base64',
             'v2ray',
-            'quantumultx',
+            'quanx',
             'shadowrocket',
             'uri'
         ];
@@ -288,8 +309,8 @@ export async function handleSubRequest(
             ['surge', 'surge'],
             ['surfboard', 'surfboard'],
             ['loon', 'loon'],
-            ['quantumult x', 'quantumultx'],
-            ['quantumult', 'quantumultx'],
+            ['quantumult x', 'quanx'],
+            ['quantumult', 'quanx'],
 
             // 兜底通用词
             ['meta', 'mihomo']

@@ -73,6 +73,7 @@ export const PLATFORM_ALIASES: Record<string, string> = {
     loon: 'Loon',
 
     // QuantumultX
+    quanx: 'QuantumultX',
     quantumultx: 'QuantumultX',
     qx: 'QuantumultX',
     'quantumult-x': 'QuantumultX',

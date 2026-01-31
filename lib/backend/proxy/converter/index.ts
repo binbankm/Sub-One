@@ -52,7 +52,7 @@ export async function convert(
         converter = converters['Surge'];
     } else if (target.includes('loon')) {
         converter = converters['Loon'];
-    } else if (target === 'qx' || target.includes('quantumult')) {
+    } else if (target === 'qx' || target === 'quanx' || target.includes('quantumult')) {
         converter = converters['QX'];
     } else if (target === 'shadowrocket') {
         converter = converters['Shadowrocket'];
