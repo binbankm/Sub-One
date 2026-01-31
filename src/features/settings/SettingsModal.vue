@@ -52,7 +52,14 @@ const defaultSettings: AppConfig = {
 
     // 转换配置
     useExternalConverter: false, // 默认使用后端自带转换
-    externalConverterUrl: 'https://api.example.com/sub', // 外部转换API示例地址
+    externalConverterUrl: 'api-suc.0z.gs', // 默认外部转换API
+    externalConverterApis: [
+        'api-suc.0z.gs',
+        'subapi.fxxk.dedyn.io',
+        'subapi.cmliussss.net',
+        'url.v1.mk',
+        'api.v1.mk'
+    ],
 
     // Telegram 通知配置
     BotToken: '',
@@ -477,13 +484,28 @@ watch(
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
                                         >外部转换API地址</label
                                     >
-                                    <input
-                                        id="externalConverterUrl"
-                                        v-model="settings.externalConverterUrl"
-                                        type="text"
-                                        class="input-modern-enhanced w-full"
-                                        placeholder="例如：https://api.dler.io/sub"
-                                    />
+                                    <div class="flex gap-2">
+                                        <select
+                                            v-model="settings.externalConverterUrl"
+                                            class="input-modern-enhanced w-1/3 min-w-37.5"
+                                        >
+                                            <option
+                                                v-for="api in settings.externalConverterApis"
+                                                :key="api"
+                                                :value="api"
+                                            >
+                                                {{ api }}
+                                            </option>
+                                            <option value="custom">-- 手动输入 --</option>
+                                        </select>
+                                        <input
+                                            id="externalConverterUrl"
+                                            v-model="settings.externalConverterUrl"
+                                            type="text"
+                                            class="input-modern-enhanced flex-1"
+                                            placeholder="例如：api-suc.0z.gs"
+                                        />
+                                    </div>
                                     <p
                                         class="mt-2 flex items-start gap-1 text-xs text-blue-600 dark:text-blue-400"
                                     >
@@ -502,7 +524,7 @@ watch(
                                             />
                                         </svg>
                                         <span
-                                            >提示：输入第三方订阅转换API的基础地址，例如 subconverter 或其他兼容服务。系统会自动拼接参数。</span
+                                            >提示：直接填写域名即可，系统会自动补全路径并拼接参数。</span
                                         >
                                     </p>
                                 </div>

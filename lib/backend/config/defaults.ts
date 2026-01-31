@@ -12,6 +12,13 @@ export const defaultSettings: AppConfig = {
     // 转换配置
     useExternalConverter: false,
     externalConverterUrl: '',
+    externalConverterApis: [
+        'api-suc.0z.gs',
+        'subapi.fxxk.dedyn.io',
+        'subapi.cmliussss.net',
+        'url.v1.mk',
+        'api.v1.mk'
+    ],
 
     // Telegram 通知
     BotToken: '',
