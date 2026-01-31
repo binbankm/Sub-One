@@ -381,11 +381,16 @@ export async function handleSubRequest(
         // 增加一个 flag 防止无限循环（如果请求中包含 _internal=true，则强制使用内置转换返回 base64）
         const isInternalFetch = url.searchParams.get('_internal') === 'true';
 
+        // 基础格式（v2ray, base64, uri）始终强制使用内置转换，避免外部 API 不支持新协议（如 vless, hy2）导致节点丢失
+        const simpleTargets = ['v2ray', 'base64', 'uri'];
+        const isSimpleTarget = simpleTargets.includes(targetFormat.toLowerCase());
+
         if (
             !isInternalFetch &&
             config.useExternalConverter &&
             config.externalConverterUrl &&
-            config.externalConverterUrl.trim()
+            config.externalConverterUrl.trim() &&
+            !isSimpleTarget
         ) {
             console.log('Using external converter API (Callback Mode)');
             
