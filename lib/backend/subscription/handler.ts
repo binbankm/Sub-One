@@ -104,7 +104,14 @@ async function convertViaExternalApi(
     }
 
     try {
-        const apiUrl = new URL(finalApiUrl);
+        let apiUrl = new URL(finalApiUrl);
+
+        // --- 智能路径补全 ---
+        // 如果用户只填了域名（路径为空或是 "/"），自动补全 "/sub"
+        // 这样用户就可以直接填 "api-suc.0z.gs" 这种域名了
+        if (apiUrl.pathname === '/' || apiUrl.pathname === '') {
+            apiUrl.pathname = '/sub';
+        }
 
         // 基础参数
         apiUrl.searchParams.set('target', targetFormat);
