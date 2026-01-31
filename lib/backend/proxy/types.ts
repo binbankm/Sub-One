@@ -363,6 +363,11 @@ export interface AppConfig {
     prependSubName: boolean;
     dedupe: boolean;
 
+    // 转换配置
+    useExternalConverter?: boolean; // 是否使用外部转换API
+    externalConverterUrl?: string; // 外部转换API地址
+    externalConverterApis?: string[]; // 默认候选API列表
+
     // 通知配置
     BotToken?: string;
     ChatID?: string;

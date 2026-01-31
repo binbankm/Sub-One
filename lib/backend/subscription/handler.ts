@@ -84,6 +84,86 @@ async function generateCombinedNodeList(
     return allNodes;
 }
 
+/**
+ * 调用外部 API 进行订阅转换
+ * @param externalApiUrl 外部转换 API 基础地址
+ * @param subscriptionUrl 订阅源链接（回调链接）
+ * @param targetFormat 目标格式
+ * @param filename 文件名
+ * @returns 转换后的内容
+ */
+async function convertViaExternalApi(
+    externalApiUrl: string,
+    subscriptionUrl: string,
+    targetFormat: string,
+    filename: string
+): Promise<string> {
+    let finalApiUrl = externalApiUrl.trim();
+    if (!finalApiUrl.startsWith('http')) {
+        finalApiUrl = 'https://' + finalApiUrl;
+    }
+
+    // --- 目标格式映射 (针对外部 API 的兼容性) ---
+    // 很多外部 API (subconverter) 不认识 mihomo 或 stash，需要映射为标准名称
+    let apiTarget = targetFormat.toLowerCase();
+    const targetMapping: Record<string, string> = {
+        'mihomo': 'clash',
+        'stash': 'clash',
+        'quantumultx': 'quanx',
+        'v2ray': 'v2ray',
+        'shadowrocket': 'ss' // 某些老的 API 可能需要这一层映射，或者保持 shadowrocket
+    };
+
+    if (targetMapping[apiTarget]) {
+        apiTarget = targetMapping[apiTarget];
+    }
+
+    try {
+        let apiUrl = new URL(finalApiUrl);
+
+        // --- 智能路径补全 ---
+        // 如果用户只填了域名（路径为空或是 "/"），自动补全 "/sub"
+        // 这样用户就可以直接填 "api-suc.0z.gs" 这种域名了
+        if (apiUrl.pathname === '/' || apiUrl.pathname === '') {
+            apiUrl.pathname = '/sub';
+        }
+
+        // 基础参数
+        apiUrl.searchParams.set('target', apiTarget);
+        
+        // 针对 Surge 的特殊处理：添加版本参数
+        if (apiTarget === 'surge') {
+            apiUrl.searchParams.set('ver', '4');
+        }
+
+        apiUrl.searchParams.set('url', subscriptionUrl); // 这里传递的是 Sub-One 的回调链接
+        apiUrl.searchParams.set('filename', filename);
+        apiUrl.searchParams.set('emoji', 'true');
+
+        console.log(`Calling external converter API: ${apiUrl.origin}${apiUrl.pathname}?target=${targetFormat}...`);
+
+        const response = await fetch(apiUrl.toString(), {
+            method: 'GET',
+            headers: {
+                'User-Agent': GLOBAL_USER_AGENT
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`外部转换API返回错误 (${response.status}): ${errorText.substring(0, 100)}`);
+        }
+
+        return await response.text();
+    } catch (err: any) {
+        if (err.message.includes('Invalid URL')) {
+            throw new Error(`非法的外部API地址: "${finalApiUrl}"`);
+        }
+        throw err;
+    }
+}
+
+
 export async function handleSubRequest(
     context: EventContext<Env, string, unknown>
 ): Promise<Response> {
@@ -192,7 +272,7 @@ export async function handleSubRequest(
             'loon',
             'base64',
             'v2ray',
-            'quantumultx',
+            'quanx',
             'shadowrocket',
             'uri'
         ];
@@ -229,8 +309,8 @@ export async function handleSubRequest(
             ['surge', 'surge'],
             ['surfboard', 'surfboard'],
             ['loon', 'loon'],
-            ['quantumult x', 'quantumultx'],
-            ['quantumult', 'quantumultx'],
+            ['quantumult x', 'quanx'],
+            ['quantumult', 'quanx'],
 
             // 兜底通用词
             ['meta', 'mihomo']
@@ -294,12 +374,52 @@ export async function handleSubRequest(
     const upstreamUserAgent = GLOBAL_USER_AGENT;
     console.log(`Fetching upstream with UA: ${upstreamUserAgent}`);
 
-    const combinedNodes = await generateCombinedNodeList(config, upstreamUserAgent, targetSubs);
-
     try {
-        const convertedContent = await convert(combinedNodes, targetFormat, {
-            filename: subName
-        });
+        let convertedContent: string;
+
+        // --- 核心逻辑修改：外部转换 API 处理 ---
+        // 增加一个 flag 防止无限循环（如果请求中包含 _internal=true，则强制使用内置转换返回 base64）
+        const isInternalFetch = url.searchParams.get('_internal') === 'true';
+
+        // 基础格式（v2ray, base64, uri）始终强制使用内置转换，避免外部 API 不支持新协议（如 vless, hy2）导致节点丢失
+        const simpleTargets = ['v2ray', 'base64', 'uri'];
+        const isSimpleTarget = simpleTargets.includes(targetFormat.toLowerCase());
+
+        if (
+            !isInternalFetch &&
+            config.useExternalConverter &&
+            config.externalConverterUrl &&
+            config.externalConverterUrl.trim() &&
+            !isSimpleTarget
+        ) {
+            console.log('Using external converter API (Callback Mode)');
+            
+            // 构建一个指向当前 Sub-One 的回调链接，让外部 API 来抓取处理好的 base64 节点
+            const callbackUrl = new URL(request.url);
+            callbackUrl.searchParams.set('target', 'base64');
+            callbackUrl.searchParams.set('_internal', 'true'); // 关键：告诉下一级请求只返回节点，不要再调外部 API
+            
+            // 某些外部 API 需要正确的 User-Agent 才能从 Sub-One 抓取数据
+            // 我们直接调用外部 API
+            const finalApiUrl = config.externalConverterUrl.trim();
+            convertedContent = await convertViaExternalApi(
+                finalApiUrl,
+                callbackUrl.toString(), // 传递回调链接而非庞大的 data URI
+                targetFormat,
+                subName
+            );
+        } else {
+            // --- 内置转换模式 (或者是回调请求本身) ---
+            console.log(isInternalFetch ? 'Serving internal nodes fetch' : 'Using built-in converter');
+            const combinedNodes = await generateCombinedNodeList(
+                config,
+                upstreamUserAgent,
+                targetSubs
+            );
+            convertedContent = await convert(combinedNodes, targetFormat, {
+                filename: subName
+            });
+        }
 
         const responseHeaders = new Headers({
             'Content-Type': 'text/plain; charset=utf-8',
