@@ -85,88 +85,54 @@ async function generateCombinedNodeList(
 }
 
 /**
- * 使用外部API进行订阅转换（混合模式）
- * 工作流程：后端处理节点 → 转URI格式 → base64编码 → 外部API转换
- * 
- * @param externalApiUrl 外部转换API地址
- * @param targetSubs 要转换的订阅列表
+ * 调用外部 API 进行订阅转换
+ * @param externalApiUrl 外部转换 API 基础地址
+ * @param subscriptionUrl 订阅源链接（回调链接）
  * @param targetFormat 目标格式
  * @param filename 文件名
- * @param config 应用配置
- * @param userAgent User-Agent字符串
  * @returns 转换后的内容
  */
 async function convertViaExternalApi(
     externalApiUrl: string,
-    targetSubs: Subscription[],
+    subscriptionUrl: string,
     targetFormat: string,
-    filename: string,
-    config: SubConfig,
-    userAgent: string
+    filename: string
 ): Promise<string> {
-    console.log('Using hybrid mode: backend processing + external API conversion');
-
-    // 1. 先用后端处理所有节点（获取、解析、去重、前缀、手动节点等）
-    const combinedNodes = await generateCombinedNodeList(config, userAgent, targetSubs);
-
-    if (combinedNodes.length === 0) {
-        throw new Error('处理后没有可用节点');
+    let finalApiUrl = externalApiUrl.trim();
+    if (!finalApiUrl.startsWith('http')) {
+        finalApiUrl = 'https://' + finalApiUrl;
     }
 
-    // 2. 将处理后的节点转换为标准URI格式
-    const { URIConverter } = await import('../proxy/converter/uri');
-    const uriConverter = new URIConverter();
-    const nodeUris: string[] = [];
+    try {
+        const apiUrl = new URL(finalApiUrl);
 
-    for (const node of combinedNodes) {
-        try {
-            const uri = uriConverter.convertSingle(node);
-            if (uri) {
-                nodeUris.push(uri);
+        // 基础参数
+        apiUrl.searchParams.set('target', targetFormat);
+        apiUrl.searchParams.set('url', subscriptionUrl); // 这里传递的是 Sub-One 的回调链接
+        apiUrl.searchParams.set('filename', filename);
+        apiUrl.searchParams.set('emoji', 'true');
+
+        console.log(`Calling external converter API: ${apiUrl.origin}${apiUrl.pathname}?target=${targetFormat}...`);
+
+        const response = await fetch(apiUrl.toString(), {
+            method: 'GET',
+            headers: {
+                'User-Agent': GLOBAL_USER_AGENT
             }
-        } catch (err) {
-            console.warn(`Failed to convert node ${node.name} to URI:`, err);
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`外部转换API返回错误 (${response.status}): ${errorText.substring(0, 100)}`);
         }
-    }
 
-    if (nodeUris.length === 0) {
-        throw new Error('无法将节点转换为URI格式');
-    }
-
-    // 3. 将URI列表转换为base64（标准订阅格式）
-    const base64Content = btoa(nodeUris.join('\n'));
-
-    // 4. 使用 data URI scheme 传递给外部API
-    const subscriptionUrl = `data:text/plain;base64,${base64Content}`;
-
-    console.log(`Processed ${nodeUris.length} nodes through backend, sending to external API`);
-
-    // 5. 构建外部API请求URL
-    const apiUrl = new URL(externalApiUrl);
-
-    // 基础参数
-    apiUrl.searchParams.set('target', targetFormat);
-    apiUrl.searchParams.set('url', subscriptionUrl);
-    apiUrl.searchParams.set('filename', filename);
-
-    // 添加通用参数
-    apiUrl.searchParams.set('emoji', 'true'); // 大多数用户喜欢emoji
-
-    console.log(`Calling external converter API: ${apiUrl.toString().substring(0, 200)}...`);
-
-    // 6. 调用外部API
-    const response = await fetch(apiUrl.toString(), {
-        method: 'GET',
-        headers: {
-            'User-Agent': GLOBAL_USER_AGENT
+        return await response.text();
+    } catch (err: any) {
+        if (err.message.includes('Invalid URL')) {
+            throw new Error(`非法的外部API地址: "${finalApiUrl}"`);
         }
-    });
-
-    if (!response.ok) {
-        throw new Error(`外部转换API返回错误: ${response.status} ${response.statusText}`);
+        throw err;
     }
-
-    return await response.text();
 }
 
 
@@ -383,23 +349,35 @@ export async function handleSubRequest(
     try {
         let convertedContent: string;
 
-        // 判断是否使用外部转换API
+        // --- 核心逻辑修改：外部转换 API 处理 ---
+        // 增加一个 flag 防止无限循环（如果请求中包含 _internal=true，则强制使用内置转换返回 base64）
+        const isInternalFetch = url.searchParams.get('_internal') === 'true';
+
         if (
+            !isInternalFetch &&
             config.useExternalConverter &&
             config.externalConverterUrl &&
             config.externalConverterUrl.trim()
         ) {
-            console.log('Using external converter API');
+            console.log('Using external converter API (Callback Mode)');
+            
+            // 构建一个指向当前 Sub-One 的回调链接，让外部 API 来抓取处理好的 base64 节点
+            const callbackUrl = new URL(request.url);
+            callbackUrl.searchParams.set('target', 'base64');
+            callbackUrl.searchParams.set('_internal', 'true'); // 关键：告诉下一级请求只返回节点，不要再调外部 API
+            
+            // 某些外部 API 需要正确的 User-Agent 才能从 Sub-One 抓取数据
+            // 我们直接调用外部 API
+            const finalApiUrl = config.externalConverterUrl.trim();
             convertedContent = await convertViaExternalApi(
-                config.externalConverterUrl.trim(),
-                targetSubs,
+                finalApiUrl,
+                callbackUrl.toString(), // 传递回调链接而非庞大的 data URI
                 targetFormat,
-                subName,
-                config,
-                upstreamUserAgent
+                subName
             );
         } else {
-            console.log('Using built-in converter');
+            // --- 内置转换模式 (或者是回调请求本身) ---
+            console.log(isInternalFetch ? 'Serving internal nodes fetch' : 'Using built-in converter');
             const combinedNodes = await generateCombinedNodeList(
                 config,
                 upstreamUserAgent,
