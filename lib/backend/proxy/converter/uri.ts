@@ -197,7 +197,7 @@ export class URIConverter extends BaseConverter {
         if (queryString) queryString = '?' + queryString;
 
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `hysteria2://${encodeURIComponent(node.password || '')}@${node.server}:${node.port}${queryString}${hash}`;
+        return `hy2://${encodeURIComponent(node.password || '')}@${node.server}:${node.port}${queryString}${hash}`;
     }
 
     private tuic(node: ProxyNode): string {
@@ -320,7 +320,8 @@ export class URIConverter extends BaseConverter {
         this.appendTransportParams(params, node);
         this.appendTLSParams(params, node);
         if (node.flow) params.set('flow', node.flow);
-        if (node.encryption) params.set('encryption', node.encryption);
+        // 强制设置 encryption=none，提高外部转换兼容性
+        params.set('encryption', node.encryption || 'none');
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
     }
 }
