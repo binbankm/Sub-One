@@ -15,7 +15,7 @@
 -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 import Modal from '../ui/BaseModal.vue';
 
@@ -47,7 +47,7 @@ const protocols = [
     { label: 'Trojan', value: 'trojan', icon: '🛡️' },
     { label: 'Hysteria2', value: 'hysteria2', icon: '☄️' },
     { label: 'Hysteria', value: 'hysteria', icon: '🌩️' },
-    { label: 'Tuic', value: 'tuic', icon: '�' },
+    { label: 'Tuic', value: 'tuic', icon: '' },
     { label: 'AnyTLS', value: 'anytls', icon: '🎭' },
     { label: 'Socks5', value: 'socks5', icon: '🔌' },
     { label: 'HTTP', value: 'http', icon: '🌐' },
@@ -183,17 +183,22 @@ const commonKeywords = [
 
 // ==================== 响应式状态 ====================
 
-/** 过滤模式：exclude(排除/黑名单) 或 keep(保留/白名单) */
-const mode = ref<'exclude' | 'keep'>('exclude');
+/** 当前激活的标签页 */
+const activeTab = ref<'exclude' | 'keep'>('exclude');
 
-/** 已选协议列表 */
-const selectedProtocols = ref<string[]>([]);
+/** 排除规则数据 (黑名单) */
+const excludeRules = reactive({
+    protocols: [] as string[],
+    regions: [] as string[],
+    keywords: [] as string[]
+});
 
-/** 已选地区列表 */
-const selectedRegions = ref<string[]>([]);
-
-/** 自定义关键词列表 */
-const customKeywords = ref<string[]>([]);
+/** 保留规则数据 (白名单) */
+const keepRules = reactive({
+    protocols: [] as string[],
+    regions: [] as string[],
+    keywords: [] as string[]
+});
 
 /** 新关键词输入 */
 const newKeyword = ref('');
@@ -206,107 +211,137 @@ const showClearConfirm = ref(false);
 
 // ==================== 计算属性 ====================
 
+/** 当前操作的协议列表 (代理) */
+const selectedProtocols = computed({
+    get: () => activeTab.value === 'exclude' ? excludeRules.protocols : keepRules.protocols,
+    set: (val) => {
+        if (activeTab.value === 'exclude') excludeRules.protocols = val;
+        else keepRules.protocols = val;
+    }
+});
+
+/** 当前操作的地区列表 (代理) */
+const selectedRegions = computed({
+    get: () => activeTab.value === 'exclude' ? excludeRules.regions : keepRules.regions,
+    set: (val) => {
+        if (activeTab.value === 'exclude') excludeRules.regions = val;
+        else keepRules.regions = val;
+    }
+});
+
+/** 当前操作的关键词列表 (代理) */
+const customKeywords = computed({
+    get: () => activeTab.value === 'exclude' ? excludeRules.keywords : keepRules.keywords,
+    set: (val) => {
+        if (activeTab.value === 'exclude') excludeRules.keywords = val;
+        else keepRules.keywords = val;
+    }
+});
+
 /** 规则总数统计 */
 const ruleCount = computed(() => {
-    let count = 0;
-    if (selectedProtocols.value.length > 0) count++;
-    if (selectedRegions.value.length > 0) count++;
-    if (customKeywords.value.length > 0) count++;
-    return count;
+    const countSet = (s: typeof excludeRules) => 
+        (s.protocols.length > 0 ? 1 : 0) + 
+        (s.regions.length > 0 ? 1 : 0) + 
+        (s.keywords.length > 0 ? 1 : 0);
+    return countSet(excludeRules) + countSet(keepRules);
 });
 
 // ==================== 解析和生成逻辑 ====================
 
+/** 解析单行规则到目标集合 */
+const parseLineToRule = (lineContent: string, target: typeof excludeRules) => {
+    if (lineContent.startsWith('proto:')) {
+        lineContent.replace('proto:', '')
+            .split(',')
+            .forEach((p) => {
+                const trimmed = p.trim();
+                if (trimmed && !target.protocols.includes(trimmed)) target.protocols.push(trimmed);
+            });
+    } else {
+        const cleanStr = lineContent.replace(/^\(/, '').replace(/\)$/, '');
+        const parts = cleanStr.split('|').map(p => p.trim()).filter(p => p);
+
+        // 识别地区
+        regions.forEach((r) => {
+            const regionAliases = r.value.split('|');
+            if (regionAliases.some(alias => parts.includes(alias))) {
+                if (!target.regions.includes(r.value)) target.regions.push(r.value);
+            }
+        });
+
+        // 识别关键词 (排除已识别为地区的片段)
+        parts.forEach((part) => {
+            const isPartofAnyRegion = regions.some((r) => 
+                r.value.split('|').includes(part)
+            );
+            if (!isPartofAnyRegion) {
+                if (!target.keywords.includes(part)) target.keywords.push(part);
+            }
+        });
+    }
+}
+
 /**
  * 解析规则字符串
- * 将规则字符串解析为可视化选项
  */
 const parseValue = (val: string) => {
-    if (!val) {
-        selectedProtocols.value = [];
-        selectedRegions.value = [];
-        customKeywords.value = [];
-        return;
-    }
+    // Reset Data
+    excludeRules.protocols = []; excludeRules.regions = []; excludeRules.keywords = [];
+    keepRules.protocols = []; keepRules.regions = []; keepRules.keywords = [];
+
+    if (!val) return;
 
     const lines = val
         .split('\n')
         .map((l) => l.trim())
         .filter((l) => l);
-    if (lines.length === 0) return;
 
-    // 检测模式
-    const hasKeep = lines.some((l) => l.startsWith('keep:'));
-    mode.value = hasKeep ? 'keep' : 'exclude';
-
-    // 移除 keep: 前缀
-    const cleanLines = lines.map((l) => l.replace(/^keep:/, ''));
-
-    const foundProtocols = new Set<string>();
-    const foundRegions = new Set<string>();
-    const foundKeywords = new Set<string>();
-
-    cleanLines.forEach((line) => {
-        if (line.startsWith('proto:')) {
-            line.replace('proto:', '')
-                .split(',')
-                .forEach((p) => foundProtocols.add(p));
+    lines.forEach((line) => {
+        if (line.startsWith('keep:')) {
+            parseLineToRule(line.replace(/^keep:/, ''), keepRules);
         } else {
-            const cleanStr = line.replace(/^\(/, '').replace(/\)$/, '');
-            // 这里的 parts 是正则中的各个分支
-            const parts = cleanStr.split('|').map(p => p.trim()).filter(p => p);
-
-            // 识别地区：如果 parts 中包含了该地区的任何一个别名
-            regions.forEach((r) => {
-                const regionAliases = r.value.split('|');
-                if (regionAliases.some(alias => parts.includes(alias))) {
-                    foundRegions.add(r.value);
-                }
-            });
-
-            // 识别关键词：从 parts 中提取那些不属于任何已定义地区的片段
-            parts.forEach((part) => {
-                const isPartofAnyRegion = regions.some((r) => 
-                    r.value.split('|').includes(part)
-                );
-                if (!isPartofAnyRegion) {
-                    foundKeywords.add(part);
-                }
-            });
+            parseLineToRule(line, excludeRules);
         }
     });
 
-    selectedProtocols.value = Array.from(foundProtocols);
-    selectedRegions.value = Array.from(foundRegions);
-    customKeywords.value = Array.from(foundKeywords);
+    // 如果有 Keep 规则，则不默认选中 keep tab，除非只有 keep 规则？
+    // 保持 exclude 为默认即可，或者根据哪个有数据激活哪个
+    if (lines.some(l => l.startsWith('keep:')) && !lines.some(l => !l.startsWith('keep:'))) {
+        activeTab.value = 'keep';
+    }
 };
+
+/** 生成单组规则字符串 */
+const generateLines = (rules: typeof excludeRules, prefix: string) => {
+    const lines: string[] = [];
+    if (rules.protocols.length > 0) {
+        lines.push(`${prefix}proto:${rules.protocols.join(',')}`);
+    }
+    if (rules.regions.length > 0) {
+        const regionPattern = rules.regions.join('|');
+        lines.push(`${prefix}(${regionPattern})`);
+    }
+    if (rules.keywords.length > 0) {
+        const keywordPattern = rules.keywords.join('|');
+        lines.push(`${prefix}(${keywordPattern})`);
+    }
+    return lines;
+}
 
 /**
  * 生成规则字符串
- * 将可视化选项转换为规则字符串
  */
 const generateString = () => {
     if (isManualMode.value) return props.modelValue;
 
     const lines: string[] = [];
-    const prefix = mode.value === 'keep' ? 'keep:' : '';
 
-    // 协议规则
-    if (selectedProtocols.value.length > 0) {
-        lines.push(`${prefix}proto:${selectedProtocols.value.join(',')}`);
-    }
+    // 黑名单规则
+    lines.push(...generateLines(excludeRules, ''));
 
-    // 地区规则
-    if (selectedRegions.value.length > 0) {
-        const regionPattern = selectedRegions.value.join('|');
-        lines.push(`${prefix}(${regionPattern})`);
-    }
-
-    // 关键词规则
-    if (customKeywords.value.length > 0) {
-        const keywordPattern = customKeywords.value.join('|');
-        lines.push(`${prefix}(${keywordPattern})`);
-    }
+    // 白名单规则
+    lines.push(...generateLines(keepRules, 'keep:'));
 
     return lines.join('\n');
 };
@@ -315,7 +350,7 @@ const generateString = () => {
 
 /** 监听状态变化，自动生成规则 */
 watch(
-    [mode, selectedProtocols, selectedRegions, customKeywords],
+    [excludeRules, keepRules],
     () => {
         if (!isManualMode.value) {
             emit('update:modelValue', generateString());
@@ -355,7 +390,7 @@ const addKeyword = () => {
 
 /** 移除关键词 */
 const removeKeyword = (k: string) => {
-    customKeywords.value = customKeywords.value.filter((item) => item !== k);
+    customKeywords.value.splice(customKeywords.value.indexOf(k), 1);
 };
 
 /** 切换地区选择 */
@@ -394,9 +429,12 @@ const clearAll = () => {
 
 /** 确认清空所有规则 */
 const confirmClear = () => {
-    selectedProtocols.value = [];
-    selectedRegions.value = [];
-    customKeywords.value = [];
+    excludeRules.protocols = [];
+    excludeRules.regions = [];
+    excludeRules.keywords = [];
+    keepRules.protocols = [];
+    keepRules.regions = [];
+    keepRules.keywords = [];
     showClearConfirm.value = false;
 };
 </script>
@@ -416,29 +454,29 @@ const confirmClear = () => {
                 <button
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
-                        mode === 'exclude'
+                        activeTab === 'exclude'
                             ? 'scale-105 transform bg-linear-to-r from-red-500 to-rose-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
-                    @click="mode = 'exclude'"
+                    @click="activeTab = 'exclude'"
                 >
                     <span>🚫</span>
-                    <span>排除模式</span>
-                    <span v-if="mode === 'exclude'" class="text-xs opacity-75">(黑名单)</span>
+                    <span>排除规则</span>
+                    <span v-if="activeTab === 'exclude'" class="text-xs opacity-75">(Block)</span>
                 </button>
                 <!-- 保留模式 (白名单) -->
                 <button
                     class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
-                        mode === 'keep'
+                        activeTab === 'keep'
                             ? 'scale-105 transform bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-md'
                             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                     "
-                    @click="mode = 'keep'"
+                    @click="activeTab = 'keep'"
                 >
                     <span>✅</span>
-                    <span>保留模式</span>
-                    <span v-if="mode === 'keep'" class="text-xs opacity-75">(白名单)</span>
+                    <span>保留规则</span>
+                    <span v-if="activeTab === 'keep'" class="text-xs opacity-75">(Allow)</span>
                 </button>
             </div>
 

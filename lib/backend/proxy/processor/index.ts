@@ -64,32 +64,39 @@ function handleFiltering(nodes: ProxyNode[], options: ProcessOptions): ProxyNode
         });
     }
 
-    if (includeRules.length === 0 && excludeRules.length === 0) return nodes;
+    // 预编译规则
+    const excludeMatchers = excludeRules.map(compileRule);
+    const includeMatchers = includeRules.map(compileRule);
+
+    if (excludeMatchers.length === 0 && includeMatchers.length === 0) return nodes;
 
     return nodes.filter((node) => {
-        if (excludeRules.length > 0) {
-            if (excludeRules.some((rule) => matchRule(node, rule))) return false;
+        // 先检查排除规则 (黑名单)
+        if (excludeMatchers.length > 0) {
+            if (excludeMatchers.some((matcher) => matcher(node))) return false;
         }
-        if (includeRules.length > 0) {
-            if (!includeRules.some((rule) => matchRule(node, rule))) return false;
+        // 再检查保留规则 (白名单)
+        if (includeMatchers.length > 0) {
+            if (!includeMatchers.some((matcher) => matcher(node))) return false;
         }
         return true;
     });
 }
 
 /**
- * 内部: 规则匹配核心
+ * 内部: 预编译规则匹配器
  */
-function matchRule(node: ProxyNode, rule: string): boolean {
+function compileRule(rule: string): (node: ProxyNode) => boolean {
     if (rule.startsWith('proto:')) {
         const protos = rule.replace('proto:', '').toLowerCase().split(',');
-        return protos.includes(node.type.toLowerCase());
+        return (node) => protos.includes(node.type.toLowerCase());
     }
     try {
         const re = buildRegex(rule, 'i');
-        return re.test(node.name);
+        return (node) => re.test(node.name);
     } catch {
-        return node.name.toLowerCase().includes(rule.toLowerCase());
+        const lowerRule = rule.toLowerCase();
+        return (node) => node.name.toLowerCase().includes(lowerRule);
     }
 }
 
