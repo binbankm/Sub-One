@@ -443,235 +443,219 @@ const confirmClear = () => {
 </script>
 
 <template>
-    <!-- 编辑器容器 -->
+    <!-- 编辑器容器: Glassmorphism + Premium Shadow -->
     <div
-        class="space-y-5 rounded-2xl border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-5 shadow-lg dark:border-gray-700 dark:from-gray-900 dark:to-gray-800"
+        class="space-y-6 rounded-3xl border border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-gray-900/60"
     >
-        <!-- 顶部：模式切换和统计 -->
-        <div class="flex items-center justify-between">
-            <!-- 模式切换按钮组 -->
-            <div
-                class="flex rounded-xl border border-gray-300 bg-white p-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-            >
-                <!-- 排除模式 (黑名单) -->
+        <!-- 顶部：优雅的分段控制器和操作栏 -->
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <!-- 分段控制器 (IOS Style) -->
+            <div class="relative flex w-full rounded-2xl bg-gray-100 p-1.5 shadow-inner dark:bg-gray-800 sm:w-auto">
+                <!-- 滑动背景 (可选实现，也可以简单的切换样式) -->
+                
+                <!-- 排除模式 (Block) -->
                 <button
-                    class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="relative z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 sm:w-40"
                     :class="
                         activeTab === 'exclude'
-                            ? 'scale-105 transform bg-linear-to-r from-red-500 to-rose-600 text-white shadow-md'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                            ? 'bg-white text-red-600 shadow-md ring-1 ring-black/5 dark:bg-gray-700 dark:text-red-400 dark:ring-white/10'
+                            : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                     "
                     @click="activeTab = 'exclude'"
                 >
-                    <span>🚫</span>
-                    <span>排除规则</span>
-                    <span v-if="activeTab === 'exclude'" class="text-xs opacity-75">(Block)</span>
+                    <span>🚫 排除规则</span>
                 </button>
-                <!-- 保留模式 (白名单) -->
+                
+                <!-- 保留模式 (Allow) -->
                 <button
-                    class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="relative z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all duration-300 sm:w-40"
                     :class="
                         activeTab === 'keep'
-                            ? 'scale-105 transform bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-md'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                            ? 'bg-white text-green-600 shadow-md ring-1 ring-black/5 dark:bg-gray-700 dark:text-green-400 dark:ring-white/10'
+                            : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                     "
                     @click="activeTab = 'keep'"
                 >
-                    <span>✅</span>
-                    <span>保留规则</span>
-                    <span v-if="activeTab === 'keep'" class="text-xs opacity-75">(Allow)</span>
+                    <span>✅ 保留规则</span>
                 </button>
             </div>
 
-            <!-- 统计和清空按钮 -->
-            <div class="flex items-center gap-3">
+            <!-- 右侧工具栏 -->
+            <div class="flex items-center justify-end gap-3">
                 <span
                     v-if="ruleCount > 0"
-                    class="rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                    class="flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-600 ring-1 ring-indigo-500/10 dark:bg-indigo-900/20 dark:text-indigo-400"
                 >
-                    {{ ruleCount }} 条规则
+                    <span class="h-2 w-2 rounded-full bg-indigo-500"></span>
+                    {{ ruleCount }} 条生效
                 </span>
+                
+                <div class="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+
                 <button
-                    class="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                    class="group flex items-center justify-center rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                    title="清空所有规则"
                     @click="clearAll"
                 >
-                    🗑️ 清空
+                    <span class="text-lg">🗑️</span>
                 </button>
             </div>
         </div>
 
+        <div class="h-px w-full bg-linear-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"></div>
+
         <!-- 协议选择 -->
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <label
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-indigo-500"></span>
-                    协议类型
-                </label>
-                <span v-if="selectedProtocols.length > 0" class="text-xs text-gray-400">
-                    已选 {{ selectedProtocols.length }} 个
-                </span>
-            </div>
-            <div class="flex flex-wrap gap-2">
+        <div class="space-y-4">
+            <h4 class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+                Protocol Type
+            </h4>
+            <div class="flex flex-wrap gap-2.5">
                 <button
                     v-for="p in protocols"
                     :key="p.value"
-                    class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="group relative overflow-hidden rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-300 active:scale-95"
                     :class="
                         selectedProtocols.includes(p.value)
-                            ? 'border-indigo-300 bg-linear-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/50 dark:border-indigo-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-600'
+                            ? 'border-indigo-500/30 bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 dark:border-indigo-400/30 dark:bg-indigo-600'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                     "
                     @click="toggleProtocol(p.value)"
                 >
-                    <span class="mr-1">{{ p.icon }}</span>
-                    {{ p.label }}
+                    <span class="relative z-10 flex items-center gap-1.5">
+                        <span class="opacity-80">{{ p.icon }}</span>
+                        {{ p.label }}
+                    </span>
                 </button>
             </div>
         </div>
 
         <!-- 地区选择 -->
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <label
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-emerald-500"></span>
-                    常用地区
-                </label>
-                <span v-if="selectedRegions.length > 0" class="text-xs text-gray-400">
-                    已选 {{ selectedRegions.length }} 个
-                </span>
-            </div>
-            <div class="flex flex-wrap gap-2">
+        <div class="space-y-4">
+            <h4 class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Region Filter
+            </h4>
+            <div class="flex flex-wrap gap-2.5">
                 <button
                     v-for="r in regions"
                     :key="r.value"
-                    class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="group relative overflow-hidden rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-300 active:scale-95"
                     :class="
                         selectedRegions.includes(r.value)
-                            ? 'border-emerald-300 bg-linear-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/50 dark:border-emerald-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-600'
+                            ? 'border-emerald-500/30 bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 dark:border-emerald-400/30 dark:bg-emerald-600'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:bg-emerald-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                     "
                     @click="toggleRegion(r.value)"
                 >
-                    <span class="mr-1.5">{{ r.flag }}</span>
-                    {{ r.label }}
+                    <span class="relative z-10 flex items-center gap-1.5">
+                        <span class="text-lg leading-none">{{ r.flag }}</span>
+                        {{ r.label }}
+                    </span>
                 </button>
             </div>
         </div>
 
         <!-- 关键词过滤 -->
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <label
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-amber-500"></span>
-                    关键词过滤
-                </label>
-                <span v-if="customKeywords.length > 0" class="text-xs text-gray-400">
-                    已选 {{ customKeywords.length }} 个
-                </span>
-            </div>
-
-            <!-- 常用词快捷选择 -->
+        <div class="space-y-4">
+            <h4 class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                Keywords
+            </h4>
+            
             <div class="flex flex-wrap gap-2">
                 <button
                     v-for="k in commonKeywords"
                     :key="k.value"
-                    class="transform rounded-lg border-2 border-dashed px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:scale-105"
-                    :class="
-                        customKeywords.includes(k.value)
-                            ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-sm dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
-                            : 'border-gray-300 bg-white text-gray-600 hover:border-amber-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-amber-500'
-                    "
+                    class="group rounded-lg border border-dashed border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-amber-400 hover:text-amber-600 active:scale-95 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-amber-500 dark:hover:text-amber-400"
+                    :class="{ 'bg-amber-50 border-amber-400! text-amber-700! dark:bg-amber-900/20 dark:text-amber-400!': customKeywords.includes(k.value) }"
                     @click="toggleKeyword(k.value)"
                 >
                     {{ k.value }}
                 </button>
             </div>
 
-            <!-- 自定义输入 -->
-            <div class="flex gap-2">
-                <input
-                    v-model="newKeyword"
-                    type="text"
-                    placeholder="✍️ 输入关键词后回车添加..."
-                    class="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800"
-                    @keyup.enter="addKeyword"
-                />
+            <!-- 输入框和标签 -->
+            <div class="flex flex-col gap-3 rounded-2xl bg-gray-50 p-3 ring-1 ring-gray-200 dark:bg-gray-800/50 dark:ring-gray-700 sm:flex-row sm:items-center">
+                <div class="relative flex-1">
+                     <span class="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-400">🔍</span>
+                     <input
+                        v-model="newKeyword"
+                        type="text"
+                        placeholder="输入关键词 (回车添加)"
+                        class="w-full rounded-xl border-none bg-white py-2.5 pl-9 pr-4 text-sm font-medium shadow-sm ring-1 ring-gray-200 transition-all focus:ring-2 focus:ring-amber-500 dark:bg-gray-800 dark:ring-gray-700 dark:focus:ring-amber-500"
+                        @keyup.enter="addKeyword"
+                    />
+                </div>
+                
                 <button
-                    class="transform rounded-xl bg-linear-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                    class="shrink-0 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-gray-800 active:scale-95 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
                     @click="addKeyword"
                 >
-                    ➕ 添加
+                    添加
                 </button>
             </div>
 
-            <!-- 已选关键词标签 -->
-            <div
-                v-if="customKeywords.length > 0"
-                class="flex flex-wrap gap-2 rounded-xl border border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
-            >
-                <span
+            <!-- 已选关键词列 -->
+            <div v-if="customKeywords.length > 0" class="flex flex-wrap gap-2 pt-1">
+                 <span
                     v-for="k in customKeywords"
                     :key="k"
-                    class="group inline-flex items-center rounded-lg border border-gray-300 bg-linear-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-red-400 dark:border-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 dark:hover:border-red-500"
+                    class="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700 ring-1 ring-amber-500/20 dark:bg-amber-900/30 dark:text-amber-300"
                 >
-                    <span>{{ k }}</span>
+                    {{ k }}
                     <button
-                        class="ml-2 text-lg font-bold leading-none text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+                        class="ml-1 rounded-full p-0.5 text-amber-500 hover:bg-amber-200 hover:text-amber-800 dark:hover:bg-amber-800 dark:hover:text-amber-200"
                         @click="removeKeyword(k)"
                     >
-                        ×
+                        <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>
                     </button>
                 </span>
             </div>
         </div>
 
-        <!-- 预览/手动编辑 -->
-        <div class="border-t-2 border-gray-300 pt-4 dark:border-gray-700">
+        <div class="h-px w-full bg-linear-to-r from-transparent via-gray-200 to-transparent dark:via-gray-700"></div>
+
+        <!-- 底部：编辑/预览区域 -->
+        <div>
             <div class="mb-3 flex items-center justify-between">
-                <label
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-purple-500"></span>
-                    {{ isManualMode ? '手动编辑' : '规则预览' }}
-                </label>
+                <div class="flex items-center gap-2 text-sm font-medium text-gray-500">
+                    <button 
+                        class="flex items-center gap-1.5 rounded-lg px-2 py-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                        @click="showPreview = true"
+                    >
+                        <span class="text-base">👁️</span> 
+                        <span class="underline decoration-dashed decoration-gray-300 underline-offset-4">查看规则详情</span>
+                    </button>
+                </div>
+                
                 <button
-                    class="transform rounded-lg bg-indigo-100 px-4 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:scale-105 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-800/50 mr-2"
-                    @click="showPreview = true"
-                >
-                    👁️ 规则解读
-                </button>
-                <button
-                    class="transform rounded-lg bg-purple-100 px-4 py-1.5 text-xs font-medium text-purple-600 transition-all hover:scale-105 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-800/50"
+                    class="group flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 transition-all hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                     @click="isManualMode = !isManualMode"
                 >
-                    {{ isManualMode ? '📊 可视化模式' : '⌨️ 手动编辑' }}
+                    <span>{{ isManualMode ? '📊 切换回可视化' : '⌨️ 手动编辑代码' }}</span>
                 </button>
             </div>
-            <textarea
-                :value="modelValue"
-                :readonly="!isManualMode"
-                rows="4"
-                :placeholder="isManualMode ? '在此手动编辑过滤规则...' : '规则将自动生成在这里'"
-                class="w-full rounded-xl border-2 border-gray-300 bg-gray-900 px-4 py-3 font-mono text-sm text-green-400 transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-700 dark:bg-black"
-                :class="{
-                    'cursor-not-allowed opacity-60': !isManualMode,
-                    'focus:border-purple-500': isManualMode
-                }"
-                @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
-            ></textarea>
-
-            <p
-                v-if="!modelValue && !isManualMode"
-                class="mt-2 text-center text-xs text-gray-400 dark:text-gray-500"
-            >
-                💡 提示：选择上方的选项来创建过滤规则
-            </p>
+            
+            <div class="relative overflow-hidden rounded-2xl ring-1 ring-gray-200 dark:ring-gray-700">
+                <textarea
+                    :value="modelValue"
+                    :readonly="!isManualMode"
+                    rows="4"
+                    :placeholder="isManualMode ? '在此手动编辑过滤规则...' : '规则将自动生成在这里'"
+                    class="w-full resize-y bg-gray-50 px-4 py-3 font-mono text-sm leading-relaxed text-gray-800 outline-none transition-all focus:bg-white dark:bg-gray-900/50 dark:text-gray-200 dark:focus:bg-gray-900"
+                    :class="{ 'cursor-default': !isManualMode }"
+                    @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+                ></textarea>
+                
+                <!-- 只读模式下的锁图标 -->
+                <div 
+                    v-if="!isManualMode" 
+                    class="pointer-events-none absolute right-3 top-3 opacity-20"
+                >
+                    �
+                </div>
+            </div>
         </div>
     </div>
 
