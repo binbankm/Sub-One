@@ -33,11 +33,7 @@ export async function process(
 
     // 4. 重命名逻辑
     if (options.prependSubName && isNotEmpty(subscriptionName)) {
-        result.forEach((node) => {
-            if (!node.name.startsWith(subscriptionName)) {
-                node.name = `${subscriptionName} - ${node.name}`;
-            }
-        });
+        result = handleRename(result, subscriptionName);
     }
 
     return result;
@@ -113,4 +109,22 @@ function handleDeduplicate(nodes: ProxyNode[]): ProxyNode[] {
         }
     });
     return Array.from(fingerprintMap.values());
+}
+
+/**
+ * 内部: 重命名逻辑
+ */
+function handleRename(nodes: ProxyNode[], prefix: string): ProxyNode[] {
+    return nodes.map((node) => {
+        if (!node.name.startsWith(prefix)) {
+            // 创建副本以避免修改原始对象 (如果需要更安全的话，虽然这里 map 已经是浅拷贝了，但 node 还是引用)
+            // 为了安全起见，通常我们不深度拷贝 node 除非必要，这里直接修改 name 属性
+            // 如果考虑到函数式编程，应该 clone(node)，但为了性能，这里我们假定 input nodes 已经是 process 内部持有的浅拷贝数组
+            // 但元素本身是共享引用。
+            // 之前的 forEach 直接修改了 node.name。
+            // 为了保持行为一致：
+            node.name = `${prefix} - ${node.name}`;
+        }
+        return node;
+    });
 }
