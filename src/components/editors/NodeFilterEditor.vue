@@ -206,6 +206,9 @@ const newKeyword = ref('');
 /** 是否手动编辑模式 */
 const isManualMode = ref(false);
 
+/** 是否显示规则解读弹窗 */
+const showPreview = ref(false);
+
 /** 清空确认对话框 */
 const showClearConfirm = ref(false);
 
@@ -638,6 +641,12 @@ const confirmClear = () => {
                     {{ isManualMode ? '手动编辑' : '规则预览' }}
                 </label>
                 <button
+                    class="transform rounded-lg bg-indigo-100 px-4 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:scale-105 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-800/50 mr-2"
+                    @click="showPreview = true"
+                >
+                    👁️ 规则解读
+                </button>
+                <button
                     class="transform rounded-lg bg-purple-100 px-4 py-1.5 text-xs font-medium text-purple-600 transition-all hover:scale-105 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-800/50"
                     @click="isManualMode = !isManualMode"
                 >
@@ -665,6 +674,91 @@ const confirmClear = () => {
             </p>
         </div>
     </div>
+
+    <!-- 规则解读弹窗 -->
+    <Modal v-model:show="showPreview">
+        <template #title>
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30">
+                    <span class="text-xl">👁️</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">规则解读</h3>
+            </div>
+        </template>
+        <template #body>
+            <div class="space-y-6">
+                <!-- 排除规则解读 -->
+                <div v-if="excludeRules.protocols.length || excludeRules.regions.length || excludeRules.keywords.length">
+                    <h4 class="mb-2 flex items-center gap-2 font-bold text-red-600 dark:text-red-400">
+                        <span>🚫 排除 (Block)</span>
+                        <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-600 dark:bg-red-900/30">黑名单</span>
+                    </h4>
+                    <div class="rounded-xl border border-red-100 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
+                        <ul class="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                            <li v-if="excludeRules.protocols.length">
+                                屏蔽 
+                                <span class="font-bold">{{ excludeRules.protocols.join(', ') }}</span> 
+                                协议
+                            </li>
+                            <li v-if="excludeRules.regions.length">
+                                屏蔽 
+                                <span class="font-bold">{{ regions.filter(r => excludeRules.regions.includes(r.value)).map(r => r.label).join(', ') }}</span> 
+                                地区
+                            </li>
+                            <li v-if="excludeRules.keywords.length">
+                                屏蔽包含 
+                                <span class="font-bold">{{ excludeRules.keywords.join(', ') }}</span> 
+                                的节点
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div v-else class="text-center text-sm text-gray-400">
+                    没有设置排除规则
+                </div>
+
+                <!-- 保留规则解读 -->
+                <div v-if="keepRules.protocols.length || keepRules.regions.length || keepRules.keywords.length">
+                    <h4 class="mb-2 flex items-center gap-2 font-bold text-green-600 dark:text-green-400">
+                        <span>✅ 保留 (Allow)</span>
+                        <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-600 dark:bg-green-900/30">白名单 (优先级高)</span>
+                    </h4>
+                    <div class="rounded-xl border border-green-100 bg-green-50 p-4 dark:border-green-900/30 dark:bg-green-900/10">
+                        <p class="mb-2 text-xs text-gray-500">在排除后剩余的节点中，只保留匹配以下任一条件的节点：</p>
+                        <ul class="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                            <li v-if="keepRules.protocols.length">
+                                协议为 
+                                <span class="font-bold">{{ keepRules.protocols.join(', ') }}</span>
+                            </li>
+                            <li v-if="keepRules.regions.length">
+                                地区为 
+                                <span class="font-bold">{{ regions.filter(r => keepRules.regions.includes(r.value)).map(r => r.label).join(', ') }}</span>
+                            </li>
+                            <li v-if="keepRules.keywords.length">
+                                名称包含 
+                                <span class="font-bold">{{ keepRules.keywords.join(', ') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                 <div v-else class="text-center text-sm text-gray-400">
+                    没有设置保留规则 (即保留所有未被排除的节点)
+                </div>
+                
+                <div class="mt-4 rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    💡 提示：系统会先移除符合【排除规则】的节点，然后再从剩余节点中筛选出符合【保留规则】的节点。 如果未设置保留规则，则直接返回排除后的结果。
+                </div>
+            </div>
+        </template>
+        <template #footer>
+            <button
+                class="w-full rounded-xl bg-gray-200 py-2.5 text-sm font-bold text-gray-700 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                @click="showPreview = false"
+            >
+                关闭
+            </button>
+        </template>
+    </Modal>
 
     <!-- 确认清空对话框 -->
     <Modal v-model:show="showClearConfirm" @confirm="confirmClear">
