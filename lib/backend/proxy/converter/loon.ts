@@ -16,11 +16,13 @@ const ipVersions: Record<string, string> = {
 export class LoonConverter extends BaseConverter {
     name = 'Loon';
 
-    async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const lines = nodes.map((node) => this.convertSingle(node, _options)).filter(Boolean);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async convert(nodes: ProxyNode[], _opts: ConvertOptions = {}): Promise<string> {
+        const lines = nodes.map((node) => this.convertSingle(node, _opts)).filter(Boolean);
         return lines.join('\n');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private convertSingle(proxy: ProxyNode, _opts: ConvertOptions): string {
         try {
             switch (proxy.type) {

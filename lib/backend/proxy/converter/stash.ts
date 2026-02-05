@@ -113,7 +113,7 @@ export class StashConverter extends ClashConverter {
         }
 
         if (node['client-fingerprint']) {
-            node['client-fingerprint'] = node['client-fingerprint'];
+            // Keep existing fingerprint
         } else if (['vmess', 'vless', 'trojan'].includes(node.type)) {
             node['client-fingerprint'] = 'chrome';
         }

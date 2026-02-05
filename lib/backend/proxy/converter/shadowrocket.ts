@@ -10,6 +10,7 @@ import { isPresent } from './utils';
 export class ShadowrocketConverter extends BaseConverter {
     name = 'Shadowrocket';
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         // Shadowrocket can import Clash-like YAML
         const processedNodes = nodes.map((node) => this.processNode(node)).filter(Boolean);
@@ -58,7 +59,7 @@ export class ShadowrocketConverter extends BaseConverter {
             }
 
             if (node['client-fingerprint']) {
-                node['client-fingerprint'] = node['client-fingerprint'];
+                // Keep existing fingerprint
             } else if (['vmess', 'vless', 'trojan'].includes(node.type)) {
                 node['client-fingerprint'] = 'chrome';
             }

@@ -49,7 +49,8 @@ const props = defineProps({
     /** 初始数据（订阅、订阅组、配置） */
     data: {
         type: Object as PropType<InitialData | null>,
-        required: false
+        required: false,
+        default: null
     },
     /** 当前激活的标签页 */
     activeTab: {

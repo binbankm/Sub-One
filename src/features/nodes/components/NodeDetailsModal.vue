@@ -349,7 +349,9 @@ const extractHost = (url: string) => {
                     const addrParts = parts[1].split(':');
                     return { host: addrParts[0], port: addrParts[1] || '' };
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Keep trying or fail silently for legacy format
+            }
         }
 
         // 3. 处理标准协议

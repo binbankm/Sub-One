@@ -119,7 +119,7 @@ async function convertViaExternalApi(
     }
 
     try {
-        let apiUrl = new URL(finalApiUrl);
+        const apiUrl = new URL(finalApiUrl);
 
         // --- 智能路径补全 ---
         // 如果用户只填了域名（路径为空或是 "/"），自动补全 "/sub"

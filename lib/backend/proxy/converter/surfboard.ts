@@ -8,6 +8,7 @@ import { Result } from './utils';
 export class SurfboardConverter extends BaseConverter {
     name = 'Surfboard';
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         const lines = nodes.map((node) => this.convertSingle(node)).filter(Boolean);
         return lines.join('\n');

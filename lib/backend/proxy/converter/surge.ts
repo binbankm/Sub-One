@@ -76,7 +76,7 @@ export class SurgeConverter extends BaseConverter {
         result.append(
             `${proxy.name}=ss,${proxy.server},${proxy.port},encrypt-method=${proxy.cipher || 'none'}`
         );
-        result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
 
         if (proxy.plugin === 'obfs') {
             const opts = (proxy['plugin-opts'] || {}) as any;
@@ -103,7 +103,7 @@ export class SurgeConverter extends BaseConverter {
     private trojan(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `${proxy.name}=trojan,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+            `${proxy.name}=trojan,${proxy.server},${proxy.port},password="${proxy.password}"`
         );
         this.appendTransport(result, proxy);
         this.appendTLS(result, proxy);
@@ -121,6 +121,7 @@ export class SurgeConverter extends BaseConverter {
         return result.toString();
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private vless(_proxy: ProxyNode): string {
         return '';
     }
@@ -129,8 +130,8 @@ export class SurgeConverter extends BaseConverter {
         const result = new Result(proxy);
         const type = proxy.type === 'https' || proxy.tls ? 'https' : 'http';
         result.append(`${proxy.name}=${type},${proxy.server},${proxy.port}`);
-        result.appendIfPresent(`,username=\"${proxy.username}\"`, 'username');
-        result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
+        result.appendIfPresent(`,username="${proxy.username}"`, 'username');
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -140,8 +141,8 @@ export class SurgeConverter extends BaseConverter {
         const result = new Result(proxy);
         const type = proxy.tls ? 'socks5-tls' : 'socks5';
         result.append(`${proxy.name}=${type},${proxy.server},${proxy.port}`);
-        result.appendIfPresent(`,username=\"${proxy.username}\"`, 'username');
-        result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
+        result.appendIfPresent(`,username="${proxy.username}"`, 'username');
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -161,13 +162,13 @@ export class SurgeConverter extends BaseConverter {
         const type = !proxy.token || proxy.token.length === 0 ? 'tuic-v5' : 'tuic';
         result.append(`${proxy.name}=${type},${proxy.server},${proxy.port}`);
         result.appendIfPresent(`,uuid=${proxy.uuid}`, 'uuid');
-        result.appendIfPresent(`,password=\"${proxy.password}\"`, 'password');
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
         result.appendIfPresent(`,token=${proxy.token}`, 'token');
         if (proxy.alpn) {
             result.append(`,alpn=${Array.isArray(proxy.alpn) ? proxy.alpn[0] : proxy.alpn}`);
         }
         if (proxy.ports) {
-            result.append(`,port-hopping=\"${String(proxy.ports).replace(/,/g, ';')}\"`);
+            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
         }
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
@@ -185,10 +186,10 @@ export class SurgeConverter extends BaseConverter {
     private hysteria2(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `${proxy.name}=hysteria2,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+            `${proxy.name}=hysteria2,${proxy.server},${proxy.port},password="${proxy.password}"`
         );
         if (proxy.ports) {
-            result.append(`,port-hopping=\"${String(proxy.ports).replace(/,/g, ';')}\"`);
+            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
         }
         if (proxy.down) {
             const down = String(proxy.down).match(/\d+/)?.[0] || '0';
@@ -245,7 +246,7 @@ export class SurgeConverter extends BaseConverter {
 
         const peerParts = [
             `public-key = ${p['public-key'] || p.publicKey}`,
-            allowedIps ? `allowed-ips = \"${allowedIps}\"` : '',
+            allowedIps ? `allowed-ips = "${allowedIps}"` : '',
             `endpoint = ${p.server}:${p.port}`,
             p['persistent-keepalive'] || p.keepalive
                 ? `keepalive = ${p['persistent-keepalive'] || p.keepalive}`
@@ -262,10 +263,10 @@ export class SurgeConverter extends BaseConverter {
     private ssh(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `${proxy.name}=ssh,${proxy.server},${proxy.port},username=\"${proxy.username}\",password=\"${proxy.password}\"`
+            `${proxy.name}=ssh,${proxy.server},${proxy.port},username="${proxy.username}",password="${proxy.password}"`
         );
         result.appendIfPresent(
-            `,server-fingerprint=\"${proxy['server-fingerprint']}\"`,
+            `,server-fingerprint="${proxy['server-fingerprint']}"`,
             'server-fingerprint'
         );
         this.appendCommon(result, proxy);
@@ -283,7 +284,7 @@ export class SurgeConverter extends BaseConverter {
     private anytls(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `${proxy.name}=anytls,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+            `${proxy.name}=anytls,${proxy.server},${proxy.port},password="${proxy.password}"`
         );
         this.appendCommon(result, proxy);
         return result.toString();
@@ -296,7 +297,7 @@ export class SurgeConverter extends BaseConverter {
             result.appendIfPresent(`,ws-path=${opts.path || '/'}`, 'ws-opts.path');
             if (opts.headers) {
                 const headers = Object.entries(opts.headers)
-                    .map(([k, v]) => `${k}:\"${v}\"`)
+                    .map(([k, v]) => `${k}:"${v}"`)
                     .join('|');
                 if (headers) result.append(`,ws-headers=${headers}`);
             }

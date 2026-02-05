@@ -33,6 +33,7 @@ const props = withDefaults(
         allManualNodes?: Node[];
     }>(),
     {
+        profile: null,
         isNew: false,
         allSubscriptions: () => [],
         allManualNodes: () => []

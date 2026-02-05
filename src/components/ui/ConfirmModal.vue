@@ -141,6 +141,7 @@ const handleCancel = () => {
         <template #body>
             <div class="text-base leading-relaxed text-gray-600 dark:text-gray-400">
                 <!-- 支持 HTML 内容 -->
+                <!-- eslint-disable-next-line vue/no-v-html -->
                 <div v-html="props.message"></div>
             </div>
         </template>

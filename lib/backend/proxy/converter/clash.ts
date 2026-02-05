@@ -40,32 +40,32 @@ export class ClashConverter extends BaseConverter {
 
         const supportedTypes = this.isMeta
             ? [
-                  'ss',
-                  'ssr',
-                  'vmess',
-                  'vless',
-                  'socks5',
-                  'http',
-                  'snell',
-                  'trojan',
-                  'wireguard',
-                  'hysteria',
-                  'hysteria2',
-                  'tuic',
-                  'anytls'
-              ]
+                'ss',
+                'ssr',
+                'vmess',
+                'vless',
+                'socks5',
+                'http',
+                'snell',
+                'trojan',
+                'wireguard',
+                'hysteria',
+                'hysteria2',
+                'tuic',
+                'anytls'
+            ]
             : [
-                  'ss',
-                  'ssr',
-                  'vmess',
-                  'vless',
-                  'socks5',
-                  'http',
-                  'snell',
-                  'trojan',
-                  'wireguard',
-                  'anytls'
-              ];
+                'ss',
+                'ssr',
+                'vmess',
+                'vless',
+                'socks5',
+                'http',
+                'snell',
+                'trojan',
+                'wireguard',
+                'anytls'
+            ];
 
         if (!supportedTypes.includes(proxy.type)) return false;
 
@@ -110,6 +110,7 @@ export class ClashConverter extends BaseConverter {
         return true;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     protected processNode(proxy: ProxyNode, _options: ConvertOptions): any {
         try {
             const node: any = JSON.parse(JSON.stringify(proxy));
@@ -146,7 +147,7 @@ export class ClashConverter extends BaseConverter {
             }
 
             if (node['client-fingerprint']) {
-                node['client-fingerprint'] = node['client-fingerprint'];
+                // Keep existing fingerprint
             } else if (['vmess', 'vless', 'trojan'].includes(node.type)) {
                 node['client-fingerprint'] = 'chrome';
             }

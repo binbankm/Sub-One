@@ -8,11 +8,13 @@ import { Result } from './utils';
 export class QuantumultXConverter extends BaseConverter {
     name = 'Quantumult X';
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         const lines = nodes.map((node) => this.convertSingle(node, _options)).filter(Boolean);
         return lines.join('\n');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private convertSingle(proxy: ProxyNode, _opts: ConvertOptions): string {
         try {
             let result = '';

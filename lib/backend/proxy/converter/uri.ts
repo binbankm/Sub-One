@@ -9,6 +9,7 @@ import { BaseConverter } from './base';
 export class URIConverter extends BaseConverter {
     name = 'URI';
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         const uris = nodes.map((node) => this.convertSingle(node)).filter(Boolean);
         return uris.join('\n');
@@ -107,7 +108,7 @@ export class URIConverter extends BaseConverter {
         const config: any = {
             v: '2',
             ps: node.name,
-            add: node.server.replace(/[\[\]]/g, ''),
+            add: node.server.replace(/[[\]]/g, ''),
             port: String(node.port),
             id: node.uuid,
             aid: String(node.alterId || 0),
@@ -152,7 +153,7 @@ export class URIConverter extends BaseConverter {
 
     private trojan(node: ProxyNode): string {
         const params = new URLSearchParams();
-        params.set('sni', node.sni || node.server.replace(/[\[\]]/g, ''));
+        params.set('sni', node.sni || node.server.replace(/[[\]]/g, ''));
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
         this.appendTransportParams(params, node);
         this.appendTLSParams(params, node);

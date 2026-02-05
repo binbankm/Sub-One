@@ -286,7 +286,11 @@ const env = {
 app.use(express.raw({ type: '*/*', limit: '50mb' }));
 
 // 适配器：将 Express Request 转换为标准 Request，并将标准 Response 转换回 Express
-async function cloudflareAdapter(req: express.Request, res: express.Response, handler: Function) {
+async function cloudflareAdapter(
+    req: express.Request,
+    res: express.Response,
+    handler: (request: Request, env: any, ctx: any) => Promise<Response>
+) {
     try {
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         const standardRequest = new Request(url, {

@@ -8,6 +8,7 @@ import { isPresent } from './utils';
 export class SingboxConverter extends BaseConverter {
     name = 'Singbox';
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         const outbounds = nodes.map((node) => this.toOutbound(node)).filter(Boolean);
         return JSON.stringify(outbounds, null, 2);
