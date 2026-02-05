@@ -16,7 +16,7 @@ import { defineStore } from 'pinia';
 /**
  * 主题类型定义
  */
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'auto';
 
 /**
  * 主题 Store
@@ -26,178 +26,147 @@ export const useThemeStore = defineStore('theme', () => {
     // ==================== 响应式状态 ====================
 
     /**
-     * 用户选择的主题
-     * 'light' - 明亮模式
-     * 'dark' - 暗黑模式
+     * 用户偏好设置
+     * 'light' - 强制明亮
+     * 'dark' - 强制暗黑
+     * 'auto' - 跟随系统
      */
-    const theme = ref<Theme>('light');
+    const theme = ref<Theme>('auto');
 
     /**
-     * 当前实际应用的主题
-     * 用于跟踪主题状态变化
+     * 当前实际应用的主题（用于 UI 显示）
+     * 即使在 auto 模式下，这里也只会有 light 或 dark
      */
-    const currentTheme = ref<Theme>('light');
+    const currentTheme = ref<'light' | 'dark'>('light');
+
+    // 系统暗黑模式查询匹配器
+    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
 
     // ==================== 初始化 ====================
 
     /**
      * 初始化主题
-     *
-     * 说明：
-     * - 从 localStorage 读取保存的主题偏好
-     * - 如果没有保存，使用默认主题（light）
-     * - 应用主题到 DOM
      */
     async function initTheme() {
-        // 从 localStorage 获取保存的主题
-        const savedTheme = localStorage.getItem('sub-one-theme');
+        const savedTheme = localStorage.getItem('sub-one-theme') as Theme | null;
 
-        // 验证主题值的合法性
-        if (savedTheme === 'light' || savedTheme === 'dark') {
+        if (savedTheme && ['light', 'dark', 'auto'].includes(savedTheme)) {
             theme.value = savedTheme;
+        } else {
+            theme.value = 'auto'; // 默认使用自动模式
         }
 
-        // 应用主题到页面
+        // 监听系统主题变化
+        systemDarkMode.addEventListener('change', handleSystemThemeChange);
+
+        // 初次应用
         applyTheme();
     }
 
-    // ==================== 主题切换 ====================
+    // ==================== 内部逻辑 ====================
 
     /**
-     * 切换主题
-     *
-     * 说明：
-     * - 在明亮和暗黑模式之间切换
-     * - 自动保存到 localStorage
-     * - 立即应用到 DOM
+     * 处理系统主题变更（仅在 auto 模式下生效）
+     */
+    function handleSystemThemeChange(e: MediaQueryListEvent) {
+        if (theme.value === 'auto') {
+            applyClass(e.matches);
+        }
+    }
+
+    /**
+     * 应用 class 到 HTML 根元素
+     * @param isDark 是否应用暗黑模式
+     */
+    function applyClass(isDark: boolean) {
+        const html = document.documentElement;
+        if (isDark) {
+            html.classList.add('dark');
+            currentTheme.value = 'dark';
+        } else {
+            html.classList.remove('dark');
+            currentTheme.value = 'light';
+        }
+    }
+
+    /**
+     * 核心应用逻辑
+     * 根据当前 theme 的值决定最终效果
+     */
+    function applyTheme() {
+        let shouldBeDark = false;
+
+        if (theme.value === 'auto') {
+            shouldBeDark = systemDarkMode.matches;
+        } else {
+            shouldBeDark = theme.value === 'dark';
+        }
+
+        applyClass(shouldBeDark);
+
+        // 持久化
+        localStorage.setItem('sub-one-theme', theme.value);
+    }
+
+    // ==================== 公开方法 ====================
+
+    /**
+     * 循环切换主题模式
+     * 顺序: Light -> Dark -> Auto -> Light ...
      */
     function toggleTheme() {
-        // 在 light 和 dark 之间切换
-        theme.value = theme.value === 'light' ? 'dark' : 'light';
-
-        // 保存到 localStorage（持久化）
-        localStorage.setItem('sub-one-theme', theme.value);
-
-        // 应用主题到页面
+        if (theme.value === 'light') {
+            theme.value = 'dark';
+        } else if (theme.value === 'dark') {
+            theme.value = 'auto';
+        } else {
+            theme.value = 'light';
+        }
         applyTheme();
     }
 
     /**
      * 设置特定主题
-     *
-     * @param {Theme} newTheme - 要设置的主题（'light' | 'dark'）
      */
     function setTheme(newTheme: Theme) {
-        // 更新主题值
         theme.value = newTheme;
-
-        // 保存到 localStorage
-        localStorage.setItem('sub-one-theme', newTheme);
-
-        // 应用主题到页面
         applyTheme();
     }
 
-    // ==================== DOM 操作 ====================
-
     /**
-     * 应用主题到 DOM
-     *
-     * 说明：
-     * - 通过添加/移除 'dark' 类名来切换主题
-     * - Tailwind CSS 会根据 .dark 类应用暗黑模式样式
-     */
-    function applyTheme() {
-        // 获取 HTML 根元素
-        const html = document.documentElement;
-
-        // 更新当前主题状态
-        currentTheme.value = theme.value;
-
-        // 根据主题值添加或移除 'dark' 类
-        if (theme.value === 'dark') {
-            html.classList.add('dark'); // 添加暗黑模式类
-        } else {
-            html.classList.remove('dark'); // 移除暗黑模式类
-        }
-    }
-
-    // ==================== 辅助方法 ====================
-
-    /**
-     * 获取主题图标名称
-     *
-     * 说明：
-     * - 明亮模式显示月亮图标（表示可以切换到暗黑模式）
-     * - 暗黑模式显示太阳图标（表示可以切换到明亮模式）
-     *
-     * @returns {'moon' | 'sun'} 图标名称
-     */
-    function getThemeIcon() {
-        if (theme.value === 'light') {
-            return 'moon'; // 当前是明亮模式，显示月亮图标
-        } else {
-            return 'sun'; // 当前是暗黑模式，显示太阳图标
-        }
-    }
-
-    /**
-     * 获取当前主题名称
-     *
-     * @returns {string} 主题的中文名称
-     */
-    function getThemeName() {
-        if (theme.value === 'light') {
-            return '明亮模式';
-        } else {
-            return '暗黑模式';
-        }
-    }
-
-    /**
-     * 获取下一个主题名称（用于提示）
-     *
-     * 说明：
-     * - 返回点击后将切换到的主题名称
-     * - 用于显示 tooltip 提示
-     *
-     * @returns {string} 下一个主题的提示文本
+     * 获取下一个模式的名称（用于提示）
      */
     function getNextThemeName() {
-        if (theme.value === 'light') {
-            return '点击切换到暗黑模式';
-        } else {
-            return '点击切换到明亮模式';
-        }
+        if (theme.value === 'light') return '切换到暗黑模式';
+        if (theme.value === 'dark') return '切换到跟随系统';
+        return '切换到明亮模式';
     }
 
     /**
-     * 是否为暗黑模式
-     *
-     * @returns {boolean}
+     * 获取当前模式名称
      */
-    const isDarkMode = computed(() => theme.value === 'dark');
+    function getThemeName() {
+        const names: Record<Theme, string> = {
+            light: '明亮模式',
+            dark: '暗黑模式',
+            auto: '跟随系统'
+        };
+        return names[theme.value];
+    }
 
-    // ==================== 导出接口 ====================
+    /**
+     * 是否为暗黑模式（计算属性）
+     */
+    const isDarkMode = computed(() => currentTheme.value === 'dark');
 
     return {
-        /** 用户选择的主题 */
         theme,
-        /** 当前实际应用的主题 */
         currentTheme,
-        /** 是否为暗黑模式 */
         isDarkMode,
-        /** 初始化主题 */
         initTheme,
-        /** 切换主题 */
         toggleTheme,
-        /** 设置特定主题 */
         setTheme,
-        /** 获取主题图标 */
-        getThemeIcon,
-        /** 获取主题名称 */
         getThemeName,
-        /** 获取下一个主题名称 */
         getNextThemeName
     };
 });

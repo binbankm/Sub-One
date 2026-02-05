@@ -331,15 +331,32 @@ onUnmounted(() => {
             <!-- 头部操作区域 - 主题切换按钮 -->
             <div class="flex justify-center">
                 <button
-                    class="icon-btn"
-                    :title="themeStore.theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'"
+                    class="icon-btn group relative"
+                    :title="themeStore.getNextThemeName()"
                     @click="themeStore.toggleTheme"
                 >
-                    <!-- 暗黑模式图标（太阳） -->
+                    <!-- 当前是暗黑模式 -> 显示电脑图标 (点击切换到自动) -->
                     <svg
                         v-if="themeStore.theme === 'dark'"
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
+                        class="h-5 w-5 transition-transform duration-300 group-hover:scale-110"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                    </svg>
+
+                    <!-- 当前是自动模式 -> 显示太阳图标 (点击切换到明亮) -->
+                    <svg
+                        v-else-if="themeStore.theme === 'auto'"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 transition-transform duration-300 group-hover:rotate-45"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -352,11 +369,11 @@ onUnmounted(() => {
                         />
                     </svg>
 
-                    <!-- 明亮模式图标（月亮） -->
+                    <!-- 当前是明亮模式 -> 显示月亮图标 (点击切换到暗黑) -->
                     <svg
                         v-else
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
+                        class="h-5 w-5 transition-transform duration-300 group-hover:-rotate-12"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -368,6 +385,12 @@ onUnmounted(() => {
                             d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
                         />
                     </svg>
+                    
+                    <!-- 自动模式指示点 -->
+                    <span 
+                        v-if="themeStore.theme === 'auto'"
+                        class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900"
+                    ></span>
                 </button>
             </div>
         </div>
