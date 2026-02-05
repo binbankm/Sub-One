@@ -89,6 +89,22 @@ const filteredNodes = computed(() => {
     return filterNodes(nodes.value, searchTerm.value);
 });
 
+// 协议分布统计
+const protocolStats = computed(() => {
+    const stats: Record<string, number> = {};
+    nodes.value.forEach((node) => {
+        const p = node.protocol || 'unknown';
+        stats[p] = (stats[p] || 0) + 1;
+    });
+    return Object.entries(stats)
+        .map(([protocol, count]) => ({
+            protocol,
+            count,
+            info: getProtocolInfo(protocol)
+        }))
+        .sort((a, b) => b.count - a.count);
+});
+
 // 获取单个订阅的节点信息
 const fetchNodes = async () => {
     if (!props.subscription?.url) return;
@@ -305,50 +321,50 @@ onUnmounted(() => {
 });
 // 修改后的提取主机名 helper
 const extractHost = (url: string) => {
-    if (!url) return '';
+    if (!url) return { host: '', port: '' };
 
     try {
         // 1. 特殊处理 VMess 协议
         if (url.startsWith('vmess://')) {
             const base64 = url.replace('vmess://', '');
             try {
-                // 使用 js-base64 解码（自动处理 Unicode）
                 const decoded = Base64.decode(base64);
                 const config = JSON.parse(decoded);
-                // VMess JSON 标准字段: add (地址), port (端口)
-                if (config.add && config.port) {
-                    return `${config.add}:${config.port}`;
-                }
-                return config.add || '未知地址';
+                return {
+                    host: config.add || '未知地址',
+                    port: config.port ? String(config.port) : ''
+                };
             } catch (e) {
-                console.warn('VMess 解析失败:', e);
-                return 'VMess 格式错误';
+                return { host: 'VMess 格式错误', port: '' };
             }
         }
 
-        // 2. 特殊处理纯 Base64 的 SS (Legacy 格式: ss://Base64)
-        // 如果是 ss:// 且不包含 @ 符号，通常是旧版 Base64 格式
+        // 2. 特殊处理 SS (Legacy 格式)
         if (url.startsWith('ss://') && !url.includes('@')) {
-            const base64 = url.replace('ss://', '').split('#')[0]; // 去掉末尾可能的 #备注
+            const base64 = url.replace('ss://', '').split('#')[0];
             try {
-                // 使用 js-base64 解码
                 const decoded = Base64.decode(base64);
-                // 解码后通常是 method:password@hostname:port
                 const parts = decoded.split('@');
                 if (parts.length > 1) {
-                    return parts[1]; // 返回 hostname:port
+                    const addrParts = parts[1].split(':');
+                    return { host: addrParts[0], port: addrParts[1] || '' };
                 }
-            } catch (e) {
-                // 解码失败则继续尝试标准 URL 解析
-            }
+            } catch (e) {}
         }
 
-        // 3. 处理标准 URL 格式 (VLESS, Hysteria, Trojan, 标准 SS)
+        // 3. 处理标准协议
         const urlObj = new URL(url);
-        if (!urlObj.hostname) return '';
-        return urlObj.port ? `${urlObj.hostname}:${urlObj.port}` : urlObj.hostname;
+        return {
+            host: urlObj.hostname,
+            port: urlObj.port || ''
+        };
     } catch (e) {
-        return 'URL 解析错误';
+        // 兜底逻辑：尝试手动切割
+        const parts = url.split('://')[1]?.split('#')[0].split('@').pop()?.split(':');
+        if (parts) {
+            return { host: parts[0] || '', port: parts[1] || '' };
+        }
+        return { host: '解析错误', port: '' };
     }
 };
 </script>
@@ -378,47 +394,57 @@ const extractHost = (url: string) => {
                                 <!-- 订阅/订阅组信息头部 -->
                                 <div
                                     v-if="subscription || profile"
-                                    class="rounded-xl border border-gray-300 bg-gray-50/60 p-4 dark:border-gray-700 dark:bg-gray-800/75"
+                                    class="rounded-2xl border border-gray-300 bg-gray-50/60 p-5 dark:border-gray-700 dark:bg-gray-800/75"
                                 >
                                     <div
-                                        class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
+                                        class="flex flex-col justify-between gap-5 sm:flex-row sm:items-start"
                                     >
                                         <div class="min-w-0 flex-1">
-                                            <h3
-                                                class="truncate font-semibold text-gray-900 dark:text-gray-100"
-                                            >
-                                                {{
-                                                    subscription
-                                                        ? subscription.name || '未命名订阅'
-                                                        : profile?.name || '未命名订阅组'
-                                                }}
-                                            </h3>
+                                            <div class="flex items-center gap-2">
+                                                <h3
+                                                    class="truncate text-lg font-bold text-gray-900 dark:text-gray-100"
+                                                >
+                                                    {{
+                                                        subscription
+                                                            ? subscription.name || '未命名订阅'
+                                                            : profile?.name || '未命名订阅组'
+                                                    }}
+                                                </h3>
+                                                <span
+                                                    class="rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+                                                >
+                                                    {{ nodes.length }} 节点
+                                                </span>
+                                            </div>
                                             <p
-                                                class="mt-1 break-all text-sm text-gray-500 dark:text-gray-400"
+                                                class="mt-1.5 break-all text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                <span v-if="subscription">{{
+                                                <span v-if="subscription" class="font-mono">{{
                                                     subscription.url
                                                 }}</span>
-                                                <span v-else-if="profile"
-                                                    >包含
-                                                    {{ profile.subscriptions?.length ?? 0 }}
-                                                    个订阅，{{
-                                                        profile.manualNodes?.length ?? 0
-                                                    }}
-                                                    个手动节点</span
-                                                >
+                                                <span v-else-if="profile" class="flex items-center gap-2">
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                                        {{ profile.subscriptions?.length ?? 0 }} 订阅
+                                                    </span>
+                                                    <span class="h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                                    <span class="inline-flex items-center gap-1">
+                                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                                        {{ profile.manualNodes?.length ?? 0 }} 手动节点
+                                                    </span>
+                                                </span>
                                             </p>
                                         </div>
-                                        <div class="shrink-0 text-right">
-                                            <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                共 {{ nodes.length }} 个节点
-                                            </p>
-                                            <p
-                                                v-if="subscription && subscription.nodeCount"
-                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                        <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                                            <div
+                                                v-for="stat in protocolStats"
+                                                :key="stat.protocol"
+                                                class="flex items-center gap-1 rounded-full border border-gray-200 bg-white/50 px-2 py-0.5 text-[10px] font-medium dark:border-gray-600 dark:bg-gray-700/50"
                                             >
-                                                上次更新: {{ subscription.nodeCount }} 个
-                                            </p>
+                                                <span :class="stat.info.color">{{ stat.info.icon }}</span>
+                                                <span class="text-gray-700 dark:text-gray-300">{{ stat.info.text }}</span>
+                                                <span class="font-bold text-gray-400">{{ stat.count }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -506,208 +532,137 @@ const extractHost = (url: string) => {
                                     >
                                 </div>
 
-                                <!-- 节点列表 -->
-                                <div v-else-if="filteredNodes.length > 0" class="space-y-2">
-                                    <!-- 全选按钮 -->
+                                <!-- 节点内容区域 -->
+                                <div v-else-if="filteredNodes.length > 0" class="space-y-4">
                                     <div
-                                        class="flex items-center justify-between rounded-lg bg-gray-50/60 p-3 dark:bg-gray-800/75"
+                                        class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray-50/60 p-3 dark:bg-gray-800/75 border border-gray-200/50 dark:border-gray-700/50"
                                     >
-                                        <label class="flex cursor-pointer items-center">
-                                            <input
-                                                type="checkbox"
-                                                :checked="
-                                                    selectedNodes.size === filteredNodes.length &&
-                                                    filteredNodes.length > 0
-                                                "
-                                                :indeterminate="
-                                                    selectedNodes.size > 0 &&
-                                                    selectedNodes.size < filteredNodes.length
-                                                "
-                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600"
-                                                @change="toggleSelectAll"
-                                            />
+                                        <label class="flex cursor-pointer items-center group">
+                                            <div class="relative flex h-5 w-5 items-center justify-center">
+                                                <input
+                                                    type="checkbox"
+                                                    :checked="
+                                                        selectedNodes.size === filteredNodes.length &&
+                                                        filteredNodes.length > 0
+                                                    "
+                                                    :indeterminate="
+                                                        selectedNodes.size > 0 &&
+                                                        selectedNodes.size < filteredNodes.length
+                                                    "
+                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
+                                                    @change="toggleSelectAll"
+                                                />
+                                                <svg
+                                                    class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
+                                                    viewBox="0 0 14 14"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
+                                                        stroke="currentColor"
+                                                        stroke-width="2"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
+                                                </svg>
+                                            </div>
                                             <span
-                                                class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+                                                class="ml-3 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"
                                             >
                                                 全选 ({{ selectedNodes.size }}/{{
                                                     filteredNodes.length
                                                 }})
                                             </span>
                                         </label>
+                                        <div class="text-[11px] font-medium text-gray-400 uppercase tracking-tight">
+                                            已选 {{ selectedNodes.size }} 个节点
+                                        </div>
                                     </div>
 
-                                    <!-- 节点卡片列表 - 重新设计 (同步 ManualNodeCard 视觉) -->
+                                    <!-- 节点卡片列表 - 采用响应式双列布局 -->
                                     <div
-                                        class="custom-scrollbar max-h-96 space-y-3 overflow-y-auto pr-1"
+                                        class="custom-scrollbar max-h-[50vh] overflow-y-auto pr-1"
                                     >
-                                        <div
-                                            v-for="node in filteredNodes"
-                                            :key="node.id"
-                                            class="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-300 bg-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10 dark:border-gray-700 dark:bg-gray-800/50"
-                                            :class="{
-                                                'border-indigo-500/50 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900':
-                                                    selectedNodes.has(node.id),
-                                                'border-gray-300 dark:border-gray-700':
-                                                    !selectedNodes.has(node.id)
-                                            }"
-                                            @click="toggleNodeSelection(node.id)"
-                                        >
-                                            <!-- 顶部彩色条 -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
                                             <div
-                                                class="h-1 bg-linear-to-r opacity-80"
-                                                :class="getProtocolInfo(node.protocol).gradient"
-                                            ></div>
-
-                                            <div class="p-4">
-                                                <!-- 头部信息 -->
+                                                v-for="node in filteredNodes"
+                                                :key="node.id"
+                                                class="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-gray-700 dark:bg-gray-800/40"
+                                                :class="{
+                                                    'border-indigo-500 ring-1 ring-indigo-500/20 dark:border-indigo-400':
+                                                        selectedNodes.has(node.id),
+                                                }"
+                                                @click="toggleNodeSelection(node.id)"
+                                            >
+                                                <!-- 协议渐变装饰条 -->
                                                 <div
-                                                    class="mb-3 flex items-start justify-between gap-3"
-                                                >
-                                                    <div
-                                                        class="flex items-center gap-3 overflow-hidden"
-                                                    >
-                                                        <!-- 选择框 -->
-                                                        <div class="shrink-0" @click.stop>
-                                                            <div
-                                                                class="relative flex h-5 w-5 items-center justify-center"
+                                                    class="h-1 bg-linear-to-r opacity-70"
+                                                    :class="getProtocolInfo(node.protocol).gradient"
+                                                ></div>
+
+                                                <div class="flex flex-1 flex-col p-4">
+                                                    <!-- 卡片头部：协议 + 选择 -->
+                                                    <div class="mb-3 flex items-center justify-between">
+                                                        <div class="flex items-center gap-2">
+                                                            <!-- 协议胶囊 -->
+                                                            <span
+                                                                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-xs"
+                                                                :class="[
+                                                                    getProtocolInfo(node.protocol).bg,
+                                                                    getProtocolInfo(node.protocol).color,
+                                                                ]"
                                                             >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    :checked="
-                                                                        selectedNodes.has(node.id)
-                                                                    "
-                                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
-                                                                    @change="
-                                                                        toggleNodeSelection(node.id)
-                                                                    "
-                                                                />
-                                                                <svg
-                                                                    class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
-                                                                    viewBox="0 0 14 14"
-                                                                    fill="none"
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                >
-                                                                    <path
-                                                                        d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-                                                                        stroke="currentColor"
-                                                                        stroke-width="2"
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
-                                                                    />
-                                                                </svg>
+                                                                <span class="text-xs">{{ getProtocolInfo(node.protocol).icon }}</span>
+                                                                {{ getProtocolInfo(node.protocol).text }}
+                                                            </span>
+                                                            
+                                                            <!-- 来源标识 -->
+                                                            <span v-if="profile && node.type === 'subscription'" class="text-[10px] text-gray-400 truncate max-w-[80px]">
+                                                                @{{ node.subscriptionName }}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- 单选框 -->
+                                                        <div class="relative flex h-4.5 w-4.5 items-center justify-center" @click.stop>
+                                                            <input
+                                                                type="checkbox"
+                                                                :checked="selectedNodes.has(node.id)"
+                                                                class="peer h-4.5 w-4.5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
+                                                                @change="toggleNodeSelection(node.id)"
+                                                            />
+                                                            <svg class="pointer-events-none absolute h-3 w-3 text-white opacity-0 transition-opacity peer-checked:opacity-100" viewBox="0 0 14 14" fill="none"><path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- 节点名称 -->
+                                                    <div class="mb-3">
+                                                        <h4 class="line-clamp-2 text-sm font-bold text-gray-800 dark:text-gray-100 leading-snug">
+                                                            {{ node.name }}
+                                                        </h4>
+                                                    </div>
+
+                                                    <!-- 服务器信息 & 复制 -->
+                                                    <div class="mt-auto flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-700/50">
+                                                        <div class="flex flex-col gap-0.5 overflow-hidden">
+                                                            <div class="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                                                <svg class="h-3 w-3 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                                                                <span class="truncate font-mono">{{ node.server && node.port ? node.server : extractHost(node.url).host }}</span>
+                                                            </div>
+                                                            <div v-if="node.port || extractHost(node.url).port" class="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
+                                                                <svg class="h-3 w-3 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                                                                {{ node.port || extractHost(node.url).port }}
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                            class="flex flex-wrap items-center gap-2"
+                                                        <button
+                                                            class="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-700 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
+                                                            title="复制链接"
+                                                            @click.stop="handleCopySingle(node.url)"
                                                         >
-                                                            <!-- 协议标签 -->
-                                                            <span
-                                                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide shadow-sm"
-                                                                :class="[
-                                                                    getProtocolInfo(node.protocol)
-                                                                        .bg,
-                                                                    getProtocolInfo(node.protocol)
-                                                                        .color,
-                                                                    'border-transparent bg-opacity-10 dark:bg-opacity-20'
-                                                                ]"
-                                                            >
-                                                                <span
-                                                                    class="text-sm font-normal drop-shadow-sm filter"
-                                                                    >{{
-                                                                        getProtocolInfo(
-                                                                            node.protocol
-                                                                        ).icon
-                                                                    }}</span
-                                                                >
-                                                                <span>{{
-                                                                    getProtocolInfo(node.protocol)
-                                                                        .text
-                                                                }}</span>
-                                                            </span>
-
-                                                            <!-- 来源标签 -->
-                                                            <template v-if="profile">
-                                                                <span
-                                                                    v-if="
-                                                                        node.type === 'subscription'
-                                                                    "
-                                                                    class="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 dark:border-blue-800/30 dark:bg-blue-900/20 dark:text-blue-400"
-                                                                >
-                                                                    {{ node.subscriptionName }}
-                                                                </span>
-                                                                <span
-                                                                    v-else-if="
-                                                                        node.type === 'manual'
-                                                                    "
-                                                                    class="inline-flex items-center gap-1 rounded-md border border-green-100 bg-green-50 px-2 py-1 text-[10px] font-medium text-green-600 dark:border-green-800/30 dark:bg-green-900/20 dark:text-green-400"
-                                                                >
-                                                                    手动
-                                                                </span>
-                                                            </template>
-                                                        </div>
+                                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 01-2-2V3" /></svg>
+                                                        </button>
                                                     </div>
-                                                </div>
-
-                                                <!-- 节点名称 -->
-                                                <div class="mb-3 pl-8">
-                                                    <h4
-                                                        class="wrap-break-word text-base font-bold leading-snug text-gray-800 dark:text-gray-100"
-                                                    >
-                                                        {{ node.name }}
-                                                    </h4>
-                                                </div>
-
-                                                <!-- 底部信息：地址 & 复制 -->
-                                                <div
-                                                    class="flex items-center justify-between gap-2 border-t border-gray-50 pl-8 pt-2 text-xs dark:border-gray-700/50"
-                                                >
-                                                    <div
-                                                        class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"
-                                                        title="服务器地址"
-                                                    >
-                                                        <svg
-                                                            class="h-3.5 w-3.5 shrink-0"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                                                            />
-                                                        </svg>
-                                                        <span class="truncate font-mono">
-                                                            {{
-                                                                node.server && node.port
-                                                                    ? `${node.server}:${node.port}`
-                                                                    : extractHost(node.url)
-                                                            }}
-                                                        </span>
-                                                    </div>
-
-                                                    <button
-                                                        class="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 font-medium text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                                                        title="复制链接"
-                                                        @click.stop="handleCopySingle(node.url)"
-                                                    >
-                                                        <span class="hidden sm:inline">复制</span>
-                                                        <svg
-                                                            class="h-3.5 w-3.5"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            stroke="currentColor"
-                                                            stroke-width="2"
-                                                        >
-                                                            <path
-                                                                stroke-linecap="round"
-                                                                stroke-linejoin="round"
-                                                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 01-2-2V3"
-                                                            />
-                                                        </svg>
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
