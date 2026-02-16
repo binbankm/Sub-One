@@ -24,6 +24,7 @@ import { storeToRefs } from 'pinia';
 import { Base64 } from 'js-base64';
 
 import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import { useDataStore } from '../../../stores/data';
 import { useToastStore } from '../../../stores/toast';
 import type { Profile, Subscription } from '../../../types/index';
@@ -455,14 +456,14 @@ const extractHost = (url: string) => {
                                 <!-- 搜索和操作栏 -->
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="relative flex-1">
-                                        <input
+                                        <Input
                                             v-model="searchTerm"
                                             type="text"
                                             placeholder="搜索节点名称或链接..."
-                                            class="search-input-unified w-full"
+                                            class="pl-10"
                                         />
                                         <svg
-                                            class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                                            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"

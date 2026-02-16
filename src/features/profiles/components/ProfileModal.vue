@@ -296,14 +296,14 @@ const handleDeselectAll = (
                         </div>
 
                         <div class="relative mb-3">
-                            <input
+                            <Input
                                 v-model="subscriptionSearchTerm"
                                 type="text"
                                 placeholder="搜索订阅..."
-                                class="search-input-unified"
+                                class="pl-10"
                             />
                             <svg
-                                class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -400,14 +400,14 @@ const handleDeselectAll = (
                         </div>
 
                         <div class="relative mb-3">
-                            <input
+                            <Input
                                 v-model="nodeSearchTerm"
                                 type="text"
                                 placeholder="搜索节点..."
-                                class="search-input-unified"
+                                class="pl-10"
                             />
                             <svg
-                                class="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                                class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"

@@ -213,15 +213,7 @@
 
 /* ==================== Components Layer - 组件样式 ==================== */
 @layer components {
-    /* ===== 按钮组件 ===== */
-
-    .btn-modern {
-        @apply rounded-xl px-4 py-2 font-semibold transition-all duration-300;
-        @apply bg-linear-to-r from-indigo-500 to-purple-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg;
-        @apply active:translate-y-0 active:scale-95;
-        @apply disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100;
-    }
+    /* ===== 按钮组件 (Legacy - kept for DashboardPage.vue scoped styles) ===== */
 
     .btn-modern-enhanced {
         @apply rounded-xl font-semibold shadow-md transition-all duration-300;
@@ -229,71 +221,7 @@
         @apply active:scale-95;
     }
 
-    .btn-add {
-        @apply bg-linear-to-r from-blue-500 to-indigo-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-blue-600 hover:to-indigo-700 hover:shadow-lg;
-    }
-
-    .btn-update {
-        @apply bg-linear-to-r from-emerald-500 to-teal-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg;
-    }
-
-    .btn-sort {
-        @apply bg-linear-to-r from-purple-500 to-pink-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-purple-600 hover:to-pink-700 hover:shadow-lg;
-    }
-
-    .btn-sort.sorting {
-        @apply from-gray-500 to-gray-600;
-    }
-
-    .btn-import {
-        @apply bg-linear-to-r from-orange-500 to-amber-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-orange-600 hover:to-amber-700 hover:shadow-lg;
-    }
-
-    .btn-primary {
-        @apply bg-linear-to-r from-indigo-500 to-purple-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg;
-    }
-
-    .btn-secondary {
-        @apply bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200;
-        @apply hover:bg-gray-200 hover:shadow-md dark:hover:bg-gray-600;
-    }
-
-    .btn-danger {
-        @apply bg-linear-to-r from-red-500 to-pink-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-red-600 hover:to-pink-700 hover:shadow-lg;
-    }
-
-    .btn-cancel {
-        @apply bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200;
-        @apply hover:bg-gray-200 hover:shadow-md dark:hover:bg-gray-600;
-    }
-
-    /* ===== 表单组件 ===== */
-
-    .form-input {
-        @apply w-full rounded-xl px-4 py-3;
-        @apply bg-white/90 dark:bg-gray-800/90;
-        @apply border-2 border-gray-300 dark:border-gray-700;
-        @apply text-gray-900 dark:text-gray-100;
-        @apply placeholder-gray-400 dark:placeholder-gray-500;
-        @apply focus:border-primary-500 focus:outline-none focus:ring-0;
-        @apply transition-all duration-300;
-    }
-
-    .input-modern {
-        @apply w-full rounded-xl px-4 py-3;
-        @apply bg-white/90 dark:bg-gray-800/90;
-        @apply border-2 border-gray-300 dark:border-gray-700;
-        @apply text-gray-900 dark:text-gray-100;
-        @apply placeholder-gray-500 dark:placeholder-gray-400;
-        @apply focus:border-primary-500 focus:outline-none focus:ring-0;
-        @apply transition-all duration-300;
-    }
+    /* ===== 表单组件 (Legacy - kept for SettingsModal and LoginPage) ===== */
 
     .input-modern-enhanced {
         @apply w-full rounded-xl px-4 py-3;
@@ -304,43 +232,6 @@
         @apply focus:border-primary-500 focus:outline-none focus:ring-0;
         @apply transition-all duration-300;
         @apply shadow-sm hover:shadow-md focus:shadow-none;
-    }
-
-    .search-input-unified {
-        @apply w-full py-2.5 pl-11 pr-4;
-        @apply bg-white dark:bg-gray-800;
-        @apply border border-gray-300 dark:border-gray-700;
-        @apply rounded-xl;
-        @apply text-sm text-gray-900 dark:text-gray-100;
-        @apply placeholder-gray-400 dark:placeholder-gray-500;
-        @apply focus:border-primary-500 focus:outline-none focus:ring-0;
-        @apply transition-all duration-300;
-        @apply shadow-sm hover:shadow-md focus:shadow-none;
-    }
-
-    /* ===== 卡片组件 ===== */
-
-    .card-glass {
-        @apply border border-white/40 bg-white/20 backdrop-blur-xl dark:border-white/10 dark:bg-gray-800/30;
-        @apply shadow-xl hover:bg-white/30 hover:shadow-2xl dark:hover:bg-gray-800/40;
-        @apply transition-all duration-300;
-    }
-
-    /* ===== 加载和图标 ===== */
-
-    .spinner {
-        @apply h-8 w-8 border-4 border-gray-300 dark:border-gray-700;
-        @apply rounded-full border-t-indigo-500;
-        @apply animate-spin;
-    }
-
-    .icon-btn {
-        @apply rounded-xl p-2.5 transition-all duration-300;
-        @apply text-gray-600 dark:text-gray-400;
-        @apply hover:bg-white/50 dark:hover:bg-white/10;
-        @apply hover:text-gray-900 dark:hover:text-gray-100;
-        @apply hover:-translate-y-0.5 hover:shadow-lg;
-        @apply active:translate-y-0 active:scale-95;
     }
 
     /* ===== LoginView 特定样式 ===== */
