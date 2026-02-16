@@ -10,6 +10,24 @@
 @import "tailwindcss";
 
 @theme {
+  /* shadcn-ui design tokens */
+  --color-background: 0 0% 100%;
+  --color-foreground: 222.2 84% 4.9%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 222.2 84% 4.9%;
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 222.2 84% 4.9%;
+  --color-muted: 210 40% 96.1%;
+  --color-muted-foreground: 215.4 16.3% 46.9%;
+  --color-accent: 210 40% 96.1%;
+  --color-accent-foreground: 222.2 47.4% 11.2%;
+  --color-destructive: 0 84.2% 60.2%;
+  --color-destructive-foreground: 210 40% 98%;
+  --color-border: 214.3 31.8% 91.4%;
+  --color-input: 214.3 31.8% 91.4%;
+  --color-ring: 222.2 84% 4.9%;
+  
+  /* Primary colors (keeping existing brand colors) */
   --color-primary-50: hsl(243, 100%, 97%);
   --color-primary-100: hsl(243, 96%, 94%);
   --color-primary-200: hsl(242, 96%, 88%);
@@ -20,7 +38,10 @@
   --color-primary-700: hsl(243, 58%, 39%);
   --color-primary-800: hsl(243, 54%, 31%);
   --color-primary-900: hsl(243, 47%, 24%);
+  --color-primary: 243 75% 59%;
+  --color-primary-foreground: 210 40% 98%;
 
+  /* Secondary colors (keeping existing brand colors) */
   --color-secondary-50: hsl(280, 100%, 97%);
   --color-secondary-100: hsl(280, 95%, 93%);
   --color-secondary-200: hsl(279, 93%, 86%);
@@ -31,22 +52,32 @@
   --color-secondary-700: hsl(280, 59%, 37%);
   --color-secondary-800: hsl(280, 54%, 30%);
   --color-secondary-900: hsl(280, 48%, 24%);
+  --color-secondary: 280 72% 54%;
+  --color-secondary-foreground: 210 40% 98%;
 
+  /* Accent colors */
   --color-accent-cyan: hsl(189, 94%, 43%);
   --color-accent-pink: hsl(328, 85%, 70%);
   --color-accent-orange: hsl(25, 95%, 53%);
   --color-accent-green: hsl(142, 71%, 45%);
 
+  /* Spacing */
   --spacing-18: 4.5rem;
   --spacing-88: 22rem;
 
+  /* Border radius */
+  --radius-lg: 0.5rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
   --radius-4xl: 2rem;
 
+  /* Shadows */
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.1);
   --shadow-glass-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-glow-primary: 0 0 30px rgba(99, 102, 241, 0.4);
   --shadow-glow-secondary: 0 0 30px rgba(168, 85, 247, 0.4);
 
+  /* Fonts */
   --font-sans: "Nunito", "Quicksand", "PingFang SC", "Microsoft YaHei", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Menlo", "Monaco", monospace;
 
@@ -85,6 +116,27 @@
   @keyframes pulse-slow {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.75; }
+  }
+}
+
+/* ==================== Dark Mode Support for shadcn-ui ==================== */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: 222.2 84% 4.9%;
+    --color-foreground: 210 40% 98%;
+    --color-card: 222.2 84% 4.9%;
+    --color-card-foreground: 210 40% 98%;
+    --color-popover: 222.2 84% 4.9%;
+    --color-popover-foreground: 210 40% 98%;
+    --color-muted: 217.2 32.6% 17.5%;
+    --color-muted-foreground: 215 20.2% 65.1%;
+    --color-accent: 217.2 32.6% 17.5%;
+    --color-accent-foreground: 210 40% 98%;
+    --color-destructive: 0 62.8% 30.6%;
+    --color-destructive-foreground: 210 40% 98%;
+    --color-border: 217.2 32.6% 17.5%;
+    --color-input: 217.2 32.6% 17.5%;
+    --color-ring: 212.7 26.8% 83.9%;
   }
 }
 
