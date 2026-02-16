@@ -5,6 +5,8 @@ import { storeToRefs } from 'pinia';
 
 import draggable from 'vuedraggable';
 
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import ConfirmModal from '../../components/ui/ConfirmModal.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import Pagination from '../../components/ui/Pagination.vue';
@@ -282,14 +284,14 @@ onUnmounted(() => {
             <div class="flex w-full flex-wrap items-center gap-2">
                 <!-- 搜索框 -->
                 <div class="relative mb-2 w-full shrink-0 sm:mb-0 sm:w-56">
-                    <input
+                    <Input
                         v-model="searchTerm"
                         type="text"
                         placeholder="搜索节点..."
-                        class="search-input-unified w-full text-base"
+                        class="w-full pl-10 text-base"
                     />
                     <svg
-                        class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+                        class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -307,28 +309,32 @@ onUnmounted(() => {
                 <div class="ml-auto flex flex-wrap items-center gap-2">
                     <!-- 主要操作按钮 -->
                     <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                        <Button
+                            variant="default"
+                            size="sm"
                             @click="handleAddNode"
                         >
                             新增
-                        </button>
+                        </Button>
 
-                        <button
-                            class="btn-modern-enhanced btn-import transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             @click="showSubscriptionImportModal = true"
                         >
                             导入节点
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
                             v-if="isSortingNodes && hasUnsavedSortChanges"
-                            class="btn-modern-enhanced btn-primary flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                            variant="default"
+                            size="sm"
+                            class="flex items-center gap-2"
                             @click="handleSaveSort"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 sm:h-5 sm:w-5"
+                                class="h-4 w-4"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -341,18 +347,16 @@ onUnmounted(() => {
                                 />
                             </svg>
                             <span class="hidden sm:inline">保存排序</span>
-                        </button>
-                        <button
-                            :class="
-                                isSortingNodes
-                                    ? 'btn-modern-enhanced btn-sort sorting flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                                    : 'btn-modern-enhanced btn-sort flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                            "
+                        </Button>
+                        <Button
+                            :variant="isSortingNodes ? 'secondary' : 'outline'"
+                            size="sm"
+                            class="flex items-center gap-2"
                             @click="handleToggleSort"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 sm:h-5 sm:w-5"
+                                class="h-4 w-4"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -368,7 +372,7 @@ onUnmounted(() => {
                                 isSortingNodes ? '排序中' : '手动排序'
                             }}</span>
                             <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
-                        </button>
+                        </Button>
                     </div>
 
                     <!-- 更多菜单 -->
@@ -468,27 +472,32 @@ onUnmounted(() => {
                         </span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="selectAll"
                         >
                             全选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="invertSelection"
                         >
                             反选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="deselectAll"
                         >
                             清空选择
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             :disabled="selectedCount === 0"
-                            class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            variant="destructive"
+                            size="sm"
+                            class="flex items-center gap-1"
                             @click="deleteSelected"
                         >
                             <svg
@@ -504,13 +513,14 @@ onUnmounted(() => {
                                 />
                             </svg>
                             删除选中 ({{ selectedCount }})
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             @click="handleToggleBatchDeleteMode"
                         >
                             取消
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

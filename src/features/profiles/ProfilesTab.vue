@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } fr
 
 import { storeToRefs } from 'pinia';
 
+import { Button } from '../../components/ui/button';
 import ConfirmModal from '../../components/ui/ConfirmModal.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import Pagination from '../../components/ui/Pagination.vue';
@@ -209,12 +210,13 @@ onUnmounted(() => {
             <div class="flex-1"></div>
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <div class="flex flex-wrap items-center gap-2">
-                    <button
-                        class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                    <Button
+                        variant="default"
+                        size="sm"
                         @click="handleAddProfile"
                     >
                         新增
-                    </button>
+                    </Button>
                     <div ref="profilesMoreMenuRef" class="relative">
                         <button
                             class="hover-lift rounded-2xl p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 sm:p-4"
@@ -293,27 +295,32 @@ onUnmounted(() => {
                         </span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="selectAll"
                         >
                             全选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="invertSelection"
                         >
                             反选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="deselectAll"
                         >
                             清空选择
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             :disabled="selectedCount === 0"
-                            class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            variant="destructive"
+                            size="sm"
+                            class="flex items-center gap-1"
                             @click="deleteSelected"
                         >
                             <svg
@@ -329,13 +336,14 @@ onUnmounted(() => {
                                 />
                             </svg>
                             删除选中 ({{ selectedCount }})
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             @click="handleToggleBatchDeleteMode"
                         >
                             取消
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

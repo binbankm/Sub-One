@@ -7,6 +7,7 @@ import { storeToRefs } from 'pinia';
 
 import draggable from 'vuedraggable';
 
+import { Button } from '../../components/ui/button';
 import ConfirmModal from '../../components/ui/ConfirmModal.vue';
 import EmptyState from '../../components/ui/EmptyState.vue';
 import Pagination from '../../components/ui/Pagination.vue';
@@ -286,21 +287,24 @@ watch(
             <div class="ml-auto flex flex-wrap items-center gap-2">
                 <!-- 主要操作按钮 -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <button
-                        class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
+                    <Button
+                        variant="default"
+                        size="sm"
                         @click="handleAddSubscription"
                     >
                         新增
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         :disabled="isUpdatingAllSubs"
-                        class="btn-modern-enhanced btn-update flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                        variant="secondary"
+                        size="sm"
+                        class="flex items-center gap-2"
                         @click="handleUpdateAllSubscriptions"
                     >
                         <svg
                             v-if="isUpdatingAllSubs"
-                            class="h-4 w-4 animate-spin sm:h-5 sm:w-5"
+                            class="h-4 w-4 animate-spin"
                             viewBox="0 0 24 24"
                         >
                             <circle
@@ -322,16 +326,18 @@ watch(
                             isUpdatingAllSubs ? '更新中...' : '一键更新'
                         }}</span>
                         <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                         v-if="isSortingSubs && hasUnsavedSortChanges"
-                        class="btn-modern-enhanced btn-primary flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                        variant="default"
+                        size="sm"
+                        class="flex items-center gap-2"
                         @click="handleSortSave"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4 sm:h-5 sm:w-5"
+                            class="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -344,18 +350,16 @@ watch(
                             />
                         </svg>
                         <span class="hidden sm:inline">保存排序</span>
-                    </button>
-                    <button
-                        :class="
-                            isSortingSubs
-                                ? 'btn-modern-enhanced btn-sort sorting flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                                : 'btn-modern-enhanced btn-sort flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                        "
+                    </Button>
+                    <Button
+                        :variant="isSortingSubs ? 'secondary' : 'outline'"
+                        size="sm"
+                        class="flex items-center gap-2"
                         @click="handleToggleSort"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4 sm:h-5 sm:w-5"
+                            class="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -371,7 +375,7 @@ watch(
                             isSortingSubs ? '排序中' : '手动排序'
                         }}</span>
                         <span class="sm:hidden">{{ isSortingSubs ? '排序' : '排序' }}</span>
-                    </button>
+                    </Button>
                 </div>
 
                 <div ref="subsMoreMenuRef" class="relative">
@@ -449,27 +453,32 @@ watch(
                         </span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="selectAll"
                         >
                             全选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="invertSelection"
                         >
                             反选
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
                             @click="deselectAll"
                         >
                             清空选择
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             :disabled="selectedCount === 0"
-                            class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                            variant="destructive"
+                            size="sm"
+                            class="flex items-center gap-1"
                             @click="deleteSelected"
                         >
                             <svg
@@ -485,13 +494,14 @@ watch(
                                 />
                             </svg>
                             删除选中 ({{ selectedCount }})
-                        </button>
-                        <button
-                            class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             @click="handleToggleBatchDeleteMode"
                         >
                             取消
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
