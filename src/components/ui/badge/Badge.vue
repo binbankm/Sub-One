@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type HTMLAttributes, computed } from 'vue';
+import { type HTMLAttributes } from 'vue';
 import { type BadgeVariants, badgeVariants } from '.';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,8 @@ const props = withDefaults(
         class?: HTMLAttributes['class'];
     }>(),
     {
-        variant: 'default'
+        variant: 'default',
+        class: ''
     }
 );
 </script>
