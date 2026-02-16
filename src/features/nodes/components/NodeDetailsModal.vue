@@ -510,7 +510,7 @@ const extractHost = (url: string) => {
                                             :disabled="selectedNodes.size === 0"
                                             variant="default"
                                             size="sm"
-                                            class="bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                                            class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                                             @click="copySelectedNodes"
                                         >
                                             复制选中
