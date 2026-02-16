@@ -23,6 +23,7 @@ import { storeToRefs } from 'pinia';
 
 import { Base64 } from 'js-base64';
 
+import { Button } from '../../../components/ui/button';
 import { useDataStore } from '../../../stores/data';
 import { useToastStore } from '../../../stores/toast';
 import type { Profile, Subscription } from '../../../types/index';
@@ -476,9 +477,9 @@ const extractHost = (url: string) => {
                                         </svg>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <button
+                                        <Button
                                             :disabled="isLoading"
-                                            class="btn-modern px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                                            size="sm"
                                             @click="refreshNodes"
                                         >
                                             <svg
@@ -502,15 +503,17 @@ const extractHost = (url: string) => {
                                                 ></path>
                                             </svg>
                                             <span v-else>刷新</span>
-                                        </button>
+                                        </Button>
 
-                                        <button
+                                        <Button
                                             :disabled="selectedNodes.size === 0"
-                                            class="transform rounded-xl bg-linear-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                                            variant="default"
+                                            size="sm"
+                                            class="bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                                             @click="copySelectedNodes"
                                         >
                                             复制选中
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
 
