@@ -13,6 +13,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 
+import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
 import Modal from '../../../components/ui/BaseModal.vue';
 import { useToastStore } from '../../../stores/toast';
 import type { Node } from '../../../types/index';
@@ -294,12 +296,11 @@ const importSubscription = async () => {
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >订阅链接</label
                     >
-                    <input
+                    <Input
                         v-model="subscriptionUrl"
                         v-focus
                         type="text"
                         placeholder="https://example.com/api/v1/client/subscribe?token=..."
-                        class="input-modern w-full"
                         @keyup.enter="importSubscription"
                     />
                 </div>
@@ -374,12 +375,12 @@ const importSubscription = async () => {
                             {{ textContent.length }} 字符
                         </span>
                     </div>
-                    <textarea
+                    <Textarea
                         v-model="textContent"
                         rows="6"
                         placeholder="在此处粘贴 Base64、节点链接列表或 Clash 配置内容..."
-                        class="input-modern w-full resize-none font-mono text-xs leading-relaxed"
-                    ></textarea>
+                        class="resize-none font-mono text-xs leading-relaxed"
+                    />
                 </div>
             </div>
 

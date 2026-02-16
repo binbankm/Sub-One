@@ -13,6 +13,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
+import { Textarea } from '../../../components/ui/textarea';
 import Modal from '../../../components/ui/BaseModal.vue';
 import { useToastStore } from '../../../stores/toast';
 import type { Node } from '../../../types/index';
@@ -201,19 +204,18 @@ const handleCancel = () => {
             <div v-if="localNode" class="space-y-4">
                 <!-- 节点名称 -->
                 <div>
-                    <label
+                    <Label
                         for="node-name"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        class="mb-2"
                     >
                         节点名称
                         <span class="ml-1 text-xs text-gray-400">(可选)</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                         id="node-name"
                         v-model="localNode.name"
                         type="text"
                         placeholder="留空时自动从链接提取"
-                        class="input-modern w-full"
                         @input="handleNameInput"
                     />
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -223,23 +225,23 @@ const handleCancel = () => {
 
                 <!-- 节点链接 -->
                 <div>
-                    <label
+                    <Label
                         for="node-url"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        class="mb-2"
                     >
                         节点链接
                         <span class="text-red-500">*</span>
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
                         id="node-url"
                         v-model="localNode.url"
                         rows="4"
                         placeholder="vmess://... 或 ss://... 等节点分享链接"
-                        class="input-modern w-full resize-none font-mono text-sm"
+                        class="resize-none font-mono text-sm"
                         :class="{ 'border-red-500 dark:border-red-500': urlError }"
                         @input="handleUrlInput"
                         @blur="handleUrlBlur"
-                    ></textarea>
+                    />
                     <p v-if="urlError" class="mt-1 text-sm text-red-600 dark:text-red-400">
                         {{ urlError }}
                     </p>

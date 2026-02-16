@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+import { Textarea } from './textarea';
 import Modal from './BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
@@ -53,12 +54,12 @@ const handleConfirm = () => {
             <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
                 每行一个订阅链接或分享节点。将自动识别节点名称。
             </p>
-            <textarea
+            <Textarea
                 v-model="importText"
                 rows="8"
-                class="input-modern w-full resize-none font-mono text-sm"
+                class="resize-none font-mono text-sm"
                 placeholder="http://...&#10;https://...&#10;vmess://...&#10;vless://...&#10;trojan://..."
-            ></textarea>
+            />
         </template>
     </Modal>
 </template>

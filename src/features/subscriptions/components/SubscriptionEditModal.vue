@@ -14,6 +14,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
 import NodeFilterEditor from '../../../components/editors/NodeFilterEditor.vue';
 import Modal from '../../../components/ui/BaseModal.vue';
 import { useToastStore } from '../../../stores/toast';
@@ -195,34 +197,29 @@ const toggleAdvanced = () => {
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                         <!-- 订阅名称 (1列) -->
                         <div class="md:col-span-1">
-                            <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >
+                            <Label class="mb-2">
                                 订阅名称
                                 <span class="ml-1 text-xs text-gray-400">(可选)</span>
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 v-model="localSubscription.name"
                                 type="text"
                                 placeholder="留空自动提取"
-                                class="input-modern w-full"
                                 @input="handleNameInput"
                             />
                         </div>
 
                         <!-- 订阅链接 (2列) -->
                         <div class="md:col-span-2">
-                            <label
-                                class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >
+                            <Label class="mb-2">
                                 订阅链接
                                 <span class="text-red-500">*</span>
-                            </label>
-                            <input
+                            </Label>
+                            <Input
                                 v-model="localSubscription.url"
                                 type="url"
                                 placeholder="https://example.com/sub?token=xxx"
-                                class="input-modern w-full font-mono text-sm"
+                                class="font-mono text-sm"
                                 :class="{ 'border-red-500 dark:border-red-500': urlError }"
                                 @blur="handleUrlBlur"
                             />
