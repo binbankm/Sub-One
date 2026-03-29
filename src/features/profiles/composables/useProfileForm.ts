@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue';
 import type { Node, Profile, Subscription } from '../../../types/index';
 import { filterNodes } from '../../../utils/search';
-import { generateShortId } from '../../../utils/utils';
+import { generateShortId } from '../../../utils/helpers';
 
 export interface UseProfileFormProps {
     profile?: Profile | null;

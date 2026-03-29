@@ -1,5 +1,5 @@
 import { ref, Ref } from 'vue';
-import { copyToClipboard } from '../../../utils/utils';
+import { copyToClipboard } from '../../../utils/helpers';
 import { useToastStore } from '../../../stores/toast';
 import type { DisplayNode } from './useNodeFetching';
 

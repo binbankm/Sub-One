@@ -12,7 +12,7 @@
 -->
 
 <script setup lang="ts">
-import NodeFilterRuleEditor from '../../../shared/components/editors/NodeFilterRuleEditor.vue';
+import NodeFilterRuleEditor from '../../../shared/components/ui/NodeFilterRuleEditor.vue';
 import Modal from '../../../shared/components/ui/BaseModal.vue';
 import type { Subscription } from '../../../types/index';
 import { useSubscriptionForm } from '../composables/useSubscriptionForm';

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToastStore } from '../../../stores/toast';
 import type { AppConfig, Profile } from '../../../types/index';
-import { copyToClipboard } from '../../../utils/utils';
+import { copyToClipboard } from '../../../utils/helpers';
 
 const props = defineProps<{
     show: boolean;

@@ -2,7 +2,7 @@ import { computed, ref, watch } from 'vue';
 import { useToastStore } from '../../../stores/toast';
 import type { Node } from '../../../types/index';
 import { getProtocol } from '../../../utils/protocols';
-import { extractHostAndPort, extractNodeName } from '../../../utils/utils';
+import { extractHostAndPort, extractNodeName } from '../../../utils/helpers';
 
 export function useNodeForm(
     props: { show: boolean; node: Node | null; isNew: boolean },

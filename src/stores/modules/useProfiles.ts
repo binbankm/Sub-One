@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import type { Profile } from '../../types/index';
-import { generateShortId, generateUUID } from '../../utils/utils';
+import { generateShortId, generateUUID } from '../../utils/helpers';
 
 export function useProfiles(
     saveData: (reason: string, showToast?: boolean) => Promise<boolean>,

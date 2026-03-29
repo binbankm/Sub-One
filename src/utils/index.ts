@@ -18,7 +18,7 @@ export * from './constants';
 export * from './importer';
 
 // 通用工具函数
-export * from './utils';
+export * from './helpers';
 
 // 格式化工具
 export * from './format';

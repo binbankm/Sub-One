@@ -74,7 +74,7 @@ const defaultSettings: AppConfig = {
 const settings = ref<AppConfig>({ ...defaultSettings });
 
 const hasWhitespace = computed(() => {
-    const fieldsToCkeck: (keyof AppConfig)[] = [
+    const fieldsToCheck: (keyof AppConfig)[] = [
         'FileName',
         'mytoken',
         'profileToken',
@@ -82,7 +82,7 @@ const hasWhitespace = computed(() => {
         'ChatID'
     ];
 
-    for (const key of fieldsToCkeck) {
+    for (const key of fieldsToCheck) {
         const value = settings.value[key];
         if (value && typeof value === 'string' && /\s/.test(value)) {
             return true;

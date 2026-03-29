@@ -17,7 +17,7 @@ import { computed } from 'vue';
 import { useToastStore } from '../../../stores/toast';
 import type { Node } from '../../../types/index';
 import { getProtocol, getProtocolInfo } from '../../../utils/protocols';
-import { copyToClipboard } from '../../../utils/utils';
+import { copyToClipboard } from '../../../utils/helpers';
 
 const props = defineProps<{
     node: Node;

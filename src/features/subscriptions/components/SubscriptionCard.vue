@@ -10,7 +10,7 @@ import { useToastStore } from '../../../stores/toast';
 import type { Subscription } from '../../../types/index';
 import { testLatency } from '../../../utils/api';
 import { formatBytes, formatExpiry, getTrafficColorClass } from '../../../utils/format';
-import { copyToClipboard } from '../../../utils/utils';
+import { copyToClipboard } from '../../../utils/helpers';
 
 const props = defineProps<{
     sub: Subscription;

@@ -6,11 +6,11 @@ import * as api from '../utils/api';
 import { HTTP_REGEX } from '../utils/constants';
 import { useToastStore } from './toast';
 
-// Import domain logic
-import { useConfig } from './domain/useConfig';
-import { useNodes } from './domain/useNodes';
-import { useProfiles } from './domain/useProfiles';
-import { useSubscriptions } from './domain/useSubscriptions';
+// Import store modules
+import { useConfig } from './modules/useConfig';
+import { useNodes } from './modules/useNodes';
+import { useProfiles } from './modules/useProfiles';
+import { useSubscriptions } from './modules/useSubscriptions';
 
 export const useDataStore = defineStore('data', () => {
     const { showToast } = useToastStore();
