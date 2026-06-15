@@ -129,14 +129,14 @@ const handleSave = async () => {
         const result = await saveSettings(settings.value);
         if (result.success) {
             // 弹出成功提示
-            showToast('✅ 设置已保存', 'success');
+            showToast('设置已保存', 'success');
 
             // 同步到 Store，防止在此期间的其他操作覆盖配置
             dataStore.updateConfig(settings.value);
 
             // 仅在非存储标签页（常规/高级设置）保存时刷新页面
             if (activeTab.value !== 'storage') {
-                showToast('✅ 设置已保存，页面将自动刷新...', 'success');
+                showToast('设置已保存，页面将自动刷新...', 'success');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -163,7 +163,7 @@ const copyCronUrl = async () => {
     if (!cronUrl.value) return;
     try {
         await navigator.clipboard.writeText(cronUrl.value);
-        showToast('✅ 触发链接已复制到剪贴板', 'success');
+        showToast('触发链接已复制到剪贴板', 'success');
     } catch (err) {
         showToast('❌ 复制失败，请手动复制', 'error');
     }

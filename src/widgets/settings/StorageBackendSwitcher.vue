@@ -110,7 +110,7 @@ async function confirmSwitch() {
             const migratedKeys = migrateData.details?.migrated || [];
             const count = migratedKeys.length;
 
-            showToast(`✅ 切换成功！已自动迁移 ${count} 项数据`, 'success');
+            showToast(`切换成功！已自动迁移 ${count} 项数据`, 'success');
 
             // 延迟刷新页面以展示成功提示
             setTimeout(() => {

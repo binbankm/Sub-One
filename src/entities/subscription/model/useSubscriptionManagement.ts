@@ -78,7 +78,7 @@ export function useSubscriptionManagement() {
 
         const success = await dataStore.updateSubscriptionNodes(subscriptionId);
         if (success) {
-            if (!silent) toastStore.showToast(`✅ ${sub.name || '订阅'} 已更新`, 'success');
+            if (!silent) toastStore.showToast(`${sub.name || '订阅'} 已更新`, 'success');
             await dataStore.saveData('订阅节点更新', false);
 
             // 发送 TG 通知（单个订阅更新）
@@ -103,7 +103,7 @@ export function useSubscriptionManagement() {
         try {
             const result = await dataStore.updateAllEnabledSubscriptions();
             if (result.success) {
-                toastStore.showToast(`✅ 成功更新了 ${result.count} 个订阅`, 'success');
+                toastStore.showToast(`成功更新了 ${result.count} 个订阅`, 'success');
                 await dataStore.saveData('批量更新', false);
 
                 // 发送 TG 通知（批量更新汇总）
@@ -111,7 +111,7 @@ export function useSubscriptionManagement() {
                     `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
                     `┃  🔄 批量更新完成  ┃\n` +
                     `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                    `✅ 成功更新了 \`${result.count}\` 个订阅\n` +
+                    `成功更新了 \`${result.count}\` 个订阅\n` +
                     `📊 所有订阅节点信息已同步完成`;
                 await sendNotification(message);
             } else {

@@ -100,7 +100,7 @@ export function useNodeManagement() {
         }
 
         toastStore.showToast(
-            `✅ 成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`,
+            `成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`,
             'success'
         );
         showBulkImportModal.value = false;

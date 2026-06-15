@@ -123,7 +123,7 @@ export function useSubscriptions(
                         `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
                         `┃  🔄 批量更新完成  ┃\n` +
                         `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                        `✅ 成功更新了 \`${successCount}\` 个订阅\n` +
+                        `成功更新了 \`${successCount}\` 个订阅\n` +
                         `📊 仪表板数据已同步完成`;
                     api.sendNotification(message).catch((err) => {
                         console.error('发送 TG 通知失败:', err);

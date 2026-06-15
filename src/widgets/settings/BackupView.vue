@@ -234,7 +234,7 @@ async function handleFileSelect(event: Event) {
         }
 
         selectedBackup.value = backupData;
-        showToast('✅ 备份文件验证成功', 'success');
+        showToast('备份文件验证成功', 'success');
     } catch (error: any) {
         console.error('读取备份文件失败:', error);
         showToast('❌ 备份文件格式错误或损坏', 'error');
@@ -272,7 +272,7 @@ async function handleDrop(event: DragEvent) {
         }
 
         selectedBackup.value = backupData;
-        showToast('✅ 备份文件验证成功', 'success');
+        showToast('备份文件验证成功', 'success');
     } catch (error: any) {
         console.error('读取备份文件失败:', error);
         showToast('❌ 备份文件格式错误或损坏', 'error');

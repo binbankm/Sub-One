@@ -44,7 +44,7 @@ export const useDataStore = defineStore('data', () => {
             const response = await api.saveAllData(payload);
 
             if (response.success) {
-                if (showSuccessToast) showToast(`✅ ${reason} 已保存`, 'success');
+                if (showSuccessToast) showToast(`${reason} 已保存`, 'success');
                 hasUnsavedChanges.value = false;
                 return true;
             } else {
