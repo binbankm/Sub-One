@@ -65,9 +65,9 @@ const emit = defineEmits<{
 /** 根据类型返回对应的颜色类 */
 const colorClasses = {
     danger: {
-        title: 'text-red-500 dark:text-red-400',
-        icon: 'text-red-500 dark:text-red-400',
-        iconBg: 'bg-red-100 dark:bg-red-900/30'
+        title: 'text-danger-500 dark:text-danger-400',
+        icon: 'text-danger-500 dark:text-danger-400',
+        iconBg: 'bg-danger-100 dark:bg-danger-900/30'
     },
     warning: {
         title: 'text-yellow-500 dark:text-yellow-400',
@@ -75,9 +75,9 @@ const colorClasses = {
         iconBg: 'bg-yellow-100 dark:bg-yellow-900/30'
     },
     info: {
-        title: 'text-blue-500 dark:text-blue-400',
-        icon: 'text-blue-500 dark:text-blue-400',
-        iconBg: 'bg-blue-100 dark:bg-blue-900/30'
+        title: 'text-info-500 dark:text-info-400',
+        icon: 'text-info-500 dark:text-info-400',
+        iconBg: 'bg-info-100 dark:bg-info-900/30'
     }
 };
 

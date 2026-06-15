@@ -234,7 +234,7 @@ useTabActionTrigger(
         <BatchActionToolbar
             :visible="isBatchDeleteMode"
             :selected-count="selectedCount"
-            accent="indigo"
+            accent="primary"
             @select-all="selectAll"
             @invert-selection="invertSelection"
             @deselect-all="deselectAll"
@@ -300,13 +300,13 @@ useTabActionTrigger(
             v-else
             title="没有订阅"
             description="从添加你的第一个订阅开始。"
-            bg-gradient-class="bg-linear-to-br from-indigo-500/20 to-purple-500/20"
-            icon-color-class="text-indigo-500"
+            bg-gradient-class="bg-linear-to-br from-primary-500/20 to-secondary-500/20"
+            icon-color-class="text-primary-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-indigo-500"
+                    class="h-12 w-12 text-primary-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

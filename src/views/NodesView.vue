@@ -324,13 +324,13 @@ useTabActionTrigger(
             v-else
             title="没有手动节点"
             description="添加分享链接或单个节点。"
-            bg-gradient-class="bg-linear-to-br from-green-500/20 to-emerald-500/20"
-            icon-color-class="text-green-500"
+            bg-gradient-class="bg-linear-to-br from-success-500/20 to-success-500/20"
+            icon-color-class="text-success-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-green-500"
+                    class="h-12 w-12 text-success-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

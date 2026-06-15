@@ -42,15 +42,15 @@ const currentYear = computed(() => new Date().getFullYear());
             <div class="mb-4 flex items-center justify-center space-x-4">
                 <!-- 左侧渐变线 -->
                 <div
-                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
+                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-white/10"
                 ></div>
                 <!-- 中心装饰点 - 渐变色圆点 -->
                 <div
-                    class="h-2 w-2 rounded-full bg-linear-to-r from-indigo-500 to-purple-600"
+                    class="h-2 w-2 rounded-full bg-linear-to-r from-primary-500 to-secondary-600"
                 ></div>
                 <!-- 右侧渐变线 -->
                 <div
-                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600"
+                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-white/10"
                 ></div>
             </div>
 
@@ -82,14 +82,14 @@ const currentYear = computed(() => new Date().getFullYear());
             >
                 <!-- 安全可靠标签 - 绿色脉冲指示灯 -->
                 <span class="flex items-center space-x-1">
-                    <div class="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+                    <div class="h-2 w-2 animate-pulse rounded-full bg-success-400"></div>
                     <span>安全可靠</span>
                 </span>
 
                 <!-- 高效管理标签 - 蓝色脉冲指示灯（延迟0.5s） -->
                 <span class="flex items-center space-x-1">
                     <div
-                        class="h-2 w-2 animate-pulse rounded-full bg-blue-400"
+                        class="h-2 w-2 animate-pulse rounded-full bg-info-400"
                         style="animation-delay: 0.5s"
                     ></div>
                     <span>高效管理</span>
@@ -98,7 +98,7 @@ const currentYear = computed(() => new Date().getFullYear());
                 <!-- 隐私保护标签 - 紫色脉冲指示灯（延迟1s） -->
                 <span class="flex items-center space-x-1">
                     <div
-                        class="h-2 w-2 animate-pulse rounded-full bg-purple-400"
+                        class="h-2 w-2 animate-pulse rounded-full bg-secondary-400"
                         style="animation-delay: 1s"
                     ></div>
                     <span>隐私保护</span>

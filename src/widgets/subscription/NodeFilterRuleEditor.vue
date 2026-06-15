@@ -152,9 +152,9 @@ const commonKeywords = [
     // 线路属性
     { value: '高倍率', color: 'red' },
     { value: '低倍率', color: 'green' },
-    { value: '中转', color: 'indigo' },
+    { value: '中转', color: 'primary' },
     { value: '直连', color: 'blue' },
-    { value: '专线', color: 'purple' },
+    { value: '专线', color: 'secondary' },
     { value: 'BGP', color: 'cyan' },
     { value: 'IPLC', color: 'amber' },
     { value: 'IEPL', color: 'orange' },
@@ -405,21 +405,21 @@ const confirmClear = () => {
 <template>
     <!-- 编辑器容器 -->
     <div
-        class="space-y-5 rounded-2xl border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-5 shadow-lg dark:border-gray-700 dark:from-gray-900 dark:to-gray-800"
+        class="space-y-5 rounded-button border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-5 shadow-elevated dark:border-white/10 dark:from-black/50 dark:to-black/30"
     >
         <!-- 顶部：模式切换和统计 -->
         <div class="flex items-center justify-between">
             <!-- 模式切换按钮组 -->
             <div
-                class="flex rounded-xl border border-gray-300 bg-white p-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                class="flex rounded-element border border-gray-300 bg-white p-1.5 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
             >
                 <!-- 排除模式 (黑名单) -->
                 <button
-                    class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="flex items-center gap-2 rounded-element px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'exclude'
-                            ? 'scale-105 transform bg-linear-to-r from-red-500 to-rose-600 text-white shadow-md'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                            ? 'scale-105 transform bg-linear-to-r from-danger-500 to-rose-600 text-white shadow-elevated-sm'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
                     "
                     @click="mode = 'exclude'"
                 >
@@ -429,11 +429,11 @@ const confirmClear = () => {
                 </button>
                 <!-- 保留模式 (白名单) -->
                 <button
-                    class="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="flex items-center gap-2 rounded-element px-5 py-2 text-sm font-semibold transition-all duration-300"
                     :class="
                         mode === 'keep'
-                            ? 'scale-105 transform bg-linear-to-r from-green-500 to-emerald-600 text-white shadow-md'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                            ? 'scale-105 transform bg-linear-to-r from-success-500 to-success-600 text-white shadow-elevated-sm'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
                     "
                     @click="mode = 'keep'"
                 >
@@ -447,12 +447,12 @@ const confirmClear = () => {
             <div class="flex items-center gap-3">
                 <span
                     v-if="ruleCount > 0"
-                    class="rounded-full bg-indigo-100 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+                    class="rounded-full bg-primary-100 px-3 py-1.5 text-xs font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
                 >
                     {{ ruleCount }} 条规则
                 </span>
                 <button
-                    class="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                    class="rounded-element px-3 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-danger-50 hover:text-danger-500 dark:text-gray-400 dark:hover:bg-danger-900/20 dark:hover:text-danger-400"
                     @click="clearAll"
                 >
                     🗑️ 清空
@@ -466,7 +466,7 @@ const confirmClear = () => {
                 <label
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
-                    <span class="h-5 w-1 rounded-full bg-indigo-500"></span>
+                    <span class="h-5 w-1 rounded-full bg-primary-500"></span>
                     协议类型
                 </label>
                 <span v-if="selectedProtocols.length > 0" class="text-xs text-gray-400">
@@ -477,11 +477,11 @@ const confirmClear = () => {
                 <button
                     v-for="p in protocols"
                     :key="p.value"
-                    class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="group transform rounded-element border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedProtocols.includes(p.value)
-                            ? 'border-indigo-300 bg-linear-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/50 dark:border-indigo-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-indigo-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-600'
+                            ? 'border-primary-300 bg-linear-to-r from-primary-500 to-info-600 text-white shadow-elevated shadow-primary-500/50 dark:border-primary-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-primary-300 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-600'
                     "
                     @click="toggleProtocol(p.value)"
                 >
@@ -497,7 +497,7 @@ const confirmClear = () => {
                 <label
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
-                    <span class="h-5 w-1 rounded-full bg-emerald-500"></span>
+                    <span class="h-5 w-1 rounded-full bg-success-500"></span>
                     常用地区
                 </label>
                 <span v-if="selectedRegions.length > 0" class="text-xs text-gray-400">
@@ -508,11 +508,11 @@ const confirmClear = () => {
                 <button
                     v-for="r in regions"
                     :key="r.value"
-                    class="group transform rounded-xl border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="group transform rounded-element border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
                     :class="
                         selectedRegions.includes(r.value)
-                            ? 'border-emerald-300 bg-linear-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/50 dark:border-emerald-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-emerald-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-emerald-600'
+                            ? 'border-success-300 bg-linear-to-r from-success-500 to-success-600 text-white shadow-elevated shadow-success-500/50 dark:border-success-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-success-300 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-success-600'
                     "
                     @click="toggleRegion(r.value)"
                 >
@@ -528,7 +528,7 @@ const confirmClear = () => {
                 <label
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
-                    <span class="h-5 w-1 rounded-full bg-amber-500"></span>
+                    <span class="h-5 w-1 rounded-full bg-warning-500"></span>
                     关键词过滤
                 </label>
                 <span v-if="customKeywords.length > 0" class="text-xs text-gray-400">
@@ -541,11 +541,11 @@ const confirmClear = () => {
                 <button
                     v-for="k in commonKeywords"
                     :key="k.value"
-                    class="transform rounded-lg border-2 border-dashed px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:scale-105"
+                    class="transform rounded-element border-2 border-dashed px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:scale-105"
                     :class="
                         customKeywords.includes(k.value)
-                            ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-sm dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
-                            : 'border-gray-300 bg-white text-gray-600 hover:border-amber-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-amber-500'
+                            ? 'border-warning-400 bg-warning-50 text-warning-700 shadow-elevated-sm dark:border-warning-600 dark:bg-warning-900/30 dark:text-warning-300'
+                            : 'border-gray-300 bg-white text-gray-600 hover:border-warning-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:border-warning-500'
                     "
                     @click="toggleKeyword(k.value)"
                 >
@@ -559,11 +559,11 @@ const confirmClear = () => {
                     v-model="newKeyword"
                     type="text"
                     placeholder="✍️ 输入关键词后回车添加..."
-                    class="flex-1 rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                    class="flex-1 rounded-element border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-warning-500 focus:ring-2 focus:ring-warning-500 focus:outline-none dark:border-white/10 dark:bg-white/5"
                     @keyup.enter="addKeyword"
                 />
                 <button
-                    class="transform rounded-xl bg-linear-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-amber-600 hover:to-orange-700 hover:shadow-xl"
+                    class="transform rounded-element bg-linear-to-r from-warning-500 to-warning-600 px-6 py-2.5 text-sm font-semibold text-white shadow-elevated transition-all duration-300 hover:scale-105 hover:from-warning-600 hover:to-warning-700 hover:shadow-card"
                     @click="addKeyword"
                 >
                     ➕ 添加
@@ -573,16 +573,16 @@ const confirmClear = () => {
             <!-- 已选关键词标签 -->
             <div
                 v-if="customKeywords.length > 0"
-                class="flex flex-wrap gap-2 rounded-xl border border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                class="flex flex-wrap gap-2 rounded-element border border-gray-300 bg-white p-3 dark:border-white/10 dark:bg-white/5"
             >
                 <span
                     v-for="k in customKeywords"
                     :key="k"
-                    class="group inline-flex items-center rounded-lg border border-gray-300 bg-linear-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-red-400 dark:border-gray-600 dark:from-gray-700 dark:to-gray-600 dark:text-gray-200 dark:hover:border-red-500"
+                    class="group inline-flex items-center rounded-element border border-gray-300 bg-linear-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-danger-400 dark:border-white/10 dark:from-white/5 dark:to-white/10 dark:text-gray-200 dark:hover:border-danger-500"
                 >
                     <span>{{ k }}</span>
                     <button
-                        class="ml-2 text-lg leading-none font-bold text-gray-400 transition-colors hover:text-red-500 dark:hover:text-red-400"
+                        class="ml-2 text-lg leading-none font-bold text-gray-400 transition-colors hover:text-danger-500 dark:hover:text-danger-400"
                         @click="removeKeyword(k)"
                     >
                         ×
@@ -592,16 +592,16 @@ const confirmClear = () => {
         </div>
 
         <!-- 预览/手动编辑 -->
-        <div class="border-t-2 border-gray-300 pt-4 dark:border-gray-700">
+        <div class="border-t-2 border-gray-300 pt-4 dark:border-white/10">
             <div class="mb-3 flex items-center justify-between">
                 <label
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
-                    <span class="h-5 w-1 rounded-full bg-purple-500"></span>
+                    <span class="h-5 w-1 rounded-full bg-secondary-500"></span>
                     {{ isManualMode ? '手动编辑' : '规则预览' }}
                 </label>
                 <button
-                    class="transform rounded-lg bg-purple-100 px-4 py-1.5 text-xs font-medium text-purple-600 transition-all hover:scale-105 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-800/50"
+                    class="transform rounded-element bg-secondary-100 px-4 py-1.5 text-xs font-medium text-secondary-600 transition-all hover:scale-105 hover:bg-secondary-200 dark:bg-secondary-900/30 dark:text-secondary-400 dark:hover:bg-secondary-800/50"
                     @click="isManualMode = !isManualMode"
                 >
                     {{ isManualMode ? '📊 可视化模式' : '⌨️ 手动编辑' }}
@@ -612,10 +612,10 @@ const confirmClear = () => {
                 :readonly="!isManualMode"
                 rows="4"
                 :placeholder="isManualMode ? '在此手动编辑过滤规则...' : '规则将自动生成在这里'"
-                class="w-full rounded-xl border-2 border-gray-300 bg-gray-900 px-4 py-3 font-mono text-sm text-green-400 transition-all focus:ring-2 focus:ring-purple-500 focus:outline-none dark:border-gray-700 dark:bg-black"
+                class="w-full rounded-element border-2 border-gray-300 bg-gray-900 px-4 py-3 font-mono text-sm text-success-400 transition-all focus:ring-2 focus:ring-secondary-500 focus:outline-none dark:border-white/10 dark:bg-black"
                 :class="{
                     'cursor-not-allowed opacity-60': !isManualMode,
-                    'focus:border-purple-500': isManualMode
+                    'focus:border-secondary-500': isManualMode
                 }"
                 @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
             ></textarea>
@@ -634,10 +634,10 @@ const confirmClear = () => {
         <template #title>
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning-100 dark:bg-warning-900/30"
                 >
                     <svg
-                        class="h-5 w-5 text-amber-600 dark:text-amber-400"
+                        class="h-5 w-5 text-warning-600 dark:text-warning-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"

@@ -33,31 +33,31 @@ const getToastStyle = (type: string) => {
     switch (type) {
         case 'success':
             return {
-                bg: 'bg-white dark:bg-gray-800',
-                border: 'border-l-4 border-green-500',
+                bg: 'bg-white dark:bg-white/5',
+                border: 'border-l-4 border-success-500',
                 text: 'text-gray-800 dark:text-gray-100',
-                iconColor: 'text-green-500',
+                iconColor: 'text-success-500',
                 icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' // 勾选图标
             };
         case 'error':
             return {
-                bg: 'bg-white dark:bg-gray-800',
-                border: 'border-l-4 border-red-500',
+                bg: 'bg-white dark:bg-white/5',
+                border: 'border-l-4 border-danger-500',
                 text: 'text-gray-800 dark:text-gray-100',
-                iconColor: 'text-red-500',
+                iconColor: 'text-danger-500',
                 icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' // 错误图标
             };
         case 'info':
             return {
-                bg: 'bg-white dark:bg-gray-800',
-                border: 'border-l-4 border-blue-500',
+                bg: 'bg-white dark:bg-white/5',
+                border: 'border-l-4 border-info-500',
                 text: 'text-gray-800 dark:text-gray-100',
-                iconColor: 'text-blue-500',
+                iconColor: 'text-info-500',
                 icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' // 信息图标
             };
         default:
             return {
-                bg: 'bg-white dark:bg-gray-800',
+                bg: 'bg-white dark:bg-white/5',
                 border: 'border-l-4 border-gray-500',
                 text: 'text-gray-800 dark:text-gray-100',
                 iconColor: 'text-gray-500',
@@ -78,7 +78,7 @@ const getToastStyle = (type: string) => {
             <div
                 v-for="toast in toastStore.toasts"
                 :key="toast.id"
-                class="pointer-events-auto flex w-full transform items-start gap-3 rounded-lg border border-gray-300 p-4 shadow-lg transition-all duration-300 hover:scale-[1.02] dark:border-gray-700"
+                class="pointer-events-auto flex w-full transform items-start gap-3 rounded-element border border-gray-300 p-4 shadow-elevated transition-all duration-300 hover:scale-[1.02] dark:border-white/10"
                 :class="[getToastStyle(toast.type).bg, getToastStyle(toast.type).border]"
             >
                 <!-- 图标 -->
@@ -110,7 +110,7 @@ const getToastStyle = (type: string) => {
 
                 <!-- 关闭按钮 -->
                 <button
-                    class="-mt-1 -mr-1 shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-700"
+                    class="-mt-1 -mr-1 shrink-0 rounded-element p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-white/10"
                     @click="toastStore.removeToast(toast.id)"
                 >
                     <svg

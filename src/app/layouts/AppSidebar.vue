@@ -102,8 +102,8 @@ const navigationItems = computed<NavigationItem[]>(() => [
         id: 'dashboard',
         label: '仪表盘',
         icon: 'dashboard',
-        gradient: 'from-orange-500 to-amber-600',
-        shadow: 'shadow-orange-500/30',
+        gradient: 'from-warning-500 to-warning-600',
+        shadow: 'shadow-warning-500/30',
         description: '概览状态'
     },
     {
@@ -111,8 +111,8 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: '订阅管理',
         icon: 'subscription',
         count: props.subscriptionsCount,
-        gradient: 'from-indigo-500 to-purple-600',
-        shadow: 'shadow-indigo-500/30',
+        gradient: 'from-primary-500 to-secondary-600',
+        shadow: 'shadow-primary-500/30',
         description: '管理订阅源'
     },
     {
@@ -120,8 +120,8 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: '订阅组',
         icon: 'profile',
         count: props.profilesCount,
-        gradient: 'from-purple-500 to-pink-600',
-        shadow: 'shadow-purple-500/30',
+        gradient: 'from-secondary-500 to-pink-600',
+        shadow: 'shadow-secondary-500/30',
         description: '组织订阅'
     },
 
@@ -130,8 +130,8 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: '手动节点',
         icon: 'node',
         count: props.manualNodesCount,
-        gradient: 'from-green-500 to-emerald-600',
-        shadow: 'shadow-green-500/30',
+        gradient: 'from-success-500 to-success-600',
+        shadow: 'shadow-success-500/30',
         description: '管理节点'
     }
 ]);
@@ -144,8 +144,8 @@ const utilityItems = computed(() => [
         id: 'help',
         label: '帮助文档',
         icon: 'help',
-        gradient: 'from-amber-500 to-orange-600',
-        shadow: 'shadow-amber-500/30',
+        gradient: 'from-warning-500 to-warning-600',
+        shadow: 'shadow-warning-500/30',
         description: '查看文档'
     },
     {
@@ -253,7 +253,7 @@ onUnmounted(() => {
 
     <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
     <button
-        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl border border-gray-300 bg-white/95 text-gray-800 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-xl lg:hidden dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-900"
+        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-element border border-gray-300 bg-white/95 text-gray-800 shadow-elevated backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-card lg:hidden dark:border-white/10 dark:bg-black/80 dark:text-gray-200 dark:hover:bg-black/90"
         :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
         @click="toggleMobileMenu"
     >
@@ -295,7 +295,7 @@ onUnmounted(() => {
             <div class="mb-4 flex items-center gap-4">
                 <!-- Logo 图标 -->
                 <div
-                    class="from-primary-500 to-secondary-500 shadow-primary-500/40 flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-2xl bg-linear-to-br shadow-lg"
+                    class="from-primary-500 to-secondary-500 shadow-primary-500/40 flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-button bg-linear-to-br shadow-elevated"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -400,7 +400,7 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
                             :class="[
                                 `bg-linear-to-br ${item.gradient}`,
                                 modelValue === item.id ? 'bg-white/20 shadow-inner' : ''
@@ -537,7 +537,7 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
                             :class="`bg-linear-to-br ${item.gradient}`"
                         >
                             <!-- Help 图标 -->
@@ -612,7 +612,7 @@ onUnmounted(() => {
         >
             <!-- 折叠按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-indigo-500/10 px-3 py-3 text-sm font-semibold text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-500/20 dark:bg-indigo-500/15 dark:text-indigo-400"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-primary-500/10 px-3 py-3 text-sm font-semibold text-primary-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-500/20 dark:bg-primary-500/15 dark:text-primary-400"
                 :title="isCollapsed ? '展开侧边栏' : '收起侧边栏'"
                 @click="toggleCollapse"
             >
@@ -636,7 +636,7 @@ onUnmounted(() => {
 
             <!-- 登出按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-red-500/10 px-3 py-3 text-sm font-semibold text-red-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-500/20 dark:bg-red-500/15 dark:text-red-400"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-danger-500/10 px-3 py-3 text-sm font-semibold text-danger-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger-500/20 dark:bg-danger-500/15 dark:text-danger-400"
                 :title="isCollapsed ? '退出登录' : ''"
                 @click="handleLogout"
             >

@@ -107,7 +107,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
     <Transition name="fade">
         <div
             v-if="show"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4 sm:p-6"
             @click.self="emit('update:show', false)"
         >
             <!-- Backdrop -->
@@ -118,11 +118,11 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
 
             <!-- Modal Card -->
             <div
-                class="relative flex max-h-[85vh] w-full max-w-sm origin-center scale-100 transform flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-900/5 transition-all dark:bg-gray-800 dark:ring-white/10"
+                class="relative flex max-h-[85vh] w-full max-w-sm origin-center scale-100 transform flex-col overflow-hidden rounded-card border border-gray-300 bg-white text-left shadow-modal transition-all dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
             >
                 <!-- Header -->
                 <div
-                    class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-gray-700 dark:bg-gray-800"
+                    class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-white/10 dark:bg-white/5"
                 >
                     <div>
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">导出订阅</h3>
@@ -131,7 +131,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         </p>
                     </div>
                     <button
-                        class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                        class="rounded-element p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
                         @click="close"
                     >
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,9 +149,9 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                 <div class="scrollbar-thin overflow-y-auto p-2">
                     <div class="px-4 py-2">
                         <div
-                            class="mb-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 dark:border-amber-900/30 dark:bg-amber-900/20"
+                            class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
                         >
-                            <p class="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
+                            <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400">
                                 请确保已在设置中配置了
                                 <strong>订阅组分享 Token</strong>，否则链接无法访问。
                             </p>
@@ -161,12 +161,12 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                     <div
                         v-for="option in exportOptions"
                         :key="option.name"
-                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-700 dark:hover:bg-gray-700/50"
+                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-white/10 dark:hover:bg-white/10/50"
                     >
                         <!-- Left: Icon & Name -->
                         <div class="flex items-center gap-4">
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-indigo-600 group-hover:shadow-sm dark:bg-gray-700 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-gray-600 dark:group-hover:text-indigo-400"
+                                class="flex h-10 w-10 items-center justify-center rounded-element bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-primary-600 group-hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-white/10 dark:group-hover:text-primary-400"
                             >
                                 <svg
                                     class="h-5 w-5"
@@ -194,7 +194,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         <div class="flex items-center gap-1">
                             <!-- Copy Button -->
                             <button
-                                class="rounded-lg p-2.5 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 active:scale-95 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                                class="rounded-element p-2.5 text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 active:scale-95 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                                 title="复制链接"
                                 @click="handleCopy(option)"
                             >
@@ -218,7 +218,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
 
                 <!-- Footer -->
                 <div
-                    class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-gray-800 dark:bg-gray-900/50"
+                    class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-white/10 dark:bg-black/40"
                 >
                     <button
                         class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

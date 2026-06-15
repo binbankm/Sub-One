@@ -151,7 +151,7 @@ useTabActionTrigger(
         <BatchActionToolbar
             :visible="isBatchDeleteMode"
             :selected-count="selectedCount"
-            accent="purple"
+            accent="secondary"
             @select-all="selectAll"
             @invert-selection="invertSelection"
             @deselect-all="deselectAll"
@@ -187,13 +187,13 @@ useTabActionTrigger(
             v-if="profiles.length === 0"
             title="没有订阅组"
             description="创建一个订阅组来组合你的节点吧！"
-            bg-gradient-class="bg-linear-to-br from-purple-500/20 to-pink-500/20"
-            icon-color-class="text-purple-500"
+            bg-gradient-class="bg-linear-to-br from-secondary-500/20 to-pink-500/20"
+            icon-color-class="text-secondary-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-purple-500"
+                    class="h-12 w-12 text-secondary-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

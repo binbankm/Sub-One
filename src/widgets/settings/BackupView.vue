@@ -319,13 +319,13 @@ async function confirmImport() {
     <div class="space-y-6 pb-12">
         <!-- 快照管理 (备份储存) -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
-            <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center border-b border-gray-300 pb-4 dark:border-gray-700">
+            <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center border-b border-gray-300 pb-4 dark:border-white/10">
                 <div>
                     <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
                         服务器快照
-                        <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
+                        <span class="rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/40 dark:text-primary-400">
                             储存功能
                         </span>
                     </h3>
@@ -339,12 +339,12 @@ async function confirmImport() {
                         v-model="snapshotName"
                         type="text"
                         placeholder="快照名称 (可选)"
-                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
+                        class="rounded-element border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white sm:w-48"
                         @keyup.enter="handleCreateSnapshot"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
-                        class="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
+                        class="flex shrink-0 items-center justify-center gap-2 rounded-element bg-primary-600 px-3 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:opacity-50 whitespace-nowrap"
                         @click="handleCreateSnapshot"
                     >
                         <svg v-if="!isCreatingSnapshot" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -358,25 +358,25 @@ async function confirmImport() {
 
             <!-- 快照列表 -->
             <div v-if="isLoadingSnapshots" class="flex justify-center py-12">
-                <div class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+                <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
             </div>
 
-            <div v-else-if="snapshots.length === 0" class="py-12 text-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+            <div v-else-if="snapshots.length === 0" class="py-12 text-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-element">
                  还没有任何服务器快照
             </div>
 
             <div v-else>
                 <!-- 批量操作栏 -->
-                <div v-if="batch.isBatchDeleteMode.value" class="mb-4 flex items-center justify-between rounded-lg bg-indigo-50 p-3 px-4 dark:bg-indigo-900/20">
+                <div v-if="batch.isBatchDeleteMode.value" class="mb-4 flex items-center justify-between rounded-element bg-primary-50 p-3 px-4 dark:bg-primary-900/20">
                     <div class="flex items-center gap-4">
                         <label class="flex cursor-pointer items-center gap-2">
                             <input
                                 type="checkbox"
                                 :checked="batch.selectedCount.value === snapshots.length && snapshots.length > 0"
-                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                 @change="batch.selectedCount.value === snapshots.length ? batch.deselectAll() : batch.selectAll()"
                             />
-                            <span class="text-sm font-medium text-indigo-900 dark:text-indigo-300">
+                            <span class="text-sm font-medium text-primary-900 dark:text-primary-300">
                                 全选 ({{ batch.selectedCount.value }}/{{ snapshots.length }})
                             </span>
                         </label>
@@ -390,7 +390,7 @@ async function confirmImport() {
                         </button>
                         <button
                             :disabled="batch.selectedCount.value === 0"
-                            class="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-600 disabled:opacity-50"
+                            class="rounded-element bg-danger-500 px-3 py-1.5 text-xs font-medium text-white shadow-elevated-sm hover:bg-danger-600 disabled:opacity-50"
                             @click="handleBatchDelete"
                         >
                             删除选中 ({{ batch.selectedCount.value }})
@@ -401,7 +401,7 @@ async function confirmImport() {
                 <!-- 列表控制栏 (非批量模式) -->
                 <div v-else class="mb-4 flex justify-end">
                     <button
-                        class="text-xs text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400"
+                        class="text-xs text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400"
                         @click="batch.toggleBatchDeleteMode()"
                     >
                         批量管理
@@ -412,7 +412,7 @@ async function confirmImport() {
                     <div
                         v-for="snapshot in snapshots"
                         :key="snapshot.id"
-                        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white dark:border-gray-700/50 dark:bg-gray-700/20 dark:hover:border-indigo-900/50 dark:hover:bg-gray-700/40"
+                        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 rounded-element border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-primary-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/30 dark:hover:bg-white/10"
                         @click="batch.isBatchDeleteMode.value && batch.toggleSelection(snapshot.id)"
                     >
                         <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -421,12 +421,12 @@ async function confirmImport() {
                                 <input
                                     type="checkbox"
                                     :checked="batch.isSelected(snapshot.id)"
-                                    class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    class="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                     @change="batch.toggleSelection(snapshot.id)"
                                 />
                             </div>
 
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 shrink-0">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-element bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -447,13 +447,13 @@ async function confirmImport() {
 
                         <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <button
-                                class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-700"
+                                class="rounded-element bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-elevated-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-white/5 dark:text-gray-200 dark:ring-white/10 dark:hover:bg-white/10"
                                 @click.stop="handleRestoreFromSnapshot(snapshot.id)"
                             >
                                 恢复
                             </button>
                             <button
-                                class="rounded-lg bg-white p-1.5 text-red-500 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50 dark:bg-gray-800 dark:ring-gray-600 dark:hover:bg-red-900/20"
+                                class="rounded-element bg-white p-1.5 text-danger-500 shadow-elevated-sm ring-1 ring-inset ring-gray-300 hover:bg-danger-50 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-danger-900/20"
                                 title="删除"
                                 @click.stop="handleDeleteSnapshot(snapshot.id)"
                             >
@@ -470,7 +470,7 @@ async function confirmImport() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- 导出备份 -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
             <div
                 class="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
@@ -487,7 +487,7 @@ async function confirmImport() {
                 </div>
                 <button
                     :disabled="isExporting"
-                    class="flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex shrink-0 items-center gap-2 rounded-element bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                     @click="handleExport"
                 >
                     <svg
@@ -514,7 +514,7 @@ async function confirmImport() {
             </div>
 
             <div
-                class="rounded-lg border border-gray-300 bg-gray-50 p-3 text-xs text-gray-400 dark:border-gray-700 dark:bg-gray-700/30 dark:text-gray-500"
+                class="rounded-element border border-gray-300 bg-gray-50 p-3 text-xs text-gray-400 dark:border-white/10 dark:bg-white/5 dark:text-gray-500"
             >
                 包含订阅源、订阅组、手动节点、系统设置和账号信息。包括敏感数据（如密码哈希），请妥善保管。
             </div>
@@ -522,9 +522,9 @@ async function confirmImport() {
 
         <!-- 导入备份 -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
-            <div class="mb-6 border-b border-gray-300 pb-4 dark:border-gray-700">
+            <div class="mb-6 border-b border-gray-300 pb-4 dark:border-white/10">
                 <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
                     导入备份
                 </h3>
@@ -537,7 +537,7 @@ async function confirmImport() {
             <div class="space-y-4">
                 <div
                     v-if="!selectedBackup"
-                    class="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/50 p-8 text-center transition-colors hover:border-indigo-500 dark:border-gray-600 dark:bg-gray-700/20 dark:hover:border-indigo-400"
+                    class="cursor-pointer rounded-element border-2 border-dashed border-gray-300 bg-gray-50/50 p-8 text-center transition-colors hover:border-primary-500 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-400"
                     @click="() => fileInput?.click()"
                     @dragover.prevent
                     @drop.prevent="handleDrop"
@@ -551,11 +551,11 @@ async function confirmImport() {
                     />
 
                     <div
-                        class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/30"
+                        class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/30"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                            class="h-6 w-6 text-primary-600 dark:text-primary-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -580,12 +580,12 @@ async function confirmImport() {
                 <div v-else class="animate-fadeIn space-y-6">
                     <!-- 文件信息卡片 -->
                     <div
-                        class="rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10"
+                        class="rounded-element border border-primary-100 bg-primary-50/50 p-4 dark:border-primary-900/30 dark:bg-primary-900/10"
                     >
                         <div class="mb-4 flex items-start justify-between">
                             <div class="flex items-center gap-3">
                                 <div
-                                    class="rounded-lg border border-indigo-100 bg-white p-2 text-indigo-600 shadow-sm dark:border-indigo-900/30 dark:bg-gray-800 dark:text-indigo-400"
+                                    class="rounded-element border border-primary-100 bg-white p-2 text-primary-600 shadow-elevated-sm dark:border-primary-900/30 dark:text-primary-400"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -613,7 +613,7 @@ async function confirmImport() {
                                 </div>
                             </div>
                             <button
-                                class="p-1 text-gray-400 transition-colors hover:text-red-500"
+                                class="p-1 text-gray-400 transition-colors hover:text-danger-500"
                                 @click="selectedBackup = null"
                             >
                                 <svg
@@ -634,9 +634,9 @@ async function confirmImport() {
                         <!-- 数据统计网格 -->
                         <div class="grid grid-cols-5 gap-2 text-center">
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.subscriptions || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
@@ -644,9 +644,9 @@ async function confirmImport() {
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.profiles || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
@@ -654,9 +654,9 @@ async function confirmImport() {
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.manualNodes || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
@@ -664,9 +664,9 @@ async function confirmImport() {
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.proxyCount || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
@@ -674,9 +674,9 @@ async function confirmImport() {
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.users || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
@@ -694,11 +694,11 @@ async function confirmImport() {
                         >
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <label
-                                class="relative flex cursor-pointer items-start rounded-xl border p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                                class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'merge'
-                                        ? 'border-indigo-500 bg-indigo-50/20 ring-1 ring-indigo-500'
-                                        : 'border-gray-300 dark:border-gray-700'
+                                        ? 'border-primary-500 bg-primary-50/20 ring-1 ring-primary-500'
+                                        : 'border-gray-300 dark:border-white/10'
                                 "
                             >
                                 <input
@@ -709,9 +709,9 @@ async function confirmImport() {
                                 />
                                 <div class="flex h-5 items-center">
                                     <div
-                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-gray-600"
+                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-white/10"
                                         :class="{
-                                            'border-indigo-600 bg-indigo-600':
+                                            'border-primary-600 bg-primary-600':
                                                 restoreMode === 'merge'
                                         }"
                                     >
@@ -734,11 +734,11 @@ async function confirmImport() {
                             </label>
 
                             <label
-                                class="relative flex cursor-pointer items-start rounded-xl border p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                                class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'overwrite'
-                                        ? 'border-amber-500 bg-amber-50/20 ring-1 ring-amber-500'
-                                        : 'border-gray-300 dark:border-gray-700'
+                                        ? 'border-warning-500 bg-warning-50/20 ring-1 ring-warning-500'
+                                        : 'border-gray-300 dark:border-white/10'
                                 "
                             >
                                 <input
@@ -749,9 +749,9 @@ async function confirmImport() {
                                 />
                                 <div class="flex h-5 items-center">
                                     <div
-                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-gray-600"
+                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-white/10"
                                         :class="{
-                                            'border-amber-600 bg-amber-600':
+                                            'border-warning-600 bg-warning-600':
                                                 restoreMode === 'overwrite'
                                         }"
                                     >
@@ -779,7 +779,7 @@ async function confirmImport() {
                     <div class="flex gap-3 pt-2">
                         <button
                             :disabled="isImporting"
-                            class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex flex-1 items-center justify-center gap-2 rounded-element bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                             @click="handleImport"
                         >
                             <svg
@@ -804,7 +804,7 @@ async function confirmImport() {
                             {{ isImporting ? '恢复数据中...' : '确认开始恢复' }}
                         </button>
                         <button
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="rounded-element border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:bg-white/5"
                             @click="selectedBackup = null"
                         >
                             取消
@@ -842,7 +842,7 @@ async function confirmImport() {
             :type="restoreMode === 'overwrite' ? 'danger' : 'warning'"
             :message="
                 restoreMode === 'overwrite'
-                    ? '确定要从快照恢复并 <strong class=\'text-red-500\'>覆盖</strong> 现有数据吗？此操作不可撤销！'
+                    ? '确定要从快照恢复并 <strong class=\'text-danger-500\'>覆盖</strong> 现有数据吗？此操作不可撤销！'
                     : '确定要从快照恢复（合并）数据吗？'
             "
             confirm-text="确认恢复"

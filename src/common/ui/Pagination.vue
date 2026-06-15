@@ -16,7 +16,7 @@ defineEmits<{
     >
         <button
             :disabled="currentPage === 1"
-            class="hover-lift flex min-w-17.5 items-center justify-center rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-2xl sm:px-6 sm:py-3 sm:text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+            class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             @click="$emit('change-page', currentPage - 1)"
         >
             &laquo;<span class="xs:inline ml-1 hidden">上一页</span>
@@ -30,7 +30,7 @@ defineEmits<{
 
         <button
             :disabled="currentPage === totalPages"
-            class="hover-lift flex min-w-17.5 items-center justify-center rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-2xl sm:px-6 sm:py-3 sm:text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+            class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             @click="$emit('change-page', currentPage + 1)"
         >
             <span class="xs:inline mr-1 hidden">下一页</span>&raquo;

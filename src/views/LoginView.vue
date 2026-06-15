@@ -131,19 +131,19 @@ const handleSubmit = async () => {
     <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-3 sm:p-6">
         <!-- ==================== 登录卡片 ==================== -->
         <div
-            class="animate-scale-in relative isolate mx-auto w-full max-w-full rounded-2xl border border-white/30 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-all duration-300 sm:max-w-105 sm:rounded-3xl sm:p-10 dark:border-white/10 dark:bg-gray-900 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]"
+            class="animate-scale-in relative isolate mx-auto w-full max-w-full rounded-button border border-white/30 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-all duration-300 sm:max-w-105 sm:rounded-card sm:p-10 dark:border-white/10 dark:bg-black/80 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]"
         >
             <!-- Logo 区域 -->
             <div class="animate-fade-in-down mb-4 text-center sm:mb-6">
                 <!-- Logo 图标容器 -->
                 <div class="mb-3 flex justify-center sm:mb-5">
                     <div
-                        class="from-primary-500 to-secondary-500 shadow-glow-primary flex h-14 w-14 animate-bounce items-center justify-center rounded-2xl bg-linear-to-br sm:h-16 sm:w-16"
+                        class="from-primary-500 to-secondary-500 shadow-glow-primary flex h-14 w-14 animate-bounce items-center justify-center rounded-button bg-linear-to-br sm:h-16 sm:w-16"
                     >
                         <!-- 闪电图标 SVG -->
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-7 w-7 text-white drop-shadow-md sm:h-8 sm:w-8"
+                            class="h-7 w-7 text-white drop-shadow-elevated-sm sm:h-8 sm:w-8"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -203,7 +203,7 @@ const handleSubmit = async () => {
                             id="username"
                             v-model="username"
                             type="text"
-                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-gray-800/50 dark:focus:bg-gray-800"
+                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error && !username }"
                             placeholder="请输入您的用户名"
                             autocomplete="username"
@@ -233,7 +233,7 @@ const handleSubmit = async () => {
                             <svg
                                 v-else
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-indigo-500 sm:h-5 sm:w-5"
+                                class="h-4 w-4 text-primary-500 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -277,7 +277,7 @@ const handleSubmit = async () => {
                             id="password"
                             v-model="password"
                             type="password"
-                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-gray-800/50 dark:focus:bg-gray-800"
+                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
                             placeholder="请输入您的密码"
                             autocomplete="current-password"
@@ -310,7 +310,7 @@ const handleSubmit = async () => {
                             <svg
                                 v-else
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-indigo-500 sm:h-5 sm:w-5"
+                                class="h-4 w-4 text-primary-500 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -329,7 +329,7 @@ const handleSubmit = async () => {
                     <transition name="shake">
                         <p
                             v-if="error"
-                            class="animate-fade-in-down mt-1.5 flex items-center gap-1.5 rounded-lg border-l-4 border-red-600 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-600 sm:mt-2.5 sm:px-3 sm:py-2 sm:text-sm dark:bg-red-900/20 dark:text-red-400"
+                            class="animate-fade-in-down mt-1.5 flex items-center gap-1.5 rounded-element border-l-4 border-danger-600 bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-600 sm:mt-2.5 sm:px-3 sm:py-2 sm:text-sm dark:bg-danger-900/20 dark:text-danger-400"
                         >
                             <!-- 警告图标 -->
                             <svg
@@ -379,7 +379,7 @@ const handleSubmit = async () => {
                             id="confirmPassword"
                             v-model="confirmPassword"
                             type="password"
-                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-gray-800/50 dark:focus:bg-gray-800"
+                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
                             placeholder="请再次输入密码"
                             autocomplete="new-password"
@@ -409,7 +409,7 @@ const handleSubmit = async () => {
                             <svg
                                 v-else-if="password === confirmPassword && confirmPassword"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-green-500 sm:h-5 sm:w-5"
+                                class="h-4 w-4 text-success-500 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -425,7 +425,7 @@ const handleSubmit = async () => {
                             <svg
                                 v-else
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-red-500 sm:h-5 sm:w-5"
+                                class="h-4 w-4 text-danger-500 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -481,7 +481,7 @@ const handleSubmit = async () => {
                 <div class="mt-4 text-center sm:mt-6">
                     <!-- 安全徽章 -->
                     <div
-                        class="inline-flex cursor-default items-center gap-1.5 rounded-full border border-green-300 bg-green-50/80 px-3 py-1.5 text-[0.6875rem] font-semibold text-green-700 transition-colors hover:bg-green-100 sm:px-4 sm:py-2 sm:text-xs dark:border-green-700 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/40"
+                        class="inline-flex cursor-default items-center gap-1.5 rounded-full border border-success-300 bg-success-50/80 px-3 py-1.5 text-[0.6875rem] font-semibold text-success-700 transition-colors hover:bg-success-100 sm:px-4 sm:py-2 sm:text-xs dark:border-success-700 dark:bg-success-900/30 dark:text-success-400 dark:hover:bg-success-900/40"
                     >
                         <!-- 盾牌图标 -->
                         <svg

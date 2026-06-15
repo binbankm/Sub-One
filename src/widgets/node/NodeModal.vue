@@ -85,7 +85,7 @@ const {
                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                         节点链接
-                        <span class="text-red-500">*</span>
+                        <span class="text-danger-500">*</span>
                     </label>
                     <textarea
                         id="node-url"
@@ -93,11 +93,11 @@ const {
                         rows="4"
                         placeholder="vmess://... 或 ss://... 等节点分享链接"
                         class="input-modern w-full resize-none font-mono text-sm"
-                        :class="{ 'border-red-500 dark:border-red-500': urlError }"
+                        :class="{ 'border-danger-500 dark:border-danger-500': urlError }"
                         @input="handleUrlInput"
                         @blur="handleUrlBlur"
                     ></textarea>
-                    <p v-if="urlError" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p v-if="urlError" class="mt-1 text-sm text-danger-600 dark:text-danger-400">
                         {{ urlError }}
                     </p>
                     <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -108,11 +108,11 @@ const {
 
                 <!-- 提示信息 -->
                 <div
-                    class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+                    class="rounded-element border border-info-200 bg-info-50 p-4 dark:border-info-800 dark:bg-info-900/20"
                 >
                     <div class="flex items-start gap-3">
                         <svg
-                            class="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400"
+                            class="mt-0.5 h-5 w-5 shrink-0 text-info-600 dark:text-info-400"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >
@@ -123,10 +123,10 @@ const {
                             />
                         </svg>
                         <div class="flex-1">
-                            <p class="mb-1 text-sm font-medium text-blue-900 dark:text-blue-100">
+                            <p class="mb-1 text-sm font-medium text-info-900 dark:text-info-100">
                                 粘贴节点分享链接
                             </p>
-                            <p class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="text-xs text-info-700 dark:text-info-300">
                                 从其他应用或网站复制节点分享链接，粘贴到上方输入框即可
                             </p>
                         </div>

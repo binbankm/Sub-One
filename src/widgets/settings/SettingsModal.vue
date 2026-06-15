@@ -198,10 +198,10 @@ watch(
     >
         <template #title>
             <div class="flex items-center gap-3">
-                <div class="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/30">
+                <div class="rounded-element bg-primary-100 p-2 dark:bg-primary-900/30">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                        class="h-6 w-6 text-primary-600 dark:text-primary-400"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -226,20 +226,20 @@ watch(
         <template #body>
             <div v-if="isLoading" class="flex flex-col items-center justify-center p-12">
                 <div
-                    class="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"
+                    class="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
                 ></div>
                 <p class="font-medium text-gray-500">正在加载配置...</p>
             </div>
 
             <div v-else class="space-y-6 px-1">
                 <!-- 标签页导航 -->
-                <div class="border-b border-gray-300 dark:border-gray-700">
+                <div class="border-b border-gray-300 dark:border-white/10">
                     <nav class="-mb-px flex gap-2" aria-label="Tabs">
                         <button
                             :class="[
                                 'border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors',
                                 activeTab === 'general'
-                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
                             @click="activeTab = 'general'"
@@ -250,7 +250,7 @@ watch(
                             :class="[
                                 'border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors',
                                 activeTab === 'advanced'
-                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
                             @click="activeTab = 'advanced'"
@@ -261,7 +261,7 @@ watch(
                             :class="[
                                 'border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors',
                                 activeTab === 'storage'
-                                    ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                             ]"
                             @click="activeTab = 'storage'"
@@ -300,7 +300,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="fileName"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >自定义订阅文件名</label
                                     >
                                     <input
@@ -314,7 +314,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="myToken"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >自定义订阅Token</label
                                     >
                                     <input
@@ -354,7 +354,7 @@ watch(
                                 <div class="group md:col-span-2">
                                     <label
                                         for="profileToken"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >订阅组分享Token</label
                                     >
                                     <input
@@ -365,7 +365,7 @@ watch(
                                         placeholder="例如：my（必须与订阅Token不同）"
                                     />
                                     <p
-                                        class="mt-2 flex items-start gap-1 text-xs text-amber-600 dark:text-amber-400"
+                                        class="mt-2 flex items-start gap-1 text-xs text-warning-600 dark:text-warning-400"
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
@@ -394,7 +394,7 @@ watch(
                                         >节点名前缀</label
                                     >
                                     <div
-                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                        class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
                                     >
                                         <div>
                                             <p
@@ -417,7 +417,7 @@ watch(
                                                 class="peer sr-only"
                                             />
                                             <div
-                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-indigo-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                                             ></div>
                                         </label>
                                     </div>
@@ -430,7 +430,7 @@ watch(
                                         >节点去重</label
                                     >
                                     <div
-                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                        class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
                                     >
                                         <div>
                                             <p
@@ -453,7 +453,7 @@ watch(
                                                 class="peer sr-only"
                                             />
                                             <div
-                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-indigo-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                                             ></div>
                                         </label>
                                     </div>
@@ -466,7 +466,7 @@ watch(
                                         >订阅转换方式</label
                                     >
                                     <div
-                                        class="flex h-22 items-center justify-between rounded-xl border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-indigo-200 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-indigo-800"
+                                        class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
                                     >
                                         <div>
                                             <p
@@ -489,7 +489,7 @@ watch(
                                                 class="peer sr-only"
                                             />
                                             <div
-                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-indigo-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                                                class="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                                             ></div>
                                         </label>
                                     </div>
@@ -502,7 +502,7 @@ watch(
                                 >
                                     <label
                                         for="externalConverterUrl"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >外部转换API地址</label
                                     >
                                     <div class="flex gap-2">
@@ -528,7 +528,7 @@ watch(
                                         />
                                     </div>
                                     <p
-                                        class="mt-2 flex items-start gap-1 text-xs text-blue-600 dark:text-blue-400"
+                                        class="mt-2 flex items-start gap-1 text-xs text-info-600 dark:text-info-400"
                                     >
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
@@ -581,7 +581,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="tgBotToken"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >Bot Token</label
                                     >
                                     <input
@@ -595,7 +595,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="tgChatID"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                         >Chat ID</label
                                     >
                                     <input
@@ -635,7 +635,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="notifyThresholdDays"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
                                         到期提醒阈值（天）
                                     </label>
@@ -657,7 +657,7 @@ watch(
                                 <div class="group">
                                     <label
                                         for="notifyThresholdPercent"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
                                         流量提醒阈值（%）
                                     </label>
@@ -694,7 +694,7 @@ watch(
                                 自动更新(Cron)配置
                             </h4>
                             <!-- 定时更新总开关 -->
-                            <div class="mb-6 flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                            <div class="mb-6 flex items-center justify-between rounded-element bg-gray-50 p-4 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                 <div>
                                     <h5 class="text-sm font-semibold text-gray-900 dark:text-gray-100">启用定时更新</h5>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -709,7 +709,7 @@ watch(
                                     />
                                     <!-- 背景轨道 -->
                                     <div
-                                        class="h-6 w-11 rounded-full bg-gray-300 transition-colors peer-checked:bg-indigo-600 peer-focus:ring-2 peer-focus:ring-indigo-500 peer-focus:ring-offset-2 dark:bg-gray-600 dark:peer-focus:ring-offset-gray-800"
+                                        class="h-6 w-11 rounded-full bg-gray-300 transition-colors peer-checked:bg-primary-600 peer-focus:ring-2 peer-focus:ring-primary-500 peer-focus:ring-offset-2 dark:bg-white/10 dark:peer-focus:ring-offset-white/10"
                                     ></div>
                                     <!-- 滑块 -->
                                     <span
@@ -723,7 +723,7 @@ watch(
                                 <div class="group md:col-span-2">
                                     <label
                                         for="cronSecret"
-                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-600 dark:text-gray-300 dark:group-hover:text-indigo-400"
+                                        class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
                                         Cron 安全密钥（Token）
                                     </label>
@@ -736,12 +736,12 @@ watch(
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                         配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：<br />
-                                        <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 rounded inline-block select-all">/api/cron/trigger?token=您的密钥</code><br />
+                                        <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-white/5 text-primary-600 dark:text-primary-400 rounded inline-block select-all">/api/cron/trigger?token=您的密钥</code><br />
                                         如果您使用的是 Cloudflare Pages，由于平台限制必须通过这种接口方式触发定时任务；Docker 用户自带内部定时器，可选择配置。
                                     </p>
                                     
                                     <!-- 动态生成的触发链接展示 -->
-                                    <div v-if="cronUrl" class="mt-4 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                                    <div v-if="cronUrl" class="mt-4 rounded-element bg-gray-50 p-3 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                         <label class="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
                                             生成的专属触发链接：
                                         </label>
@@ -750,11 +750,11 @@ watch(
                                                 type="text"
                                                 readonly
                                                 :value="cronUrl"
-                                                class="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300"
+                                                class="flex-1 rounded-element border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-black/80 dark:text-gray-300"
                                             />
                                             <button
                                                 type="button"
-                                                class="rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors"
+                                                class="rounded-element bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50 transition-colors"
                                                 @click="copyCronUrl"
                                             >
                                                 复制链接
@@ -765,7 +765,7 @@ watch(
                             </div>
 
                             <!-- 关闭状态提示 -->
-                            <div v-else class="rounded-lg bg-gray-100 p-4 text-center dark:bg-gray-800/50">
+                            <div v-else class="rounded-element bg-gray-100 p-4 text-center dark:bg-white/5">
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
                                     <span class="inline-flex items-center gap-1">
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

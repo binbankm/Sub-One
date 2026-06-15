@@ -127,11 +127,11 @@ const handleTestLatency = async () => {
 
 <template>
     <div
-        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-2xl hover:scale-[1.02] sm:min-h-60"
+        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-card hover:scale-[1.02] sm:min-h-60"
         :class="{
             'opacity-50': !sub.enabled,
-            'ring-2 ring-indigo-500/50': sub.isNew,
-            'ring-2 ring-indigo-600 dark:ring-indigo-400': isBatchMode && isSelected,
+            'ring-2 ring-primary-500/50': sub.isNew,
+            'ring-2 ring-primary-600 dark:ring-primary-400': isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
         @mousedown="handleMouseDown"
@@ -145,7 +145,7 @@ const handleTestLatency = async () => {
                         <input
                             type="checkbox"
                             :checked="isSelected"
-                            class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-indigo-600 dark:border-gray-600 dark:bg-gray-700"
+                            class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-primary-600 dark:border-white/10 dark:bg-white/10"
                             @change="emit('toggleSelect')"
                         />
                     </label>
@@ -154,7 +154,7 @@ const handleTestLatency = async () => {
                 <div class="w-full truncate">
                     <div class="flex items-center gap-3">
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg transition-all duration-300 group-hover:shadow-xl"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-button bg-linear-to-br from-info-500 to-primary-600 shadow-elevated transition-all duration-300 group-hover:shadow-card"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -173,19 +173,19 @@ const handleTestLatency = async () => {
                         </div>
                         <div class="min-w-0 flex-1">
                             <p
-                                class="truncate text-lg font-bold text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 dark:text-gray-100 dark:group-hover:text-indigo-400"
+                                class="truncate text-lg font-bold text-gray-800 transition-colors duration-300 group-hover:text-primary-600 dark:text-gray-100 dark:group-hover:text-primary-400"
                                 :title="sub.name || '未命名订阅'"
                             >
                                 {{ sub.name || '未命名订阅' }}
                             </p>
                             <div
                                 v-if="sub.exclude && sub.exclude.trim()"
-                                class="animate-pulse-slow mt-1.5 flex w-fit items-center gap-1.5 rounded-lg border border-orange-300/50 bg-linear-to-r from-orange-500/15 to-amber-500/15 px-2.5 py-1 dark:border-orange-500/30 dark:from-orange-500/20 dark:to-amber-500/20"
+                                class="animate-pulse-slow mt-1.5 flex w-fit items-center gap-1.5 rounded-element border border-warning-300/50 bg-linear-to-r from-warning-500/15 to-warning-500/15 px-2.5 py-1 dark:border-warning-500/30 dark:from-warning-500/20 dark:to-warning-500/20"
                                 :title="`已启用规则过滤: ${sub.exclude}`"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-3.5 w-3.5 shrink-0 text-orange-600 dark:text-orange-400"
+                                    class="h-3.5 w-3.5 shrink-0 text-warning-600 dark:text-warning-400"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -198,7 +198,7 @@ const handleTestLatency = async () => {
                                     />
                                 </svg>
                                 <span
-                                    class="text-[10px] font-bold tracking-wide text-orange-700 dark:text-orange-300"
+                                    class="text-[10px] font-bold tracking-wide text-warning-700 dark:text-warning-300"
                                     >规则过滤</span
                                 >
                             </div>
@@ -210,7 +210,7 @@ const handleTestLatency = async () => {
                     class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
                 >
                     <button
-                        class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
                         title="编辑"
                         @click.stop="emit('edit')"
                     >
@@ -230,7 +230,7 @@ const handleTestLatency = async () => {
                         </svg>
                     </button>
                     <button
-                        class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
+                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
                         title="删除"
                         @click.stop="emit('delete')"
                     >
@@ -262,12 +262,12 @@ const handleTestLatency = async () => {
                         type="text"
                         :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'"
                         readonly
-                        class="w-full rounded-xl border border-gray-300 bg-gray-50/60 px-3 py-2 font-mono text-sm text-gray-500 transition-all duration-300 sm:px-4 sm:py-3 dark:border-gray-700 dark:bg-gray-900/75 dark:text-gray-400"
+                        class="w-full rounded-element border border-gray-300 bg-gray-50/60 px-3 py-2 font-mono text-sm text-gray-500 transition-all duration-300 sm:px-4 sm:py-3 dark:border-white/10 dark:bg-black/60 dark:text-gray-400"
                         :class="{ 'select-none': !showUrl }"
                     />
                     <div class="mt-2 flex items-center gap-2 sm:mt-3">
                         <button
-                            class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-orange-500/20 hover:text-orange-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-orange-400"
+                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-warning-500/20 hover:text-warning-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-warning-400"
                             :title="showUrl ? '隐藏链接' : '显示链接'"
                             @click.stop="toggleUrlVisibility"
                         >
@@ -309,7 +309,7 @@ const handleTestLatency = async () => {
                         </button>
                         <button
                             v-if="showUrl"
-                            class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
+                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
                             title="复制链接"
                             @click.stop="copyUrl"
                         >
@@ -334,7 +334,7 @@ const handleTestLatency = async () => {
                 <!-- 流量信息 -->
                 <div
                     v-if="trafficInfo"
-                    class="mt-2 rounded-xl border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50"
+                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/10/50 dark:bg-white/5"
                 >
                     <div class="mb-2 flex items-end justify-between">
                         <span
@@ -363,10 +363,10 @@ const handleTestLatency = async () => {
                         </div>
                     </div>
                     <div
-                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10"
                     >
                         <div
-                            class="absolute top-0 left-0 h-full rounded-full shadow-sm transition-all duration-700 ease-out"
+                            class="absolute top-0 left-0 h-full rounded-full shadow-elevated-sm transition-all duration-700 ease-out"
                             :class="trafficColorClass"
                             :style="{ width: trafficInfo.percentage + '%' }"
                         >
@@ -379,7 +379,7 @@ const handleTestLatency = async () => {
                         >
                         <span
                             v-if="expiryInfo"
-                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-sm dark:border-gray-600 dark:bg-gray-700"
+                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-elevated-sm dark:border-white/10 dark:bg-white/10"
                             :class="expiryInfo.style"
                             >{{ expiryInfo.daysRemaining }}</span
                         >
@@ -389,7 +389,7 @@ const handleTestLatency = async () => {
 
             <!-- 底部控制 -->
             <div
-                class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-gray-700/50"
+                class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-white/10/50"
                 @click.stop
             >
                 <div class="flex items-center gap-3">
@@ -401,7 +401,7 @@ const handleTestLatency = async () => {
                             @change="emit('change')"
                         />
                         <div
-                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-md peer-checked:bg-indigo-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-elevated-sm peer-checked:bg-primary-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                         ></div>
                     </label>
                     <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{
@@ -412,13 +412,13 @@ const handleTestLatency = async () => {
                 <div class="flex items-center gap-2">
                     <button
                         :disabled="isTestingLatency"
-                        class="rounded-lg p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="rounded-element p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                         :class="{
-                            'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30':
+                            'text-warning-500 hover:bg-warning-50 dark:hover:bg-warning-900/30':
                                 !latencyResult,
-                            'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30':
+                            'text-success-500 hover:bg-success-50 dark:hover:bg-success-900/30':
                                 latencyResult && latencyResult.available,
-                            'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30':
+                            'text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/30':
                                 latencyResult && !latencyResult.available
                         }"
                         :title="
@@ -450,12 +450,12 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
-                        class="group/btn flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                        class="group/btn flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         @click.stop="emit('showNodes')"
                     >
                         <span
                             class="h-1.5 w-1.5 rounded-full"
-                            :class="(sub.nodeCount || 0) > 0 ? 'bg-green-500' : 'bg-gray-300'"
+                            :class="(sub.nodeCount || 0) > 0 ? 'bg-success-500' : 'bg-gray-300'"
                         ></span>
                         {{ sub.nodeCount }} 节点
                         <svg
@@ -476,14 +476,14 @@ const handleTestLatency = async () => {
 
                     <button
                         :disabled="sub.isUpdating"
-                        class="rounded-lg p-1.5 text-gray-600 transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                        class="rounded-element p-1.5 text-gray-600 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         :title="sub.isUpdating ? '更新中...' : '更新订阅'"
                         @click.stop="emit('update')"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             class="h-4 w-4"
-                            :class="{ 'animate-spin text-indigo-500': sub.isUpdating }"
+                            :class="{ 'animate-spin text-primary-500': sub.isUpdating }"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                         >

@@ -107,7 +107,7 @@ const {
                             />
                             <button
                                 type="button"
-                                class="rounded-xl bg-gray-100 px-3 py-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                                class="rounded-element bg-gray-100 px-3 py-2 text-gray-600 shadow-elevated-sm transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/10"
                                 title="生成随机短 ID"
                                 @click="handleGenerateShortId"
                             >
@@ -129,7 +129,7 @@ const {
                         </div>
                         <p class="mt-1.5 text-xs text-gray-400">
                             设置后，订阅链接会变为：/token/<span
-                                class="font-bold text-indigo-500"
+                                class="font-bold text-primary-500"
                                 >{{ localProfile.customId || 'id' }}</span
                             >
                         </p>
@@ -167,13 +167,13 @@ const {
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleSelectAll('subscriptions', filteredSubscriptions)"
                                 >
                                     全选
                                 </button>
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="
                                         handleDeselectAll('subscriptions', filteredSubscriptions)
                                     "
@@ -207,26 +207,26 @@ const {
                         </div>
 
                         <div
-                            class="custom-scrollbar flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800"
+                            class="custom-scrollbar flex-1 overflow-y-auto rounded-element border border-gray-300 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5"
                         >
                             <div v-if="filteredSubscriptions.length > 0" class="space-y-1">
                                 <div v-for="sub in filteredSubscriptions" :key="sub.id">
                                     <label
-                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-lg p-3 transition-all duration-200"
+                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-element p-3 transition-all duration-200"
                                         :class="
                                             localProfile.subscriptions?.includes(sub.id)
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                ? 'bg-primary-50 dark:bg-primary-900/20'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/10/50'
                                         "
                                     >
                                         <div
                                             v-if="localProfile.subscriptions?.includes(sub.id)"
-                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
+                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-secondary-500"
                                         ></div>
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.subscriptions?.includes(sub.id)"
-                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-primary-600 transition-colors"
                                             @change="toggleSelection('subscriptions', sub.id)"
                                         />
                                         <span
@@ -235,7 +235,7 @@ const {
                                             {{ sub.name || '未命名订阅' }}
                                             <span
                                                 v-if="!sub.enabled"
-                                                class="ml-1 text-xs text-red-500"
+                                                class="ml-1 text-xs text-danger-500"
                                                 >(已禁用)</span
                                             >
                                         </span>
@@ -273,13 +273,13 @@ const {
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleSelectAll('manualNodes', filteredManualNodes)"
                                 >
                                     全选
                                 </button>
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleDeselectAll('manualNodes', filteredManualNodes)"
                                 >
                                     全不选
@@ -311,26 +311,26 @@ const {
                         </div>
 
                         <div
-                            class="custom-scrollbar flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800"
+                            class="custom-scrollbar flex-1 overflow-y-auto rounded-element border border-gray-300 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5"
                         >
                             <div v-if="filteredManualNodes.length > 0" class="space-y-1">
                                 <div v-for="node in filteredManualNodes" :key="node.id">
                                     <label
-                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-lg p-3 transition-all duration-200"
+                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-element p-3 transition-all duration-200"
                                         :class="
                                             localProfile.manualNodes?.includes(node.id)
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                ? 'bg-primary-50 dark:bg-primary-900/20'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/10/50'
                                         "
                                     >
                                         <div
                                             v-if="localProfile.manualNodes?.includes(node.id)"
-                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
+                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-secondary-500"
                                         ></div>
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.manualNodes?.includes(node.id)"
-                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-primary-600 transition-colors"
                                             @change="toggleSelection('manualNodes', node.id)"
                                         />
                                         <span

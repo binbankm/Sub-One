@@ -52,10 +52,10 @@ const totalNodeCount = computed(() => {
 
 <template>
     <div
-        class="card-glass group relative flex min-h-35 flex-col overflow-hidden rounded-2xl p-4 hover:scale-[1.02]"
+        class="card-glass group relative flex min-h-35 flex-col overflow-hidden rounded-card p-4 hover:scale-[1.02]"
         :class="{
             'opacity-50': !profile.enabled,
-            'ring-2 ring-purple-600 dark:ring-purple-400': isBatchMode && isSelected,
+            'ring-2 ring-secondary-600 dark:ring-secondary-400': isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
         @click="isBatchMode ? emit('toggleSelect') : null"
@@ -67,7 +67,7 @@ const totalNodeCount = computed(() => {
                     <input
                         type="checkbox"
                         :checked="isSelected"
-                        class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-purple-600 dark:border-gray-600 dark:bg-gray-700"
+                        class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-secondary-600 dark:border-white/10 dark:bg-white/10"
                         @change="emit('toggleSelect')"
                     />
                 </label>
@@ -77,7 +77,7 @@ const totalNodeCount = computed(() => {
             <div class="min-w-0 flex-1">
                 <div class="mb-2 flex items-center gap-2">
                     <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-600"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-element bg-linear-to-br from-secondary-500 to-pink-600"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +112,7 @@ const totalNodeCount = computed(() => {
                 class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
                 <button
-                    class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+                    class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
                     title="编辑"
                     @click.stop="emit('edit')"
                 >
@@ -132,7 +132,7 @@ const totalNodeCount = computed(() => {
                     </svg>
                 </button>
                 <button
-                    class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
+                    class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
                     title="删除"
                     @click.stop="emit('delete')"
                 >
@@ -158,7 +158,7 @@ const totalNodeCount = computed(() => {
 
         <!-- 底部操作区 -->
         <div
-            class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-gray-700"
+            class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-white/10"
         >
             <!-- 启用/禁用开关 -->
             <label class="relative inline-flex cursor-pointer items-center">
@@ -174,7 +174,7 @@ const totalNodeCount = computed(() => {
                     "
                 />
                 <div
-                    class="peer h-6 w-11 rounded-full bg-gray-200 from-indigo-500 to-purple-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                    class="peer h-6 w-11 rounded-full bg-gray-200 from-primary-500 to-secondary-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                 ></div>
                 <span
                     class="ml-3 text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
@@ -185,7 +185,7 @@ const totalNodeCount = computed(() => {
             <!-- 操作按钮组 -->
             <div class="flex shrink-0 items-center gap-2">
                 <button
-                    class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                    class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                     title="显示节点信息"
                     @click.stop="emit('showNodes')"
                 >
@@ -211,7 +211,7 @@ const totalNodeCount = computed(() => {
                     <span>节点</span>
                 </button>
                 <button
-                    class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-purple-800 dark:hover:bg-purple-900/30 dark:hover:text-purple-400"
+                    class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-secondary-200 hover:bg-secondary-50 hover:text-secondary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-secondary-800 dark:hover:bg-secondary-900/30 dark:hover:text-secondary-400"
                     @click.stop="emit('copy-link')"
                 >
                     <svg

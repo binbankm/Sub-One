@@ -5,11 +5,11 @@ const props = withDefaults(
     defineProps<{
         visible: boolean;
         selectedCount: number;
-        accent?: 'indigo' | 'purple' | 'emerald';
+        accent?: 'primary' | 'secondary' | 'emerald';
         deleteLabel?: string;
     }>(),
     {
-        accent: 'indigo',
+        accent: 'primary',
         deleteLabel: '删除选中'
     }
 );
@@ -23,23 +23,23 @@ const emit = defineEmits<{
 }>();
 
 const styleMap = {
-    indigo: {
+    primary: {
         wrapper:
-            'border-indigo-200 from-indigo-50 to-purple-50 dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20',
-        text: 'text-indigo-700 dark:text-indigo-300',
-        badge: 'bg-indigo-600'
+            'border-primary-200 from-primary-50 to-secondary-50 dark:border-primary-800 dark:from-primary-900/20 dark:to-secondary-900/20',
+        text: 'text-primary-700 dark:text-primary-300',
+        badge: 'bg-primary-600'
     },
-    purple: {
+    secondary: {
         wrapper:
-            'border-purple-200 from-purple-50 to-pink-50 dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20',
-        text: 'text-purple-700 dark:text-purple-300',
-        badge: 'bg-purple-600'
+            'border-secondary-200 from-secondary-50 to-pink-50 dark:border-secondary-800 dark:from-secondary-900/20 dark:to-pink-900/20',
+        text: 'text-secondary-700 dark:text-secondary-300',
+        badge: 'bg-secondary-600'
     },
     emerald: {
         wrapper:
-            'border-emerald-200 from-emerald-50 to-green-50 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20',
-        text: 'text-emerald-700 dark:text-emerald-300',
-        badge: 'bg-emerald-600'
+            'border-success-200 from-success-50 to-success-50 dark:border-success-800 dark:from-success-900/20 dark:to-success-900/20',
+        text: 'text-success-700 dark:text-success-300',
+        badge: 'bg-success-600'
     }
 } as const;
 
@@ -50,7 +50,7 @@ const accentStyles = computed(() => styleMap[props.accent]);
     <Transition name="slide-fade">
         <div
             v-if="visible"
-            class="mb-6 rounded-2xl border-2 bg-linear-to-r p-4 shadow-lg"
+            class="mb-6 rounded-button border-2 bg-linear-to-r p-4 shadow-elevated"
             :class="accentStyles.wrapper"
         >
             <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
@@ -74,7 +74,7 @@ const accentStyles = computed(() => styleMap[props.accent]);
                     批量删除模式
                     <span
                         v-if="selectedCount > 0"
-                        class="ml-2 rounded-full px-3 py-1 text-xs font-bold text-white shadow-md"
+                        class="ml-2 rounded-full px-3 py-1 text-xs font-bold text-white shadow-elevated-sm"
                         :class="accentStyles.badge"
                     >
                         已选 {{ selectedCount }}

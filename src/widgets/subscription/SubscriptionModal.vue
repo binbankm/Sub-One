@@ -108,32 +108,32 @@ const {
                                 class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
                                 订阅链接
-                                <span class="text-red-500">*</span>
+                                <span class="text-danger-500">*</span>
                             </label>
                             <input
                                 v-model="localSubscription.url"
                                 type="url"
                                 placeholder="https://example.com/sub?token=xxx"
                                 class="input-modern w-full font-mono text-sm"
-                                :class="{ 'border-red-500 dark:border-red-500': urlError }"
+                                :class="{ 'border-danger-500 dark:border-danger-500': urlError }"
                                 @blur="handleUrlBlur"
                             />
-                            <p v-if="urlError" class="mt-1 text-sm text-red-600 dark:text-red-400">
+                            <p v-if="urlError" class="mt-1 text-sm text-danger-600 dark:text-danger-400">
                                 {{ urlError }}
                             </p>
                         </div>
                     </div>
 
                     <div class="px-1 text-xs text-gray-500 dark:text-gray-400">
-                        <p v-if="nameError" class="mb-1 text-red-600">{{ nameError }}</p>
+                        <p v-if="nameError" class="mb-1 text-danger-600">{{ nameError }}</p>
                         <p v-else>名称留空将自动从链接中提取</p>
                     </div>
                 </div>
 
                 <!-- 高级选项 -->
-                <div class="border-t border-gray-300 pt-4 dark:border-gray-700">
+                <div class="border-t border-gray-300 pt-4 dark:border-white/10">
                     <button
-                        class="flex items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
+                        class="flex items-center gap-2 text-sm font-medium text-gray-700 transition-colors hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
                         @click="toggleAdvanced"
                     >
                         <svg
@@ -167,7 +167,7 @@ const {
                                 />
                                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                                     支持正则表达式，多个规则用换行分隔。使用
-                                    <code class="rounded bg-gray-200 px-1 py-0.5 dark:bg-gray-700"
+                                    <code class="rounded bg-gray-200 px-1 py-0.5 dark:bg-white/10"
                                         >keep:</code
                                     >
                                     前缀表示白名单
@@ -180,11 +180,11 @@ const {
                 <!-- 提示信息 -->
                 <div
                     v-if="isNew"
-                    class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+                    class="rounded-element border border-info-200 bg-info-50 p-4 dark:border-info-800 dark:bg-info-900/20"
                 >
                     <div class="flex items-start gap-3">
                         <svg
-                            class="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400"
+                            class="mt-0.5 h-5 w-5 shrink-0 text-info-600 dark:text-info-400"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >
@@ -195,10 +195,10 @@ const {
                             />
                         </svg>
                         <div class="flex-1">
-                            <p class="mb-1 text-sm font-medium text-blue-900 dark:text-blue-100">
+                            <p class="mb-1 text-sm font-medium text-info-900 dark:text-info-100">
                                 添加订阅后自动获取节点
                             </p>
-                            <p class="text-xs text-blue-700 dark:text-blue-300">
+                            <p class="text-xs text-info-700 dark:text-info-300">
                                 保存后系统将自动从订阅链接获取节点数量和流量信息
                             </p>
                         </div>

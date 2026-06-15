@@ -136,7 +136,7 @@ onMounted(() => {
 
 <template>
     <div
-        class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+        class="rounded-element border border-gray-300 bg-white p-6 shadow-elevated-sm transition-all hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
     >
         <!-- 头部：标题与刷新 -->
         <div class="mb-6 flex items-center justify-between">
@@ -147,7 +147,7 @@ onMounted(() => {
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">管理应用数据的存储位置</p>
             </div>
             <button
-                class="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700"
+                class="rounded-element p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-white/10"
                 :disabled="loading"
                 title="刷新状态"
                 @click="loadBackendInfo"
@@ -194,7 +194,7 @@ onMounted(() => {
         <!-- 错误提示 -->
         <div
             v-if="error"
-            class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+            class="mb-6 flex items-start gap-3 rounded-element border border-danger-200 bg-danger-50 p-4 text-sm text-danger-600 dark:border-danger-800 dark:bg-danger-900/20 dark:text-danger-400"
         >
             <svg
                 class="mt-0.5 h-5 w-5 shrink-0"
@@ -217,7 +217,7 @@ onMounted(() => {
         <div v-if="backendInfo" class="space-y-6">
             <!-- 当前状态展示 -->
             <div
-                class="relative overflow-hidden rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10"
+                class="relative overflow-hidden rounded-element border border-primary-100 bg-primary-50/50 p-4 dark:border-primary-900/30 dark:bg-primary-900/10"
             >
                 <div class="relative z-10 flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -225,8 +225,8 @@ onMounted(() => {
                             class="flex h-10 w-10 items-center justify-center rounded-full"
                             :class="
                                 backendInfo.current === 'kv'
-                                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400'
-                                    : 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400'
+                                    ? 'bg-info-100 text-info-600 dark:bg-info-900/40 dark:text-info-400'
+                                    : 'bg-success-100 text-success-600 dark:bg-success-900/40 dark:text-success-400'
                             "
                         >
                             <span class="text-xs font-bold">{{
@@ -250,9 +250,9 @@ onMounted(() => {
                     </div>
 
                     <div
-                        class="flex items-center gap-2 rounded-full border border-indigo-100 bg-white px-3 py-1 text-xs font-semibold text-indigo-600 shadow-sm dark:border-indigo-900/30 dark:bg-gray-800 dark:text-indigo-400"
+                        class="flex items-center gap-2 rounded-full border border-primary-100 bg-white px-3 py-1 text-xs font-semibold text-primary-600 shadow-elevated-sm dark:border-primary-900/30 dark:text-primary-400"
                     >
-                        <div class="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+                        <div class="h-2 w-2 animate-pulse rounded-full bg-success-500"></div>
                         运行中
                     </div>
                 </div>
@@ -267,11 +267,11 @@ onMounted(() => {
                     <button
                         v-for="backend in backendInfo.available"
                         :key="backend"
-                        class="group relative flex flex-col items-start rounded-xl border p-4 text-left transition-all duration-200"
+                        class="group relative flex flex-col items-start rounded-element border p-4 text-left transition-all duration-200"
                         :class="[
                             backend === backendInfo.current
-                                ? 'cursor-default border-indigo-200 bg-indigo-50/30 ring-1 ring-indigo-200 dark:border-indigo-800 dark:bg-indigo-900/10 dark:ring-indigo-800'
-                                : 'border-gray-300 bg-white hover:border-indigo-300 hover:shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-600'
+                                ? 'cursor-default border-primary-200 bg-primary-50/30 ring-1 ring-primary-200 dark:border-primary-800 dark:bg-primary-900/10 dark:ring-primary-800'
+                                : 'border-gray-300 bg-white hover:border-primary-300 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-600'
                         ]"
                         :disabled="backend === backendInfo.current || switching"
                         @click="initiateSwitch(backend)"
@@ -279,7 +279,7 @@ onMounted(() => {
                         <!-- 选中标记 -->
                         <div
                             v-if="backend === backendInfo.current"
-                            class="absolute top-3 right-3 text-indigo-600 dark:text-indigo-400"
+                            class="absolute top-3 right-3 text-primary-600 dark:text-primary-400"
                         >
                             <svg
                                 class="h-5 w-5"
@@ -298,10 +298,10 @@ onMounted(() => {
                         <!-- 加载状态 -->
                         <div
                             v-if="switching && targetBackend === backend"
-                            class="absolute inset-0 z-20 flex items-center justify-center rounded-xl bg-white/80 dark:bg-gray-800/80"
+                            class="absolute inset-0 z-20 flex items-center justify-center rounded-element bg-white/80 dark:bg-white/10"
                         >
                             <svg
-                                class="h-6 w-6 animate-spin text-indigo-600"
+                                class="h-6 w-6 animate-spin text-primary-600"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -326,7 +326,7 @@ onMounted(() => {
                             class="mb-1 text-sm font-bold"
                             :class="
                                 backend === backendInfo.current
-                                    ? 'text-indigo-700 dark:text-indigo-300'
+                                    ? 'text-primary-700 dark:text-primary-300'
                                     : 'text-gray-900 dark:text-gray-100'
                             "
                         >
@@ -341,7 +341,7 @@ onMounted(() => {
                             class="text-xs leading-relaxed"
                             :class="
                                 backend === backendInfo.current
-                                    ? 'text-indigo-600/80 dark:text-indigo-400/80'
+                                    ? 'text-primary-600/80 dark:text-primary-400/80'
                                     : 'text-gray-500 dark:text-gray-400'
                             "
                         >
@@ -358,7 +358,7 @@ onMounted(() => {
             <!-- 无法切换提示 -->
             <div
                 v-else
-                class="rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/30"
+                class="rounded-element border border-gray-300 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5"
             >
                 <div class="flex items-start gap-3">
                     <svg
@@ -382,10 +382,10 @@ onMounted(() => {
                         <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                             仅检测到一个可用的存储后端。如需使用 D1 存储，请在 Cloudflare
                             控制台创建名为
-                            <strong class="text-indigo-600 dark:text-indigo-400">sub-one-d1</strong>
+                            <strong class="text-primary-600 dark:text-primary-400">sub-one-d1</strong>
                             的 D1 数据库并绑定到项目变量
                             <code
-                                class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-800 dark:text-gray-200"
                                 >SUB_ONE_D1</code
                             >。
                         </p>
@@ -397,7 +397,7 @@ onMounted(() => {
         <!-- 加载中状态 -->
         <div v-else-if="loading" class="flex flex-col items-center justify-center space-y-3 p-8">
             <div
-                class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600"
+                class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
             ></div>
             <p class="text-sm text-gray-500 dark:text-gray-400">正在检查存储后端配置...</p>
         </div>
@@ -421,14 +421,14 @@ onMounted(() => {
                         backendInfo?.current.toUpperCase()
                     }}</strong>
                     切换到
-                    <strong class="text-indigo-600 dark:text-indigo-400">{{
+                    <strong class="text-primary-600 dark:text-primary-400">{{
                         targetBackend?.toUpperCase()
                     }}</strong
                     >。
                 </p>
 
                 <div
-                    class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
+                    class="rounded-element border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
                 >
                     <h4
                         class="mb-2 flex items-center gap-2 text-sm font-bold text-yellow-800 dark:text-yellow-400"
