@@ -109,6 +109,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                 const parsed = content.match(/(\?.*)$/);
                 if (parsed) query = parsed[1];
             }
+            userInfoStr = Base64.decode(rawUserInfoStr);
         }
 
         const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
