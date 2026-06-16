@@ -46,13 +46,6 @@ export class QuantumultXConverter extends BaseConverter {
                     throw new Error(`[QXConverter] Unsupported proxy type: ${proxy.type}`);
             }
 
-            // Reality support (appended to any type that support it in QX)
-            if (proxy['reality-opts']) {
-                const r = proxy['reality-opts'];
-                if (r['public-key']) result += `,reality-base64-pubkey=${r['public-key']}`;
-                if (r['short-id']) result += `,reality-hex-shortid=${r['short-id']}`;
-            }
-
             result += `,tag=${proxy.name}`;
 
             return result;

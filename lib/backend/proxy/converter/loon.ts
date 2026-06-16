@@ -200,10 +200,8 @@ export class LoonConverter extends BaseConverter {
         );
         if (proxy.flow) result.append(`,flow=${proxy.flow}`);
         if (proxy['reality-opts']) {
+            appendReality(result, proxy);
             const reality = proxy['reality-opts'];
-            result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-            result.appendIfPresent(`,public-key="${reality['public-key']}"`, 'public-key');
-            result.appendIfPresent(`,short-id=${reality['short-id']}`, 'short-id');
             result.appendIfPresent(
                 `,spider-x=${reality['_spider-x'] || reality['spider-x']}`,
                 'reality-opts.spider-x'
