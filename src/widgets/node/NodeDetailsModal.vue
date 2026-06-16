@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { useNodeFetching } from '@/entities/node/model/useNodeFetching';
 import { useNodeSelection } from '@/entities/node/model/useNodeSelection';
@@ -39,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const searchTerm = ref('');
+const { t } = useI18n();
 
 // 抽取的核心逻辑 Hooks
 const { nodes, isLoading, errorMessage, loadData, refreshNodes, extractHost } =
@@ -98,12 +100,12 @@ onUnmounted(() => {
                 <Transition name="scale-fade-bounce">
                     <div
                         v-if="show"
-                        class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-3xl border border-gray-300 bg-white text-left shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+                        class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-card border border-gray-300 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/80"
                         @click.stop
                     >
                         <!-- 标题 -->
                         <div class="shrink-0 p-6 pb-4">
-                            <h3 class="gradient-text text-xl font-bold">节点详情</h3>
+                            <h3 class="gradient-text text-xl font-bold">{{ t('widgets.node.detailsModal.title') }}</h3>
                         </div>
 
                         <!-- 内容 -->
@@ -112,7 +114,7 @@ onUnmounted(() => {
                                 <!-- 订阅/订阅组信息头部 -->
                                 <div
                                     v-if="subscription || profile"
-                                    class="rounded-xl border border-gray-300 bg-gray-50/60 p-4 dark:border-gray-700 dark:bg-gray-800/75"
+                                    class="rounded-element border border-gray-300 bg-gray-50/60 p-4 dark:border-white/10 dark:bg-white/5"
                                 >
                                     <div
                                         class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
@@ -123,8 +125,8 @@ onUnmounted(() => {
                                             >
                                                 {{
                                                     subscription
-                                                        ? subscription.name || '未命名订阅'
-                                                        : profile?.name || '未命名订阅组'
+                                                        ? subscription.name || t('widgets.node.detailsModal.unnamedSub')
+                                                        : profile?.name || t('widgets.node.detailsModal.unnamedProfile')
                                                 }}
                                             </h3>
                                             <p
@@ -134,24 +136,19 @@ onUnmounted(() => {
                                                     subscription.url
                                                 }}</span>
                                                 <span v-else-if="profile"
-                                                    >包含
-                                                    {{ profile.subscriptions?.length ?? 0 }}
-                                                    个订阅，{{
-                                                        profile.manualNodes?.length ?? 0
-                                                    }}
-                                                    个手动节点</span
+                                                    >{{ t('widgets.node.detailsModal.contains', { subCount: profile.subscriptions?.length ?? 0, manualCount: profile.manualNodes?.length ?? 0 }) }}</span
                                                 >
                                             </p>
                                         </div>
                                         <div class="shrink-0 text-right">
                                             <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                共 {{ nodes.length }} 个节点
+                                                {{ t('widgets.node.detailsModal.totalNodes', { count: nodes.length }) }}
                                             </p>
                                             <p
                                                 v-if="subscription && subscription.nodeCount"
                                                 class="text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                上次更新: {{ subscription.nodeCount }} 个
+                                                {{ t('widgets.node.detailsModal.lastUpdate', { count: subscription.nodeCount }) }}
                                             </p>
                                         </div>
                                     </div>
@@ -163,7 +160,7 @@ onUnmounted(() => {
                                         <input
                                             v-model="searchTerm"
                                             type="text"
-                                            placeholder="搜索节点名称或链接..."
+                                            :placeholder="t('widgets.node.detailsModal.searchPlaceholder')"
                                             class="search-input-unified w-full"
                                         />
                                         <svg
@@ -207,15 +204,15 @@ onUnmounted(() => {
                                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                 ></path>
                                             </svg>
-                                            <span v-else>刷新</span>
+                                            <span v-else>{{ t('widgets.node.detailsModal.refresh') }}</span>
                                         </button>
 
                                         <button
                                             :disabled="selectedNodes.size === 0"
-                                            class="transform rounded-xl bg-linear-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                                            class="transform rounded-element bg-linear-to-r from-success-500 to-success-600 px-4 py-2 text-sm text-white shadow-elevated transition-all duration-300 hover:scale-105 hover:from-success-600 hover:to-success-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50"
                                             @click="copySelectedNodes"
                                         >
-                                            复制选中
+                                            {{ t('widgets.node.detailsModal.copySelected') }}
                                         </button>
                                     </div>
                                 </div>
@@ -223,9 +220,9 @@ onUnmounted(() => {
                                 <!-- 错误信息 -->
                                 <div
                                     v-if="errorMessage"
-                                    class="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
+                                    class="rounded-element border border-danger-200 bg-danger-50 p-3 dark:border-danger-800 dark:bg-danger-900/20"
                                 >
-                                    <p class="text-sm text-red-600 dark:text-red-400">
+                                    <p class="text-sm text-danger-600 dark:text-danger-400">
                                         {{ errorMessage }}
                                     </p>
                                 </div>
@@ -233,10 +230,10 @@ onUnmounted(() => {
                                 <!-- 加载状态 -->
                                 <div v-if="isLoading" class="flex items-center justify-center py-8">
                                     <div
-                                        class="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-600"
+                                        class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600"
                                     ></div>
                                     <span class="ml-2 text-gray-600 dark:text-gray-400"
-                                        >正在获取节点信息...</span
+                                        >{{ t('widgets.node.detailsModal.loading') }}</span
                                     >
                                 </div>
 
@@ -244,7 +241,7 @@ onUnmounted(() => {
                                 <div v-else-if="filteredNodes.length > 0" class="space-y-2">
                                     <!-- 全选按钮 -->
                                     <div
-                                        class="flex items-center justify-between rounded-lg bg-gray-50/60 p-3 dark:bg-gray-800/75"
+                                        class="flex items-center justify-between rounded-element bg-gray-50/60 p-3 dark:bg-white/5"
                                     >
                                         <label class="flex cursor-pointer items-center">
                                             <input
@@ -257,15 +254,13 @@ onUnmounted(() => {
                                                     selectedNodes.size > 0 &&
                                                     selectedNodes.size < filteredNodes.length
                                                 "
-                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                                                class="h-4 w-4 rounded border-gray-300 text-primary-600"
                                                 @change="toggleSelectAll"
                                             />
                                             <span
                                                 class="ml-2 text-sm text-gray-700 dark:text-gray-300"
                                             >
-                                                全选 ({{ selectedNodes.size }}/{{
-                                                    filteredNodes.length
-                                                }})
+                                                {{ t('widgets.node.detailsModal.selectAll', { selected: selectedNodes.size, total: filteredNodes.length }) }}
                                             </span>
                                         </label>
                                     </div>
@@ -277,11 +272,11 @@ onUnmounted(() => {
                                         <div
                                             v-for="node in filteredNodes"
                                             :key="node.id"
-                                            class="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-300 bg-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-500/10 dark:border-gray-700 dark:bg-gray-800/50"
+                                            class="group relative cursor-pointer overflow-hidden rounded-button border border-gray-300 bg-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elevated hover:shadow-primary-500/10 dark:border-white/10 dark:bg-white/5"
                                             :class="{
-                                                'border-indigo-500/50 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-900':
+                                                'border-primary-500/50 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-black/80':
                                                     selectedNodes.has(node.id),
-                                                'border-gray-300 dark:border-gray-700':
+                                                'border-gray-300 dark:border-white/10':
                                                     !selectedNodes.has(node.id)
                                             }"
                                             @click="toggleNodeSelection(node.id)"
@@ -310,7 +305,7 @@ onUnmounted(() => {
                                                                     :checked="
                                                                         selectedNodes.has(node.id)
                                                                     "
-                                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-indigo-500 checked:bg-indigo-500 dark:border-gray-600"
+                                                                    class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-primary-500 checked:bg-primary-500 dark:border-white/10"
                                                                     @change="
                                                                         toggleNodeSelection(node.id)
                                                                     "
@@ -337,7 +332,7 @@ onUnmounted(() => {
                                                         >
                                                             <!-- 协议标签 -->
                                                             <span
-                                                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-sm"
+                                                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-elevated-sm"
                                                                 :class="[
                                                                     getProtocolInfo(node.protocol)
                                                                         .bg,
@@ -347,7 +342,7 @@ onUnmounted(() => {
                                                                 ]"
                                                             >
                                                                 <span
-                                                                    class="text-sm font-normal drop-shadow-sm filter"
+                                                                    class="text-sm font-normal drop-shadow-elevated-sm filter"
                                                                     >{{
                                                                         getProtocolInfo(
                                                                             node.protocol
@@ -366,7 +361,7 @@ onUnmounted(() => {
                                                                     v-if="
                                                                         node.type === 'subscription'
                                                                     "
-                                                                    class="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-600 dark:border-blue-800/30 dark:bg-blue-900/20 dark:text-blue-400"
+                                                                    class="inline-flex items-center gap-1 rounded-element border border-info-100 bg-info-50 px-2 py-1 text-[10px] font-medium text-info-600 dark:border-info-800/30 dark:bg-info-900/20 dark:text-info-400"
                                                                 >
                                                                     {{ node.subscriptionName }}
                                                                 </span>
@@ -374,9 +369,9 @@ onUnmounted(() => {
                                                                     v-else-if="
                                                                         node.type === 'manual'
                                                                     "
-                                                                    class="inline-flex items-center gap-1 rounded-md border border-green-100 bg-green-50 px-2 py-1 text-[10px] font-medium text-green-600 dark:border-green-800/30 dark:bg-green-900/20 dark:text-green-400"
+                                                                    class="inline-flex items-center gap-1 rounded-element border border-success-100 bg-success-50 px-2 py-1 text-[10px] font-medium text-success-600 dark:border-success-800/30 dark:bg-success-900/20 dark:text-success-400"
                                                                 >
-                                                                    手动
+                                                                    {{ t('widgets.node.detailsModal.manual') }}
                                                                 </span>
                                                             </template>
                                                         </div>
@@ -394,11 +389,11 @@ onUnmounted(() => {
 
                                                 <!-- 底部信息：地址 & 复制 -->
                                                 <div
-                                                    class="flex items-center justify-between gap-2 border-t border-gray-50 pt-2 pl-8 text-xs dark:border-gray-700/50"
+                                                    class="flex items-center justify-between gap-2 border-t border-gray-50 pt-2 pl-8 text-xs dark:border-white/10"
                                                 >
                                                     <div
                                                         class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"
-                                                        title="服务器地址"
+                                                        :title="t('widgets.node.detailsModal.serverAddr')"
                                                     >
                                                         <svg
                                                             class="h-3.5 w-3.5 shrink-0"
@@ -423,11 +418,11 @@ onUnmounted(() => {
                                                     </div>
 
                                                     <button
-                                                        class="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 font-medium text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                                                        title="复制链接"
+                                                        class="flex items-center gap-1 rounded-element bg-gray-50 px-2 py-1 font-medium text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 dark:bg-white/5 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                                                        :title="t('widgets.node.detailsModal.copyLink')"
                                                         @click.stop="handleCopySingle(node.url)"
                                                     >
-                                                        <span class="hidden sm:inline">复制</span>
+                                                        <span class="hidden sm:inline">{{ t('widgets.node.detailsModal.copyBtn') }}</span>
                                                         <svg
                                                             class="h-3.5 w-3.5"
                                                             fill="none"
@@ -466,7 +461,7 @@ onUnmounted(() => {
                                         </svg>
                                     </div>
                                     <p class="text-gray-500 dark:text-gray-400">
-                                        {{ searchTerm ? '没有找到匹配的节点' : '暂无节点信息' }}
+                                        {{ searchTerm ? t('widgets.node.detailsModal.noMatch') : t('widgets.node.detailsModal.empty') }}
                                     </p>
                                 </div>
                             </div>
@@ -474,13 +469,13 @@ onUnmounted(() => {
 
                         <!-- 底部按钮 -->
                         <div
-                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
+                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-white/10"
                         >
                             <button
-                                class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                class="rounded-element bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/10"
                                 @click="emit('update:show', false)"
                             >
-                                关闭
+                                {{ t('widgets.node.detailsModal.close') }}
                             </button>
                         </div>
                     </div>

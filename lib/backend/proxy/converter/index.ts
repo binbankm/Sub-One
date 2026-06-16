@@ -7,6 +7,7 @@ import { LoonConverter } from './loon';
 import { QuantumultXConverter } from './quantumultx';
 import { ShadowrocketConverter } from './shadowrocket';
 import { SingboxConverter } from './singbox';
+import { EgernConverter } from './egern';
 import { StashConverter } from './stash';
 import { SurfboardConverter } from './surfboard';
 import { SurgeConverter } from './surge';
@@ -24,7 +25,8 @@ const converters: Record<string, any> = {
     QuantumultX: new QuantumultXConverter(),
     Shadowrocket: new ShadowrocketConverter(),
     Stash: new StashConverter(),
-    Surfboard: new SurfboardConverter()
+    Surfboard: new SurfboardConverter(),
+    Egern: new EgernConverter()
 };
 
 /**
@@ -58,6 +60,8 @@ export async function convert(
         converter = converters['Shadowrocket'];
     } else if (target === 'stash') {
         converter = converters['Stash'];
+    } else if (target === 'egern') {
+        converter = converters['Egern'];
     } else if (target === 'surfboard') {
         converter = converters['Surfboard'];
     } else if (target === 'uri' || target === 'base64' || target === 'v2ray') {
@@ -83,5 +87,6 @@ export {
     SurgeConverter,
     LoonConverter,
     QuantumultXConverter,
-    ShadowrocketConverter
+    ShadowrocketConverter,
+    EgernConverter
 };

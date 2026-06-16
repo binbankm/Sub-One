@@ -2,6 +2,7 @@
 import type { AppConfig, Profile } from '@/common/types/index';
 import { copyToClipboard } from '@/common/utils/utils';
 
+import { useI18n } from 'vue-i18n';
 import { useToastStore } from '@/stores/useNotificationStore';
 
 const props = defineProps<{
@@ -20,14 +21,16 @@ const close = () => {
     emit('update:show', false);
 };
 
+const { t } = useI18n();
+
 // 格式定义列表
 const exportOptions = [
     {
-        name: '通用订阅',
+        name: t('widgets.profile.exportModal.generalSub'),
         format: 'base64',
         icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'
     },
-    { name: 'Clash', format: 'clash', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+    { name: 'Clash', format: 'Clash', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
     { name: 'Mihomo', format: 'mihomo', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
     {
         name: 'Stash',
@@ -44,15 +47,16 @@ const exportOptions = [
         format: 'surfboard',
         icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
     },
+    { name: 'Loon', format: 'Loon', icon: 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z' },
     {
-        name: 'Loon',
-        format: 'loon',
-        icon: 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
+        name: 'Egern',
+        format: 'egern',
+        icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
     },
     { name: 'Shadowrocket', format: 'shadowrocket', icon: 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8' },
     {
         name: 'Quantumult X',
-        format: 'quanx',
+        format: 'QX',
         icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z'
     },
     {
@@ -90,15 +94,15 @@ const generateUrl = (format: string) => {
 const handleCopy = async (option: (typeof exportOptions)[0]) => {
     const url = generateUrl(option.format);
     if (!url) {
-        showToast('⚠️ 该订阅组未配置分享 Token，无法导出', 'error');
+        showToast(t('widgets.profile.exportModal.noTokenError'), 'error');
         return;
     }
 
     const success = await copyToClipboard(url);
     if (success) {
-        showToast(`📋 已复制 ${option.name} 订阅链接`, 'success');
+        showToast(t('widgets.profile.exportModal.copySuccess', { name: option.name }), 'success');
     } else {
-        showToast('❌ 复制失败', 'error');
+        showToast(t('widgets.profile.exportModal.copyFail'), 'error');
     }
 };
 </script>
@@ -107,7 +111,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
     <Transition name="fade">
         <div
             v-if="show"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4 sm:p-6"
             @click.self="emit('update:show', false)"
         >
             <!-- Backdrop -->
@@ -118,20 +122,20 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
 
             <!-- Modal Card -->
             <div
-                class="relative flex max-h-[85vh] w-full max-w-sm origin-center scale-100 transform flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-gray-900/5 transition-all dark:bg-gray-800 dark:ring-white/10"
+                class="relative flex max-h-[85vh] w-full max-w-sm origin-center scale-100 transform flex-col overflow-hidden rounded-card border border-gray-300 bg-white text-left shadow-modal transition-all dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
             >
                 <!-- Header -->
                 <div
-                    class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-gray-700 dark:bg-gray-800"
+                    class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-white/10 dark:bg-white/5"
                 >
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">导出订阅</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('widgets.profile.exportModal.title') }}</h3>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {{ profile.name }}
                         </p>
                     </div>
                     <button
-                        class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                        class="rounded-element p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
                         @click="close"
                     >
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,24 +153,21 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                 <div class="scrollbar-thin overflow-y-auto p-2">
                     <div class="px-4 py-2">
                         <div
-                            class="mb-2 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 dark:border-amber-900/30 dark:bg-amber-900/20"
+                            class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
                         >
-                            <p class="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                                请确保已在设置中配置了
-                                <strong>订阅组分享 Token</strong>，否则链接无法访问。
-                            </p>
+                            <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400" v-html="t('widgets.profile.exportModal.tokenHint')"></p>
                         </div>
                     </div>
 
                     <div
                         v-for="option in exportOptions"
                         :key="option.name"
-                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-xl border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-700 dark:hover:bg-gray-700/50"
+                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-white/10 dark:hover:bg-white/5"
                     >
                         <!-- Left: Icon & Name -->
                         <div class="flex items-center gap-4">
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-indigo-600 group-hover:shadow-sm dark:bg-gray-700 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-gray-600 dark:group-hover:text-indigo-400"
+                                class="flex h-10 w-10 items-center justify-center rounded-element bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-primary-600 group-hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-white/10 dark:group-hover:text-primary-400"
                             >
                                 <svg
                                     class="h-5 w-5"
@@ -194,8 +195,8 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         <div class="flex items-center gap-1">
                             <!-- Copy Button -->
                             <button
-                                class="rounded-lg p-2.5 text-gray-400 transition-all hover:bg-indigo-50 hover:text-indigo-600 active:scale-95 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                                title="复制链接"
+                                class="rounded-element p-2.5 text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 active:scale-95 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                                :title="t('widgets.profile.exportModal.copyLink')"
                                 @click="handleCopy(option)"
                             >
                                 <svg
@@ -218,13 +219,13 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
 
                 <!-- Footer -->
                 <div
-                    class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-gray-800 dark:bg-gray-900/50"
+                    class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-white/10 dark:bg-black/40"
                 >
                     <button
                         class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                         @click="emit('update:show', false)"
                     >
-                        取消
+                        {{ t('widgets.profile.exportModal.cancel') }}
                     </button>
                 </div>
             </div>

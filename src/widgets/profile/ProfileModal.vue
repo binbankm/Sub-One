@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { useProfileForm } from '@/entities/profile/model/useProfileForm';
+import { useI18n } from 'vue-i18n';
 import type { Node, Profile, Subscription } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
 
@@ -54,6 +55,8 @@ const {
     handleSelectAll,
     handleDeselectAll
 } = useProfileForm(props, (profile: Profile) => emit('save', profile));
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -65,7 +68,7 @@ const {
     >
         <template #title>
             <h3 class="text-xl font-bold text-gray-800 dark:text-white">
-                {{ isNew ? '新增订阅组' : '编辑订阅组' }}
+                {{ isNew ? t('widgets.profile.modal.newTitle') : t('widgets.profile.modal.editTitle') }}
             </h3>
         </template>
         <template #body>
@@ -78,13 +81,13 @@ const {
                             for="profile-name"
                             class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300"
                         >
-                            订阅组名称
+                            {{ t('widgets.profile.modal.nameLabel') }}
                         </label>
                         <input
                             id="profile-name"
                             v-model="localProfile.name"
                             type="text"
-                            placeholder="例如：家庭共享"
+                            :placeholder="t('widgets.profile.modal.namePlaceholder')"
                             class="input-modern-enhanced"
                         />
                     </div>
@@ -95,20 +98,20 @@ const {
                             for="profile-custom-id"
                             class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300"
                         >
-                            自定义 ID (订阅短链)
+                            {{ t('widgets.profile.modal.customIdLabel') }}
                         </label>
                         <div class="flex gap-2">
                             <input
                                 id="profile-custom-id"
                                 v-model="localProfile.customId"
                                 type="text"
-                                placeholder="如: home, game (限字母、数字、-、_)"
+                                :placeholder="t('widgets.profile.modal.customIdPlaceholder')"
                                 class="input-modern-enhanced flex-1"
                             />
                             <button
                                 type="button"
-                                class="rounded-xl bg-gray-100 px-3 py-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                                title="生成随机短 ID"
+                                class="rounded-element bg-gray-100 px-3 py-2 text-gray-600 shadow-elevated-sm transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/10"
+                                :title="t('widgets.profile.modal.generateIdBtn')"
                                 @click="handleGenerateShortId"
                             >
                                 <svg
@@ -128,8 +131,8 @@ const {
                             </button>
                         </div>
                         <p class="mt-1.5 text-xs text-gray-400">
-                            设置后，订阅链接会变为：/token/<span
-                                class="font-bold text-indigo-500"
+                            {{ t('widgets.profile.modal.linkPreview') }}<span
+                                class="font-bold text-primary-500"
                                 >{{ localProfile.customId || 'id' }}</span
                             >
                         </p>
@@ -141,7 +144,7 @@ const {
                             for="profile-expires-at"
                             class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300"
                         >
-                            到期时间 (可选)
+                            {{ t('widgets.profile.modal.expiresLabel') }}
                         </label>
                         <div class="relative">
                             <input
@@ -152,7 +155,7 @@ const {
                             />
                         </div>
                         <p class="mt-1.5 text-xs text-gray-400">
-                            设置此订阅组的到期时间，到期后将返回默认节点。
+                            {{ t('widgets.profile.modal.expiresHint') }}
                         </p>
                     </div>
                 </div>
@@ -163,22 +166,22 @@ const {
                     <div class="flex h-80 flex-col">
                         <div class="mb-3 flex items-center justify-between">
                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                选择订阅
+                                {{ t('widgets.profile.modal.selectSub') }}
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleSelectAll('subscriptions', filteredSubscriptions)"
                                 >
-                                    全选
+                                    {{ t('widgets.profile.modal.selectAll') }}
                                 </button>
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="
                                         handleDeselectAll('subscriptions', filteredSubscriptions)
                                     "
                                 >
-                                    全不选
+                                    {{ t('widgets.profile.modal.deselectAll') }}
                                 </button>
                             </div>
                         </div>
@@ -187,7 +190,7 @@ const {
                             <input
                                 v-model="subscriptionSearchTerm"
                                 type="text"
-                                placeholder="搜索订阅..."
+                                :placeholder="t('widgets.profile.modal.searchSubPlaceholder')"
                                 class="search-input-unified"
                             />
                             <svg
@@ -207,36 +210,36 @@ const {
                         </div>
 
                         <div
-                            class="custom-scrollbar flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800"
+                            class="custom-scrollbar flex-1 overflow-y-auto rounded-element border border-gray-300 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5"
                         >
                             <div v-if="filteredSubscriptions.length > 0" class="space-y-1">
                                 <div v-for="sub in filteredSubscriptions" :key="sub.id">
                                     <label
-                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-lg p-3 transition-all duration-200"
+                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-element p-3 transition-all duration-200"
                                         :class="
                                             localProfile.subscriptions?.includes(sub.id)
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                ? 'bg-primary-50 dark:bg-primary-900/20'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/5'
                                         "
                                     >
                                         <div
                                             v-if="localProfile.subscriptions?.includes(sub.id)"
-                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
+                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-secondary-500"
                                         ></div>
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.subscriptions?.includes(sub.id)"
-                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-primary-600 transition-colors"
                                             @change="toggleSelection('subscriptions', sub.id)"
                                         />
                                         <span
                                             class="truncate text-sm font-medium text-gray-700 select-none dark:text-gray-200"
                                         >
-                                            {{ sub.name || '未命名订阅' }}
+                                            {{ sub.name || t('widgets.profile.modal.unnamedSub') }}
                                             <span
                                                 v-if="!sub.enabled"
-                                                class="ml-1 text-xs text-red-500"
-                                                >(已禁用)</span
+                                                class="ml-1 text-xs text-danger-500"
+                                                >{{ t('widgets.profile.modal.disabled') }}</span
                                             >
                                         </span>
                                     </label>
@@ -260,7 +263,7 @@ const {
                                         d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
-                                没有找到订阅
+                                {{ t('widgets.profile.modal.noSubFound') }}
                             </div>
                         </div>
                     </div>
@@ -269,20 +272,20 @@ const {
                     <div class="flex h-80 flex-col">
                         <div class="mb-3 flex items-center justify-between">
                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                选择手动节点
+                                {{ t('widgets.profile.modal.selectManual') }}
                             </h4>
                             <div class="space-x-3 text-sm">
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleSelectAll('manualNodes', filteredManualNodes)"
                                 >
-                                    全选
+                                    {{ t('widgets.profile.modal.selectAll') }}
                                 </button>
                                 <button
-                                    class="font-medium text-indigo-600 transition-colors hover:text-indigo-700"
+                                    class="font-medium text-primary-600 transition-colors hover:text-primary-700"
                                     @click="handleDeselectAll('manualNodes', filteredManualNodes)"
                                 >
-                                    全不选
+                                    {{ t('widgets.profile.modal.deselectAll') }}
                                 </button>
                             </div>
                         </div>
@@ -291,7 +294,7 @@ const {
                             <input
                                 v-model="nodeSearchTerm"
                                 type="text"
-                                placeholder="搜索节点..."
+                                :placeholder="t('widgets.profile.modal.searchNodePlaceholder')"
                                 class="search-input-unified"
                             />
                             <svg
@@ -311,31 +314,31 @@ const {
                         </div>
 
                         <div
-                            class="custom-scrollbar flex-1 overflow-y-auto rounded-xl border border-gray-300 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800"
+                            class="custom-scrollbar flex-1 overflow-y-auto rounded-element border border-gray-300 bg-gray-50 p-2 dark:border-white/10 dark:bg-white/5"
                         >
                             <div v-if="filteredManualNodes.length > 0" class="space-y-1">
                                 <div v-for="node in filteredManualNodes" :key="node.id">
                                     <label
-                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-lg p-3 transition-all duration-200"
+                                        class="group relative flex cursor-pointer items-center overflow-hidden rounded-element p-3 transition-all duration-200"
                                         :class="
                                             localProfile.manualNodes?.includes(node.id)
-                                                ? 'bg-indigo-50 dark:bg-indigo-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                                ? 'bg-primary-50 dark:bg-primary-900/20'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/5'
                                         "
                                     >
                                         <div
                                             v-if="localProfile.manualNodes?.includes(node.id)"
-                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-indigo-500 to-purple-500"
+                                            class="absolute top-0 bottom-0 left-0 w-1 bg-linear-to-b from-primary-500 to-secondary-500"
                                         ></div>
                                         <input
                                             type="checkbox"
                                             :checked="localProfile.manualNodes?.includes(node.id)"
-                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-indigo-600 transition-colors"
+                                            class="mr-3 h-5 w-5 rounded border-gray-300 text-primary-600 transition-colors"
                                             @change="toggleSelection('manualNodes', node.id)"
                                         />
                                         <span
                                             class="truncate text-sm font-medium text-gray-700 select-none dark:text-gray-200"
-                                            >{{ node.name || '未命名节点' }}</span
+                                            >{{ node.name || t('widgets.profile.modal.unnamedNode') }}</span
                                         >
                                     </label>
                                 </div>
@@ -358,7 +361,7 @@ const {
                                         d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
-                                没有找到节点
+                                {{ t('widgets.profile.modal.noNodeFound') }}
                             </div>
                         </div>
                     </div>

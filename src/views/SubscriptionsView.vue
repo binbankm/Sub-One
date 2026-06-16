@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -34,6 +35,7 @@ const SubscriptionModal = defineAsyncComponent(() => import('@/widgets/subscript
 // Stores
 const dataStore = useDataStore();
 const { subscriptions } = storeToRefs(dataStore);
+const { t } = useI18n();
 const filteredSubscriptions = computed(() => subscriptions.value);
 
 // Hooks: Subscription Management
@@ -69,10 +71,10 @@ const {
     resetPage
 } = usePagination<Subscription>(filteredSubscriptions, 6, isSortingSubs);
 
-const subsMoreMenuItems = [
-    { key: 'batch-delete', label: '批量删除' },
-    { key: 'clear-all', label: '清空所有', danger: true, dividerBefore: true }
-];
+const subsMoreMenuItems = computed(() => [
+    { key: 'batch-delete', label: t('views.subscriptions.menus.batchDelete') },
+    { key: 'clear-all', label: t('views.subscriptions.menus.clearAll'), danger: true, dividerBefore: true }
+]);
 
 const {
     isBatchDeleteMode,
@@ -139,7 +141,7 @@ useTabActionTrigger(
                         class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
                         @click="handleAddSubscription"
                     >
-                        新增
+                        {{ t('views.subscriptions.addBtn') }}
                     </button>
 
                     <button
@@ -168,9 +170,9 @@ useTabActionTrigger(
                             ></path>
                         </svg>
                         <span class="hidden sm:inline">{{
-                            isUpdatingAllSubs ? '更新中...' : '一键更新'
+                            isUpdatingAllSubs ? t('views.subscriptions.updating') : t('views.subscriptions.updateAllBtn')
                         }}</span>
-                        <span class="sm:hidden">{{ isUpdatingAllSubs ? '更新' : '更新' }}</span>
+                        <span class="sm:hidden">{{ t('views.subscriptions.updateShortBtn') }}</span>
                     </button>
 
                     <button
@@ -192,7 +194,7 @@ useTabActionTrigger(
                                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                             />
                         </svg>
-                        <span class="hidden sm:inline">保存排序</span>
+                        <span class="hidden sm:inline">{{ t('views.subscriptions.saveSortBtn') }}</span>
                     </button>
                     <button
                         :class="
@@ -217,9 +219,9 @@ useTabActionTrigger(
                             />
                         </svg>
                         <span class="hidden sm:inline">{{
-                            isSortingSubs ? '排序中' : '手动排序'
+                            isSortingSubs ? t('views.subscriptions.sorting') : t('views.subscriptions.manualSortBtn')
                         }}</span>
-                        <span class="sm:hidden">{{ isSortingSubs ? '排序' : '排序' }}</span>
+                        <span class="sm:hidden">{{ t('views.subscriptions.sortShortBtn') }}</span>
                     </button>
                 </div>
 
@@ -234,7 +236,7 @@ useTabActionTrigger(
         <BatchActionToolbar
             :visible="isBatchDeleteMode"
             :selected-count="selectedCount"
-            accent="indigo"
+            accent="primary"
             @select-all="selectAll"
             @invert-selection="invertSelection"
             @deselect-all="deselectAll"
@@ -298,15 +300,15 @@ useTabActionTrigger(
         </div>
         <EmptyState
             v-else
-            title="没有订阅"
-            description="从添加你的第一个订阅开始。"
-            bg-gradient-class="bg-linear-to-br from-indigo-500/20 to-purple-500/20"
-            icon-color-class="text-indigo-500"
+            :title="t('views.subscriptions.emptyTitle')"
+            :description="t('views.subscriptions.emptyDesc')"
+            bg-gradient-class="bg-linear-to-br from-primary-500/20 to-secondary-500/20"
+            icon-color-class="text-primary-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-indigo-500"
+                    class="h-12 w-12 text-primary-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -334,16 +336,16 @@ useTabActionTrigger(
 
     <ConfirmModal
         v-model:show="showDeleteAllSubsModal"
-        title="确认清空订阅"
-        message="您确定要删除所有<strong>订阅</strong>吗？此操作将标记为待保存，不会影响手动节点。"
+        :title="t('views.subscriptions.clearAllModal.title')"
+        :message="t('views.subscriptions.clearAllModal.desc')"
         type="danger"
         @confirm="handleDeleteAllSubscriptionsWithCleanup"
     />
 
     <ConfirmModal
         v-model:show="showDeleteSingleSubModal"
-        title="确认删除订阅"
-        message="您确定要删除此订阅吗？此操作将标记为待保存，不会影响手动节点。"
+        :title="t('views.subscriptions.deleteModal.title')"
+        :message="t('views.subscriptions.deleteModal.desc')"
         type="danger"
         @confirm="handleConfirmDeleteSingleSub"
     />

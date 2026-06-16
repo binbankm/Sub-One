@@ -11,8 +11,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import Modal from '@/common/ui/BaseModal.vue';
+
+const { t } = useI18n();
 
 // ==================== Props 和 Emit ====================
 
@@ -47,11 +50,11 @@ const handleConfirm = () => {
 <template>
     <Modal :show="show" @update:show="emit('update:show', $event)" @confirm="handleConfirm">
         <template #title>
-            <h3 class="gradient-text text-lg font-bold">批量导入</h3>
+            <h3 class="gradient-text text-lg font-bold">{{ t('common.ui.bulk.title') }}</h3>
         </template>
         <template #body>
             <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                每行一个订阅链接或分享节点。将自动识别节点名称。
+                {{ t('common.ui.bulk.desc') }}
             </p>
             <textarea
                 v-model="importText"

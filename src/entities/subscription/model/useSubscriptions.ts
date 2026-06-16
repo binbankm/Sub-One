@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import type { Subscription } from '@/common/types/index';
 import * as api from '@/common/utils/api';
 import { HTTP_REGEX } from '@/common/utils/constants';
+import i18n from '@/i18n';
 
 export function useSubscriptions(
     saveData: (reason: string, showToast?: boolean) => Promise<boolean>
@@ -15,14 +16,14 @@ export function useSubscriptions(
 
     async function addSubscription(sub: Subscription): Promise<boolean> {
         subscriptions.value.unshift(sub);
-        return await saveData('新增订阅');
+        return await saveData(i18n.global.t('entities.subscription.actions.add'));
     }
 
     async function updateSubscription(sub: Subscription, silent: boolean = false) {
         const index = subscriptions.value.findIndex((s: Subscription) => s.id === sub.id);
         if (index !== -1) {
             subscriptions.value[index] = { ...sub };
-            await saveData('更新订阅', !silent);
+            await saveData(i18n.global.t('entities.subscription.actions.update'), !silent);
         }
     }
 
@@ -32,7 +33,7 @@ export function useSubscriptions(
     ) {
         subscriptions.value = subscriptions.value.filter((s: Subscription) => s.id !== id);
         removeIdFromProfiles(id, 'subscriptions');
-        await saveData('删除订阅');
+        await saveData(i18n.global.t('entities.subscription.actions.delete'));
     }
 
     async function deleteAllSubscriptions(
@@ -40,13 +41,13 @@ export function useSubscriptions(
     ) {
         subscriptions.value = [];
         clearProfilesField('subscriptions');
-        await saveData('清空订阅');
+        await saveData(i18n.global.t('entities.subscription.actions.clear'));
     }
 
     async function addSubscriptionsFromBulk(newSubs: Subscription[]) {
         if (newSubs.length === 0) return;
         subscriptions.value.push(...newSubs);
-        await saveData('批量导入订阅');
+        await saveData(i18n.global.t('entities.subscription.actions.batchImport'));
     }
 
     async function updateSubscriptionNodes(id: string): Promise<boolean> {
@@ -67,7 +68,7 @@ export function useSubscriptions(
                 return true;
             } else {
                 sub.status = 'error';
-                sub.errorMsg = '更新失败';
+                sub.errorMsg = i18n.global.t('entities.subscription.actions.updateFailed');
                 return false;
             }
         } catch (e) {
@@ -82,7 +83,7 @@ export function useSubscriptions(
         const enabled = subscriptions.value.filter(
             (s: Subscription) => s.enabled && s.url && HTTP_REGEX.test(s.url)
         );
-        if (enabled.length === 0) return { success: true, count: 0, message: '没有启用的订阅' };
+        if (enabled.length === 0) return { success: true, count: 0, message: i18n.global.t('entities.subscription.actions.noEnabled') };
 
         const ids = enabled.map((s: Subscription) => s.id);
 
@@ -120,13 +121,11 @@ export function useSubscriptions(
                 // 发送 TG 通知（仪表板立即更新）
                 if (successCount > 0) {
                     const message = 
-                        `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
-                        `┃  🔄 批量更新完成  ┃\n` +
-                        `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                        `✅ 成功更新了 \`${successCount}\` 个订阅\n` +
-                        `📊 仪表板数据已同步完成`;
+                        i18n.global.t('entities.subscription.tg.batchUpdateSuccess') +
+                        i18n.global.t('entities.subscription.management.batchUpdated').replace('{count}', String(successCount)) + '\n' +
+                        i18n.global.t('entities.subscription.tg.batchUpdateSynced');
                     api.sendNotification(message).catch((err) => {
-                        console.error('发送 TG 通知失败:', err);
+                        console.error(`${i18n.global.t('entities.subscription.actions.tgFail')}`, err);
                     });
                 }
 

@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 /**
  * ==================== 订阅和节点导入模块 ====================
  *
@@ -46,7 +47,7 @@ export function createSubscription(url: string, name?: string): Subscription {
         // 生成唯一标识符（优先使用包装后的兼容函数）
         id: generateUUID(),
         // 设置订阅名称（优先使用传入的名称，否则从 URL 提取，最后使用默认值）
-        name: name || extractNodeName(url) || '未命名',
+        name: name || extractNodeName(url) || i18n.global.t('entities.subscription.tg.unnamed'),
         // 保存订阅 URL
         url: url,
         // 默认启用该订阅
@@ -82,7 +83,7 @@ export function createNode(url: string, name?: string): Node {
         // 生成唯一标识符（优先使用包装后的兼容函数）
         id: generateUUID(),
         // 设置节点名称（优先使用传入的名称，否则从 URL 提取，最后使用默认值）
-        name: name || extractNodeName(url) || '未命名',
+        name: name || extractNodeName(url) || i18n.global.t('entities.subscription.tg.unnamed'),
         // 保存节点 URL
         url: url,
         // 节点类型

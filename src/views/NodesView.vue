@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -36,6 +37,7 @@ const SubscriptionImportModal = defineAsyncComponent(
 
 const dataStore = useDataStore();
 const { manualNodes } = storeToRefs(dataStore);
+const { t } = useI18n();
 
 // Hooks
 const {
@@ -73,12 +75,12 @@ const {
     resetPage
 } = usePagination<Node>(filteredNodes, 15, isSortingNodes);
 
-const nodesMoreMenuItems = [
-    { key: 'auto-sort', label: '一键排序' },
-    { key: 'deduplicate', label: '一键去重' },
-    { key: 'batch-delete', label: '批量删除' },
-    { key: 'clear-all', label: '清空所有', danger: true, dividerBefore: true }
-];
+const nodesMoreMenuItems = computed(() => [
+    { key: 'auto-sort', label: t('views.nodes.menus.autoSort') },
+    { key: 'deduplicate', label: t('views.nodes.menus.deduplicate') },
+    { key: 'batch-delete', label: t('views.nodes.menus.batchDelete') },
+    { key: 'clear-all', label: t('views.nodes.menus.clearAll'), danger: true, dividerBefore: true }
+]);
 
 const {
     isBatchDeleteMode,
@@ -165,7 +167,7 @@ useTabActionTrigger(
                     <input
                         v-model="searchTerm"
                         type="text"
-                        placeholder="搜索节点..."
+                        :placeholder="t('views.nodes.searchPlaceholder')"
                         class="search-input-unified w-full text-base"
                     />
                     <svg
@@ -191,14 +193,14 @@ useTabActionTrigger(
                             class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
                             @click="handleAddNode"
                         >
-                            新增
+                            {{ t('views.nodes.addBtn') }}
                         </button>
 
                         <button
                             class="btn-modern-enhanced btn-import transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
                             @click="showSubscriptionImportModal = true"
                         >
-                            导入节点
+                            {{ t('views.nodes.importBtn') }}
                         </button>
 
                         <button
@@ -220,7 +222,7 @@ useTabActionTrigger(
                                     d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                                 />
                             </svg>
-                            <span class="hidden sm:inline">保存排序</span>
+                            <span class="hidden sm:inline">{{ t('views.nodes.saveSortBtn') }}</span>
                         </button>
                         <button
                             :class="
@@ -245,9 +247,9 @@ useTabActionTrigger(
                                 />
                             </svg>
                             <span class="hidden sm:inline">{{
-                                isSortingNodes ? '排序中' : '手动排序'
+                                isSortingNodes ? t('views.nodes.sorting') : t('views.nodes.manualSortBtn')
                             }}</span>
-                            <span class="sm:hidden">{{ isSortingNodes ? '排序' : '排序' }}</span>
+                            <span class="sm:hidden">{{ t('views.nodes.sortShortBtn') }}</span>
                         </button>
                     </div>
 
@@ -322,15 +324,15 @@ useTabActionTrigger(
         </div>
         <EmptyState
             v-else
-            title="没有手动节点"
-            description="添加分享链接或单个节点。"
-            bg-gradient-class="bg-linear-to-br from-green-500/20 to-emerald-500/20"
-            icon-color-class="text-green-500"
+            :title="t('views.nodes.emptyTitle')"
+            :description="t('views.nodes.emptyDesc')"
+            bg-gradient-class="bg-linear-to-br from-success-500/20 to-success-500/20"
+            icon-color-class="text-success-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-green-500"
+                    class="h-12 w-12 text-success-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -350,16 +352,16 @@ useTabActionTrigger(
 
         <ConfirmModal
             v-model:show="showDeleteNodesModal"
-            title="确认清空节点"
-            message="您确定要删除所有<strong>手动节点</strong>吗？此操作将标记为待保存，不会影响订阅。"
+            :title="t('views.nodes.clearAllModal.title')"
+            :message="t('views.nodes.clearAllModal.desc')"
             type="danger"
             @confirm="handleDeleteAllNodes"
         />
 
         <ConfirmModal
             v-model:show="showDeleteSingleNodeModal"
-            title="确认删除节点"
-            message="您确定要删除此手动节点吗？此操作将标记为待保存，不会影响订阅。"
+            :title="t('views.nodes.deleteModal.title')"
+            :message="t('views.nodes.deleteModal.desc')"
             type="danger"
             @confirm="handleConfirmDeleteSingleNode"
         />

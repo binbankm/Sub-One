@@ -13,6 +13,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import type { Node } from '@/common/types/index';
 import { getProtocol, getProtocolInfo } from '@/common/utils/protocols';
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 }>();
 
 const toastStore = useToastStore();
+const { t } = useI18n();
 
 const protocol = computed(() => {
     const node = props.node as any;
@@ -46,9 +48,9 @@ const protocolInfo = computed(() => getProtocolInfo(protocol.value));
 const handleCopy = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('📋 已复制节点链接', 'success');
+        toastStore.showToast(t('widgets.node.manualCard.copySuccess'), 'success');
     } else {
-        toastStore.showToast('❌ 复制失败', 'error');
+        toastStore.showToast(t('widgets.node.manualCard.copyFail'), 'error');
     }
 };
 </script>
@@ -56,10 +58,10 @@ const handleCopy = async (url: string) => {
 <template>
     <!-- 卡片容器 -->
     <div
-        class="card-glass group relative flex h-full flex-col overflow-hidden rounded-2xl border border-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 dark:border-gray-800"
+        class="card-glass group relative flex h-full flex-col overflow-hidden rounded-card border border-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-card hover:shadow-primary-500/10 dark:border-white/10"
         :class="{
             'opacity-60 grayscale filter': !node.enabled,
-            'border-emerald-500/50 ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-gray-900':
+            'border-success-500/50 ring-2 ring-success-500 ring-offset-2 dark:ring-offset-black/80':
                 isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
@@ -82,7 +84,7 @@ const handleCopy = async (url: string) => {
                             <input
                                 type="checkbox"
                                 :checked="isSelected"
-                                class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 transition-colors checked:border-emerald-500 checked:bg-emerald-500 dark:border-gray-600"
+                                class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-success-500 checked:bg-success-500 dark:border-white/10"
                                 @change="emit('toggleSelect')"
                             />
                             <svg
@@ -104,14 +106,14 @@ const handleCopy = async (url: string) => {
 
                     <!-- 协议标签 (胶囊样式) -->
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-sm"
+                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-elevated-sm"
                         :class="[
                             protocolInfo.bg,
                             protocolInfo.color,
                             'bg-opacity-10 dark:bg-opacity-20 border-transparent'
                         ]"
                     >
-                        <span class="text-sm font-normal drop-shadow-sm filter">{{
+                        <span class="text-sm font-normal drop-shadow-elevated-sm filter">{{
                             protocolInfo.icon
                         }}</span>
                         <span>{{ protocolInfo.text }}</span>
@@ -129,8 +131,8 @@ const handleCopy = async (url: string) => {
                     @click.stop
                 >
                     <button
-                        class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
-                        title="编辑"
+                        class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/40 dark:hover:text-primary-400"
+                        :title="t('widgets.node.manualCard.edit')"
                         @click="emit('edit')"
                     >
                         <svg
@@ -148,8 +150,8 @@ const handleCopy = async (url: string) => {
                         </svg>
                     </button>
                     <button
-                        class="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/40 dark:hover:text-rose-400"
-                        title="删除"
+                        class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/40 dark:hover:text-rose-400"
+                        :title="t('widgets.node.manualCard.delete')"
                         @click="emit('delete')"
                     >
                         <svg
@@ -173,19 +175,19 @@ const handleCopy = async (url: string) => {
             <div class="mb-4">
                 <h4
                     class="line-clamp-2 text-base leading-snug font-bold wrap-break-word text-gray-800 transition-all duration-300 hover:line-clamp-none dark:text-gray-100"
-                    :title="node.name || '未命名节点'"
+                    :title="node.name || t('widgets.node.manualCard.unnamed')"
                 >
-                    {{ node.name || '未命名节点' }}
+                    {{ node.name || t('widgets.node.manualCard.unnamed') }}
                 </h4>
             </div>
 
             <!-- 底部信息：地址 & 复制 -->
-            <div class="mt-auto border-t border-gray-300 pt-3 dark:border-gray-700/50">
+            <div class="mt-auto border-t border-gray-300 pt-3 dark:border-white/10">
                 <div class="flex items-center justify-between gap-2 text-xs">
                     <!-- 服务器地址展示 (更简洁) -->
                     <div
                         class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"
-                        title="服务器地址"
+                        :title="t('widgets.node.manualCard.serverAddr')"
                     >
                         <svg
                             class="h-3.5 w-3.5 shrink-0"
@@ -208,11 +210,11 @@ const handleCopy = async (url: string) => {
                     <!-- 复制链接按钮 -->
                     <button
                         v-if="node.url"
-                        class="flex items-center gap-1 rounded-md bg-gray-50 px-2 py-1 font-medium text-gray-500 transition-all hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                        title="复制完整链接"
+                        class="flex items-center gap-1 rounded-element bg-gray-50 px-2 py-1 font-medium text-gray-500 transition-all hover:bg-primary-50 hover:text-primary-600 dark:bg-white/5 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                        :title="t('widgets.node.manualCard.copyLink')"
                         @click.stop="handleCopy(node.url)"
                     >
-                        <span class="hidden sm:inline">复制</span>
+                        <span class="hidden sm:inline">{{ t('widgets.node.manualCard.copyBtn') }}</span>
                         <svg
                             class="h-3.5 w-3.5"
                             fill="none"

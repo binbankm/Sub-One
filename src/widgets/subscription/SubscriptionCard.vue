@@ -12,6 +12,9 @@ import { formatBytes, formatExpiry, getTrafficColorClass } from '@/common/utils/
 import { copyToClipboard } from '@/common/utils/utils';
 
 import { useToastStore } from '@/stores/useNotificationStore';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     sub: Subscription;
@@ -35,9 +38,9 @@ const copyUrl = async () => {
     if (!props.sub.url) return;
     const success = await copyToClipboard(props.sub.url);
     if (success) {
-        toastStore.showToast('📋 链接已复制到剪贴板', 'success');
+        toastStore.showToast(t('widgets.subscription.card.copySuccess'), 'success');
     } else {
-        toastStore.showToast('❌ 复制失败', 'error');
+        toastStore.showToast(t('widgets.subscription.card.copyFailed'), 'error');
     }
 };
 
@@ -127,11 +130,11 @@ const handleTestLatency = async () => {
 
 <template>
     <div
-        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-2xl hover:scale-[1.02] sm:min-h-60"
+        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-card hover:scale-[1.02] sm:min-h-60"
         :class="{
             'opacity-50': !sub.enabled,
-            'ring-2 ring-indigo-500/50': sub.isNew,
-            'ring-2 ring-indigo-600 dark:ring-indigo-400': isBatchMode && isSelected,
+            'ring-2 ring-primary-500/50': sub.isNew,
+            'ring-2 ring-primary-600 dark:ring-primary-400': isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
         @mousedown="handleMouseDown"
@@ -145,7 +148,7 @@ const handleTestLatency = async () => {
                         <input
                             type="checkbox"
                             :checked="isSelected"
-                            class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-indigo-600 dark:border-gray-600 dark:bg-gray-700"
+                            class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-primary-600 dark:border-white/10 dark:bg-white/10"
                             @change="emit('toggleSelect')"
                         />
                     </label>
@@ -154,7 +157,7 @@ const handleTestLatency = async () => {
                 <div class="w-full truncate">
                     <div class="flex items-center gap-3">
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg transition-all duration-300 group-hover:shadow-xl"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-button bg-linear-to-br from-info-500 to-primary-600 shadow-elevated transition-all duration-300 group-hover:shadow-card"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -173,19 +176,19 @@ const handleTestLatency = async () => {
                         </div>
                         <div class="min-w-0 flex-1">
                             <p
-                                class="truncate text-lg font-bold text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 dark:text-gray-100 dark:group-hover:text-indigo-400"
-                                :title="sub.name || '未命名订阅'"
+                                class="truncate text-lg font-bold text-gray-800 transition-colors duration-300 group-hover:text-primary-600 dark:text-gray-100 dark:group-hover:text-primary-400"
+                                :title="sub.name || t('widgets.subscription.card.unnamed')"
                             >
-                                {{ sub.name || '未命名订阅' }}
+                                {{ sub.name || t('widgets.subscription.card.unnamed') }}
                             </p>
                             <div
                                 v-if="sub.exclude && sub.exclude.trim()"
-                                class="animate-pulse-slow mt-1.5 flex w-fit items-center gap-1.5 rounded-lg border border-orange-300/50 bg-linear-to-r from-orange-500/15 to-amber-500/15 px-2.5 py-1 dark:border-orange-500/30 dark:from-orange-500/20 dark:to-amber-500/20"
-                                :title="`已启用规则过滤: ${sub.exclude}`"
+                                class="animate-pulse-slow mt-1.5 flex w-fit items-center gap-1.5 rounded-element border border-warning-300/50 bg-linear-to-r from-warning-500/15 to-warning-500/15 px-2.5 py-1 dark:border-warning-500/30 dark:from-warning-500/20 dark:to-warning-500/20"
+                                :title="`${t('widgets.subscription.card.filterEnabledMsg')}${sub.exclude}`"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-3.5 w-3.5 shrink-0 text-orange-600 dark:text-orange-400"
+                                    class="h-3.5 w-3.5 shrink-0 text-warning-600 dark:text-warning-400"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -198,8 +201,8 @@ const handleTestLatency = async () => {
                                     />
                                 </svg>
                                 <span
-                                    class="text-[10px] font-bold tracking-wide text-orange-700 dark:text-orange-300"
-                                    >规则过滤</span
+                                    class="text-[10px] font-bold tracking-wide text-warning-700 dark:text-warning-300"
+                                    >{{ t('widgets.subscription.card.filterLabel') }}</span
                                 >
                             </div>
                         </div>
@@ -210,8 +213,8 @@ const handleTestLatency = async () => {
                     class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
                 >
                     <button
-                        class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
-                        title="编辑"
+                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+                        :title="t('widgets.subscription.card.edit')"
                         @click.stop="emit('edit')"
                     >
                         <svg
@@ -230,8 +233,8 @@ const handleTestLatency = async () => {
                         </svg>
                     </button>
                     <button
-                        class="hover-lift rounded-xl p-2.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
-                        title="删除"
+                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
+                        :title="t('widgets.subscription.card.delete')"
                         @click.stop="emit('delete')"
                     >
                         <svg
@@ -256,19 +259,19 @@ const handleTestLatency = async () => {
             <div class="flex grow flex-col justify-start space-y-3 sm:space-y-4">
                 <div class="relative">
                     <label class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                        >订阅链接</label
+                        >{{ t('widgets.subscription.card.subUrl') }}</label
                     >
                     <input
                         type="text"
                         :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'"
                         readonly
-                        class="w-full rounded-xl border border-gray-300 bg-gray-50/60 px-3 py-2 font-mono text-sm text-gray-500 transition-all duration-300 sm:px-4 sm:py-3 dark:border-gray-700 dark:bg-gray-900/75 dark:text-gray-400"
+                        class="w-full rounded-element border border-gray-300 bg-gray-50/60 px-3 py-2 font-mono text-sm text-gray-500 transition-all duration-300 sm:px-4 sm:py-3 dark:border-white/10 dark:bg-black/60 dark:text-gray-400"
                         :class="{ 'select-none': !showUrl }"
                     />
                     <div class="mt-2 flex items-center gap-2 sm:mt-3">
                         <button
-                            class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-orange-500/20 hover:text-orange-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-orange-400"
-                            :title="showUrl ? '隐藏链接' : '显示链接'"
+                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-warning-500/20 hover:text-warning-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-warning-400"
+                            :title="showUrl ? t('widgets.subscription.card.hideUrlTitle') : t('widgets.subscription.card.showUrlTitle')"
                             @click.stop="toggleUrlVisibility"
                         >
                             <svg
@@ -305,12 +308,12 @@ const handleTestLatency = async () => {
                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 />
                             </svg>
-                            {{ showUrl ? '隐藏' : '显示' }}
+                            {{ showUrl ? t('widgets.subscription.card.hideBtn') : t('widgets.subscription.card.showBtn') }}
                         </button>
                         <button
                             v-if="showUrl"
-                            class="hover-lift flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
-                            title="复制链接"
+                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
+                            :title="t('widgets.subscription.card.copyUrlTitle')"
                             @click.stop="copyUrl"
                         >
                             <svg
@@ -326,7 +329,7 @@ const handleTestLatency = async () => {
                                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                                 />
                             </svg>
-                            复制
+                            {{ t('widgets.subscription.card.copyBtn') }}
                         </button>
                     </div>
                 </div>
@@ -334,7 +337,7 @@ const handleTestLatency = async () => {
                 <!-- 流量信息 -->
                 <div
                     v-if="trafficInfo"
-                    class="mt-2 rounded-xl border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/50"
+                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]"
                 >
                     <div class="mb-2 flex items-end justify-between">
                         <span
@@ -352,7 +355,7 @@ const handleTestLatency = async () => {
                                     clip-rule="evenodd"
                                 />
                             </svg>
-                            流量使用
+                            {{ t('widgets.subscription.card.trafficUsage') }}
                         </span>
                         <div class="text-right">
                             <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{
@@ -363,10 +366,10 @@ const handleTestLatency = async () => {
                         </div>
                     </div>
                     <div
-                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/20"
                     >
                         <div
-                            class="absolute top-0 left-0 h-full rounded-full shadow-sm transition-all duration-700 ease-out"
+                            class="absolute top-0 left-0 h-full rounded-full shadow-elevated-sm transition-all duration-700 ease-out"
                             :class="trafficColorClass"
                             :style="{ width: trafficInfo.percentage + '%' }"
                         >
@@ -375,11 +378,11 @@ const handleTestLatency = async () => {
                     </div>
                     <div class="mt-2 flex items-center justify-between">
                         <span class="text-[10px] font-medium text-gray-400"
-                            >已用 {{ trafficInfo.percentage.toFixed(1) }}%</span
+                            >{{ t('widgets.subscription.card.usedPrefix') }} {{ trafficInfo.percentage.toFixed(1) }}%</span
                         >
                         <span
                             v-if="expiryInfo"
-                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-sm dark:border-gray-600 dark:bg-gray-700"
+                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-elevated-sm dark:border-white/5 dark:bg-white/10"
                             :class="expiryInfo.style"
                             >{{ expiryInfo.daysRemaining }}</span
                         >
@@ -389,10 +392,10 @@ const handleTestLatency = async () => {
 
             <!-- 底部控制 -->
             <div
-                class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-gray-700/50"
+                class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-300 pt-3 dark:border-white/10"
                 @click.stop
             >
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3">
                     <label class="group/toggle relative inline-flex cursor-pointer items-center">
                         <input
                             type="checkbox"
@@ -401,34 +404,34 @@ const handleTestLatency = async () => {
                             @change="emit('change')"
                         />
                         <div
-                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-md peer-checked:bg-indigo-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
+                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-elevated-sm peer-checked:bg-primary-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:bg-white/10 dark:after:border-gray-600 dark:peer-checked:bg-primary-500 dark:peer-checked:after:border-white"
                         ></div>
                     </label>
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{
-                        sub.enabled ? '已启用' : '已禁用'
+                    <span class="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-300">{{
+                        sub.enabled ? t('widgets.subscription.card.enabled') : t('widgets.subscription.card.disabled')
                     }}</span>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="ml-auto flex items-center gap-1 sm:gap-2">
                     <button
                         :disabled="isTestingLatency"
-                        class="rounded-lg p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        class="rounded-element p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                         :class="{
-                            'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30':
+                            'text-warning-500 hover:bg-warning-50 dark:hover:bg-warning-900/30':
                                 !latencyResult,
-                            'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/30':
+                            'text-success-500 hover:bg-success-50 dark:hover:bg-success-900/30':
                                 latencyResult && latencyResult.available,
-                            'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30':
+                            'text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/30':
                                 latencyResult && !latencyResult.available
                         }"
                         :title="
                             isTestingLatency
-                                ? '测试中...'
+                                ? t('widgets.subscription.card.testing')
                                 : latencyResult
                                   ? latencyResult.available
-                                      ? '可用'
-                                      : '不可用'
-                                  : '测试连接'
+                                      ? t('widgets.subscription.card.available')
+                                      : t('widgets.subscription.card.unavailable')
+                                  : t('widgets.subscription.card.testConn')
                         "
                         @click.stop="handleTestLatency"
                     >
@@ -450,14 +453,14 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
-                        class="group/btn flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
+                        class="group/btn flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         @click.stop="emit('showNodes')"
                     >
                         <span
-                            class="h-1.5 w-1.5 rounded-full"
-                            :class="(sub.nodeCount || 0) > 0 ? 'bg-green-500' : 'bg-gray-300'"
+                            class="h-1.5 w-1.5 shrink-0 rounded-full"
+                            :class="(sub.nodeCount || 0) > 0 ? 'bg-success-500' : 'bg-gray-300'"
                         ></span>
-                        {{ sub.nodeCount }} 节点
+                        <span class="whitespace-nowrap">{{ sub.nodeCount }} {{ t('widgets.subscription.card.nodes') }}</span>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             class="-ml-1 h-3 w-3 opacity-0 transition-all duration-200 group-hover/btn:opacity-100"
@@ -476,14 +479,14 @@ const handleTestLatency = async () => {
 
                     <button
                         :disabled="sub.isUpdating"
-                        class="rounded-lg p-1.5 text-gray-600 transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                        :title="sub.isUpdating ? '更新中...' : '更新订阅'"
+                        class="rounded-element p-1.5 text-gray-600 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                        :title="sub.isUpdating ? t('widgets.subscription.card.updating') : t('widgets.subscription.card.updateSub')"
                         @click.stop="emit('update')"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             class="h-4 w-4"
-                            :class="{ 'animate-spin text-indigo-500': sub.isUpdating }"
+                            :class="{ 'animate-spin text-primary-500': sub.isUpdating }"
                             viewBox="0 0 20 20"
                             fill="currentColor"
                         >

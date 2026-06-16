@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import type { Subscription } from '@/common/types/index';
 
 import { useToastStore } from '@/stores/useNotificationStore';
+import { useI18n } from 'vue-i18n';
 
 interface UseSubscriptionFormProps {
     show: boolean;
@@ -16,14 +17,15 @@ export function useSubscriptionForm(
     onCancel: () => void
 ) {
     const toastStore = useToastStore();
+    const { t } = useI18n();
 
     const localSubscription = ref<Subscription | null>(null);
     const urlError = ref('');
     const nameError = ref('');
     const showAdvanced = ref(false);
 
-    const modalTitle = computed(() => (props.isNew ? '新增订阅' : '编辑订阅'));
-    const saveButtonText = computed(() => (props.isNew ? '添加' : '保存'));
+    const modalTitle = computed(() => (props.isNew ? t('entities.subscription.modal.addTitle') : t('entities.subscription.modal.editTitle')));
+    const saveButtonText = computed(() => (props.isNew ? t('entities.subscription.modal.addBtn') : t('entities.subscription.modal.saveBtn')));
 
     const canSave = computed(() => {
         return localSubscription.value?.url && !urlError.value && !nameError.value;
@@ -46,21 +48,21 @@ export function useSubscriptionForm(
         urlError.value = '';
 
         if (!localSubscription.value?.url) {
-            urlError.value = '订阅链接不能为空';
+            urlError.value = t('entities.subscription.modal.urlEmpty');
             return false;
         }
 
         const url = localSubscription.value.url.trim();
 
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            urlError.value = '订阅链接必须以 http:// 或 https:// 开头';
+            urlError.value = t('entities.subscription.modal.urlInvalidScheme');
             return false;
         }
 
         try {
             new URL(url);
         } catch {
-            urlError.value = '无效的 URL 格式';
+            urlError.value = t('entities.subscription.modal.urlInvalid');
             return false;
         }
 
@@ -79,7 +81,7 @@ export function useSubscriptionForm(
         if (!localSubscription.value) return;
 
         if (!validateUrl()) {
-            toastStore.showToast('⚠️ 请修正错误后再保存', 'error');
+            toastStore.showToast(t('entities.subscription.modal.fixErrors'), 'error');
             return;
         }
 

@@ -57,7 +57,7 @@ onUnmounted(() => {
 <template>
     <div ref="rootRef" class="relative">
         <button
-            class="hover-lift rounded-2xl p-2 transition-colors hover:bg-gray-200 sm:p-4 dark:hover:bg-gray-700"
+            class="hover-lift rounded-button p-2 transition-colors hover:bg-gray-200 sm:p-4 dark:hover:bg-white/10"
             @click="toggleMenu"
         >
             <svg
@@ -75,20 +75,20 @@ onUnmounted(() => {
         <Transition name="slide-fade-sm">
             <div
                 v-if="isOpen"
-                class="absolute right-0 z-50 mt-2 rounded-2xl border border-gray-300 bg-white shadow-2xl ring-2 ring-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:ring-gray-700"
+                class="absolute right-0 z-50 mt-2 p-1 overflow-hidden rounded-button border border-gray-200/80 bg-white/80 backdrop-blur-xl shadow-modal ring-1 ring-black/5 dark:border-white/10 dark:bg-gray-900/80 dark:ring-white/10"
                 :class="widthClass"
             >
                 <template v-for="item in props.items" :key="item.key">
                     <div
                         v-if="item.dividerBefore"
-                        class="my-1 border-t border-gray-300 dark:border-gray-700"
+                        class="mx-1 my-1 border-t border-gray-200/80 dark:border-white/10"
                     ></div>
                     <button
-                        class="w-full px-5 py-3 text-left text-base transition-colors"
+                        class="w-full rounded-element px-4 py-2.5 text-left text-[0.9375rem] font-medium transition-all duration-200"
                         :class="
                             item.danger
-                                ? 'text-red-500 hover:text-red-600 dark:hover:text-red-400'
-                                : 'text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white'
+                                ? 'text-danger-600 hover:bg-danger-50 hover:text-danger-700 dark:text-danger-400 dark:hover:bg-danger-500/15 dark:hover:text-danger-300'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white'
                         "
                         @click="selectItem(item.key)"
                     >

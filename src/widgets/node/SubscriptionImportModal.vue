@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { useSubscriptionImport } from '@/entities/node/model/useSubscriptionImport';
 import type { Node } from '@/common/types/index';
@@ -39,6 +40,8 @@ const {
     importSubscription
 } = useSubscriptionImport(props, emit);
 
+const { t } = useI18n();
+
 // Local UI Refs and Handlers
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const triggerFileInput = () => {
@@ -54,35 +57,35 @@ const vFocus = {
 <template>
     <Modal
         :show="show"
-        confirm-text="导入"
+        :confirm-text="t('widgets.node.importModal.importBtn')"
         :confirm-disabled="isLoading"
         @update:show="emit('update:show', $event)"
         @confirm="importSubscription"
     >
         <template #title>
             <div class="flex flex-col gap-1">
-                <h3 class="gradient-text text-lg font-bold">导入订阅</h3>
+                <h3 class="gradient-text text-lg font-bold">{{ t('widgets.node.importModal.title') }}</h3>
                 <p class="text-xs font-normal text-gray-400">
-                    支持 URL 链接、纯文本、Base64 以及 Clash/YAML 配置文件
+                    {{ t('widgets.node.importModal.subtitle') }}
                 </p>
             </div>
         </template>
 
         <template #body>
             <!-- 导入模式切换 Tabs -->
-            <div class="mb-5 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800/50">
+            <div class="mb-5 flex rounded-element bg-gray-100 p-1 dark:bg-white/5">
                 <button
                     v-for="m in ['url', 'text'] as const"
                     :key="m"
-                    class="flex-1 rounded-lg py-1.5 text-sm font-medium transition-all"
+                    class="flex-1 rounded-element py-1.5 text-sm font-medium transition-all"
                     :class="
                         mode === m
-                            ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-700 dark:text-indigo-400'
+                            ? 'bg-white text-primary-600 shadow-elevated-sm dark:bg-white/10 dark:text-primary-400'
                             : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                     "
                     @click="mode = m"
                 >
-                    {{ m === 'url' ? '链接导入' : '文本/文件导入' }}
+                    {{ m === 'url' ? t('widgets.node.importModal.urlMode') : t('widgets.node.importModal.textMode') }}
                 </button>
             </div>
 
@@ -90,7 +93,7 @@ const vFocus = {
             <div v-if="mode === 'url'" class="space-y-4">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >订阅链接</label
+                        >{{ t('widgets.node.importModal.urlLabel') }}</label
                     >
                     <input
                         v-model="subscriptionUrl"
@@ -103,11 +106,10 @@ const vFocus = {
                 </div>
 
                 <div
-                    class="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-relaxed text-blue-600 dark:border-blue-800/30 dark:bg-blue-900/10 dark:text-blue-400"
+                    class="rounded-element border border-info-100 bg-info-50 p-3 text-xs leading-relaxed text-info-600 dark:border-info-800/30 dark:bg-info-900/10 dark:text-info-400"
                 >
-                    <p class="mb-1 font-bold">💡 提示：</p>
-                    此模式通过后端服务器下载订阅内容，适合需要定期更新的订阅源。如果链接包含敏感参数（如
-                    Token），它们将安全地传输给后端。
+                    <p class="mb-1 font-bold">{{ t('widgets.node.importModal.hintTitle') }}</p>
+                    {{ t('widgets.node.importModal.urlHintDesc') }}
                 </div>
             </div>
 
@@ -130,14 +132,14 @@ const vFocus = {
                     />
 
                     <div
-                        class="flex items-center gap-3 rounded-xl border-2 border-dashed p-3 transition-all"
+                        class="flex items-center gap-3 rounded-element border-2 border-dashed p-3 transition-all"
                         :class="
                             isDragging
-                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/10'
-                                : 'border-gray-300 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/30 dark:hover:border-gray-600'
+                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10'
+                                : 'border-gray-300 bg-gray-50 hover:border-gray-300 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/10'
                         "
                     >
-                        <div class="rounded-lg bg-white p-2 shadow-sm dark:bg-gray-700">
+                        <div class="rounded-element bg-white p-2 shadow-elevated-sm dark:bg-white/10">
                             <svg
                                 class="h-5 w-5 text-gray-500"
                                 xmlns="http://www.w3.org/2000/svg"
@@ -155,9 +157,9 @@ const vFocus = {
                         </div>
                         <div class="flex-1">
                             <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                点击上传或拖拽文件
+                                {{ t('widgets.node.importModal.uploadTitle') }}
                             </p>
-                            <p class="text-xs text-gray-400">支持 YAML, JSON, TXT 等格式</p>
+                            <p class="text-xs text-gray-400">{{ t('widgets.node.importModal.uploadDesc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -166,16 +168,16 @@ const vFocus = {
                 <div>
                     <div class="mb-1.5 flex items-center justify-between">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >订阅内容</label
+                            >{{ t('widgets.node.importModal.contentLabel') }}</label
                         >
                         <span v-if="textContent" class="text-xs text-gray-400">
-                            {{ textContent.length }} 字符
+                            {{ textContent.length }} {{ t('widgets.node.importModal.chars') }}
                         </span>
                     </div>
                     <textarea
                         v-model="textContent"
                         rows="6"
-                        placeholder="在此处粘贴 Base64、节点链接列表或 Clash 配置内容..."
+                        :placeholder="t('widgets.node.importModal.contentPlaceholder')"
                         class="input-modern w-full resize-none font-mono text-xs leading-relaxed"
                     ></textarea>
                 </div>
@@ -184,10 +186,10 @@ const vFocus = {
             <!-- 错误提示 -->
             <div
                 v-if="errorMessage"
-                class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/20"
+                class="mt-4 flex items-start gap-2 rounded-element border border-danger-200 bg-danger-50 p-3 dark:border-danger-800 dark:bg-danger-900/20"
             >
                 <svg
-                    class="mt-0.5 h-4 w-4 shrink-0 text-red-500"
+                    class="mt-0.5 h-4 w-4 shrink-0 text-danger-500"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -200,7 +202,7 @@ const vFocus = {
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                 </svg>
-                <p class="text-xs leading-relaxed break-all text-red-600 dark:text-red-400">
+                <p class="text-xs leading-relaxed break-all text-danger-600 dark:text-danger-400">
                     {{ errorMessage }}
                 </p>
             </div>

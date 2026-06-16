@@ -7,6 +7,7 @@ import { sendNotification } from '@/common/utils/api';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export function useSubscriptionManagement() {
     const dataStore = useDataStore();
@@ -41,11 +42,11 @@ export function useSubscriptionManagement() {
 
     const handleSaveSubscription = async (updatedSub: Subscription, onSuccess: () => void) => {
         if (!updatedSub.url) {
-            toastStore.showToast('⚠️ 订阅链接不能为空', 'error');
+            toastStore.showToast(i18n.global.t('entities.subscription.management.urlEmpty'), 'error');
             return;
         }
         if (!HTTP_REGEX.test(updatedSub.url)) {
-            toastStore.showToast('⚠️ 请输入有效的 http:// 或 https:// 订阅链接', 'error');
+            toastStore.showToast(i18n.global.t('entities.subscription.management.urlInvalid'), 'error');
             return;
         }
 
@@ -78,22 +79,20 @@ export function useSubscriptionManagement() {
 
         const success = await dataStore.updateSubscriptionNodes(subscriptionId);
         if (success) {
-            if (!silent) toastStore.showToast(`✅ ${sub.name || '订阅'} 已更新`, 'success');
-            await dataStore.saveData('订阅节点更新', false);
+            if (!silent) toastStore.showToast(i18n.global.t('entities.subscription.management.updated').replace('{name}', sub.name || ''), 'success');
+            await dataStore.saveData(i18n.global.t('entities.subscription.actions.update'), false);
 
             // 发送 TG 通知（单个订阅更新）
             const nodeCount = sub.nodeCount || 0;
             const message = 
-                `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
-                `┃  🔄 订阅更新完成  ┃\n` +
-                `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                `📌 *订阅名称*\n` +
-                `\`${sub.name || '未命名'}\`\n\n` +
-                `📊 *节点数量*\n` +
-                `\`${nodeCount}\` 个节点`;
+                i18n.global.t('entities.subscription.tg.singleUpdateSuccess') +
+                i18n.global.t('entities.subscription.tg.subName') +
+                `\`${sub.name || i18n.global.t('entities.subscription.tg.unnamed')}\`\n\n` +
+                i18n.global.t('entities.subscription.tg.nodeCount') +
+                `\`${nodeCount}\` ${i18n.global.t('entities.subscription.tg.nodesSuffix')}`;
             await sendNotification(message);
         } else {
-            toastStore.showToast(`❌ 更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
+            toastStore.showToast(i18n.global.t('entities.subscription.management.updateFailedMsg').replace('{msg}', sub.errorMsg || ''), 'error');
         }
     };
 
@@ -103,22 +102,20 @@ export function useSubscriptionManagement() {
         try {
             const result = await dataStore.updateAllEnabledSubscriptions();
             if (result.success) {
-                toastStore.showToast(`✅ 成功更新了 ${result.count} 个订阅`, 'success');
-                await dataStore.saveData('批量更新', false);
+                toastStore.showToast(i18n.global.t('entities.subscription.management.batchUpdated').replace('{count}', String(result.count)), 'success');
+                await dataStore.saveData(i18n.global.t('entities.subscription.actions.update'), false);
 
                 // 发送 TG 通知（批量更新汇总）
                 const message = 
-                    `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
-                    `┃  🔄 批量更新完成  ┃\n` +
-                    `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                    `✅ 成功更新了 \`${result.count}\` 个订阅\n` +
-                    `📊 所有订阅节点信息已同步完成`;
+                    i18n.global.t('entities.subscription.tg.batchUpdateSuccess') +
+                    i18n.global.t('entities.subscription.tg.batchUpdateSuccessMsg').replace('{count}', String(result.count)) +
+                    i18n.global.t('entities.subscription.tg.batchUpdateAllSynced');
                 await sendNotification(message);
             } else {
-                toastStore.showToast(`❌ 更新失败: ${result.message}`, 'error');
+                toastStore.showToast(i18n.global.t('entities.subscription.management.batchFailedWithMessage').replace('{msg}', String(result.message)), 'error');
             }
         } catch (e) {
-            toastStore.showToast('❌ 批量更新失败', 'error');
+            toastStore.showToast(i18n.global.t('entities.subscription.management.batchFailed'), 'error');
         } finally {
             isUpdatingAllSubs.value = false;
         }
@@ -148,7 +145,7 @@ export function useSubscriptionManagement() {
     };
 
     const handleSortSave = async () => {
-        await dataStore.saveData('订阅排序');
+        await dataStore.saveData(i18n.global.t('entities.subscription.actions.update'));
         hasUnsavedSortChanges.value = false;
         isSortingSubs.value = false;
     };

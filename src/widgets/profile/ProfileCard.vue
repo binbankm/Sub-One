@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import type { Profile, Subscription } from '@/common/types/index';
 
 const props = withDefaults(
@@ -48,14 +48,16 @@ const totalNodeCount = computed(() => {
 
     return manualNodeCount + subscriptionNodeCount;
 });
+
+const { t } = useI18n();
 </script>
 
 <template>
     <div
-        class="card-glass group relative flex min-h-35 flex-col overflow-hidden rounded-2xl p-4 hover:scale-[1.02]"
+        class="card-glass group relative flex min-h-35 flex-col overflow-hidden rounded-card p-4 hover:scale-[1.02]"
         :class="{
             'opacity-50': !profile.enabled,
-            'ring-2 ring-purple-600 dark:ring-purple-400': isBatchMode && isSelected,
+            'ring-2 ring-secondary-600 dark:ring-secondary-400': isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
         @click="isBatchMode ? emit('toggleSelect') : null"
@@ -67,7 +69,7 @@ const totalNodeCount = computed(() => {
                     <input
                         type="checkbox"
                         :checked="isSelected"
-                        class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-purple-600 dark:border-gray-600 dark:bg-gray-700"
+                        class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-secondary-600 dark:border-white/10 dark:bg-white/10"
                         @change="emit('toggleSelect')"
                     />
                 </label>
@@ -77,7 +79,7 @@ const totalNodeCount = computed(() => {
             <div class="min-w-0 flex-1">
                 <div class="mb-2 flex items-center gap-2">
                     <div
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-purple-500 to-pink-600"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-element bg-linear-to-br from-secondary-500 to-pink-600"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -102,8 +104,7 @@ const totalNodeCount = computed(() => {
                     </p>
                 </div>
                 <p class="text-sm leading-relaxed wrap-break-word text-gray-700 dark:text-gray-300">
-                    包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ totalNodeCount }}
-                    个节点
+                    {{ t('widgets.profile.card.contains', { subCount: profile.subscriptions?.length ?? 0, nodeCount: totalNodeCount }) }}
                 </p>
             </div>
 
@@ -112,8 +113,8 @@ const totalNodeCount = computed(() => {
                 class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
             >
                 <button
-                    class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400"
-                    title="编辑"
+                    class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+                    :title="t('widgets.profile.card.edit')"
                     @click.stop="emit('edit')"
                 >
                     <svg
@@ -132,8 +133,8 @@ const totalNodeCount = computed(() => {
                     </svg>
                 </button>
                 <button
-                    class="rounded-lg p-1.5 text-gray-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-500 dark:text-gray-300"
-                    title="删除"
+                    class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
+                    :title="t('widgets.profile.card.delete')"
                     @click.stop="emit('delete')"
                 >
                     <svg
@@ -158,35 +159,37 @@ const totalNodeCount = computed(() => {
 
         <!-- 底部操作区 -->
         <div
-            class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-gray-700"
+            class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-300 pt-3 dark:border-white/10"
         >
             <!-- 启用/禁用开关 -->
-            <label class="relative inline-flex cursor-pointer items-center">
-                <input
-                    type="checkbox"
-                    :checked="profile.enabled"
-                    class="peer sr-only"
-                    @change="
-                        $emit('change', {
-                            ...profile,
-                            enabled: ($event.target as HTMLInputElement).checked
-                        })
-                    "
-                />
-                <div
-                    class="peer h-6 w-11 rounded-full bg-gray-200 from-indigo-500 to-purple-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"
-                ></div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <label class="group/toggle relative inline-flex cursor-pointer items-center">
+                    <input
+                        type="checkbox"
+                        :checked="profile.enabled"
+                        class="peer sr-only"
+                        @change="
+                            $emit('change', {
+                                ...profile,
+                                enabled: ($event.target as HTMLInputElement).checked
+                            })
+                        "
+                    />
+                    <div
+                        class="peer h-6 w-11 rounded-full bg-gray-200 from-primary-500 to-secondary-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:bg-white/10 dark:after:border-gray-600 dark:peer-checked:bg-linear-to-r dark:peer-checked:after:border-white"
+                    ></div>
+                </label>
                 <span
-                    class="ml-3 text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
-                    >{{ profile.enabled ? '已启用' : '已禁用' }}</span
+                    class="text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
+                    >{{ profile.enabled ? t('widgets.profile.card.enabled') : t('widgets.profile.card.disabled') }}</span
                 >
-            </label>
+            </div>
 
             <!-- 操作按钮组 -->
-            <div class="flex shrink-0 items-center gap-2">
+            <div class="ml-auto flex items-center gap-2">
                 <button
-                    class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400"
-                    title="显示节点信息"
+                    class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                    :title="t('widgets.profile.card.showNodes')"
                     @click.stop="emit('showNodes')"
                 >
                     <svg
@@ -208,10 +211,10 @@ const totalNodeCount = computed(() => {
                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                     </svg>
-                    <span>节点</span>
+                    <span>{{ t('widgets.profile.card.nodesBtn') }}</span>
                 </button>
                 <button
-                    class="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-purple-800 dark:hover:bg-purple-900/30 dark:hover:text-purple-400"
+                    class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-secondary-200 hover:bg-secondary-50 hover:text-secondary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-secondary-800 dark:hover:bg-secondary-900/30 dark:hover:text-secondary-400"
                     @click.stop="emit('copy-link')"
                 >
                     <svg
@@ -228,7 +231,7 @@ const totalNodeCount = computed(() => {
                             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                         />
                     </svg>
-                    <span>链接</span>
+                    <span>{{ t('widgets.profile.card.linkBtn') }}</span>
                 </button>
             </div>
         </div>

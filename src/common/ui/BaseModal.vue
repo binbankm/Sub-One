@@ -29,8 +29,11 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 // ==================== Props 定义 ====================
+
+const { t } = useI18n();
 
 withDefaults(
     defineProps<{
@@ -46,8 +49,7 @@ withDefaults(
     }>(),
     {
         size: 'sm',
-        confirmDisabled: false,
-        confirmButtonTitle: '确认'
+        confirmDisabled: false
     }
 );
 
@@ -113,7 +115,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                     <!-- 模态框容器 - 点击阻止冒泡，避免关闭 -->
                     <div
                         v-if="show"
-                        class="flex max-h-[85vh] w-full flex-col rounded-3xl border border-gray-300 bg-white text-left shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+                        class="flex max-h-[85vh] w-full flex-col rounded-card border border-gray-300 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
                         :class="{
                             'max-w-sm': size === 'sm',
                             'max-w-2xl': size === '2xl',
@@ -127,7 +129,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         <div class="shrink-0 p-6 pb-4">
                             <slot name="title">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">
-                                    确认操作
+                                    {{ t('common.ui.modal.title') }}
                                 </h3>
                             </slot>
                         </div>
@@ -136,30 +138,30 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                         <div class="grow overflow-y-auto px-6 pb-6">
                             <slot name="body">
                                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    你确定要继续吗？
+                                    {{ t('common.ui.modal.body') }}
                                 </p>
                             </slot>
                         </div>
 
                         <!-- 按钮区域 -->
                         <div
-                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-gray-700"
+                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-white/10"
                         >
                             <!-- 取消按钮 -->
                             <button
-                                class="rounded-xl bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-md dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                class="rounded-element bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20"
                                 @click="emit('update:show', false)"
                             >
-                                取消
+                                {{ t('common.ui.modal.cancel') }}
                             </button>
                             <!-- 确认按钮 -->
                             <button
                                 :disabled="confirmDisabled"
-                                :title="confirmDisabled ? confirmButtonTitle : '确认'"
+                                :title="confirmDisabled ? confirmButtonTitle : t('common.ui.modal.confirm')"
                                 class="btn-modern px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
                                 @click="handleConfirm"
                             >
-                                确认
+                                {{ confirmButtonTitle || t('common.ui.modal.confirm') }}
                             </button>
                         </div>
                     </div>

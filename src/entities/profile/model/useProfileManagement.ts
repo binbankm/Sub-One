@@ -4,6 +4,7 @@ import type { Profile } from '@/common/types/index';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export function useProfileManagement() {
     const dataStore = useDataStore();
@@ -29,7 +30,7 @@ export function useProfileManagement() {
 
     const handleAddProfile = () => {
         if (!config.value.profileToken?.trim()) {
-            toastStore.showToast('⚠️ 请先在"设置"中配置"订阅组分享Token"', 'error');
+            toastStore.showToast(i18n.global.t('entities.profile.management.tokenRequired'), 'error');
             return;
         }
         isNewProfile.value = true;
@@ -56,7 +57,7 @@ export function useProfileManagement() {
 
     const handleSaveProfile = async (profileData: Profile, onSuccess?: () => void) => {
         if (!profileData?.name) {
-            toastStore.showToast('⚠️ 订阅组名称不能为空', 'error');
+            toastStore.showToast(i18n.global.t('entities.profile.management.nameEmpty'), 'error');
             return;
         }
 

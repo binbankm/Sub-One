@@ -14,10 +14,10 @@ defineSlots<{
 
 <template>
     <div
-        class="rounded-3xl border-2 border-dashed border-gray-300 py-20 text-center text-gray-500 lg:py-24 dark:border-gray-700"
+        class="rounded-card border-2 border-dashed border-gray-300 py-20 text-center text-gray-500 lg:py-24 dark:border-white/10"
     >
         <div
-            class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl"
+            class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-card"
             :class="bgGradientClass || 'bg-linear-to-br from-gray-500/20 to-gray-400/20'"
         >
             <slot name="icon">

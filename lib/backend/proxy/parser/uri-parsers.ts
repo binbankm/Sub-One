@@ -10,6 +10,21 @@ import type { ProxyNode } from '../types';
 import { isIPv4, isIPv6, isPresent, parsePort, parseSpeed, randomId } from '../utils';
 
 /**
+ * 解析 URL 查询参数（正确处理值中含 = 的情况）
+ */
+function parseQueryParams(query: string): Record<string, string> {
+    const params: Record<string, string> = {};
+    for (const part of query.replace(/^\?/, '').split('&')) {
+        if (!part) continue;
+        const eqIdx = part.indexOf('=');
+        if (eqIdx >= 0) {
+            params[part.substring(0, eqIdx)] = decodeURIComponent(part.substring(eqIdx + 1));
+        }
+    }
+    return params;
+}
+
+/**
  * 处理 Surge 风格的端口跳跃参数
  */
 function parseSurgePortHopping(raw: string): { port_hopping?: string; line: string } {
@@ -94,6 +109,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                 const parsed = content.match(/(\?.*)$/);
                 if (parsed) query = parsed[1];
             }
+            userInfoStr = Base64.decode(rawUserInfoStr);
         }
 
         const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
@@ -102,14 +118,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
             proxy.password = userInfo[2];
         }
 
-        const params: Record<string, any> = {};
-        for (const addon of query.replace(/^\?/, '').split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                const value = decodeURIComponent(valueRaw);
-                params[key] = value;
-            }
-        }
+        const params = parseQueryParams(query) as Record<string, any>;
 
         proxy.tls = params.security && params.security !== 'none';
         proxy['skip-cert-verify'] = !!params['allowInsecure'];
@@ -121,21 +130,39 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
             const netType = params['type'] as string;
             proxy.network = netType as any;
 
+            let httpupgrade = false;
+            let httpUpgradeEd = '';
             if (netType === 'httpupgrade') {
                 proxy.network = 'ws';
+                httpupgrade = true;
             }
 
             if (proxy.network === 'grpc') {
-                proxy['grpc-opts'] = {
-                    'service-name': params['serviceName']
+                (proxy['grpc-opts'] as any) = {
+                    'service-name': params['serviceName'],
+                    '_grpc-type': params['mode'],
+                    '_grpc-authority': params['authority']
                 };
             } else if (proxy.network === 'ws' || proxy.network === 'h2') {
                 proxy[`${proxy.network}-opts`] = {} as any;
 
                 if (params['path']) {
-                    (proxy[`${proxy.network}-opts`] as any).path = decodeURIComponent(
-                        params['path']
-                    );
+                    let transportPath = decodeURIComponent(params['path']);
+                    if (proxy.network === 'ws') {
+                        const edMatch = transportPath.match(/[?&]ed=(\d+)/);
+                        if (edMatch) {
+                            const edValue = edMatch[1];
+                            if (httpupgrade) {
+                                httpUpgradeEd = edValue;
+                            } else {
+                                // 普通 WebSocket early data
+                                (proxy['ws-opts'] as any)['max-early-data'] = parseInt(edValue, 10);
+                                (proxy['ws-opts'] as any)['early-data-header-name'] = 'Sec-WebSocket-Protocol';
+                            }
+                        }
+                        transportPath = transportPath.split(/[?&]ed=/)[0];
+                    }
+                    (proxy[`${proxy.network}-opts`] as any).path = transportPath;
                 }
                 if (params['host']) {
                     if (!proxy[`${proxy.network}-opts`]) {
@@ -143,6 +170,16 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                     }
                     (proxy[`${proxy.network}-opts`] as any).headers = {
                         Host: decodeURIComponent(params['host'])
+                    };
+                }
+
+                if (httpupgrade) {
+                    proxy.httpupgrade = true;
+                    (proxy as any)[`${proxy.network}-opts`] = {
+                        ...(proxy[`${proxy.network}-opts`] as any),
+                        'v2ray-http-upgrade': true,
+                        'v2ray-http-upgrade-fast-open': true,
+                        '_v2ray-http-upgrade-ed': httpUpgradeEd || params.ed || ''
                     };
                 }
             }
@@ -173,16 +210,19 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                 if (pluginName === 'obfs-local' || pluginName === 'simple-obfs') {
                     proxy.plugin = 'obfs';
                     proxy['plugin-opts'] = {
-                        mode: pluginOpts.obfs,
-                        host: pluginOpts['obfs-host']
+                        mode: pluginOpts.obfs || pluginOpts.mode,
+                        host: pluginOpts['obfs-host'] || pluginOpts.host
                     };
                 } else if (pluginName === 'v2ray-plugin') {
                     proxy.plugin = 'v2ray-plugin';
                     proxy['plugin-opts'] = {
-                        mode: 'websocket',
-                        host: pluginOpts['obfs-host'],
+                        mode: pluginOpts.obfs || pluginOpts.mode || 'websocket',
+                        host: pluginOpts['obfs-host'] || pluginOpts.host,
                         path: pluginOpts.path,
-                        tls: !!pluginOpts.tls
+                        tls: !!pluginOpts.tls,
+                        sni: pluginOpts.sni,
+                        'skip-cert-verify': ['1', 'true'].includes(pluginOpts['skip-cert-verify']),
+                        mux: /^\d+$/.test(pluginOpts.mux) ? parseInt(pluginOpts.mux, 10) : undefined
                     };
                 } else if (pluginName === 'shadow-tls') {
                     proxy.plugin = 'shadow-tls';
@@ -193,6 +233,48 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                     };
                 }
             }
+        }
+
+        if (params['v2ray-plugin'] && !proxy.plugin) {
+            try {
+                const decoded = JSON.parse(Base64.decode(params['v2ray-plugin']));
+                proxy.plugin = 'v2ray-plugin';
+                proxy['plugin-opts'] = decoded;
+            } catch { /* 忽略解析失败 */ }
+        }
+
+        if (params['shadow-tls'] && !proxy.plugin) {
+            try {
+                const decoded = JSON.parse(Base64.decode(params['shadow-tls']));
+                const version = decoded.version;
+                const address = decoded.address;
+                const port = decoded.port;
+                proxy.plugin = 'shadow-tls';
+                proxy['plugin-opts'] = {
+                    host: decoded.host || undefined,
+                    password: decoded.password || undefined,
+                    version: version ? parseInt(String(version), 10) : undefined
+                };
+                if (address) proxy.server = address;
+                if (port) proxy.port = parseInt(String(port), 10);
+            } catch { /* 忽略解析失败 */ }
+        }
+
+        if (params['gost'] && !proxy.plugin) {
+            try {
+                const decoded = JSON.parse(Base64.decode(decodeURIComponent(params['gost'])));
+                const route = decoded.route?.trim().toLowerCase();
+                const isWebsocketRoute = ['ws', 'wss', 'websocket'].includes(route);
+                proxy.plugin = 'gost-plugin';
+                proxy['plugin-opts'] = {
+                    mode: isWebsocketRoute ? 'websocket' : decoded.route,
+                    host: decoded.host || undefined,
+                    path: decoded.path || undefined,
+                    tls: route === 'wss' || undefined
+                };
+                if (decoded.address) proxy.server = decoded.address;
+                if (decoded.port) proxy.port = parseInt(String(decoded.port), 10);
+            } catch { /* 忽略解析失败 */ }
         }
 
         proxy.name = name ? decodeURIComponent(name) : `SS ${proxy.server}:${proxy.port}`;
@@ -296,13 +378,7 @@ export function parseTrojan(uri: string): ProxyNode | null {
             name: name ? decodeURIComponent(name) : `Trojan ${server}:${port}`
         };
 
-        const params: Record<string, any> = {};
-        for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                params[key] = decodeURIComponent(valueRaw || '');
-            }
-        }
+        const params = parseQueryParams(query) as Record<string, any>;
 
         proxy.tls = params.security !== 'none';
         proxy.sni = params.sni || params.peer;
@@ -326,6 +402,16 @@ export function parseTrojan(uri: string): ProxyNode | null {
         }
 
         proxy.udp = /TRUE|1/i.test(params.udp);
+
+        // Reality support
+        if (params.security === 'reality' || params.pbk) {
+            const opts: Record<string, string> = {};
+            if (params.pbk) opts['public-key'] = params.pbk;
+            if (params.sid) opts['short-id'] = params.sid;
+            if (Object.keys(opts).length > 0) {
+                proxy['reality-opts'] = opts as any;
+            }
+        }
 
         return proxy as ProxyNode;
     } catch (e) {
@@ -466,7 +552,7 @@ export function parseVMess(uri: string): ProxyNode | null {
 
     try {
         const line = uri.split(/vmess:\/\//i)[1];
-        let content = Base64.decode(line.replace(/\?.*?$/, ''));
+        let content = Base64.decode(line.replace(/#.*$/, '').replace(/\?.*$/, ''));
 
         if (/=\s*vmess/.test(content)) {
             return parseQuantumultVMess(content);
@@ -483,9 +569,12 @@ export function parseVMess(uri: string): ProxyNode | null {
                 content = Base64.decode(base64Line);
 
                 for (const addon of qs.split('&')) {
-                    const [key, valueRaw] = addon.split('=');
-                    const value = decodeURIComponent(valueRaw);
-                    params[key] = value.indexOf(',') === -1 ? value : value.split(',');
+                    const eqIdx = addon.indexOf('=');
+                    if (eqIdx >= 0) {
+                        const key = addon.substring(0, eqIdx);
+                        const value = decodeURIComponent(addon.substring(eqIdx + 1));
+                        params[key] = value.indexOf(',') === -1 ? value : value.split(',');
+                    }
                 }
 
                 const contentMatch = /(^[^:]+?):([^:]+?)@(.*):(\ d+)$/.exec(content);
@@ -694,13 +783,7 @@ export function parseVLESS(uri: string): ProxyNode | null {
             name: name ? decodeURIComponent(name) : `VLESS ${server}:${port}`
         };
 
-        const params: Record<string, any> = {};
-        for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                params[key] = decodeURIComponent(valueRaw || '');
-            }
-        }
+        const params = parseQueryParams(query) as Record<string, any>;
 
         /*
         // [FIX-ED] 显式捕获 'ed' (Early Data) 参数，防止在部分客户端中丢失
@@ -771,6 +854,10 @@ export function parseVLESS(uri: string): ProxyNode | null {
         const netType = params.type as string;
         proxy.network = netType as any;
 
+        if (proxy.network === 'splithttp') {
+            proxy.network = 'xhttp' as any;
+        }
+
         if (proxy.network === 'tcp' && params.headerType === 'http') {
             proxy.network = 'http';
         } else if (netType === 'httpupgrade') {
@@ -780,8 +867,22 @@ export function parseVLESS(uri: string): ProxyNode | null {
             proxy.network = 'ws';
         }
 
+        // httpupgrade 在 URI 中映射为 network=xhttp + mode=stream-one
+        if (httpupgrade && !proxy['xhttp-opts']) {
+            proxy['xhttp-opts'] = {
+                mode: 'stream-one'
+            };
+        }
+
         if (!proxy.network && isShadowrocket && params.obfs) {
             proxy.network = params.obfs === 'none' ? undefined : params.obfs;
+        }
+
+        if (params.mode && proxy.network === 'xhttp') {
+            if (!proxy['xhttp-opts']) {
+                proxy['xhttp-opts'] = {};
+            }
+            proxy['xhttp-opts'].mode = params.mode;
         }
 
         if (proxy.network && proxy.network !== 'tcp') {
@@ -793,15 +894,36 @@ export function parseVLESS(uri: string): ProxyNode | null {
             }
 
             if (params.serviceName) {
-                opts[`${proxy.network}-service-name`] = params.serviceName;
+                if (proxy.network === 'grpc') {
+                    opts['service-name'] = params.serviceName;
+                    opts['_grpc-type'] = params.mode || 'gun';
+                } else {
+                    opts[`${proxy.network}-service-name`] = params.serviceName;
+                }
             }
 
             if (params.path) {
                 opts.path = params.path;
             }
 
-            if (proxy.network === 'grpc') {
-                opts['_grpc-type'] = params.mode || 'gun';
+            if (proxy.network === 'ws' && params.path) {
+                const edMatch = params.path.match(/[?&]ed=(\d+)/);
+                if (edMatch) {
+                    const edValue = parseInt(edMatch[1], 10);
+                    if (!isNaN(edValue) && edValue > 0) {
+                        if (httpupgrade) {
+                            // httpupgrade 的 early data
+                            if (!proxy['xhttp-opts']) {
+                                proxy['xhttp-opts'] = {};
+                            }
+                            proxy['xhttp-opts']['_v2ray-http-upgrade-ed'] = String(edValue);
+                        } else {
+                            // 普通 WebSocket early data
+                            opts['max-early-data'] = edValue;
+                            opts['early-data-header-name'] = 'Sec-WebSocket-Protocol';
+                        }
+                    }
+                }
             }
 
             if (proxy.network === 'kcp') {
@@ -858,13 +980,7 @@ export function parseHysteria(uri: string): ProxyNode | null {
             name: name ? decodeURIComponent(name) : `Hysteria ${server}:${port}`
         };
 
-        const params: Record<string, string> = {};
-        for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                params[key] = decodeURIComponent(valueRaw || '');
-            }
-        }
+        const params = parseQueryParams(query);
 
         proxy.auth = params.auth || params['auth-str'] || '';
         proxy.up = params.upmbps ? parseInt(params.upmbps, 10) : undefined;
@@ -909,13 +1025,7 @@ export function parseSnell(uri: string): ProxyNode | null {
             name: name ? decodeURIComponent(name) : `Snell ${server}:${port}`
         };
 
-        const params: Record<string, string> = {};
-        for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                params[key] = decodeURIComponent(valueRaw || '');
-            }
-        }
+        const params = parseQueryParams(query);
 
         if (params.version) {
             proxy.version = parseInt(params.version, 10);
@@ -1057,29 +1167,30 @@ export function parseHysteria2(uri: string): ProxyNode | null {
         };
 
         for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                const value = decodeURIComponent(valueRaw || '');
-                const normalizedKey = key.replace(/_/g, '-');
+            if (!addon) continue;
+            const eqIdx = addon.indexOf('=');
+            if (eqIdx < 0) continue;
+            const key = addon.substring(0, eqIdx);
+            const value = decodeURIComponent(addon.substring(eqIdx + 1));
+            const normalizedKey = key.replace(/_/g, '-');
 
-                if (normalizedKey === 'insecure') {
-                    proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
-                } else if (normalizedKey === 'alpn') {
-                    proxy.alpn = value ? value.split(',') : undefined;
-                } else if (normalizedKey === 'obfs') {
-                    proxy.obfs = value || 'salamander';
-                } else if (normalizedKey === 'obfs-password') {
-                    proxy['obfs-password'] = value;
-                } else if (normalizedKey === 'mport' || normalizedKey === 'ports') {
-                    proxy.ports = value;
-                } else if (normalizedKey === 'sni') {
-                    proxy.sni = value;
-                } else if (normalizedKey.match(/^(up|down)(-?mbps)?$/)) {
-                    const speedKey = normalizedKey.startsWith('up') ? 'up' : 'down';
-                    proxy[speedKey] = parseSpeed(value);
-                } else if (!Object.keys(proxy).includes(normalizedKey)) {
-                    proxy[normalizedKey] = value;
-                }
+            if (normalizedKey === 'insecure') {
+                proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
+            } else if (normalizedKey === 'alpn') {
+                proxy.alpn = value ? value.split(',') : undefined;
+            } else if (normalizedKey === 'obfs') {
+                proxy.obfs = value || 'salamander';
+            } else if (normalizedKey === 'obfs-password') {
+                proxy['obfs-password'] = value;
+            } else if (normalizedKey === 'mport' || normalizedKey === 'ports') {
+                proxy.ports = value;
+            } else if (normalizedKey === 'sni') {
+                proxy.sni = value;
+            } else if (normalizedKey.match(/^(up|down)(-?mbps)?$/)) {
+                const speedKey = normalizedKey.startsWith('up') ? 'up' : 'down';
+                proxy[speedKey] = parseSpeed(value);
+            } else if (!Object.keys(proxy).includes(normalizedKey)) {
+                proxy[normalizedKey] = value;
             }
         }
 
@@ -1121,24 +1232,25 @@ export function parseTUIC(uri: string): ProxyNode | null {
         };
 
         for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                const value = decodeURIComponent(valueRaw || '');
-                const normalizedKey = key.replace(/_/g, '-');
+            if (!addon) continue;
+            const eqIdx = addon.indexOf('=');
+            if (eqIdx < 0) continue;
+            const key = addon.substring(0, eqIdx);
+            const value = decodeURIComponent(addon.substring(eqIdx + 1));
+            const normalizedKey = key.replace(/_/g, '-');
 
-                if (['allow-insecure', 'insecure'].includes(normalizedKey)) {
-                    proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
-                } else if (normalizedKey === 'alpn') {
-                    proxy.alpn = value ? value.split(',') : undefined;
-                } else if (normalizedKey === 'fast-open') {
-                    proxy.tfo = true;
-                } else if (['disable-sni', 'reduce-rtt'].includes(normalizedKey)) {
-                    proxy[normalizedKey] = /(TRUE)|1/i.test(value);
-                } else if (normalizedKey === 'congestion-control') {
-                    proxy['congestion-controller'] = value;
-                } else if (!Object.keys(proxy).includes(normalizedKey)) {
-                    proxy[normalizedKey] = value;
-                }
+            if (['allow-insecure', 'insecure'].includes(normalizedKey)) {
+                proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
+            } else if (normalizedKey === 'alpn') {
+                proxy.alpn = value ? value.split(',') : undefined;
+            } else if (normalizedKey === 'fast-open') {
+                proxy.tfo = true;
+            } else if (['disable-sni', 'reduce-rtt'].includes(normalizedKey)) {
+                proxy[normalizedKey] = /(TRUE)|1/i.test(value);
+            } else if (normalizedKey === 'congestion-control') {
+                proxy['congestion-controller'] = value;
+            } else if (!Object.keys(proxy).includes(normalizedKey)) {
+                proxy[normalizedKey] = value;
             }
         }
 
@@ -1176,47 +1288,48 @@ export function parseWireGuard(uri: string): ProxyNode | null {
         };
 
         for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                const value = decodeURIComponent(valueRaw || '');
-                const normalizedKey = key.replace(/_/g, '-');
+            if (!addon) continue;
+            const eqIdx = addon.indexOf('=');
+            if (eqIdx < 0) continue;
+            const key = addon.substring(0, eqIdx);
+            const value = decodeURIComponent(addon.substring(eqIdx + 1));
+            const normalizedKey = key.replace(/_/g, '-');
 
-                if (normalizedKey === 'reserved') {
-                    const parsed = value
-                        .split(',')
-                        .map((i) => parseInt(i.trim(), 10))
-                        .filter((i) => Number.isInteger(i));
-                    if (parsed.length === 3) {
-                        proxy.reserved = parsed;
-                    }
-                } else if (['address', 'ip'].includes(normalizedKey)) {
-                    value.split(',').forEach((i) => {
-                        const ip = i
-                            .trim()
-                            .replace(/\/\d+$/, '')
-                            .replace(/^\[/, '')
-                            .replace(/\]$/, '');
-                        if (isIPv4(ip)) {
-                            proxy.ip = ip;
-                        } else if (isIPv6(ip)) {
-                            proxy.ipv6 = ip;
-                        }
-                    });
-                } else if (normalizedKey === 'mtu') {
-                    const parsedMtu = parseInt(value.trim(), 10);
-                    if (Number.isInteger(parsedMtu)) {
-                        proxy.mtu = parsedMtu;
-                    }
-                } else if (normalizedKey === 'public-key' || normalizedKey === 'publickey') {
-                    proxy['public-key'] = value;
-                } else if (
-                    normalizedKey === 'pre-shared-key' ||
-                    normalizedKey === 'preshared-key'
-                ) {
-                    proxy['pre-shared-key'] = value;
-                } else if (!Object.keys(proxy).includes(normalizedKey)) {
-                    proxy[normalizedKey] = value;
+            if (normalizedKey === 'reserved') {
+                const parsed = value
+                    .split(',')
+                    .map((i) => parseInt(i.trim(), 10))
+                    .filter((i) => Number.isInteger(i));
+                if (parsed.length === 3) {
+                    proxy.reserved = parsed;
                 }
+            } else if (['address', 'ip'].includes(normalizedKey)) {
+                value.split(',').forEach((i) => {
+                    const ip = i
+                        .trim()
+                        .replace(/\/\d+$/, '')
+                        .replace(/^\[/, '')
+                        .replace(/\]$/, '');
+                    if (isIPv4(ip)) {
+                        proxy.ip = ip;
+                    } else if (isIPv6(ip)) {
+                        proxy.ipv6 = ip;
+                    }
+                });
+            } else if (normalizedKey === 'mtu') {
+                const parsedMtu = parseInt(value.trim(), 10);
+                if (Number.isInteger(parsedMtu)) {
+                    proxy.mtu = parsedMtu;
+                }
+            } else if (normalizedKey === 'public-key' || normalizedKey === 'publickey') {
+                proxy['public-key'] = value;
+            } else if (
+                normalizedKey === 'pre-shared-key' ||
+                normalizedKey === 'preshared-key'
+            ) {
+                proxy['pre-shared-key'] = value;
+            } else if (!Object.keys(proxy).includes(normalizedKey)) {
+                proxy[normalizedKey] = value;
             }
         }
 
@@ -1266,13 +1379,7 @@ export function parseNaive(uri: string): ProxyNode | null {
             tls: true
         };
 
-        const params: Record<string, string> = {};
-        for (const addon of query.split('&')) {
-            if (addon) {
-                const [key, valueRaw] = addon.split('=');
-                params[key] = decodeURIComponent(valueRaw || '');
-            }
-        }
+        const params = parseQueryParams(query);
 
         proxy.sni = params.sni;
         proxy.padding = params.padding === 'true' || params.padding === '1';

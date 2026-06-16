@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   ==================== 侧边导航栏组件 ====================
   
   功能说明：
@@ -31,6 +31,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 import { useLayoutStore } from '@/stores/useLayoutStore';
 import { useThemeStore } from '@/stores/useThemeStore';
+import { useI18n } from 'vue-i18n';
 
 // ==================== Props 定义 ====================
 
@@ -69,6 +70,13 @@ const emit = defineEmits<{
 
 const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
+const { t, locale } = useI18n();
+
+const toggleLanguage = () => {
+    const newLocale = locale.value === 'zh' ? 'en' : 'zh';
+    locale.value = newLocale;
+    localStorage.setItem('locale', newLocale);
+};
 
 // ==================== 本地状态 ====================
 
@@ -100,39 +108,39 @@ interface NavigationItem {
 const navigationItems = computed<NavigationItem[]>(() => [
     {
         id: 'dashboard',
-        label: '仪表盘',
+        label: t('layout.sidebar.menu.dashboard'),
         icon: 'dashboard',
-        gradient: 'from-orange-500 to-amber-600',
-        shadow: 'shadow-orange-500/30',
-        description: '概览状态'
+        gradient: 'from-warning-500 to-warning-600',
+        shadow: 'shadow-warning-500/30',
+        description: t('layout.sidebar.menu.dashboardDesc')
     },
     {
         id: 'subscriptions',
-        label: '订阅管理',
+        label: t('layout.sidebar.menu.subscriptions'),
         icon: 'subscription',
         count: props.subscriptionsCount,
-        gradient: 'from-indigo-500 to-purple-600',
-        shadow: 'shadow-indigo-500/30',
-        description: '管理订阅源'
+        gradient: 'from-primary-500 to-secondary-600',
+        shadow: 'shadow-primary-500/30',
+        description: t('layout.sidebar.menu.subscriptionsDesc')
     },
     {
         id: 'profiles',
-        label: '订阅组',
+        label: t('layout.sidebar.menu.profiles'),
         icon: 'profile',
         count: props.profilesCount,
-        gradient: 'from-purple-500 to-pink-600',
-        shadow: 'shadow-purple-500/30',
-        description: '组织订阅'
+        gradient: 'from-secondary-500 to-pink-600',
+        shadow: 'shadow-secondary-500/30',
+        description: t('layout.sidebar.menu.profilesDesc')
     },
 
     {
         id: 'nodes',
-        label: '手动节点',
+        label: t('layout.sidebar.menu.nodes'),
         icon: 'node',
         count: props.manualNodesCount,
-        gradient: 'from-green-500 to-emerald-600',
-        shadow: 'shadow-green-500/30',
-        description: '管理节点'
+        gradient: 'from-success-500 to-success-600',
+        shadow: 'shadow-success-500/30',
+        description: t('layout.sidebar.menu.nodesDesc')
     }
 ]);
 
@@ -142,19 +150,19 @@ const navigationItems = computed<NavigationItem[]>(() => [
 const utilityItems = computed(() => [
     {
         id: 'help',
-        label: '帮助文档',
+        label: t('layout.sidebar.help'),
         icon: 'help',
-        gradient: 'from-amber-500 to-orange-600',
-        shadow: 'shadow-amber-500/30',
-        description: '查看文档'
+        gradient: 'from-warning-500 to-warning-600',
+        shadow: 'shadow-warning-500/30',
+        description: t('layout.sidebar.helpDesc')
     },
     {
         id: 'settings',
-        label: '设置',
+        label: t('layout.sidebar.settings'),
         icon: 'settings',
         gradient: 'from-slate-500 to-gray-600',
         shadow: 'shadow-slate-500/30',
-        description: '系统设置'
+        description: t('layout.sidebar.settingsDesc')
     }
 ]);
 
@@ -253,8 +261,8 @@ onUnmounted(() => {
 
     <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
     <button
-        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl border border-gray-300 bg-white/95 text-gray-800 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-xl lg:hidden dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-900"
-        :aria-label="isMobileMenuOpen ? '关闭菜单' : '打开菜单'"
+        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-element border border-gray-300 bg-white/95 text-gray-800 shadow-elevated backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-card lg:hidden dark:border-white/10 dark:bg-black/80 dark:text-gray-200 dark:hover:bg-black/90"
+        :aria-label="isMobileMenuOpen ? t('layout.sidebar.closeMenu') : t('layout.sidebar.openMenu')"
         @click="toggleMobileMenu"
     >
         <svg
@@ -295,7 +303,7 @@ onUnmounted(() => {
             <div class="mb-4 flex items-center gap-4">
                 <!-- Logo 图标 -->
                 <div
-                    class="from-primary-500 to-secondary-500 shadow-primary-500/40 flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-2xl bg-linear-to-br shadow-lg"
+                    class="from-primary-500 to-secondary-500 shadow-primary-500/40 flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-button bg-linear-to-br shadow-elevated"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -328,11 +336,33 @@ onUnmounted(() => {
                 </transition>
             </div>
 
-            <!-- 头部操作区域 - 主题切换按钮 -->
-            <div class="flex justify-center">
+            <!-- 头部操作区域 - 切换按钮 -->
+            <div class="flex justify-center gap-1">
+                <!-- 语言切换按钮 -->
                 <button
                     class="icon-btn"
-                    :title="themeStore.theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'"
+                    :title="locale === 'zh' ? 'Switch to English' : '切换到中文'"
+                    @click="toggleLanguage"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802M10.5 21l5.25-11.25L21 21m-9-3h7.5"
+                        />
+                    </svg>
+                </button>
+
+                <button
+                    class="icon-btn"
+                    :title="themeStore.theme === 'dark' ? t('layout.sidebar.switchToLight') : t('layout.sidebar.switchToDark')"
                     @click="themeStore.toggleTheme"
                 >
                     <!-- 暗黑模式图标（太阳） -->
@@ -380,7 +410,7 @@ onUnmounted(() => {
                     v-if="!isCollapsed"
                     class="mb-3 px-3 text-[0.6875rem] font-bold tracking-wider text-gray-600 uppercase dark:text-gray-400"
                 >
-                    主要功能
+                    {{ t('layout.sidebar.mainFeatures') }}
                 </p>
 
                 <div class="flex flex-col gap-2">
@@ -400,7 +430,7 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
                             :class="[
                                 `bg-linear-to-br ${item.gradient}`,
                                 modelValue === item.id ? 'bg-white/20 shadow-inner' : ''
@@ -517,7 +547,7 @@ onUnmounted(() => {
                     v-if="!isCollapsed"
                     class="mb-3 px-3 text-[0.6875rem] font-bold tracking-wider text-gray-600 uppercase dark:text-gray-400"
                 >
-                    其他
+                    {{ t('layout.sidebar.others') }}
                 </p>
 
                 <div class="flex flex-col gap-2">
@@ -537,7 +567,7 @@ onUnmounted(() => {
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-300"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
                             :class="`bg-linear-to-br ${item.gradient}`"
                         >
                             <!-- Help 图标 -->
@@ -612,8 +642,8 @@ onUnmounted(() => {
         >
             <!-- 折叠按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-indigo-500/10 px-3 py-3 text-sm font-semibold text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-500/20 dark:bg-indigo-500/15 dark:text-indigo-400"
-                :title="isCollapsed ? '展开侧边栏' : '收起侧边栏'"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-primary-500/10 px-3 py-3 text-sm font-semibold text-primary-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-500/20 dark:bg-primary-500/15 dark:text-primary-400"
+                :title="isCollapsed ? t('layout.sidebar.expand') : t('layout.sidebar.collapse')"
                 @click="toggleCollapse"
             >
                 <svg
@@ -631,13 +661,13 @@ onUnmounted(() => {
                         d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
                     />
                 </svg>
-                <span v-if="!isCollapsed">收起</span>
+                <span v-if="!isCollapsed">{{ t('layout.sidebar.collapse') }}</span>
             </button>
 
             <!-- 登出按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-red-500/10 px-3 py-3 text-sm font-semibold text-red-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-red-500/20 dark:bg-red-500/15 dark:text-red-400"
-                :title="isCollapsed ? '退出登录' : ''"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-danger-500/10 px-3 py-3 text-sm font-semibold text-danger-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger-500/20 dark:bg-danger-500/15 dark:text-danger-400"
+                :title="isCollapsed ? t('layout.sidebar.logout') : ''"
                 @click="handleLogout"
             >
                 <svg
@@ -654,7 +684,7 @@ onUnmounted(() => {
                         d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                     />
                 </svg>
-                <span v-if="!isCollapsed">退出登录</span>
+                <span v-if="!isCollapsed">{{ t('layout.sidebar.logout') }}</span>
             </button>
         </div>
     </aside>

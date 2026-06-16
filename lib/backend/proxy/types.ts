@@ -40,7 +40,9 @@ export type NetworkType =
     | 'h2' // HTTP/2
     | 'http' // HTTP
     | 'kcp' // KCP
-    | 'quic'; // QUIC
+    | 'quic' // QUIC
+    | 'xhttp' // XHTTP/SplitHTTP (Xray-core)
+    | 'splithttp'; // SplitHTTP 别名
 
 // ============================================================================
 // 平台类型
@@ -52,10 +54,84 @@ export type PlatformType =
     | 'Singbox'
     | 'Surge'
     | 'Loon'
+    | 'Egern'
     | 'QuantumultX'
     | 'Shadowrocket'
     | 'URI'
     | 'JSON';
+
+// ============================================================================
+// XHTTP/SplitHTTP 选项 
+// ============================================================================
+
+/**
+ * XHTTP Download Settings (下行独立配置)
+ */
+export interface XhttpDownloadSettings {
+    server?: string;
+    port?: number;
+    network?: string;
+    tls?: boolean;
+    servername?: string;
+    'client-fingerprint'?: string;
+    'skip-cert-verify'?: boolean;
+    alpn?: string[];
+    path?: string;
+    host?: string;
+    mode?: string;
+    'reality-opts'?: {
+        'public-key'?: string;
+        'short-id'?: string;
+    };
+    'ech-opts'?: EchOptions;
+}
+
+/**
+ * XHTTP 传输选项
+ */
+export interface XhttpOptions {
+    mode?: string; // auto | packet-up | stream-up | stream-one
+    path?: string;
+    host?: string;
+    headers?: Record<string, string | string[]>;
+    'download-settings'?: XhttpDownloadSettings;
+    // XHTTP 扩展字段 
+    'no-grpc-header'?: boolean;
+    'x-padding-bytes'?: number;
+    'x-padding-obfs-mode'?: boolean;
+    'x-padding-key'?: string;
+    'x-padding-header'?: string;
+    'x-padding-placement'?: string;
+    'x-padding-method'?: string;
+    'uplink-http-method'?: string;
+    'session-placement'?: string;
+    'session-key'?: string;
+    'session-table'?: string;
+    'session-length'?: number | string;
+    'seq-placement'?: string;
+    'seq-key'?: string;
+    'uplink-data-placement'?: string;
+    'uplink-data-key'?: string;
+    'uplink-chunk-size'?: number | string;
+    'sc-max-each-post-bytes'?: number | string;
+    'sc-min-posts-interval-ms'?: number | string;
+    'reuse-settings'?: Record<string, any>;
+    [key: string]: any;
+}
+
+// ============================================================================
+// ECH (Encrypted Client Hello) 选项
+// ============================================================================
+
+/**
+ * ECH 选项 
+ */
+export interface EchOptions {
+    'query-server-name'?: string;
+    'config-list'?: string[];
+    _dns?: string; // DNS 服务器 (用于查询 ECH config)
+    [key: string]: any;
+}
 
 // ============================================================================
 // ProxyNode - 统一节点中间表示 (IR)
@@ -103,9 +179,19 @@ export interface ProxyNode {
         headers?: Record<string, string | string[]>;
         'max-early-data'?: number;
         'early-data-header-name'?: string;
+        // httpupgrade 
+        'v2ray-http-upgrade'?: boolean;
+        'v2ray-http-upgrade-fast-open'?: boolean;
+        '_v2ray-http-upgrade-ed'?: string;
     };
     'ws-path'?: string; // 兼容简化写法
     'ws-headers'?: Record<string, string>;
+
+    // === XHTTP/SplitHTTP 选项  ===
+    'xhttp-opts'?: XhttpOptions;
+
+    // === HTTP Upgrade (httpupgrade) 标记 ===
+    'httpupgrade'?: boolean; // WS 实际为 httpupgrade
 
     // === gRPC 选项 ===
     'grpc-opts'?: {
@@ -141,6 +227,17 @@ export interface ProxyNode {
         'spider-x'?: string;
         '_spider-x'?: string; // 兼容
     };
+
+    // === ECH (Encrypted Client Hello) 选项 ===
+    'ech-opts'?: EchOptions;
+    _echConfigList?: string; // ECH config-list (URI round-trip)
+
+    // === VMess 额外字段 ===
+    _extra?: string | Record<string, any>; // VLESS/VMess extra JSON (URI round-trip)
+    _mode?: string; // VLESS Reality mode (URI round-trip)
+    _pqv?: string; // VLESS pre-shared quantum version (URI round-trip)
+    _h2?: boolean; // VLESS H2 标记 (URI round-trip)
+    _extra_unsupported?: Record<string, any>; // VLESS xhttp 不支持字段
 
     // === UDP/TCP 选项 ===
     udp?: boolean; // 是否支持UDP

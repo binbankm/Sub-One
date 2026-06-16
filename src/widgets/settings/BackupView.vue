@@ -14,11 +14,13 @@ import {
     batchDeleteSnapshots
 } from '@/common/utils/api';
 import { onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 // 导入批量选择模块
 import { useBatchSelection } from '@/common/hooks/useBatchSelection';
 
 const { showToast } = useToastStore();
+const { t } = useI18n();
 const isExporting = ref(false);
 const isImporting = ref(false);
 const selectedBackup = ref<any>(null);
@@ -50,7 +52,7 @@ async function loadSnapshots() {
             snapshots.value = result.data;
         }
     } catch (error) {
-        console.error('获取快照列表失败:', error);
+        console.error('Failed to fetch snapshots:', error);
     } finally {
         isLoadingSnapshots.value = false;
     }
@@ -62,14 +64,14 @@ async function handleCreateSnapshot() {
     try {
         const result = await createSnapshot(snapshotName.value);
         if (result.success) {
-            showToast('📸 快照创建成功', 'success');
+            showToast(t('widgets.settings.backup.snapshotCreateSuccess'), 'success');
             snapshotName.value = '';
             await loadSnapshots();
         } else {
-            showToast('❌ ' + (result.message || '创建快照失败'), 'error');
+            showToast(result.message || t('widgets.settings.backup.snapshotCreateFail'), 'error');
         }
     } catch (error) {
-        showToast('❌ 创建快照失败', 'error');
+        showToast(t('widgets.settings.backup.snapshotCreateFail'), 'error');
     } finally {
         isCreatingSnapshot.value = false;
     }
@@ -91,22 +93,22 @@ function handleBatchDelete() {
 async function confirmBatchDelete() {
     const ids = batch.getSelectedIds();
 
-    showToast(`⏳ 正在删除 ${ids.length} 个快照...`, 'info');
+    showToast(t('widgets.settings.backup.deletingSnapshots', { count: ids.length }), 'info');
 
     try {
         // 使用后端批量删除接口，原子操作，性能更优，且避免并发冲突
         const result = await batchDeleteSnapshots(ids);
 
         if (result.success) {
-           showToast(`🗑️ 成功删除 ${result.deletedCount} 个快照`, 'success');
+           showToast(t('widgets.settings.backup.deleteSnapshotsSuccess', { count: result.deletedCount }), 'success');
            await loadSnapshots();
            batch.toggleBatchDeleteMode(); // 退出批量模式
         } else {
-           showToast('❌ ' + (result.message || '批量删除失败'), 'error');
+           showToast(result.message || t('widgets.settings.backup.batchDeleteFail'), 'error');
         }
     } catch (error) {
-        console.error('批量删除失败:', error);
-        showToast('❌ 批量删除过程中发生错误', 'error');
+        console.error('Failed to batch delete:', error);
+        showToast(t('widgets.settings.backup.batchDeleteError'), 'error');
     } finally {
         showBatchDeleteConfirm.value = false;
     }
@@ -119,13 +121,13 @@ async function confirmDeleteSnapshot() {
     try {
         const success = await deleteSnapshot(pendingSnapshotId.value);
         if (success) {
-            showToast('🗑️ 快照已删除', 'success');
+            showToast(t('widgets.settings.backup.snapshotDeleted'), 'success');
             await loadSnapshots();
         } else {
-            showToast('❌ 删除快照失败', 'error');
+            showToast(t('widgets.settings.backup.snapshotDeleteFail'), 'error');
         }
     } catch (error) {
-        showToast('❌ 删除快照失败', 'error');
+        showToast(t('widgets.settings.backup.snapshotDeleteFail'), 'error');
     } finally {
         pendingSnapshotId.value = '';
     }
@@ -143,18 +145,18 @@ async function confirmRestoreFromSnapshot() {
 
     isImporting.value = true;
     try {
-            showToast('⏳ 正在恢复快照，请稍候...', 'info');
+            showToast(t('widgets.settings.backup.restoringSnapshot'), 'info');
             const result = await restoreSnapshot(pendingSnapshotId.value, restoreMode.value);
             if (result.success) {
-                showToast('🔄 快照恢复成功，页面即将刷新...', 'success');
+                showToast(t('widgets.settings.backup.snapshotRestoreSuccess'), 'success');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
         } else {
-            showToast('❌ ' + (result.message || '快照恢复失败'), 'error');
+            showToast(result.message || t('widgets.settings.backup.snapshotRestoreFail'), 'error');
         }
     } catch (error) {
-        showToast('❌ 快照恢复失败', 'error');
+        showToast(t('widgets.settings.backup.snapshotRestoreFail'), 'error');
     } finally {
         isImporting.value = false;
         pendingSnapshotId.value = '';
@@ -185,7 +187,7 @@ async function handleExport() {
         const result = await exportBackup();
 
         if (!result.success || !result.data) {
-            throw new Error(result.error || '导出失败');
+            throw new Error(result.error || t('widgets.settings.backup.exportFail'));
         }
 
         // 生成文件名
@@ -204,10 +206,10 @@ async function handleExport() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        showToast('📦 备份文件已导出', 'success');
+        showToast(t('widgets.settings.backup.exportSuccess'), 'success');
     } catch (error: any) {
-        console.error('导出备份失败:', error);
-        showToast('❌ ' + (error.message || '导出备份失败'), 'error');
+        console.error('Failed to export backup:', error);
+        showToast(error.message || t('widgets.settings.backup.exportError'), 'error');
     } finally {
         isExporting.value = false;
     }
@@ -228,16 +230,16 @@ async function handleFileSelect(event: Event) {
         const validation = await validateBackupFile(backupData);
 
         if (!validation.valid) {
-            showToast('❌ ' + (validation.error || '备份文件格式错误'), 'error');
+            showToast(validation.error || t('widgets.settings.backup.formatError'), 'error');
             selectedBackup.value = null;
             return;
         }
 
         selectedBackup.value = backupData;
-        showToast('✅ 备份文件验证成功', 'success');
+        showToast(t('widgets.settings.backup.validateSuccess'), 'success');
     } catch (error: any) {
-        console.error('读取备份文件失败:', error);
-        showToast('❌ 备份文件格式错误或损坏', 'error');
+        console.error('Failed to read backup file:', error);
+        showToast(t('widgets.settings.backup.formatCorrupt'), 'error');
         selectedBackup.value = null;
     } finally {
         // 清空文件输入
@@ -253,7 +255,7 @@ async function handleDrop(event: DragEvent) {
 
     // 检查文件类型
     if (!file.name.endsWith('.json') && file.type !== 'application/json') {
-        showToast('⚠️ 仅支持 JSON 格式的备份文件', 'error');
+        showToast(t('widgets.settings.backup.onlyJson'), 'error');
         return;
     }
 
@@ -266,16 +268,16 @@ async function handleDrop(event: DragEvent) {
         const validation = await validateBackupFile(backupData);
 
         if (!validation.valid) {
-            showToast('❌ ' + (validation.error || '备份文件格式错误'), 'error');
+            showToast(validation.error || t('widgets.settings.backup.formatError'), 'error');
             selectedBackup.value = null;
             return;
         }
 
         selectedBackup.value = backupData;
-        showToast('✅ 备份文件验证成功', 'success');
+        showToast(t('widgets.settings.backup.validateSuccess'), 'success');
     } catch (error: any) {
-        console.error('读取备份文件失败:', error);
-        showToast('❌ 备份文件格式错误或损坏', 'error');
+        console.error('Failed to read backup file:', error);
+        showToast(t('widgets.settings.backup.formatCorrupt'), 'error');
         selectedBackup.value = null;
     }
 }
@@ -283,7 +285,7 @@ async function handleDrop(event: DragEvent) {
 // 导入备份 (打开确认框)
 async function handleImport() {
     if (!selectedBackup.value) {
-        showToast('⚠️ 请先选择备份文件', 'error');
+        showToast(t('widgets.settings.backup.selectFileFirst'), 'error');
         return;
     }
     showImportConfirm.value = true;
@@ -298,18 +300,18 @@ async function confirmImport() {
         const result = await importBackup(selectedBackup.value, restoreMode.value);
 
         if (!result.success) {
-            throw new Error(result.message || '导入失败');
+            throw new Error(result.message || t('widgets.settings.backup.importFail'));
         }
 
-        showToast('🚀 数据恢复成功，页面即将刷新...', 'success');
+        showToast(t('widgets.settings.backup.importSuccess'), 'success');
 
         // 延迟刷新页面
         setTimeout(() => {
             window.location.reload();
         }, 1500);
     } catch (error: any) {
-        console.error('导入备份失败:', error);
-        showToast('❌ ' + (error.message || '导入备份失败'), 'error');
+        console.error('Failed to import backup:', error);
+        showToast(error.message || t('widgets.settings.backup.importError'), 'error');
         isImporting.value = false;
     }
 }
@@ -319,18 +321,18 @@ async function confirmImport() {
     <div class="space-y-6 pb-12">
         <!-- 快照管理 (备份储存) -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
-            <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center border-b border-gray-300 pb-4 dark:border-gray-700">
+            <div class="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center border-b border-gray-300 pb-4 dark:border-white/10">
                 <div>
                     <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-                        服务器快照
-                        <span class="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
-                            储存功能
+                        {{ t('widgets.settings.backup.snapshotTitle') }}
+                        <span class="rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-medium text-primary-600 dark:bg-primary-900/40 dark:text-primary-400">
+                            {{ t('widgets.settings.backup.storageFeature') }}
                         </span>
                     </h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        在服务器上保存数据的历史版本，随时快速恢复 (保留最近 20 条)
+                        {{ t('widgets.settings.backup.snapshotDesc') }}
                     </p>
                 </div>
                 <!-- 快速创建 -->
@@ -338,46 +340,46 @@ async function confirmImport() {
                     <input
                         v-model="snapshotName"
                         type="text"
-                        placeholder="快照名称 (可选)"
-                        class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:w-48"
+                        :placeholder="t('widgets.settings.backup.snapshotNamePlaceholder')"
+                        class="rounded-element border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white sm:w-48"
                         @keyup.enter="handleCreateSnapshot"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
-                        class="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 whitespace-nowrap"
+                        class="flex shrink-0 items-center justify-center gap-2 rounded-element bg-primary-600 px-3 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:opacity-50 whitespace-nowrap"
                         @click="handleCreateSnapshot"
                     >
                         <svg v-if="!isCreatingSnapshot" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         <div v-else class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                        创建快照
+                        {{ t('widgets.settings.backup.createSnapshot') }}
                     </button>
                 </div>
             </div>
 
             <!-- 快照列表 -->
             <div v-if="isLoadingSnapshots" class="flex justify-center py-12">
-                <div class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+                <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent"></div>
             </div>
 
-            <div v-else-if="snapshots.length === 0" class="py-12 text-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-                 还没有任何服务器快照
+            <div v-else-if="snapshots.length === 0" class="py-12 text-center text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-white/10 rounded-element">
+                 {{ t('widgets.settings.backup.noSnapshots') }}
             </div>
 
             <div v-else>
                 <!-- 批量操作栏 -->
-                <div v-if="batch.isBatchDeleteMode.value" class="mb-4 flex items-center justify-between rounded-lg bg-indigo-50 p-3 px-4 dark:bg-indigo-900/20">
+                <div v-if="batch.isBatchDeleteMode.value" class="mb-4 flex items-center justify-between rounded-element bg-primary-50 p-3 px-4 dark:bg-primary-900/20">
                     <div class="flex items-center gap-4">
                         <label class="flex cursor-pointer items-center gap-2">
                             <input
                                 type="checkbox"
                                 :checked="batch.selectedCount.value === snapshots.length && snapshots.length > 0"
-                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                 @change="batch.selectedCount.value === snapshots.length ? batch.deselectAll() : batch.selectAll()"
                             />
-                            <span class="text-sm font-medium text-indigo-900 dark:text-indigo-300">
-                                全选 ({{ batch.selectedCount.value }}/{{ snapshots.length }})
+                            <span class="text-sm font-medium text-primary-900 dark:text-primary-300">
+                                {{ t('widgets.settings.backup.selectAll') }} ({{ batch.selectedCount.value }}/{{ snapshots.length }})
                             </span>
                         </label>
                     </div>
@@ -386,14 +388,14 @@ async function confirmImport() {
                             class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                             @click="batch.toggleBatchDeleteMode()"
                         >
-                            取消
+                            {{ t('widgets.settings.backup.cancel') }}
                         </button>
                         <button
                             :disabled="batch.selectedCount.value === 0"
-                            class="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-600 disabled:opacity-50"
+                            class="rounded-element bg-danger-500 px-3 py-1.5 text-xs font-medium text-white shadow-elevated-sm hover:bg-danger-600 disabled:opacity-50"
                             @click="handleBatchDelete"
                         >
-                            删除选中 ({{ batch.selectedCount.value }})
+                            {{ t('widgets.settings.backup.deleteSelected') }} ({{ batch.selectedCount.value }})
                         </button>
                     </div>
                 </div>
@@ -401,10 +403,10 @@ async function confirmImport() {
                 <!-- 列表控制栏 (非批量模式) -->
                 <div v-else class="mb-4 flex justify-end">
                     <button
-                        class="text-xs text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400"
+                        class="text-xs text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400"
                         @click="batch.toggleBatchDeleteMode()"
                     >
-                        批量管理
+                        {{ t('widgets.settings.backup.batchManage') }}
                     </button>
                 </div>
 
@@ -412,7 +414,7 @@ async function confirmImport() {
                     <div
                         v-for="snapshot in snapshots"
                         :key="snapshot.id"
-                        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white dark:border-gray-700/50 dark:bg-gray-700/20 dark:hover:border-indigo-900/50 dark:hover:bg-gray-700/40"
+                        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 rounded-element border border-gray-100 bg-gray-50/50 p-4 transition-all hover:border-primary-300 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-500/30 dark:hover:bg-white/10"
                         @click="batch.isBatchDeleteMode.value && batch.toggleSelection(snapshot.id)"
                     >
                         <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -421,12 +423,12 @@ async function confirmImport() {
                                 <input
                                     type="checkbox"
                                     :checked="batch.isSelected(snapshot.id)"
-                                    class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    class="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                     @change="batch.toggleSelection(snapshot.id)"
                                 />
                             </div>
 
-                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 shrink-0">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-element bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -436,25 +438,25 @@ async function confirmImport() {
                                 <div class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                                     <span class="shrink-0">{{ formatTimestamp(snapshot.timestamp) }}</span>
                                     <span class="shrink-0">·</span>
-                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.subscriptions || 0 }} 订阅</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.subscriptions || 0 }} {{ t('widgets.settings.backup.subscriptions') }}</span>
                                     <span class="shrink-0">·</span>
-                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.manualNodes || 0 }} 手动</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.manualNodes || 0 }} {{ t('widgets.settings.backup.manualNodes') }}</span>
                                     <span class="shrink-0">·</span>
-                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.proxyCount || 0 }} 总节点</span>
+                                    <span class="shrink-0">{{ snapshot.metadata?.itemCount?.proxyCount || 0 }} {{ t('widgets.settings.backup.totalNodes') }}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div v-if="!batch.isBatchDeleteMode.value" class="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <button
-                                class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-700"
+                                class="rounded-element bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-elevated-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-white/5 dark:text-gray-200 dark:ring-white/10 dark:hover:bg-white/10"
                                 @click.stop="handleRestoreFromSnapshot(snapshot.id)"
                             >
-                                恢复
+                                {{ t('widgets.settings.backup.restore') }}
                             </button>
                             <button
-                                class="rounded-lg bg-white p-1.5 text-red-500 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-red-50 dark:bg-gray-800 dark:ring-gray-600 dark:hover:bg-red-900/20"
-                                title="删除"
+                                class="rounded-element bg-white p-1.5 text-danger-500 shadow-elevated-sm ring-1 ring-inset ring-gray-300 hover:bg-danger-50 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-danger-900/20"
+                                :title="t('widgets.settings.backup.delete')"
                                 @click.stop="handleDeleteSnapshot(snapshot.id)"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -470,7 +472,7 @@ async function confirmImport() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- 导出备份 -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
             <div
                 class="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
@@ -479,15 +481,15 @@ async function confirmImport() {
                     <h3
                         class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white"
                     >
-                        导出备份
+                        {{ t('widgets.settings.backup.exportTitle') }}
                     </h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        下载包含所有数据的 JSON 文件到本地
+                        {{ t('widgets.settings.backup.exportDesc') }}
                     </p>
                 </div>
                 <button
                     :disabled="isExporting"
-                    class="flex shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="flex shrink-0 items-center gap-2 rounded-element bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                     @click="handleExport"
                 >
                     <svg
@@ -509,27 +511,27 @@ async function confirmImport() {
                         v-else
                         class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                     ></div>
-                    {{ isExporting ? '正在导出...' : '导出数据' }}
+                    {{ isExporting ? t('widgets.settings.backup.exporting') : t('widgets.settings.backup.exportData') }}
                 </button>
             </div>
 
             <div
-                class="rounded-lg border border-gray-300 bg-gray-50 p-3 text-xs text-gray-400 dark:border-gray-700 dark:bg-gray-700/30 dark:text-gray-500"
+                class="rounded-element border border-gray-300 bg-gray-50 p-3 text-xs text-gray-400 dark:border-white/10 dark:bg-white/5 dark:text-gray-500"
             >
-                包含订阅源、订阅组、手动节点、系统设置和账号信息。包括敏感数据（如密码哈希），请妥善保管。
+                {{ t('widgets.settings.backup.exportHint') }}
             </div>
         </div>
 
         <!-- 导入备份 -->
         <div
-            class="rounded-xl border border-gray-300 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+            class="card-glass rounded-element p-6"
         >
-            <div class="mb-6 border-b border-gray-300 pb-4 dark:border-gray-700">
+            <div class="mb-6 border-b border-gray-300 pb-4 dark:border-white/10">
                 <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-                    导入备份
+                    {{ t('widgets.settings.backup.importTitle') }}
                 </h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    从本地 JSON 文件恢复数据
+                    {{ t('widgets.settings.backup.importDesc') }}
                 </p>
             </div>
 
@@ -537,7 +539,7 @@ async function confirmImport() {
             <div class="space-y-4">
                 <div
                     v-if="!selectedBackup"
-                    class="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 bg-gray-50/50 p-8 text-center transition-colors hover:border-indigo-500 dark:border-gray-600 dark:bg-gray-700/20 dark:hover:border-indigo-400"
+                    class="cursor-pointer rounded-element border-2 border-dashed border-gray-300 bg-gray-50/50 p-8 text-center transition-colors hover:border-primary-500 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-400"
                     @click="() => fileInput?.click()"
                     @dragover.prevent
                     @drop.prevent="handleDrop"
@@ -551,11 +553,11 @@ async function confirmImport() {
                     />
 
                     <div
-                        class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-900/30"
+                        class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/30"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                            class="h-6 w-6 text-primary-600 dark:text-primary-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -569,10 +571,10 @@ async function confirmImport() {
                         </svg>
                     </div>
                     <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        点击选择或拖拽文件到此处
+                        {{ t('widgets.settings.backup.dropZoneTitle') }}
                     </p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        支持 .json 格式备份文件
+                        {{ t('widgets.settings.backup.dropZoneDesc') }}
                     </p>
                 </div>
 
@@ -580,12 +582,12 @@ async function confirmImport() {
                 <div v-else class="animate-fadeIn space-y-6">
                     <!-- 文件信息卡片 -->
                     <div
-                        class="rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10"
+                        class="rounded-element border border-primary-100 bg-primary-50/50 p-4 dark:border-primary-900/30 dark:bg-primary-900/10"
                     >
                         <div class="mb-4 flex items-start justify-between">
                             <div class="flex items-center gap-3">
                                 <div
-                                    class="rounded-lg border border-indigo-100 bg-white p-2 text-indigo-600 shadow-sm dark:border-indigo-900/30 dark:bg-gray-800 dark:text-indigo-400"
+                                    class="rounded-element border border-primary-100 bg-white p-2 text-primary-600 shadow-elevated-sm dark:border-primary-900/30 dark:text-primary-400"
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -604,16 +606,16 @@ async function confirmImport() {
                                 </div>
                                 <div>
                                     <h5 class="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                        备份文件已就绪
+                                        {{ t('widgets.settings.backup.backupReady') }}
                                     </h5>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        版本 {{ selectedBackup.version }} ·
+                                        {{ t('widgets.settings.backup.version') }} {{ selectedBackup.version }} ·
                                         {{ formatTimestamp(selectedBackup.timestamp) }}
                                     </p>
                                 </div>
                             </div>
                             <button
-                                class="p-1 text-gray-400 transition-colors hover:text-red-500"
+                                class="p-1 text-gray-400 transition-colors hover:text-danger-500"
                                 @click="selectedBackup = null"
                             >
                                 <svg
@@ -634,53 +636,53 @@ async function confirmImport() {
                         <!-- 数据统计网格 -->
                         <div class="grid grid-cols-5 gap-2 text-center">
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.subscriptions || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
-                                    订阅源
+                                    {{ t('widgets.settings.backup.statSubs') }}
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.profiles || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
-                                    订阅组
+                                    {{ t('widgets.settings.backup.statProfiles') }}
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.manualNodes || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
-                                    手动节点
+                                    {{ t('widgets.settings.backup.statManual') }}
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.proxyCount || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
-                                    总节点
+                                    {{ t('widgets.settings.backup.statTotal') }}
                                 </div>
                             </div>
                             <div
-                                class="rounded border border-indigo-50 bg-white p-2 dark:border-indigo-900/20 dark:bg-gray-800"
+                                class="rounded border border-primary-50 bg-white p-2 dark:border-primary-900/20 dark:bg-white/5"
                             >
-                                <div class="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                <div class="text-lg font-bold text-primary-600 dark:text-primary-400">
                                     {{ selectedBackup.metadata?.itemCount?.users || 0 }}
                                 </div>
                                 <div class="text-[10px] uppercase tracking-wide text-gray-500">
-                                    用户
+                                    {{ t('widgets.settings.backup.statUsers') }}
                                 </div>
                             </div>
                         </div>
@@ -690,15 +692,15 @@ async function confirmImport() {
                     <div>
                         <label
                             class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >选择恢复方式</label
+                            >{{ t('widgets.settings.backup.restoreModeLabel') }}</label
                         >
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <label
-                                class="relative flex cursor-pointer items-start rounded-xl border p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                                class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'merge'
-                                        ? 'border-indigo-500 bg-indigo-50/20 ring-1 ring-indigo-500'
-                                        : 'border-gray-300 dark:border-gray-700'
+                                        ? 'border-primary-500 bg-primary-50/20 ring-1 ring-primary-500'
+                                        : 'border-gray-300 dark:border-white/10'
                                 "
                             >
                                 <input
@@ -709,9 +711,9 @@ async function confirmImport() {
                                 />
                                 <div class="flex h-5 items-center">
                                     <div
-                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-gray-600"
+                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-white/10"
                                         :class="{
-                                            'border-indigo-600 bg-indigo-600':
+                                            'border-primary-600 bg-primary-600':
                                                 restoreMode === 'merge'
                                         }"
                                     >
@@ -724,21 +726,21 @@ async function confirmImport() {
                                 <div class="ml-3">
                                     <span
                                         class="block text-sm font-medium text-gray-900 dark:text-gray-100"
-                                        >合并模式 (推荐)</span
+                                        >{{ t('widgets.settings.backup.modeMerge') }}</span
                                     >
                                     <span
                                         class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400"
-                                        >保留现有数据，仅添加新项</span
+                                        >{{ t('widgets.settings.backup.modeMergeDesc') }}</span
                                     >
                                 </div>
                             </label>
 
                             <label
-                                class="relative flex cursor-pointer items-start rounded-xl border p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                                class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'overwrite'
-                                        ? 'border-amber-500 bg-amber-50/20 ring-1 ring-amber-500'
-                                        : 'border-gray-300 dark:border-gray-700'
+                                        ? 'border-warning-500 bg-warning-50/20 ring-1 ring-warning-500'
+                                        : 'border-gray-300 dark:border-white/10'
                                 "
                             >
                                 <input
@@ -749,9 +751,9 @@ async function confirmImport() {
                                 />
                                 <div class="flex h-5 items-center">
                                     <div
-                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-gray-600"
+                                        class="flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 transition-colors dark:border-white/10"
                                         :class="{
-                                            'border-amber-600 bg-amber-600':
+                                            'border-warning-600 bg-warning-600':
                                                 restoreMode === 'overwrite'
                                         }"
                                     >
@@ -764,11 +766,11 @@ async function confirmImport() {
                                 <div class="ml-3">
                                     <span
                                         class="block text-sm font-medium text-gray-900 dark:text-gray-100"
-                                        >覆盖模式</span
+                                        >{{ t('widgets.settings.backup.modeOverwrite') }}</span
                                     >
                                     <span
                                         class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400"
-                                        >清空现有数据，完全替换</span
+                                        >{{ t('widgets.settings.backup.modeOverwriteDesc') }}</span
                                     >
                                 </div>
                             </label>
@@ -779,7 +781,7 @@ async function confirmImport() {
                     <div class="flex gap-3 pt-2">
                         <button
                             :disabled="isImporting"
-                            class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex flex-1 items-center justify-center gap-2 rounded-element bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-elevated-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                             @click="handleImport"
                         >
                             <svg
@@ -801,13 +803,13 @@ async function confirmImport() {
                                 v-else
                                 class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                             ></div>
-                            {{ isImporting ? '恢复数据中...' : '确认开始恢复' }}
+                            {{ isImporting ? t('widgets.settings.backup.restoring') : t('widgets.settings.backup.confirmRestore') }}
                         </button>
                         <button
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="rounded-element border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/10 dark:bg-white/5"
                             @click="selectedBackup = null"
                         >
-                            取消
+                            {{ t('widgets.settings.backup.cancel') }}
                         </button>
                     </div>
                 </div>
@@ -818,48 +820,48 @@ async function confirmImport() {
         <!-- 确认框 -->
         <ConfirmModal
             :show="showBatchDeleteConfirm"
-            title="确认批量删除"
-            :message="`您确定要删除选中的 <strong>${batch.selectedCount.value}</strong> 个快照吗？删除后将无法恢复。`"
+            :title="t('widgets.settings.backup.confirmBatchDeleteTitle')"
+            :message="t('widgets.settings.backup.confirmBatchDeleteMsg', { count: batch.selectedCount.value })"
             type="danger"
-            confirm-text="批量删除"
+            :confirm-text="t('widgets.settings.backup.batchDeleteBtn')"
             @update:show="showBatchDeleteConfirm = $event"
             @confirm="confirmBatchDelete"
         />
 
         <ConfirmModal
             :show="showDeleteConfirm"
-            title="确认删除快照"
-            message="您确定要删除此快照吗？删除后将无法恢复。"
+            :title="t('widgets.settings.backup.confirmDeleteTitle')"
+            :message="t('widgets.settings.backup.confirmDeleteMsg')"
             type="danger"
-            confirm-text="删除"
+            :confirm-text="t('widgets.settings.backup.delete')"
             @update:show="showDeleteConfirm = $event"
             @confirm="confirmDeleteSnapshot"
         />
 
         <ConfirmModal
             :show="showRestoreConfirm"
-            title="确认恢复快照"
+            :title="t('widgets.settings.backup.confirmRestoreTitle')"
             :type="restoreMode === 'overwrite' ? 'danger' : 'warning'"
             :message="
                 restoreMode === 'overwrite'
-                    ? '确定要从快照恢复并 <strong class=\'text-red-500\'>覆盖</strong> 现有数据吗？此操作不可撤销！'
-                    : '确定要从快照恢复（合并）数据吗？'
+                    ? t('widgets.settings.backup.confirmRestoreOverwriteMsg')
+                    : t('widgets.settings.backup.confirmRestoreMergeMsg')
             "
-            confirm-text="确认恢复"
+            :confirm-text="t('widgets.settings.backup.confirmRestore')"
             @update:show="showRestoreConfirm = $event"
             @confirm="confirmRestoreFromSnapshot"
         />
 
         <ConfirmModal
             :show="showImportConfirm"
-            title="确认导入备份"
+            :title="t('widgets.settings.backup.confirmImportTitle')"
             :type="restoreMode === 'overwrite' ? 'danger' : 'warning'"
             :message="
                 restoreMode === 'overwrite'
-                    ? '确定要覆盖现有数据吗？现有数据将被完全替换，此操作不可撤销！'
-                    : '确定要导入备份数据吗？现有数据将保留。'
+                    ? t('widgets.settings.backup.confirmImportOverwriteMsg')
+                    : t('widgets.settings.backup.confirmImportMergeMsg')
             "
-            confirm-text="开始导入"
+            :confirm-text="t('widgets.settings.backup.startImportBtn')"
             @update:show="showImportConfirm = $event"
             @confirm="confirmImport"
         />

@@ -4,6 +4,7 @@ import type { Node } from '@/common/types/index';
 import { parseImportText } from '@/common/utils/importer';
 
 import { useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export function useSubscriptionImport(
     props: {
@@ -38,7 +39,7 @@ export function useSubscriptionImport(
 
     const readFileContent = (file: File) => {
         if (file.size > 5 * 1024 * 1024) {
-            errorMessage.value = '文件过大，请上传小于 5MB 的文件';
+            errorMessage.value = i18n.global.t('entities.node.import.fileTooLarge');
             return;
         }
 
@@ -48,11 +49,11 @@ export function useSubscriptionImport(
             if (typeof result === 'string') {
                 textContent.value = result;
                 errorMessage.value = '';
-                toastStore.showToast(`📄 已读取文件: ${file.name}`, 'success');
+                toastStore.showToast(i18n.global.t('entities.node.import.fileRead').replace('{name}', file.name), 'success');
             }
         };
         reader.onerror = () => {
-            errorMessage.value = '文件读取失败';
+            errorMessage.value = i18n.global.t('entities.node.import.fileReadError');
         };
         reader.readAsText(file);
     };
@@ -88,12 +89,12 @@ export function useSubscriptionImport(
                 await props.onImportSuccess();
             }
             toastStore.showToast(
-                `🚀 ${methodMsg}成功！共添加 ${newNodes.length} 个节点`,
+                i18n.global.t('entities.node.import.importSuccessMethod').replace('{method}', methodMsg).replace('{count}', String(newNodes.length)),
                 'success'
             );
             emit('update:show', false);
         } else {
-            errorMessage.value = '未能解析出任何节点，请检查内容或链接是否正确。';
+            errorMessage.value = i18n.global.t('entities.node.import.parseFailed');
         }
     };
 
@@ -102,13 +103,13 @@ export function useSubscriptionImport(
 
         if (mode.value === 'url') {
             if (!subscriptionUrl.value.trim()) {
-                errorMessage.value = '请输入订阅链接';
+                errorMessage.value = i18n.global.t('entities.node.import.emptyUrl');
                 return;
             }
             try {
                 new URL(subscriptionUrl.value);
             } catch {
-                errorMessage.value = '请输入有效的 URL (例如 https://example.com/...)';
+                errorMessage.value = i18n.global.t('entities.node.import.invalidUrl');
                 return;
             }
 
@@ -128,17 +129,17 @@ export function useSubscriptionImport(
                     throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
 
-                await _processParseResponse(await response.json(), '导入');
+                await _processParseResponse(await response.json(), i18n.global.t('entities.subscription.actions.import'));
             } catch (error: unknown) {
-                console.error('导入失败:', error);
+                console.error('Import failed:', error);
                 const msg = error instanceof Error ? error.message : String(error);
-                errorMessage.value = `导入失败: ${msg}`;
+                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg').replace('{msg}', msg);
             } finally {
                 isLoading.value = false;
             }
         } else {
             if (!textContent.value.trim()) {
-                errorMessage.value = '请粘贴订阅内容或上传文件';
+                errorMessage.value = i18n.global.t('entities.node.import.emptyContent');
                 return;
             }
 
@@ -151,10 +152,10 @@ export function useSubscriptionImport(
                     if (props.onImportSuccess) {
                         await props.onImportSuccess();
                     }
-                    toastStore.showToast(`🚀 导入成功！共添加 ${nodes.length} 个节点`, 'success');
+                    toastStore.showToast(i18n.global.t('entities.node.import.importSuccess').replace('{count}', String(nodes.length)), 'success');
                     emit('update:show', false);
                 } else if (subs.length > 0) {
-                    errorMessage.value = `检测到 ${subs.length} 个订阅链接，请使用 URL 导入模式或在订阅管理中添加。`;
+                    errorMessage.value = i18n.global.t('entities.node.import.subsDetected').replace('{count}', String(subs.length));
                 } else {
                     const response = await fetch('/api/node_count', {
                         method: 'POST',
@@ -165,13 +166,13 @@ export function useSubscriptionImport(
                         })
                     });
 
-                    if (!response.ok) throw new Error('后端解析也失败了');
-                    await _processParseResponse(await response.json(), '导入');
+                    if (!response.ok) throw new Error(i18n.global.t('entities.node.import.backendParseFailed'));
+                    await _processParseResponse(await response.json(), i18n.global.t('entities.subscription.actions.import'));
                 }
             } catch (error: unknown) {
-                console.error('导入失败:', error);
+                console.error('Import failed:', error);
                 const msg = error instanceof Error ? error.message : String(error);
-                errorMessage.value = `导入失败: ${msg}。支持节点链接、Clash(YAML)、Base64 等格式。`;
+                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsgExt').replace('{msg}', msg);
             } finally {
                 isLoading.value = false;
             }

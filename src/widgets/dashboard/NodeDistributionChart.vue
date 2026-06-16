@@ -1,5 +1,6 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { PieChart } from 'echarts/charts';
 import type { PieSeriesOption } from 'echarts/charts';
@@ -22,6 +23,7 @@ use([PieChart, TooltipComponent, LegendComponent, SVGRenderer]);
 const chartRef = ref<HTMLElement | null>(null);
 const chartInstance = shallowRef<EChartsType | null>(null);
 const themeStore = useThemeStore();
+const { t } = useI18n();
 
 type NodeChartOption = ComposeOption<
     PieSeriesOption | TooltipComponentOption | LegendComponentOption
@@ -44,14 +46,19 @@ const initChart = () => {
 
 const getOption = (): NodeChartOption => {
     const isDark = themeStore.isDarkMode;
-    const textColor = isDark ? '#94a3b8' : '#64748b';
+    // Get colors from CSS variables or use tailwind defaults that match the theme
+    const textColor = isDark ? '#94a3b8' : '#64748b'; // Tailwind slate-400 : slate-500
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary-500').trim() || 'hsl(243, 75%, 59%)';
+    const primaryColorLight = getComputedStyle(document.documentElement).getPropertyValue('--color-secondary-500').trim() || 'hsl(280, 72%, 54%)';
+    const warningColor = getComputedStyle(document.documentElement).getPropertyValue('--color-warning-500').trim() || 'hsl(38, 92%, 50%)';
+    const warningColorLight = getComputedStyle(document.documentElement).getPropertyValue('--color-warning-400').trim() || 'hsl(43, 74%, 56%)';
 
     return {
         backgroundColor: 'transparent',
         tooltip: {
             trigger: 'item',
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
-            borderColor: isDark ? '#334155' : '#e2e8f0',
+            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
             textStyle: { color: isDark ? '#f1f5f9' : '#0f172a' },
             padding: [10, 14],
             borderRadius: 12,
@@ -68,7 +75,7 @@ const getOption = (): NodeChartOption => {
         },
         series: [
             {
-                name: '节点分布',
+                name: t('widgets.dashboard.chart.nodeDistribution'),
                 type: 'pie',
                 radius: ['55%', '75%'],
                 center: ['50%', '42%'],
@@ -99,21 +106,21 @@ const getOption = (): NodeChartOption => {
                 data: [
                     {
                         value: props.subscribedNodes,
-                        name: '订阅节点',
+                        name: t('widgets.dashboard.chart.subscriptionNodes'),
                         itemStyle: {
                             color: new graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: '#6366f1' },
-                                { offset: 1, color: '#a855f7' }
+                                { offset: 0, color: primaryColor },
+                                { offset: 1, color: primaryColorLight }
                             ])
                         }
                     },
                     {
                         value: props.manualNodes,
-                        name: '手动节点',
+                        name: t('widgets.dashboard.chart.manualNodes'),
                         itemStyle: {
                             color: new graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: '#f97316' },
-                                { offset: 1, color: '#fbbf24' }
+                                { offset: 0, color: warningColor },
+                                { offset: 1, color: warningColorLight }
                             ])
                         }
                     }

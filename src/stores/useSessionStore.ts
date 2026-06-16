@@ -21,6 +21,7 @@ import {
     checkSystemStatus,
     fetchInitialData
 } from '@/common/utils/api';
+import i18n from '@/i18n';
 
 /**
  * 会话状态类型定义
@@ -91,7 +92,7 @@ export const useSessionStore = defineStore('session', () => {
                 }
             } catch (error) {
                 // 发生错误，记录日志并标记为未登录
-                console.error('会话检查失败:', error);
+                console.error('Session check failed:', error);
                 sessionState.value = 'loggedOut';
             }
         };
@@ -128,7 +129,7 @@ export const useSessionStore = defineStore('session', () => {
                 handleLoginSuccess();
             } else {
                 // 登录失败，解析错误消息
-                let errorMessage = '登录失败';
+                let errorMessage = i18n.global.t('app.stores.session.loginFailed');
 
                 if (response instanceof Response) {
                     // 从响应中提取错误消息
@@ -144,7 +145,7 @@ export const useSessionStore = defineStore('session', () => {
             }
         } catch (error) {
             // 记录错误并重新抛出
-            console.error('登录失败:', error);
+            console.error('Login failed:', error);
             throw error;
         }
     }
@@ -212,7 +213,7 @@ export const useSessionStore = defineStore('session', () => {
                 initialData.value = null;
             } else {
                 // 初始化失败，解析错误消息
-                let errorMessage = '初始化失败';
+                let errorMessage = i18n.global.t('app.stores.session.initFailed');
 
                 if (response instanceof Response) {
                     const errorData = (await response.json().catch(() => ({}))) as any;
@@ -224,7 +225,7 @@ export const useSessionStore = defineStore('session', () => {
                 throw new Error(errorMessage);
             }
         } catch (error) {
-            console.error('系统初始化失败:', error);
+            console.error('System initialization failed:', error);
             throw error;
         }
     }

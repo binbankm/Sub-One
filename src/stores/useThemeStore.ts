@@ -12,6 +12,7 @@
 import { computed, ref } from 'vue';
 
 import { defineStore } from 'pinia';
+import i18n from '@/i18n';
 
 /**
  * 主题类型定义
@@ -148,9 +149,9 @@ export const useThemeStore = defineStore('theme', () => {
      */
     function getThemeName() {
         if (theme.value === 'light') {
-            return '明亮模式';
+            return i18n.global.t('app.stores.theme.lightMode');
         } else {
-            return '暗黑模式';
+            return i18n.global.t('app.stores.theme.darkMode');
         }
     }
 
@@ -165,9 +166,9 @@ export const useThemeStore = defineStore('theme', () => {
      */
     function getNextThemeName() {
         if (theme.value === 'light') {
-            return '点击切换到暗黑模式';
+            return i18n.global.t('app.stores.theme.switchToDark');
         } else {
-            return '点击切换到明亮模式';
+            return i18n.global.t('app.stores.theme.switchToLight');
         }
     }
 

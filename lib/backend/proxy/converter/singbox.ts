@@ -108,6 +108,31 @@ export class SingboxConverter extends BaseConverter {
                     outbound.server = node.server;
                     outbound.server_port = node.port;
                     break;
+                case 'naive':
+                    outbound.username = node.username;
+                    outbound.password = node.password;
+                    // NaiveProxy 天然需要 TLS，删除 insecure（sing-box 不支持）
+                    this.appendTLS(outbound, node);
+                    if (outbound.tls?.insecure) delete outbound.tls.insecure;
+                    // udp-over-tcp
+                    if (node['udp-over-tcp'] || node.uot) {
+                        if (typeof node['udp-over-tcp'] === 'object') {
+                            outbound.udp_over_tcp = {
+                                enabled: true,
+                                version: (!node['udp-over-tcp-version'] || node['udp-over-tcp-version'] === 1) ? 1 : 2
+                            };
+                        } else {
+                            outbound.udp_over_tcp = true;
+                        }
+                    }
+                    // extra-headers
+                    if (node['extra-headers']) outbound.extra_headers = node['extra-headers'];
+                    // quic
+                    if (node.quic) outbound.quic = true;
+                    if (node['quic-congestion-control']) outbound.quic_congestion_control = node['quic-congestion-control'];
+                    // fast-open
+                    if (node['fast-open']) outbound.udp_fragment = true;
+                    break;
                 case 'vmess':
                     outbound.uuid = node.uuid;
                     outbound.security = node.cipher || 'auto';
@@ -140,10 +165,14 @@ export class SingboxConverter extends BaseConverter {
                     if (node.type === 'https' || node.tls) this.appendTLS(outbound, node);
                     break;
                 case 'hysteria':
-                    outbound.auth_str = node.auth;
+                    outbound.auth_str = node['auth-str'] || node.auth;
                     outbound.up_mbps = node.up;
                     outbound.down_mbps = node.down;
                     if (node.obfs) outbound.obfs = { type: 'salamander', password: node.obfs };
+                    if (node['recv-window-conn']) outbound.recv_window_conn = node['recv-window-conn'];
+                    if (node['recv-window']) outbound.recv_window = node['recv-window'];
+                    if (node['fast-open']) outbound.udp_fragment = true;
+                    if (node['disable-mtu-discovery']) outbound.disable_mtu_discovery = true;
                     this.appendTLS(outbound, node);
                     break;
                 case 'hysteria2':
@@ -166,6 +195,8 @@ export class SingboxConverter extends BaseConverter {
                         const hi = String(node['hop-interval']);
                         outbound.hop_interval = /^\d+$/.test(hi) ? `${hi}s` : hi;
                     }
+                    if (node['fast-open']) outbound.udp_fragment = true;
+                    if (node['disable-mtu-discovery']) outbound.disable_mtu_discovery = true;
                     this.appendTLS(outbound, node);
                     break;
                 case 'tuic':
@@ -290,6 +321,16 @@ export class SingboxConverter extends BaseConverter {
             }
         }
 
+        if (node['ech-opts']) {
+            const ech = node['ech-opts'];
+            if (ech['config-list'] && ech['config-list'].length > 0) {
+                tls.ech = {
+                    enabled: true,
+                    config_list: ech['config-list']
+                };
+            }
+        }
+
         if (node['client-fingerprint'] && !['hysteria', 'hysteria2', 'tuic'].includes(node.type)) {
             tls.utls = {
                 enabled: true,
@@ -324,6 +365,15 @@ export class SingboxConverter extends BaseConverter {
             transport.type = 'http';
             transport.path = node['h2-opts']?.path || node['http-opts']?.path || '/';
             transport.host = node['h2-opts']?.host || node['http-opts']?.headers?.Host || [];
+        } else if (node.network === 'xhttp' || node.network === 'splithttp') {
+            transport.type = 'splithttp';
+            const xopts = node['xhttp-opts'] as Record<string, any>;
+            if (xopts) {
+                if (xopts.mode) transport.mode = xopts.mode;
+                if (xopts.path) transport.path = xopts.path;
+                if (xopts.host) transport.host = xopts.host;
+                if (xopts.headers) transport.headers = xopts.headers;
+            }
         }
 
         outbound.transport = transport;

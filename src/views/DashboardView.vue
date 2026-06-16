@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -21,6 +22,7 @@ const { activeSubscriptions, manualNodes, profiles, totalNodeCount, activeNodeCo
     storeToRefs(dataStore);
 
 // Computed for Display
+const { t, tm } = useI18n();
 const activeProfilesCount = computed(() => profiles.value.filter((p: Profile) => p.enabled).length);
 const isUpdatingAllSubs = ref(false);
 
@@ -31,73 +33,55 @@ const handleUpdateAll = async () => {
 
     if (result.success) {
         if (result.count && result.count > 0) {
-            showToast(`✅ 成功更新 ${result.count} 个订阅`, 'success');
+            showToast(t('views.dashboard.messages.updateSuccess', { count: result.count }), 'success');
         } else {
-            showToast('✅ 所有订阅已是最新状态', 'success');
+            showToast(t('views.dashboard.messages.allUpToDate'), 'success');
         }
     } else {
-        showToast('❌ ' + (result.message || '更新失败'), 'error');
+        showToast(result.message || t('views.dashboard.messages.updateFailed'), 'error');
     }
 };
 
-/** 励志语录数据库 */
-const quotes = [
-    {
-        text: '成功不是终点，失败也不是终结，唯有勇气才是永恒。',
-        author: '温斯顿·丘吉尔',
-        category: '励志'
-    },
-    { text: '代码如诗，每一行都是对完美的追求。', author: '极客箴言', category: '技术' },
-    { text: '今天的努力，是为了明天更好的自己。', author: '佚名', category: '励志' },
-    {
-        text: '优秀的程序员不是写代码最多的，而是删代码最多的。',
-        author: '编程智慧',
-        category: '技术'
-    },
-    { text: '保持简单，保持优雅，保持高效。', author: '设计哲学', category: '技术' },
-    { text: '每一次调试，都是与bug的一场较量。', author: '程序员日常', category: '幽默' },
-    { text: '不要害怕重构，害怕的应该是技术债。', author: '代码整洁之道', category: '技术' },
-    {
-        text: '真正的智慧不在于知道所有答案，而在于提出正确的问题。',
-        author: '苏格拉底',
-        category: '励志'
-    },
-    { text: '让代码自己说话，注释只是辅助。', author: 'Clean Code', category: '技术' },
-    {
-        text: 'bug不会因为你忽视它而消失，只会在生产环境中惊艳亮相。',
-        author: '墨菲定律',
-        category: '幽默'
-    },
-    { text: '持续学习，永不止步。今天比昨天更强大。', author: '成长心态', category: '励志' },
-    { text: '好的架构不是设计出来的，而是演化出来的。', author: '架构之道', category: '技术' },
-    { text: '测试不是负担，而是对代码的信心保障。', author: 'TDD实践', category: '技术' },
-    { text: '编程不仅是科学，更是艺术。', author: 'Donald Knuth', category: '技术' },
-    { text: '越简单的方案，越容易维护。', author: 'KISS原则', category: '技术' }
-];
+const quotes = computed(() => tm('views.dashboard.quotes') as any[]);
 
-const currentQuote = ref(quotes[0]);
+const currentQuoteIndex = ref(0);
+const currentQuote = computed(() => quotes.value[currentQuoteIndex.value] || quotes.value[0]);
 const isRefreshing = ref(false);
 
 /** 获取随机语录（避免重复） */
-const getRandomQuote = () => {
-    let newQuote;
+const getRandomQuoteIndex = () => {
+    let newIndex;
     do {
-        newQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    } while (newQuote === currentQuote.value && quotes.length > 1);
-    return newQuote;
+        newIndex = Math.floor(Math.random() * quotes.value.length);
+    } while (newIndex === currentQuoteIndex.value && quotes.value.length > 1);
+    return newIndex;
 };
 
 /** 刷新语录 */
 const refreshQuote = () => {
     isRefreshing.value = true;
     setTimeout(() => {
-        currentQuote.value = getRandomQuote();
+        currentQuoteIndex.value = getRandomQuoteIndex();
         isRefreshing.value = false;
     }, 300);
 };
 
+const quoteCategoryClass = computed(() => {
+    const cat = currentQuote.value.category;
+    if (['Inspirational', '励志'].includes(cat)) {
+        return 'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300';
+    }
+    if (['Technical', '技术'].includes(cat)) {
+        return 'border-info-400/30 bg-info-400/20 text-info-700 dark:text-info-300';
+    }
+    if (['Humor', '幽默'].includes(cat)) {
+        return 'border-success-400/30 bg-success-400/20 text-success-700 dark:text-success-300';
+    }
+    return 'border-primary-400/30 bg-primary-400/20 text-primary-700 dark:text-primary-300';
+});
+
 onMounted(() => {
-    currentQuote.value = getRandomQuote();
+    currentQuoteIndex.value = getRandomQuoteIndex();
 });
 </script>
 
@@ -105,18 +89,18 @@ onMounted(() => {
     <div class="space-y-6">
         <!-- 励志语录卡片 -->
         <div
-            class="card-glass group relative overflow-hidden rounded-3xl p-6 shadow-lg transition-all duration-500 hover:shadow-xl"
+            class="card-glass group relative overflow-hidden rounded-card p-6 shadow-elevated transition-all duration-500 hover:shadow-card"
         >
             <div class="relative z-10">
                 <!-- 标题栏 -->
                 <div class="mb-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div
-                            class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-300 bg-gray-100 backdrop-blur-md dark:border-gray-600 dark:bg-gray-700"
+                            class="flex h-9 w-9 items-center justify-center rounded-element border border-gray-300 bg-gray-100 backdrop-blur-md dark:border-white/10 dark:bg-white/10"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-purple-600 dark:text-purple-300"
+                                class="h-5 w-5 text-secondary-600 dark:text-secondary-300"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -131,10 +115,10 @@ onMounted(() => {
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-gray-800 dark:text-white">
-                                每日一言
+                                {{ t('views.dashboard.dailyQuote') }}
                             </h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Daily Inspiration
+                                {{ t('views.dashboard.dailyInspiration') }}
                             </p>
                         </div>
                     </div>
@@ -142,23 +126,16 @@ onMounted(() => {
                     <!-- 分类标签和刷新按钮 -->
                     <div class="flex items-center gap-2">
                         <span
-                            :class="{
-                                'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300':
-                                    currentQuote.category === '励志',
-                                'border-blue-400/30 bg-blue-400/20 text-blue-700 dark:text-blue-300':
-                                    currentQuote.category === '技术',
-                                'border-green-400/30 bg-green-400/20 text-green-700 dark:text-green-300':
-                                    currentQuote.category === '幽默'
-                            }"
-                            class="rounded-lg border px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-all duration-300"
+                            class="rounded-element border px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-all duration-300"
+                            :class="quoteCategoryClass"
                         >
                             {{ currentQuote.category }}
                         </span>
 
                         <button
                             :disabled="isRefreshing"
-                            class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white/30 text-gray-700 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/50 active:scale-95 disabled:opacity-50 dark:border-gray-600 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
-                            title="换一条"
+                            class="flex h-8 w-8 items-center justify-center rounded-element border border-gray-300 bg-white/30 text-gray-700 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/50 active:scale-95 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
+                            :title="t('views.dashboard.nextQuote')"
                             @click="refreshQuote"
                         >
                             <svg
@@ -206,13 +183,13 @@ onMounted(() => {
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
             <!-- 核心统计图表 (占2列) -->
             <div
-                class="card-glass group relative flex min-h-75 flex-col overflow-hidden rounded-3xl p-6 shadow-xl md:col-span-2"
+                class="card-glass group relative flex min-h-75 flex-col overflow-hidden rounded-card p-6 shadow-card md:col-span-2"
             >
                 <div class="relative z-10 mb-6 flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">节点概览</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('views.dashboard.nodeOverview') }}</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Node Distribution & Status
+                            {{ t('views.dashboard.nodeDistribution') }}
                         </p>
                     </div>
                     <div class="flex gap-4">
@@ -220,9 +197,9 @@ onMounted(() => {
                             <div
                                 class="text-[10px] font-bold tracking-wider text-gray-400 uppercase"
                             >
-                                活跃率
+                                {{ t('views.dashboard.activeRate') }}
                             </div>
-                            <div class="text-lg font-black text-indigo-600 dark:text-indigo-400">
+                            <div class="text-lg font-black text-primary-600 dark:text-primary-400">
                                 {{
                                     totalNodeCount > 0
                                         ? Math.round((activeNodeCount / totalNodeCount) * 100)
@@ -247,40 +224,40 @@ onMounted(() => {
                     <!-- 详细指标 -->
                     <div class="grid w-full grid-cols-2 gap-4 sm:w-1/2">
                         <div
-                            class="rounded-2xl border border-gray-300 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-black/20"
+                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                活跃订阅
+                                {{ t('views.dashboard.activeSubscriptions') }}
                             </div>
                             <div class="text-xl font-bold text-gray-900 dark:text-white">
                                 {{ activeSubscriptions.length }}
                             </div>
                         </div>
                         <div
-                            class="rounded-2xl border border-gray-300 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-black/20"
+                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                活跃节点
+                                {{ t('views.dashboard.activeNodes') }}
                             </div>
-                            <div class="text-xl font-bold text-emerald-500">
+                            <div class="text-xl font-bold text-success-500">
                                 {{ activeNodeCount }}
                             </div>
                         </div>
                         <div
-                            class="rounded-2xl border border-gray-300 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-black/20"
+                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">订阅组</div>
-                            <div class="text-xl font-bold text-purple-500">
+                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.profiles') }}</div>
+                            <div class="text-xl font-bold text-secondary-500">
                                 {{ profiles.length }}
                             </div>
                         </div>
                         <div
-                            class="rounded-2xl border border-gray-300 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-black/20"
+                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                手动节点
+                                {{ t('views.dashboard.manualNodes') }}
                             </div>
-                            <div class="text-xl font-bold text-orange-500">
+                            <div class="text-xl font-bold text-warning-500">
                                 {{ manualNodes.length }}
                             </div>
                         </div>
@@ -292,15 +269,15 @@ onMounted(() => {
             <div class="flex flex-col gap-4 lg:gap-6">
                 <button
                     :disabled="isUpdatingAllSubs"
-                    class="card-glass group relative flex flex-1 flex-col justify-between overflow-hidden rounded-3xl p-6 text-left shadow-lg transition-all duration-300 hover:shadow-xl"
+                    class="card-glass group relative flex flex-1 flex-col justify-between overflow-hidden rounded-card p-6 text-left shadow-elevated transition-all duration-300 hover:shadow-card"
                     @click="handleUpdateAll"
                 >
                     <div
-                        class="absolute inset-0 bg-linear-to-br from-blue-50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-blue-900/10 dark:to-transparent"
+                        class="absolute inset-0 bg-linear-to-br from-info-50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-info-900/10 dark:to-transparent"
                     ></div>
                     <div class="relative z-10">
                         <div
-                            class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 transition-transform duration-300 group-hover:scale-110 dark:bg-blue-500/20 dark:text-blue-400"
+                            class="mb-4 flex h-12 w-12 items-center justify-center rounded-button bg-info-500/10 text-info-600 transition-transform duration-300 group-hover:scale-110 dark:bg-info-500/20 dark:text-info-400"
                         >
                             <svg
                                 v-if="!isUpdatingAllSubs"
@@ -340,23 +317,23 @@ onMounted(() => {
                             </svg>
                         </div>
                         <h3 class="mb-1 text-xl font-bold text-gray-900 dark:text-white">
-                            {{ isUpdatingAllSubs ? '正在更新...' : '立即更新' }}
+                            {{ isUpdatingAllSubs ? t('views.dashboard.updating') : t('views.dashboard.updateNow') }}
                         </h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             {{
                                 isUpdatingAllSubs
-                                    ? '正在同步最新节点信息'
-                                    : '同步所有订阅源的节点信息'
+                                    ? t('views.dashboard.syncLatest')
+                                    : t('views.dashboard.syncAll')
                             }}
                         </p>
                     </div>
                 </button>
 
                 <!-- 订阅组指示 -->
-                <div class="card-glass relative flex-1 rounded-3xl p-6 shadow-md">
+                <div class="card-glass relative flex-1 rounded-card p-6 shadow-elevated-sm">
                     <div class="mb-2 flex items-start justify-between">
                         <div
-                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400"
+                            class="flex h-10 w-10 items-center justify-center rounded-element bg-secondary-500/20 text-secondary-600 dark:text-secondary-400"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -374,20 +351,20 @@ onMounted(() => {
                             </svg>
                         </div>
                         <span
-                            class="rounded-full bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white"
-                            >{{ activeProfilesCount }} Active</span
+                            class="rounded-full bg-secondary-500 px-2 py-0.5 text-[10px] font-bold text-white"
+                            >{{ t('views.dashboard.activeCount', { count: activeProfilesCount }) }}</span
                         >
                     </div>
                     <div class="text-2xl font-black text-gray-900 dark:text-white">
                         {{ profiles.length }}
-                        <span class="text-sm font-normal text-gray-500">订阅组</span>
+                        <span class="text-sm font-normal text-gray-500">{{ t('views.dashboard.profiles') }}</span>
                     </div>
                     <!-- 迷你进度条 -->
                     <div
                         class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10"
                     >
                         <div
-                            class="h-full rounded-full bg-purple-500 transition-all duration-1000"
+                            class="h-full rounded-full bg-secondary-500 transition-all duration-1000"
                             :style="{
                                 width:
                                     profiles.length > 0
@@ -401,11 +378,11 @@ onMounted(() => {
 
             <!-- 快捷操作按钮 (3个) -->
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-indigo-200 hover:shadow-md dark:hover:border-indigo-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
                 @click="$emit('add-subscription')"
             >
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-indigo-500 group-hover:text-white dark:bg-gray-700"
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-primary-500 group-hover:text-white dark:bg-white/10 dark:group-hover:bg-primary-500"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -424,20 +401,20 @@ onMounted(() => {
                 </div>
                 <div class="text-left">
                     <p
-                        class="font-bold text-gray-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400"
+                        class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        添加订阅
+                        {{ t('views.dashboard.addSubscription') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">支持 HTTP/HTTPS</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.supportsHttp') }}</p>
                 </div>
             </button>
 
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-md dark:hover:border-emerald-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
                 @click="$emit('add-node')"
             >
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-emerald-500 group-hover:text-white dark:bg-gray-700"
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-primary-500 group-hover:text-white dark:bg-white/10 dark:group-hover:bg-primary-500"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -456,20 +433,20 @@ onMounted(() => {
                 </div>
                 <div class="text-left">
                     <p
-                        class="font-bold text-gray-900 transition-colors group-hover:text-emerald-600 dark:text-white dark:group-hover:text-emerald-400"
+                        class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        添加节点
+                        {{ t('views.dashboard.addNode') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">支持多种协议</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.supportsProtocols') }}</p>
                 </div>
             </button>
 
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-2xl p-6 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md dark:hover:border-purple-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
                 @click="$emit('add-profile')"
             >
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-purple-500 group-hover:text-white dark:bg-gray-700"
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition-colors duration-300 group-hover:bg-primary-500 group-hover:text-white dark:bg-white/10 dark:group-hover:bg-primary-500"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -488,11 +465,11 @@ onMounted(() => {
                 </div>
                 <div class="text-left">
                     <p
-                        class="font-bold text-gray-900 transition-colors group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400"
+                        class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        创建订阅组
+                        {{ t('views.dashboard.createProfile') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">组合订阅和节点</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.combineSubs') }}</p>
                 </div>
             </button>
         </div>

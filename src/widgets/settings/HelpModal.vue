@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import Modal from '@/common/ui/BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
@@ -40,60 +40,62 @@ const toggleFaq = (index: number) => {
     activeFaqIndex.value = activeFaqIndex.value === index ? null : index;
 };
 
+const { t } = useI18n();
+
 // ==================== 数据源 ====================
 
 const faqs = [
     {
-        q: '如何添加订阅？',
-        a: '在首页点击"添加订阅"按钮，输入订阅链接（支持 HTTP/HTTPS），系统会自动解析其中的节点信息。支持 Clash、Surge、V2Ray 等多种格式链接。',
+        q: t('widgets.settings.help.faq.add_q'),
+        a: t('widgets.settings.help.faq.add_a'),
         icon: 'M12 4v16m8-8H4'
     },
     {
-        q: '如何生成订阅链接？',
-        a: '在仪表盘或订阅组卡片中，点击"导出"或"链接"按钮。选择您需要的客户端格式（如 Clash, Shadowrocket），然后点击复制即可。',
+        q: t('widgets.settings.help.faq.export_q'),
+        a: t('widgets.settings.help.faq.export_a'),
         icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'
     },
     {
-        q: '支持哪些客户端格式？',
-        a: 'Sub-One 支持几乎所有主流客户端，包括 Clash (Meta), Surge, Loon, Shadowrocket, Quantumult X, Sing-Box, V2Ray, Surfboard 等。',
+        q: t('widgets.settings.help.faq.clients_q'),
+        a: t('widgets.settings.help.faq.clients_a'),
         icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
     },
     {
-        q: '什么是订阅 Token？',
-        a: '订阅 Token 是用于生成固定订阅链接的密钥。在"系统设置"中配置后，您的订阅链接将包含此 Token，即使服务器重启或迁移，只要 Token 不变，链接依然有效。',
+        q: t('widgets.settings.help.faq.token_q'),
+        a: t('widgets.settings.help.faq.token_a'),
         icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
     },
     {
-        q: '如何进行批量操作？',
-        a: '在订阅列表页，点击右上角的"多选/批量"图标进入批量模式。选择多个订阅后，可以进行批量删除、批量更新或批量启用/禁用操作。',
+        q: t('widgets.settings.help.faq.batch_q'),
+        a: t('widgets.settings.help.faq.batch_a'),
         icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
     }
 ];
 
 const features = [
     {
-        title: '订阅管理',
-        desc: '支持多种格式订阅自动解析，流量与过期时间监控，定时自动更新。',
+        title: t('widgets.settings.help.features.sub_title'),
+        desc: t('widgets.settings.help.features.sub_desc'),
         icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
-        color: 'from-blue-500 to-indigo-600'
+        color: 'from-info-500 to-primary-600'
     },
     {
-        title: '订阅组',
-        desc: '将多个订阅源组合成一个大的订阅，支持自定义筛选规则和排除规则。',
+        title: t('widgets.settings.help.features.profile_title'),
+        desc: t('widgets.settings.help.features.profile_desc'),
         icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
-        color: 'from-purple-500 to-pink-600'
+        color: 'from-secondary-500 to-pink-600'
     },
     {
-        title: '手动节点',
-        desc: '支持手动添加单个节点，或批量导入节点链接，支持智能去重排序。',
+        title: t('widgets.settings.help.features.manual_title'),
+        desc: t('widgets.settings.help.features.manual_desc'),
         icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
-        color: 'from-green-500 to-emerald-600'
+        color: 'from-success-500 to-success-600'
     },
     {
-        title: '格式转换',
-        desc: '内置强大的格式转换引擎，支持生成适配各种主流客户端的配置文件。',
+        title: t('widgets.settings.help.features.convert_title'),
+        desc: t('widgets.settings.help.features.convert_desc'),
         icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
-        color: 'from-orange-500 to-red-600'
+        color: 'from-warning-500 to-danger-600'
     }
 ];
 </script>
@@ -108,7 +110,7 @@ const features = [
         <template #title>
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg"
+                    class="flex h-10 w-10 items-center justify-center rounded-element bg-linear-to-br from-primary-500 to-secondary-600 shadow-elevated"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -126,8 +128,8 @@ const features = [
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">帮助中心</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Documentation & Guides</p>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('widgets.settings.help.title') }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('widgets.settings.help.subtitle') }}</p>
                 </div>
             </div>
         </template>
@@ -135,18 +137,18 @@ const features = [
         <template #body>
             <div class="min-h-75">
                 <!-- Tab Navigation -->
-                <div class="mb-8 flex justify-center border-b border-gray-300 dark:border-gray-700">
+                <div class="mb-8 flex justify-center border-b border-gray-300 dark:border-white/10">
                     <nav class="-mb-px flex space-x-8">
                         <button
                             v-for="tab in [
-                                { id: 'guide', label: '🚀 快速上手' },
-                                { id: 'features', label: '✨ 功能详解' },
-                                { id: 'faq', label: '❓ 常见问题' }
+                                { id: 'guide', label: t('widgets.settings.help.tab_guide') },
+                                { id: 'features', label: t('widgets.settings.help.tab_features') },
+                                { id: 'faq', label: t('widgets.settings.help.tab_faq') }
                             ]"
                             :key="tab.id"
                             :class="[
                                 activeTab === tab.id
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
                                 'border-b-2 px-1 py-4 text-sm font-medium whitespace-nowrap transition-all duration-200'
                             ]"
@@ -163,76 +165,63 @@ const features = [
                         <div class="relative space-y-8">
                             <!-- 连线 -->
                             <div
-                                class="absolute top-8 left-6.75 h-[calc(100%-60px)] w-0.5 bg-gray-200 dark:bg-gray-700"
+                                class="absolute top-8 left-6.75 h-[calc(100%-60px)] w-0.5 bg-gray-200 dark:bg-white/10"
                             ></div>
 
                             <!-- 步骤 1 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xl font-bold text-blue-600 ring-4 ring-white transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white group-hover:shadow-lg dark:bg-blue-900/30 dark:text-blue-400 dark:ring-gray-900 dark:group-hover:bg-blue-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-info-50 text-xl font-bold text-info-600 ring-4 ring-white transition-all duration-300 group-hover:bg-info-600 group-hover:text-white group-hover:shadow-elevated dark:bg-info-900/30 dark:text-info-400 dark:ring-black/50 dark:group-hover:bg-info-500 dark:group-hover:text-white"
                                 >
                                     1
                                 </div>
                                 <div
-                                    class="flex-1 rounded-2xl border border-gray-300 bg-white p-5 shadow-sm transition-all duration-300 hover:border-blue-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-info-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        添加订阅源
+                                        {{ t('widgets.settings.help.guide.step1_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        在首页点击<span class="font-bold text-indigo-600">
-                                            + 添加订阅</span
-                                        >按钮，粘贴您的机场订阅链接。系统会自动下载并解析所有节点信息。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step1_desc')"></p>
                                 </div>
                             </div>
 
                             <!-- 步骤 2 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-50 text-xl font-bold text-purple-600 ring-4 ring-white transition-all duration-300 group-hover:bg-purple-600 group-hover:text-white group-hover:shadow-lg dark:bg-purple-900/30 dark:text-purple-400 dark:ring-gray-900 dark:group-hover:bg-purple-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-secondary-50 text-xl font-bold text-secondary-600 ring-4 ring-white transition-all duration-300 group-hover:bg-secondary-600 group-hover:text-white group-hover:shadow-elevated dark:bg-secondary-900/30 dark:text-secondary-400 dark:ring-black/50 dark:group-hover:bg-secondary-500 dark:group-hover:text-white"
                                 >
                                     2
                                 </div>
                                 <div
-                                    class="flex-1 rounded-2xl border border-gray-300 bg-white p-5 shadow-sm transition-all duration-300 hover:border-purple-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-secondary-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        创建订阅组 (可选)
+                                        {{ t('widgets.settings.help.guide.step2_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        如果您有多个订阅，可以创建一个
-                                        <span class="font-bold text-purple-600">订阅组</span>。
-                                        将它们聚合在一起，还可以设置过滤规则来排除不需要的节点。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step2_desc')"></p>
                                 </div>
                             </div>
 
                             <!-- 步骤 3 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-xl font-bold text-emerald-600 ring-4 ring-white transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white group-hover:shadow-lg dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-gray-900 dark:group-hover:bg-emerald-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-success-50 text-xl font-bold text-success-600 ring-4 ring-white transition-all duration-300 group-hover:bg-success-600 group-hover:text-white group-hover:shadow-elevated dark:bg-success-900/30 dark:text-success-400 dark:ring-black/50 dark:group-hover:bg-success-500 dark:group-hover:text-white"
                                 >
                                     3
                                 </div>
                                 <div
-                                    class="flex-1 rounded-2xl border border-gray-300 bg-white p-5 shadow-sm transition-all duration-300 hover:border-emerald-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-success-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        导出使用
+                                        {{ t('widgets.settings.help.guide.step3_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        点击订阅或订阅组上的
-                                        <span class="font-bold text-emerald-600">导出/链接</span>
-                                        按钮。 选择适配您的客户端（如 Clash, Shadowrocket）的格式，
-                                        复制链接即可使用。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step3_desc')"></p>
                                 </div>
                             </div>
                         </div>
@@ -244,11 +233,11 @@ const features = [
                             <div
                                 v-for="(feat, idx) in features"
                                 :key="idx"
-                                class="shadow-modern hover-lift group relative overflow-hidden rounded-2xl border border-gray-300 bg-white p-6 transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
+                                class="shadow-modern hover-lift group relative overflow-hidden rounded-button border border-gray-300 bg-white p-6 transition-all duration-300 dark:border-white/10 dark:bg-white/5"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-md transition-transform duration-300 group-hover:scale-110"
+                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-button bg-linear-to-br text-white shadow-elevated-sm transition-transform duration-300 group-hover:scale-110"
                                         :class="feat.color"
                                     >
                                         <svg
@@ -288,21 +277,21 @@ const features = [
                             <div
                                 v-for="(item, index) in faqs"
                                 :key="index"
-                                class="overflow-hidden rounded-2xl border border-gray-300 bg-white transition-all duration-300 dark:border-gray-700 dark:bg-gray-800"
+                                class="overflow-hidden rounded-button border border-gray-300 bg-white transition-all duration-300 dark:border-white/10 dark:bg-white/5"
                                 :class="{
-                                    'shadow-md ring-1 ring-indigo-500/50 dark:ring-indigo-400/50':
+                                    'shadow-elevated-sm ring-1 ring-primary-500/50 dark:ring-primary-400/50':
                                         activeFaqIndex === index
                                 }"
                             >
                                 <button
-                                    class="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                    class="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/10"
                                     @click="toggleFaq(index)"
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-300 text-gray-500 transition-colors dark:bg-gray-700 dark:text-gray-400"
+                                            class="flex h-8 w-8 items-center justify-center rounded-element bg-gray-300 text-gray-500 transition-colors dark:bg-white/10 dark:text-gray-400"
                                             :class="{
-                                                'bg-indigo-100! text-indigo-600! dark:bg-indigo-900/30! dark:text-indigo-400!':
+                                                'bg-primary-100! text-primary-600! dark:bg-primary-900/30! dark:text-primary-400!':
                                                     activeFaqIndex === index
                                             }"
                                         >
@@ -341,7 +330,7 @@ const features = [
                                 </button>
                                 <div
                                     v-show="activeFaqIndex === index"
-                                    class="border-t border-gray-100 bg-gray-50/50 p-5 dark:border-gray-700 dark:bg-gray-900/30"
+                                    class="border-t border-gray-100 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5"
                                 >
                                     <p class="text-sm leading-7 text-gray-600 dark:text-gray-300">
                                         {{ item.a }}

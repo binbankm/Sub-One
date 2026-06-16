@@ -190,16 +190,23 @@ export class SurgeConverter extends BaseConverter {
     private hysteria2(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `${proxy.name}=hysteria2,${proxy.server},${proxy.port},password=\"${proxy.password}\"`
+            `${proxy.name}=hysteria2,${proxy.server},${proxy.port}`
         );
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
         if (proxy.ports) {
-            result.append(`,port-hopping=\"${String(proxy.ports).replace(/,/g, ';')}\"`);
+            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
         }
         if (proxy.down) {
             const down = String(proxy.down).match(/\d+/)?.[0] || '0';
             result.append(`,download-bandwidth=${down}`);
         }
-        this.appendTLS(result, proxy);
+        // Hysteria2 强制 TLS，直接追加 TLS 参数，不依赖 proxy.tls
+        result.appendIfPresent(`,tls-fingerprint=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
+        result.appendIfPresent(`,sni="${proxy.sni}"`, 'sni');
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -342,6 +349,12 @@ export class SurgeConverter extends BaseConverter {
             );
             if (proxy['tls-fingerprint']) {
                 result.append(`,server-cert-fingerprint-sha256=${proxy['tls-fingerprint']}`);
+            }
+            if (proxy['reality-opts']) {
+                const r = proxy['reality-opts'];
+                result.appendIfPresent(`,reality-public-key=${r['public-key']}`, 'public-key');
+                result.appendIfPresent(`,reality-short-id=${r['short-id']}`, 'short-id');
+                result.appendIfPresent(`,reality-spider-x=${r['_spider-x']}`, '_spider-x');
             }
         }
     }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -36,6 +37,7 @@ const SubscriptionExportModal = defineAsyncComponent(
 // Stores
 const dataStore = useDataStore();
 const { profiles, subscriptions, manualNodes, config } = storeToRefs(dataStore);
+const { t } = useI18n();
 
 const {
     currentPage,
@@ -72,10 +74,10 @@ const handleSaveProfile = (profileData: Profile) => {
     baseHandleSaveProfile(profileData, () => resetPage());
 };
 
-const profilesMoreMenuItems = [
-    { key: 'batch-delete', label: '批量删除' },
-    { key: 'clear-all', label: '清空所有', danger: true, dividerBefore: true }
-];
+const profilesMoreMenuItems = computed(() => [
+    { key: 'batch-delete', label: t('views.profiles.menus.batchDelete') },
+    { key: 'clear-all', label: t('views.profiles.menus.clearAll'), danger: true, dividerBefore: true }
+]);
 
 // Batch Select
 const {
@@ -137,7 +139,7 @@ useTabActionTrigger(
                         class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
                         @click="handleAddProfile"
                     >
-                        新增
+                        {{ t('views.profiles.addBtn') }}
                     </button>
                     <MoreMenu
                         :items="profilesMoreMenuItems"
@@ -151,7 +153,7 @@ useTabActionTrigger(
         <BatchActionToolbar
             :visible="isBatchDeleteMode"
             :selected-count="selectedCount"
-            accent="purple"
+            accent="secondary"
             @select-all="selectAll"
             @invert-selection="invertSelection"
             @deselect-all="deselectAll"
@@ -185,15 +187,15 @@ useTabActionTrigger(
         />
         <EmptyState
             v-if="profiles.length === 0"
-            title="没有订阅组"
-            description="创建一个订阅组来组合你的节点吧！"
-            bg-gradient-class="bg-linear-to-br from-purple-500/20 to-pink-500/20"
-            icon-color-class="text-purple-500"
+            :title="t('views.profiles.emptyTitle')"
+            :description="t('views.profiles.emptyDesc')"
+            bg-gradient-class="bg-linear-to-br from-secondary-500/20 to-pink-500/20"
+            icon-color-class="text-secondary-500"
         >
             <template #icon>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 text-purple-500"
+                    class="h-12 w-12 text-secondary-500"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -222,16 +224,16 @@ useTabActionTrigger(
 
         <ConfirmModal
             v-model:show="showDeleteSingleProfileModal"
-            title="确认删除订阅组"
-            message="您确定要删除此订阅组吗？此操作不可逆。"
+            :title="t('views.profiles.deleteModal.title')"
+            :message="t('views.profiles.deleteModal.desc')"
             type="danger"
             @confirm="handleConfirmDeleteSingleProfile"
         />
 
         <ConfirmModal
             v-model:show="showDeleteAllProfilesModal"
-            title="确认清空订阅组"
-            message="您确定要删除所有<strong>订阅组</strong>吗？此操作不可逆。"
+            :title="t('views.profiles.clearAllModal.title')"
+            :message="t('views.profiles.clearAllModal.desc')"
             type="danger"
             @confirm="handleDeleteAllProfiles"
         />
