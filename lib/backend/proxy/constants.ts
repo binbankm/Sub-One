@@ -30,7 +30,17 @@ export const PROXY_PROTOCOLS = [
 /**
  * 传输协议
  */
-export const NETWORK_TYPES = ['tcp', 'ws', 'grpc', 'h2', 'http', 'kcp', 'quic'] as const;
+export const NETWORK_TYPES = [
+    'tcp',
+    'ws', // WebSocket
+    'grpc', // gRPC
+    'h2', // HTTP/2
+    'http', // HTTP
+    'kcp', // mKCP
+    'quic', // QUIC
+    'xhttp', // XHTTP/SplitHTTP (Xray-core)
+    'splithttp' // SplitHTTP 别名
+] as const;
 
 // ============================================================================
 // 平台常量
@@ -148,6 +158,11 @@ export const VLESS_FLOWS = [
 ] as const;
 
 /**
+ * Hysteria 混淆类型
+ */
+export const HYSTERIA_OBFS = ['salamander'] as const;
+
+/**
  * Hysteria2 混淆类型
  */
 export const HYSTERIA2_OBFS = ['salamander'] as const;
@@ -161,6 +176,46 @@ export const TUIC_CONGESTION_CONTROLLERS = ['cubic', 'new_reno', 'bbr'] as const
  * ALPN 协议列表
  */
 export const ALPN_PROTOCOLS = ['h3', 'h2', 'http/1.1'] as const;
+
+/**
+ * VLESS Reality Xray 模式 
+ */
+export const XHTTP_MODES = ['auto', 'packet-up', 'stream-up', 'stream-one'] as const;
+
+/**
+ * mKCP 伪装头部类型
+ */
+export const KCP_HEADER_TYPES = ['none', 'srtp', 'utp', 'wechat-video', 'dtls', 'wireguard'] as const;
+
+/**
+ * VMess Security 别名映射 
+ * 用于兼容不同客户端的加密方法命名
+ */
+export const VMESS_SECURITY_ALIASES: Record<string, string> = {
+    'aes-128-gcm': 'aes-128-gcm',
+    'chacha20-poly1305': 'chacha20-poly1305',
+    'auto': 'auto',
+    'none': 'none',
+    'zero': 'zero',
+    // Shadowrocket 兼容
+    'aes_128_gcm': 'aes-128-gcm',
+    'chacha20_poly1305': 'chacha20-poly1305',
+    // 旧版兼容 -> 统一到 auto
+    'aes-128-cfb': 'auto',
+    'aes-128-ctr': 'auto',
+    'rc4-md5': 'auto',
+    'aes-128-gcm-ipv6': 'aes-128-gcm',
+    'chacha20-poly1305-ipv6': 'chacha20-poly1305'
+};
+
+/**
+ * 标准化 VMess 加密方法 
+ */
+export function normalizeVmessSecurity(security: string | undefined): string {
+    if (!security) return 'auto';
+    const normalized = security.toLowerCase().trim();
+    return VMESS_SECURITY_ALIASES[normalized] || 'auto';
+}
 
 // ============================================================================
 // 默认值

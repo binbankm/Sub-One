@@ -13,6 +13,18 @@ const ipVersions: Record<string, string> = {
     'ipv6-prefer': 'prefer-v6'
 };
 
+function appendReality(result: Result, proxy: ProxyNode) {
+    result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
+    result.appendIfPresent(
+        `,public-key="${proxy['reality-opts']!['public-key']}"`,
+        'reality-opts.public-key'
+    );
+    result.appendIfPresent(
+        `,short-id=${proxy['reality-opts']!['short-id']}`,
+        'reality-opts.short-id'
+    );
+}
+
 export class LoonConverter extends BaseConverter {
     name = 'Loon';
 
@@ -104,6 +116,7 @@ export class LoonConverter extends BaseConverter {
     }
 
     private trojan(proxy: ProxyNode): string {
+        const isReality = !!proxy['reality-opts'];
         const result = new Result(proxy);
         result.append(`${proxy.name}=trojan,${proxy.server},${proxy.port},"${proxy.password}"`);
 
@@ -118,12 +131,32 @@ export class LoonConverter extends BaseConverter {
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
-        result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+
+        if (isReality) {
+            appendReality(result, proxy);
+        } else {
+            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            result.appendIfPresent(
+                `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
+                'tls-fingerprint'
+            );
+            result.appendIfPresent(
+                `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
+                'tls-pubkey-sha256'
+            );
+        }
+
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn="${alpn}"`);
+        }
+
         this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private vmess(proxy: ProxyNode): string {
+        const isReality = !!proxy['reality-opts'];
         const result = new Result(proxy);
         result.append(
             `${proxy.name}=vmess,${proxy.server},${proxy.port},${proxy.cipher || 'auto'},"${proxy.uuid}"`
@@ -134,7 +167,13 @@ export class LoonConverter extends BaseConverter {
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
-        result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+
+        if (isReality) {
+            appendReality(result, proxy);
+        } else {
+            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+        }
+
         // aead 字段存在时: true→alterId=0 (AEAD开启), false→alterId=1; 不存在时直接用 alterId
         if (proxy.aead !== undefined) {
             result.append(`,alterId=${proxy.aead ? 0 : 1}`);
@@ -162,19 +201,32 @@ export class LoonConverter extends BaseConverter {
         if (proxy.flow) result.append(`,flow=${proxy.flow}`);
         if (proxy['reality-opts']) {
             const reality = proxy['reality-opts'];
-            result.append(`,public-key="${reality['public-key']}"`);
-            result.appendIfPresent(`,short-id=${reality['short-id']}`, 'reality-opts.short-id');
+            result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
+            result.appendIfPresent(`,public-key="${reality['public-key']}"`, 'public-key');
+            result.appendIfPresent(`,short-id=${reality['short-id']}`, 'short-id');
             result.appendIfPresent(
                 `,spider-x=${reality['_spider-x'] || reality['spider-x']}`,
                 'reality-opts.spider-x'
             );
-            result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
         } else {
             result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
             result.appendIfPresent(
                 `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
                 'tls-fingerprint'
             );
+        }
+        // TLS profile (client-fingerprint → Loon tls-profile)
+        if (proxy['client-fingerprint']) {
+            const fpMap: Record<string, string> = {
+                'chrome': 'chrome', 'ios': 'ios26', 'ios18': 'ios18'
+            };
+            const profile = fpMap[proxy['client-fingerprint']];
+            if (profile) result.append(`,tls-profile=${profile}`);
+        }
+        // ALPN
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn="${alpn}"`);
         }
         this.appendCommon(result, proxy);
         return result.toString();
@@ -291,7 +343,10 @@ export class LoonConverter extends BaseConverter {
             'skip-cert-verify'
         );
         result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,alpn=${proxy.alpn?.join(',') || 'h3'}`, 'alpn');
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn=${alpn}`);
+        }
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -305,6 +360,7 @@ export class LoonConverter extends BaseConverter {
     }
 
     private anytls(proxy: ProxyNode): string {
+        const isReality = !!proxy['reality-opts'];
         const result = new Result(proxy);
         result.append(`${proxy.name}=anytls,${proxy.server},${proxy.port},"${proxy.password}"`);
 
@@ -320,12 +376,25 @@ export class LoonConverter extends BaseConverter {
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
-        result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
-        result.appendIfPresent(`,tls-cert-sha256=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
-        result.appendIfPresent(
-            `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
-            'tls-pubkey-sha256'
-        );
+
+        if (isReality) {
+            appendReality(result, proxy);
+        } else {
+            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            result.appendIfPresent(
+                `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
+                'tls-fingerprint'
+            );
+            result.appendIfPresent(
+                `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
+                'tls-pubkey-sha256'
+            );
+        }
+
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn="${alpn}"`);
+        }
 
         // TFO
         result.appendIfPresent(`,fast-open=${proxy.tfo}`, 'tfo');
@@ -351,8 +420,18 @@ export class LoonConverter extends BaseConverter {
         if (network === 'ws') {
             result.append(`,transport=ws`);
             const wsOpts = (proxy['ws-opts'] || {}) as any;
-            result.appendIfPresent(`,path=${wsOpts.path || '/'}`, 'ws-opts.path');
+            let path = wsOpts.path || '/';
+            const ed = wsOpts['max-early-data'];
+            if (ed && !path.includes('ed=')) {
+                const sep = path.includes('?') ? '&' : '?';
+                path = `${path}${sep}ed=${ed}`;
+            }
+            result.append(`,path=${path}`);
             result.appendIfPresent(`,host=${wsOpts.headers?.Host}`, 'ws-opts.headers.Host');
+        } else if (network === 'grpc') {
+            result.append(`,transport=grpc`);
+            const grpcOpts = (proxy['grpc-opts'] || {}) as any;
+            result.appendIfPresent(`,path=${grpcOpts['service-name']}`, 'grpc-opts.service-name');
         } else if (network === 'http') {
             result.append(`,transport=http`);
             const opts = (proxy['http-opts'] || {}) as any;

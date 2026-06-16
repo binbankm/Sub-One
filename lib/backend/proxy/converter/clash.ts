@@ -146,6 +146,23 @@ export class ClashConverter extends BaseConverter {
                 if (node.cipher && !vmessCiphers.includes(node.cipher)) {
                     node.cipher = 'auto';
                 }
+            } else if (node.type === 'ss') {
+                if (isPresent(node, 'shadow-tls-password') && !isPresent(node, 'plugin')) {
+                    node.plugin = 'shadow-tls';
+                    node['plugin-opts'] = {
+                        host: node['shadow-tls-sni'],
+                        password: node['shadow-tls-password'],
+                        version: node['shadow-tls-version']
+                    };
+                    delete node['shadow-tls-password'];
+                    delete node['shadow-tls-sni'];
+                    delete node['shadow-tls-version'];
+                }
+                if (isPresent(node, 'plugin-opts.mux') && node['plugin-opts']?.mux !== undefined) {
+                    const v = String(node['plugin-opts'].mux).toLowerCase();
+                    if (v === 'true' || v === '1') node['plugin-opts'].mux = true;
+                    else if (v === 'false' || v === '0') node['plugin-opts'].mux = false;
+                }
             } else if (node.type === 'vless') {
                 node.cipher = 'none'; // VLESS always none in Clash Meta
                 if (node['reality-opts']) {
@@ -154,6 +171,23 @@ export class ClashConverter extends BaseConverter {
                         'short-id': node['reality-opts']['short-id'],
                         'spider-x': node['reality-opts']['_spider-x'] || ''
                     };
+                }
+                if (node['ech-opts'] && node['ech-opts']['config-list']) {
+                    node['ech-opts'] = {
+                        'config-list': node['ech-opts']['config-list']
+                    };
+                }
+                if (node['xhttp-opts']) {
+                    const xopts: any = {};
+                    const rawOpts = node['xhttp-opts'] as Record<string, any>;
+                    if (rawOpts.mode) xopts.mode = rawOpts.mode;
+                    if (rawOpts.path) xopts.path = rawOpts.path;
+                    if (rawOpts.host) xopts.host = rawOpts.host;
+                    if (rawOpts.headers) xopts.headers = rawOpts.headers;
+                    if (rawOpts['download-settings']) xopts['download-settings'] = rawOpts['download-settings'];
+                    if (Object.keys(xopts).length > 0) {
+                        node['xhttp-opts'] = xopts;
+                    }
                 }
             } else if (node.type === 'wireguard') {
                 node.keepalive = node.keepalive ?? node['persistent-keepalive'];
@@ -182,6 +216,10 @@ export class ClashConverter extends BaseConverter {
                     node.servername = node.sni;
                     delete node.sni;
                 }
+            }
+
+            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls', 'naive'].includes(node.type)) {
+                delete node.tls;
             }
 
             if (node['client-fingerprint']) {
@@ -228,6 +266,32 @@ export class ClashConverter extends BaseConverter {
                 ) {
                     node['http-opts'].headers.Host = [node['http-opts'].headers.Host];
                 }
+            } else if (
+                (node.type === 'vmess' || node.type === 'vless') &&
+                node.network === 'h2'
+            ) {
+                if (node['h2-opts']) {
+                    // h2-opts.path: array → first element
+                    const h2Path = node['h2-opts'].path;
+                    if (isPresent(node, 'h2-opts.path') && Array.isArray(h2Path)) {
+                        node['h2-opts'].path = h2Path[0];
+                    }
+                    // h2-opts.host: 从 headers.host 或 host 提取，输出为数组
+                    const h2Host = node['h2-opts'].host ??
+                        node['h2-opts'].headers?.host ??
+                        node['h2-opts'].headers?.Host;
+                    if (isPresent(node, 'h2-opts.host') || isPresent(node, 'h2-opts.headers.host') || isPresent(node, 'h2-opts.headers.Host')) {
+                        node['h2-opts'].host = Array.isArray(h2Host) ? h2Host : [h2Host];
+                    }
+                    // 清理 headers.host/Host
+                    if (node['h2-opts'].headers) {
+                        delete node['h2-opts'].headers.host;
+                        delete node['h2-opts'].headers.Host;
+                        if (Object.keys(node['h2-opts'].headers).length === 0) {
+                            delete node['h2-opts'].headers;
+                        }
+                    }
+                }
             } else if (node.network === 'kcp') {
                 // mKCP 传输层处理
                 node['kcp-opts'] = node['kcp-opts'] || {};
@@ -265,10 +329,30 @@ export class ClashConverter extends BaseConverter {
             // Cleanup
             delete node.subName;
             delete node.id;
+            delete node.resolved;
+
+            if (node['tls-fingerprint']) {
+                node.fingerprint = node['tls-fingerprint'];
+            }
+            delete node['tls-fingerprint'];
+
             for (const key in node) {
                 if (key.startsWith('_') || node[key] === null) {
                     delete node[key];
                 }
+            }
+
+            if (node.network === 'ws' && node['ws-opts']) {
+                const wsOpts = node['ws-opts'];
+                if (wsOpts['v2ray-http-upgrade'] !== undefined) delete wsOpts['v2ray-http-upgrade'];
+                if (wsOpts['v2ray-http-upgrade-fast-open'] !== undefined) delete wsOpts['v2ray-http-upgrade-fast-open'];
+                if (wsOpts['_v2ray-http-upgrade-ed'] !== undefined) delete wsOpts['_v2ray-http-upgrade-ed'];
+            }
+            if (node.httpupgrade !== undefined) delete node.httpupgrade;
+
+            if (node.network === 'grpc' && node['grpc-opts']) {
+                delete node['grpc-opts']['_grpc-type'];
+                delete node['grpc-opts']['_grpc-authority'];
             }
 
             // === 按照 Clash 标准重新排序字段 ===
@@ -300,6 +384,8 @@ export class ClashConverter extends BaseConverter {
                 'flow',
                 // Reality
                 'reality-opts',
+                // ECH (ClashMeta)
+                'ech-opts',
                 // WebSocket
                 'ws-opts',
                 'ws-path',
@@ -313,6 +399,8 @@ export class ClashConverter extends BaseConverter {
                 'kcp-opts',
                 // QUIC
                 'quic-opts',
+                // XHTTP/SplitHTTP (ClashMeta)
+                'xhttp-opts',
                 // 协议特定
                 'auth',
                 'auth-str',

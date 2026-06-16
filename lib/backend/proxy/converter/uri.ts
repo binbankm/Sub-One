@@ -172,6 +172,7 @@ export class URIConverter extends BaseConverter {
         if (node['skip-cert-verify']) params.set('insecure', '1');
         if (node.tfo) params.set('fastopen', '1');
         if (node.ports) params.set('mport', String(node.ports));
+        if (node['hop-interval']) params.set('hop-interval', String(node['hop-interval']));
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
 
         let queryString = params.toString();
@@ -213,6 +214,12 @@ export class URIConverter extends BaseConverter {
         if (node['disable-sni']) params.set('disable_sni', '1');
         if (node['reduce-rtt']) params.set('reduce_rtt', '1');
         if (node['udp-relay-mode']) params.set('udp_relay_mode', node['udp-relay-mode']);
+        if (node['heartbeat-interval'])
+            params.set('heartbeat_interval', String(node['heartbeat-interval']));
+        if (node['max-udp-relay-packet-size'])
+            params.set('max_udp_relay_packet_size', String(node['max-udp-relay-packet-size']));
+        if (node['max-open-streams'])
+            params.set('max_open_streams', String(node['max-open-streams']));
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -234,6 +241,15 @@ export class URIConverter extends BaseConverter {
         if (node.reserved) {
             const res = Array.isArray(node.reserved) ? node.reserved.join(',') : node.reserved;
             params.set('reserved', String(res));
+        }
+        if (node['persistent-keepalive'])
+            params.set('keepalive', String(node['persistent-keepalive']));
+        if (node['allowed-ips'] && node['allowed-ips'].length > 0) {
+            params.set('allowed', node['allowed-ips'].join(','));
+        }
+        if (node.dns) {
+            const dnsStr = Array.isArray(node.dns) ? node.dns.join(',') : node.dns;
+            params.set('dns', dnsStr);
         }
 
         let queryString = params.toString();
@@ -293,7 +309,9 @@ export class URIConverter extends BaseConverter {
 
     private appendTransportParams(params: URLSearchParams, node: ProxyNode) {
         if (!node.network) return;
-        params.set('type', node.network);
+
+        const networkType = (node as any).httpupgrade ? 'httpupgrade' : node.network;
+        params.set('type', networkType);
         const opts = (node[`${node.network}-opts`] || {}) as any;
         if (opts) {
             if (opts.path) params.set('path', Array.isArray(opts.path) ? opts.path[0] : opts.path);
@@ -318,6 +336,22 @@ export class URIConverter extends BaseConverter {
             }
         }
 
+        const xopts = node['xhttp-opts'] as Record<string, any>;
+        if (xopts && Object.keys(xopts).length > 0) {
+            if (xopts.mode) params.set('mode', xopts.mode);
+            if (xopts.path) params.set('path', Array.isArray(xopts.path) ? xopts.path[0] : xopts.path);
+            if (xopts.host) params.set('host', Array.isArray(xopts.host) ? xopts.host[0] : xopts.host);
+        }
+
+        if ((node as any).httpupgrade && opts) {
+            const edValue = opts['_v2ray-http-upgrade-ed'] || (node['ws-opts'] as any)?.['_v2ray-http-upgrade-ed'];
+            if (edValue) {
+                const basePath = opts.path || '/';
+                const sep = basePath.includes('?') ? '&' : '?';
+                params.set('path', `${basePath}${sep}ed=${edValue}`);
+            }
+        }
+
         // 兼容旧版本的简化写法
         if (node.network === 'kcp') {
             if (node.seed && !opts?.seed) params.set('seed', node.seed);
@@ -339,6 +373,20 @@ export class URIConverter extends BaseConverter {
             if (r['short-id']) params.set('sid', r['short-id']);
             if (r['_spider-x']) params.set('spx', r['_spider-x']);
         }
+        if (node['ech-opts']) {
+            const ech = node['ech-opts'];
+            if (ech['config-list'] && ech['config-list'].length > 0) {
+                params.set('ech', '1');
+                // config-list 编码到 extra 字段
+            } else if (ech._dns) {
+                params.set('ech', '1');
+            }
+        }
+        if (node._echConfigList) {
+            params.set('ech', node._echConfigList);
+        }
+        // skip-cert-verify 通用处理
+        if (node['skip-cert-verify']) params.set('allowInsecure', '1');
     }
 
     private appendVLESSParams(params: URLSearchParams, node: ProxyNode) {
@@ -348,5 +396,29 @@ export class URIConverter extends BaseConverter {
         // 强制设置 encryption=none，提高外部转换兼容性
         params.set('encryption', node.encryption || 'none');
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
+
+        if (node._extra) {
+            const extra = typeof node._extra === 'string' ? node._extra : JSON.stringify(node._extra);
+            params.set('extra', extra);
+        }
+        if (node._mode) params.set('mode', node._mode);
+        if (node._pqv) params.set('pqv', node._pqv);
+        if (node._h2) params.set('h2', '1');
+        if (node._pcs) params.set('pcs', '1');
+
+        const xopts = node['xhttp-opts'] as Record<string, any>;
+        if (xopts && xopts.mode) {
+            params.set('mode', xopts.mode);
+        }
+
+        if (node.network === 'ws' && node['ws-opts']) {
+            const wsOpts = node['ws-opts'] as Record<string, any>;
+            if (wsOpts['max-early-data']) {
+                const basePath = wsOpts.path || '/';
+                const ed = wsOpts['max-early-data'];
+                const sep = basePath.includes('?') ? '&' : '?';
+                params.set('path', `${basePath}${sep}ed=${ed}`);
+            }
+        }
     }
 }

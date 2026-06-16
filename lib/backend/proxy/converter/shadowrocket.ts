@@ -43,6 +43,14 @@ export class ShadowrocketConverter extends BaseConverter {
                 }
             } else if (node.type === 'vless') {
                 node.cipher = 'none';
+                // Reality 支持 (Shadowrocket)
+                if (node['reality-opts']) {
+                    node['reality-opts'] = {
+                        'public-key': node['reality-opts']['public-key'],
+                        'short-id': node['reality-opts']['short-id'],
+                        'spider-x': node['reality-opts']['_spider-x'] || ''
+                    };
+                }
             } else if (node.type === 'tuic' || node.type === 'hysteria2') {
                 if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
                 if (node.tfo && !node['fast-open']) node['fast-open'] = node.tfo;
@@ -68,6 +76,16 @@ export class ShadowrocketConverter extends BaseConverter {
                 node['client-fingerprint'] = node['client-fingerprint'];
             } else if (['vmess', 'vless', 'trojan'].includes(node.type)) {
                 node['client-fingerprint'] = 'chrome';
+            }
+
+            if (node['reality-opts'] && !node['client-fingerprint']) {
+                node['client-fingerprint'] = 'chrome';
+            }
+
+            if (node['ech-opts'] && node['ech-opts']['config-list']) {
+                node['ech-opts'] = {
+                    'config-list': node['ech-opts']['config-list']
+                };
             }
 
             // Move SNI to servername for Clash YAML compatibility used by Shadowrocket
@@ -112,11 +130,28 @@ export class ShadowrocketConverter extends BaseConverter {
             delete node.resolved;
             delete node.encryption; // VLESS uses cipher: none instead
 
+            if (node['tls-fingerprint']) {
+                node.fingerprint = node['tls-fingerprint'];
+            }
+            delete node['tls-fingerprint'];
+
             // Remove fields starting with underscore (internal)
             for (const key in node) {
                 if (key.startsWith('_') || node[key] === null) {
                     delete node[key];
                 }
+            }
+
+            if (node.network === 'ws' && node['ws-opts']) {
+                const wsOpts = node['ws-opts'];
+                if (wsOpts['v2ray-http-upgrade'] !== undefined) delete wsOpts['v2ray-http-upgrade'];
+                if (wsOpts['v2ray-http-upgrade-fast-open'] !== undefined) delete wsOpts['v2ray-http-upgrade-fast-open'];
+            }
+            if (node.httpupgrade !== undefined) delete node.httpupgrade;
+
+            if (node.network === 'grpc' && node['grpc-opts']) {
+                delete node['grpc-opts']['_grpc-type'];
+                delete node['grpc-opts']['_grpc-authority'];
             }
 
             return node;

@@ -32,6 +32,9 @@ export class QuantumultXConverter extends BaseConverter {
                 case 'vless':
                     result = this.vless(proxy);
                     break;
+                case 'anytls':
+                    result = this.anytls(proxy);
+                    break;
                 case 'http':
                 case 'https':
                     result = this.http(proxy);
@@ -154,6 +157,8 @@ export class QuantumultXConverter extends BaseConverter {
 
         if (proxy.network === 'ws') {
             result.append(`,obfs=${proxy.tls ? 'wss' : 'ws'}`);
+        } else if (proxy.network === 'h2') {
+            result.append(`,obfs=${proxy.tls ? 'h2-tls' : 'h2'}`);
         } else if (proxy.network === 'http') {
             result.append(`,obfs=http`);
         } else if (proxy.tls) {
@@ -162,7 +167,7 @@ export class QuantumultXConverter extends BaseConverter {
 
         // 只在 ws/http 传输时才读对应的 opts
         const netForVlessOpts =
-            proxy.network === 'ws' || proxy.network === 'http' ? proxy.network : null;
+            proxy.network === 'ws' || proxy.network === 'http' || proxy.network === 'h2' ? proxy.network : null;
         const vlessOpts = netForVlessOpts ? ((proxy[`${netForVlessOpts}-opts`] || {}) as any) : {};
         if (vlessOpts.path)
             result.append(
@@ -174,6 +179,11 @@ export class QuantumultXConverter extends BaseConverter {
             );
 
         this.appendTLS(result, proxy);
+        if (proxy['reality-opts']) {
+            const r = proxy['reality-opts'];
+            if (r['public-key']) result.append(`,reality-base64-pubkey=${r['public-key']}`);
+            if (r['short-id']) result.append(`,reality-hex-shortid=${r['short-id']}`);
+        }
         if (proxy.flow) result.append(`,vless-flow=${proxy.flow}`);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -198,6 +208,41 @@ export class QuantumultXConverter extends BaseConverter {
         if (proxy.tls) result.append(`,over-tls=true`);
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
+        return result.toString();
+    }
+
+    private anytls(proxy: ProxyNode): string {
+        const network = proxy.network?.trim().toLowerCase();
+        if (network && network !== 'tcp') {
+            throw new Error(
+                `[QXConverter] Does not support AnyTLS with transport ${proxy.network}`,
+            );
+        }
+
+        const result = new Result(proxy);
+        result.append(`anytls=${proxy.server}:${proxy.port}`);
+        result.append(`,password=${proxy.password}`);
+
+        // AnyTLS 强制 TLS
+        result.append(`,over-tls=true`);
+        result.appendIfPresent(`,tls-host=${proxy.sni}`, 'sni');
+        result.appendIfPresent(
+            `,tls-verification=${!proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
+        result.appendIfPresent(`,tls-cert-sha256=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
+        result.appendIfPresent(`,tls-alpn=${proxy.alpn}`, 'alpn');
+        if (proxy['tls-no-session-ticket']) result.append(`,tls-no-session-ticket=true`);
+        if (proxy['tls-no-session-reuse']) result.append(`,tls-no-session-reuse=true`);
+
+        // TFO / UDP
+        if (proxy.tfo) result.append(`,fast-open=true`);
+        if (proxy.udp) result.append(`,udp-relay=true`);
+
+        // test-url
+        result.appendIfPresent(`,server_check_url=${proxy['test-url']}`, 'test-url');
+
+        result.append(`,tag=${proxy.name}`);
         return result.toString();
     }
 

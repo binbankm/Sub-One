@@ -343,6 +343,12 @@ export class SurgeConverter extends BaseConverter {
             if (proxy['tls-fingerprint']) {
                 result.append(`,server-cert-fingerprint-sha256=${proxy['tls-fingerprint']}`);
             }
+            if (proxy['reality-opts']) {
+                const r = proxy['reality-opts'];
+                result.appendIfPresent(`,reality-public-key=${r['public-key']}`, 'public-key');
+                result.appendIfPresent(`,reality-short-id=${r['short-id']}`, 'short-id');
+                result.appendIfPresent(`,reality-spider-x=${r['_spider-x']}`, '_spider-x');
+            }
         }
     }
 

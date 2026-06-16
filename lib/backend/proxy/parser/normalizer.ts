@@ -46,7 +46,7 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     // 7. TLS 默认值处理
     if (proxy.tls === undefined) {
         // 某些协议默认开启 TLS
-        if (['hysteria2', 'tuic', 'https', 'anytls'].includes(proxy.type)) {
+        if (['hysteria2', 'tuic', 'https', 'anytls', 'naive'].includes(proxy.type)) {
             proxy.tls = true;
         } else {
             proxy.tls = false;
@@ -56,6 +56,53 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     // 8. 默认名称补全
     if (!isNotEmpty(proxy.name)) {
         proxy.name = `${proxy.type.toUpperCase()} ${proxy.server}:${proxy.port}`;
+    }
+
+    if (proxy.type === 'vmess' && proxy.cipher) {
+        const validCiphers = ['auto', 'aes-128-gcm', 'chacha20-poly1305', 'none', 'zero'];
+        if (!validCiphers.includes(proxy.cipher)) {
+            proxy.cipher = 'auto';
+        }
+    }
+
+    // 10. 标准化 VLESS 加密方式
+    if (proxy.type === 'vless') {
+        if (!proxy.encryption) {
+            proxy.encryption = 'none';
+        }
+        // VLESS 标准化 flow
+        if (proxy.flow && !proxy['reality-opts'] && !proxy.tls) {
+            delete proxy.flow;
+        }
+    }
+
+    // 11. 标准化 Reality 选项
+    if (proxy['reality-opts']) {
+        const r = proxy['reality-opts'] as Record<string, any>;
+        // 统一 _spider-x 和 spider-x
+        if (r['spider-x'] && !r['_spider-x']) {
+            r['_spider-x'] = r['spider-x'];
+            delete r['spider-x'];
+        }
+        // 如果 reality-opts 为空则删除
+        if (Object.keys(r).filter(k => r[k] != null && r[k] !== '').length === 0) {
+            delete proxy['reality-opts'];
+        }
+    }
+
+    // 12. 标准化 ECH 选项
+    if (proxy['ech-opts']) {
+        const ech = proxy['ech-opts'] as Record<string, any>;
+        if (Object.keys(ech).filter(k => ech[k] != null && ech[k] !== '').length === 0) {
+            delete proxy['ech-opts'];
+        }
+    }
+
+    // 13. 标准化 xhttp 选项 (标准化 splithttp -> xhttp)
+    if ((proxy as any)['xhttp-opts']) {
+        if (!proxy.network || proxy.network === 'tcp') {
+            proxy.network = 'xhttp' as any;
+        }
     }
 
     return proxy;
