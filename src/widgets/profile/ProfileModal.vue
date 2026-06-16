@@ -219,7 +219,7 @@ const { t } = useI18n();
                                         :class="
                                             localProfile.subscriptions?.includes(sub.id)
                                                 ? 'bg-primary-50 dark:bg-primary-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-white/10/50'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/5'
                                         "
                                     >
                                         <div
@@ -323,7 +323,7 @@ const { t } = useI18n();
                                         :class="
                                             localProfile.manualNodes?.includes(node.id)
                                                 ? 'bg-primary-50 dark:bg-primary-900/20'
-                                                : 'hover:bg-gray-50 dark:hover:bg-white/10/50'
+                                                : 'hover:bg-gray-50 dark:hover:bg-white/5'
                                         "
                                     >
                                         <div

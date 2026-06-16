@@ -337,7 +337,7 @@ const handleTestLatency = async () => {
                 <!-- 流量信息 -->
                 <div
                     v-if="trafficInfo"
-                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/10/50 dark:bg-white/5"
+                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]"
                 >
                     <div class="mb-2 flex items-end justify-between">
                         <span
@@ -366,7 +366,7 @@ const handleTestLatency = async () => {
                         </div>
                     </div>
                     <div
-                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10"
+                        class="relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/20"
                     >
                         <div
                             class="absolute top-0 left-0 h-full rounded-full shadow-elevated-sm transition-all duration-700 ease-out"
@@ -382,7 +382,7 @@ const handleTestLatency = async () => {
                         >
                         <span
                             v-if="expiryInfo"
-                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-elevated-sm dark:border-white/10 dark:bg-white/10"
+                            class="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] shadow-elevated-sm dark:border-white/5 dark:bg-white/10"
                             :class="expiryInfo.style"
                             >{{ expiryInfo.daysRemaining }}</span
                         >
@@ -392,11 +392,11 @@ const handleTestLatency = async () => {
 
             <!-- 底部控制 -->
             <div
-                class="mt-4 flex items-center justify-between gap-2 border-t border-gray-300 pt-3 dark:border-white/10/50 sm:gap-3"
+                class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-300 pt-3 dark:border-white/10"
                 @click.stop
             >
-                <div class="flex min-w-0 shrink items-center gap-2 sm:gap-3">
-                    <label class="group/toggle relative inline-flex shrink-0 cursor-pointer items-center">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <label class="group/toggle relative inline-flex cursor-pointer items-center">
                         <input
                             type="checkbox"
                             :checked="sub.enabled"
@@ -404,15 +404,15 @@ const handleTestLatency = async () => {
                             @change="emit('change')"
                         />
                         <div
-                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-elevated-sm peer-checked:bg-primary-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
+                            class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-elevated-sm peer-checked:bg-primary-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:bg-white/10 dark:after:border-gray-600 dark:peer-checked:bg-primary-500 dark:peer-checked:after:border-white"
                         ></div>
                     </label>
-                    <span class="truncate text-xs font-medium text-gray-600 dark:text-gray-300">{{
+                    <span class="whitespace-nowrap text-xs font-medium text-gray-600 dark:text-gray-300">{{
                         sub.enabled ? t('widgets.subscription.card.enabled') : t('widgets.subscription.card.disabled')
                     }}</span>
                 </div>
 
-                <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+                <div class="ml-auto flex items-center gap-1 sm:gap-2">
                     <button
                         :disabled="isTestingLatency"
                         class="rounded-element p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"

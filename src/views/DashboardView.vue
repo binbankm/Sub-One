@@ -66,6 +66,20 @@ const refreshQuote = () => {
     }, 300);
 };
 
+const quoteCategoryClass = computed(() => {
+    const cat = currentQuote.value.category;
+    if (['Inspirational', '励志'].includes(cat)) {
+        return 'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300';
+    }
+    if (['Technical', '技术'].includes(cat)) {
+        return 'border-info-400/30 bg-info-400/20 text-info-700 dark:text-info-300';
+    }
+    if (['Humor', '幽默'].includes(cat)) {
+        return 'border-success-400/30 bg-success-400/20 text-success-700 dark:text-success-300';
+    }
+    return 'border-primary-400/30 bg-primary-400/20 text-primary-700 dark:text-primary-300';
+});
+
 onMounted(() => {
     currentQuoteIndex.value = getRandomQuoteIndex();
 });
@@ -112,15 +126,8 @@ onMounted(() => {
                     <!-- 分类标签和刷新按钮 -->
                     <div class="flex items-center gap-2">
                         <span
-                            :class="{
-                                'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300':
-                                    currentQuote.category === 'Inspirational',
-                                'border-info-400/30 bg-info-400/20 text-info-700 dark:text-info-300':
-                                    currentQuote.category === 'Technical',
-                                'border-success-400/30 bg-success-400/20 text-success-700 dark:text-success-300':
-                                    currentQuote.category === 'Humor'
-                            }"
                             class="rounded-element border px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-all duration-300"
+                            :class="quoteCategoryClass"
                         >
                             {{ currentQuote.category }}
                         </span>

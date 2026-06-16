@@ -162,7 +162,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                     <div
                         v-for="option in exportOptions"
                         :key="option.name"
-                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-white/10 dark:hover:bg-white/10/50"
+                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-white/10 dark:hover:bg-white/5"
                     >
                         <!-- Left: Icon & Name -->
                         <div class="flex items-center gap-4">

@@ -159,32 +159,34 @@ const { t } = useI18n();
 
         <!-- 底部操作区 -->
         <div
-            class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-white/10"
+            class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-300 pt-3 dark:border-white/10"
         >
             <!-- 启用/禁用开关 -->
-            <label class="relative inline-flex cursor-pointer items-center">
-                <input
-                    type="checkbox"
-                    :checked="profile.enabled"
-                    class="peer sr-only"
-                    @change="
-                        $emit('change', {
-                            ...profile,
-                            enabled: ($event.target as HTMLInputElement).checked
-                        })
-                    "
-                />
-                <div
-                    class="peer h-6 w-11 rounded-full bg-gray-200 from-primary-500 to-secondary-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
-                ></div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <label class="group/toggle relative inline-flex cursor-pointer items-center">
+                    <input
+                        type="checkbox"
+                        :checked="profile.enabled"
+                        class="peer sr-only"
+                        @change="
+                            $emit('change', {
+                                ...profile,
+                                enabled: ($event.target as HTMLInputElement).checked
+                            })
+                        "
+                    />
+                    <div
+                        class="peer h-6 w-11 rounded-full bg-gray-200 from-primary-500 to-secondary-600 peer-checked:bg-linear-to-r peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-5 peer-checked:after:border-white dark:bg-white/10 dark:after:border-gray-600 dark:peer-checked:bg-linear-to-r dark:peer-checked:after:border-white"
+                    ></div>
+                </label>
                 <span
-                    class="ml-3 text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
+                    class="text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
                     >{{ profile.enabled ? t('widgets.profile.card.enabled') : t('widgets.profile.card.disabled') }}</span
                 >
-            </label>
+            </div>
 
             <!-- 操作按钮组 -->
-            <div class="flex shrink-0 items-center gap-2">
+            <div class="ml-auto flex items-center gap-2">
                 <button
                     class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                     :title="t('widgets.profile.card.showNodes')"

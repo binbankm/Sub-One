@@ -389,7 +389,7 @@ onUnmounted(() => {
 
                                                 <!-- 底部信息：地址 & 复制 -->
                                                 <div
-                                                    class="flex items-center justify-between gap-2 border-t border-gray-50 pt-2 pl-8 text-xs dark:border-white/10/50"
+                                                    class="flex items-center justify-between gap-2 border-t border-gray-50 pt-2 pl-8 text-xs dark:border-white/10"
                                                 >
                                                     <div
                                                         class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"

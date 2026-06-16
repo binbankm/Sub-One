@@ -182,7 +182,7 @@ const handleCopy = async (url: string) => {
             </div>
 
             <!-- 底部信息：地址 & 复制 -->
-            <div class="mt-auto border-t border-gray-300 pt-3 dark:border-white/10/50">
+            <div class="mt-auto border-t border-gray-300 pt-3 dark:border-white/10">
                 <div class="flex items-center justify-between gap-2 text-xs">
                     <!-- 服务器地址展示 (更简洁) -->
                     <div
