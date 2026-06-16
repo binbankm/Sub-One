@@ -95,15 +95,15 @@ const generateUrl = (format: string) => {
 const handleCopy = async (option: (typeof exportOptions)[0]) => {
     const url = generateUrl(option.format);
     if (!url) {
-        showToast('⚠️ 该订阅组未配置分享 Token，无法导出', 'error');
+        showToast('该订阅组未配置分享 Token，无法导出', 'error');
         return;
     }
 
     const success = await copyToClipboard(url);
     if (success) {
-        showToast(`📋 已复制 ${option.name} 订阅链接`, 'success');
+        showToast(`已复制 ${option.name} 订阅链接`, 'success');
     } else {
-        showToast('❌ 复制失败', 'error');
+        showToast('复制失败', 'error');
     }
 };
 </script>

@@ -112,7 +112,7 @@ const loadSettings = async () => {
         }
     } catch (error) {
         console.error('加载设置出错:', error);
-        showToast('⚠️ 加载设置失败，将使用默认值', 'warning');
+        showToast('加载设置失败，将使用默认值', 'warning');
     } finally {
         isLoading.value = false;
     }
@@ -120,7 +120,7 @@ const loadSettings = async () => {
 
 const handleSave = async () => {
     if (hasWhitespace.value) {
-        showToast('⚠️ 输入项中不能包含空格，请检查后再试。', 'error');
+        showToast('输入项中不能包含空格，请检查后再试。', 'error');
         return;
     }
 
@@ -149,7 +149,7 @@ const handleSave = async () => {
         }
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
-        showToast('❌ ' + msg, 'error');
+        showToast(msg, 'error');
         isSaving.value = false; // 只有失败时才需要重置保存状态
     }
 };
@@ -165,7 +165,7 @@ const copyCronUrl = async () => {
         await navigator.clipboard.writeText(cronUrl.value);
         showToast('触发链接已复制到剪贴板', 'success');
     } catch (err) {
-        showToast('❌ 复制失败，请手动复制', 'error');
+        showToast('复制失败，请手动复制', 'error');
     }
 };
 

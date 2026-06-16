@@ -20,7 +20,7 @@ export function useProfiles(
         }
 
         if (profiles.value.some((p: Profile) => p.customId === newProfile.customId)) {
-            showToast('⚠️ 自定义ID已存在，请修改', 'error');
+            showToast('自定义ID已存在，请修改', 'error');
             return false;
         }
 
@@ -34,7 +34,7 @@ export function useProfiles(
 
         if (profile.customId !== profiles.value[idx].customId) {
             if (!profile.customId?.trim()) {
-                showToast('⚠️ 自定义ID不能为空', 'error');
+                showToast('自定义ID不能为空', 'error');
                 return false;
             }
             if (
@@ -42,7 +42,7 @@ export function useProfiles(
                     (p: Profile) => p.id !== profile.id && p.customId === profile.customId
                 )
             ) {
-                showToast('⚠️ 自定义ID已存在', 'error');
+                showToast('自定义ID已存在', 'error');
                 return false;
             }
         }

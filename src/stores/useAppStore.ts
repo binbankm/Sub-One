@@ -48,12 +48,12 @@ export const useDataStore = defineStore('data', () => {
                 hasUnsavedChanges.value = false;
                 return true;
             } else {
-                showToast(`❌ 保存失败: ${response.message}`, 'error');
+                showToast(`保存失败: ${response.message}`, 'error');
                 return false;
             }
         } catch (error) {
             console.error('Save failed:', error);
-            showToast('❌ 保存数据时发生未知错误', 'error');
+            showToast('保存数据时发生未知错误', 'error');
             return false;
         } finally {
             isLoading.value = false;

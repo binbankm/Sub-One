@@ -1,6 +1,5 @@
 /**
- * Comprehensive Test Suite — 对比 Sub-Store 所有协议、所有参数、所有客户端生成格式
- *
+ * Comprehensive Test Suite 
  * 覆盖范围:
  *   1. 所有协议 URI 解析 (SS/SSR/VMess/VLESS/Trojan/Hysteria/Hysteria2/TUIC/WireGuard/SOCKS5/HTTP/HTTPS/Snell/AnyTLS/Naive)
  *   2. 所有协议所有参数的完整验证

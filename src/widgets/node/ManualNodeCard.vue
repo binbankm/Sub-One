@@ -46,9 +46,9 @@ const protocolInfo = computed(() => getProtocolInfo(protocol.value));
 const handleCopy = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('📋 已复制节点链接', 'success');
+        toastStore.showToast('已复制节点链接', 'success');
     } else {
-        toastStore.showToast('❌ 复制失败', 'error');
+        toastStore.showToast('复制失败', 'error');
     }
 };
 </script>

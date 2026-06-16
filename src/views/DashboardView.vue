@@ -36,7 +36,7 @@ const handleUpdateAll = async () => {
             showToast('所有订阅已是最新状态', 'success');
         }
     } else {
-        showToast('❌ ' + (result.message || '更新失败'), 'error');
+        showToast(result.message || '更新失败', 'error');
     }
 };
 

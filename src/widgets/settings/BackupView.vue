@@ -62,14 +62,14 @@ async function handleCreateSnapshot() {
     try {
         const result = await createSnapshot(snapshotName.value);
         if (result.success) {
-            showToast('📸 快照创建成功', 'success');
+            showToast('快照创建成功', 'success');
             snapshotName.value = '';
             await loadSnapshots();
         } else {
-            showToast('❌ ' + (result.message || '创建快照失败'), 'error');
+            showToast(result.message || '创建快照失败', 'error');
         }
     } catch (error) {
-        showToast('❌ 创建快照失败', 'error');
+        showToast('创建快照失败', 'error');
     } finally {
         isCreatingSnapshot.value = false;
     }
@@ -91,22 +91,22 @@ function handleBatchDelete() {
 async function confirmBatchDelete() {
     const ids = batch.getSelectedIds();
 
-    showToast(`⏳ 正在删除 ${ids.length} 个快照...`, 'info');
+    showToast(`正在删除 ${ids.length} 个快照...`, 'info');
 
     try {
         // 使用后端批量删除接口，原子操作，性能更优，且避免并发冲突
         const result = await batchDeleteSnapshots(ids);
 
         if (result.success) {
-           showToast(`🗑️ 成功删除 ${result.deletedCount} 个快照`, 'success');
+           showToast(`成功删除 ${result.deletedCount} 个快照`, 'success');
            await loadSnapshots();
            batch.toggleBatchDeleteMode(); // 退出批量模式
         } else {
-           showToast('❌ ' + (result.message || '批量删除失败'), 'error');
+           showToast(result.message || '批量删除失败', 'error');
         }
     } catch (error) {
         console.error('批量删除失败:', error);
-        showToast('❌ 批量删除过程中发生错误', 'error');
+        showToast('批量删除过程中发生错误', 'error');
     } finally {
         showBatchDeleteConfirm.value = false;
     }
@@ -119,13 +119,13 @@ async function confirmDeleteSnapshot() {
     try {
         const success = await deleteSnapshot(pendingSnapshotId.value);
         if (success) {
-            showToast('🗑️ 快照已删除', 'success');
+            showToast('快照已删除', 'success');
             await loadSnapshots();
         } else {
-            showToast('❌ 删除快照失败', 'error');
+            showToast('删除快照失败', 'error');
         }
     } catch (error) {
-        showToast('❌ 删除快照失败', 'error');
+        showToast('删除快照失败', 'error');
     } finally {
         pendingSnapshotId.value = '';
     }
@@ -143,18 +143,18 @@ async function confirmRestoreFromSnapshot() {
 
     isImporting.value = true;
     try {
-            showToast('⏳ 正在恢复快照，请稍候...', 'info');
+            showToast('正在恢复快照，请稍候...', 'info');
             const result = await restoreSnapshot(pendingSnapshotId.value, restoreMode.value);
             if (result.success) {
-                showToast('🔄 快照恢复成功，页面即将刷新...', 'success');
+                showToast('快照恢复成功，页面即将刷新...', 'success');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
         } else {
-            showToast('❌ ' + (result.message || '快照恢复失败'), 'error');
+            showToast(result.message || '快照恢复失败', 'error');
         }
     } catch (error) {
-        showToast('❌ 快照恢复失败', 'error');
+        showToast('快照恢复失败', 'error');
     } finally {
         isImporting.value = false;
         pendingSnapshotId.value = '';
@@ -204,10 +204,10 @@ async function handleExport() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        showToast('📦 备份文件已导出', 'success');
+        showToast('备份文件已导出', 'success');
     } catch (error: any) {
         console.error('导出备份失败:', error);
-        showToast('❌ ' + (error.message || '导出备份失败'), 'error');
+        showToast(error.message || '导出备份失败', 'error');
     } finally {
         isExporting.value = false;
     }
@@ -228,7 +228,7 @@ async function handleFileSelect(event: Event) {
         const validation = await validateBackupFile(backupData);
 
         if (!validation.valid) {
-            showToast('❌ ' + (validation.error || '备份文件格式错误'), 'error');
+            showToast(validation.error || '备份文件格式错误', 'error');
             selectedBackup.value = null;
             return;
         }
@@ -237,7 +237,7 @@ async function handleFileSelect(event: Event) {
         showToast('备份文件验证成功', 'success');
     } catch (error: any) {
         console.error('读取备份文件失败:', error);
-        showToast('❌ 备份文件格式错误或损坏', 'error');
+        showToast('备份文件格式错误或损坏', 'error');
         selectedBackup.value = null;
     } finally {
         // 清空文件输入
@@ -253,7 +253,7 @@ async function handleDrop(event: DragEvent) {
 
     // 检查文件类型
     if (!file.name.endsWith('.json') && file.type !== 'application/json') {
-        showToast('⚠️ 仅支持 JSON 格式的备份文件', 'error');
+        showToast('仅支持 JSON 格式的备份文件', 'error');
         return;
     }
 
@@ -266,7 +266,7 @@ async function handleDrop(event: DragEvent) {
         const validation = await validateBackupFile(backupData);
 
         if (!validation.valid) {
-            showToast('❌ ' + (validation.error || '备份文件格式错误'), 'error');
+            showToast(validation.error || '备份文件格式错误', 'error');
             selectedBackup.value = null;
             return;
         }
@@ -275,7 +275,7 @@ async function handleDrop(event: DragEvent) {
         showToast('备份文件验证成功', 'success');
     } catch (error: any) {
         console.error('读取备份文件失败:', error);
-        showToast('❌ 备份文件格式错误或损坏', 'error');
+        showToast('备份文件格式错误或损坏', 'error');
         selectedBackup.value = null;
     }
 }
@@ -283,7 +283,7 @@ async function handleDrop(event: DragEvent) {
 // 导入备份 (打开确认框)
 async function handleImport() {
     if (!selectedBackup.value) {
-        showToast('⚠️ 请先选择备份文件', 'error');
+        showToast('请先选择备份文件', 'error');
         return;
     }
     showImportConfirm.value = true;
@@ -301,7 +301,7 @@ async function confirmImport() {
             throw new Error(result.message || '导入失败');
         }
 
-        showToast('🚀 数据恢复成功，页面即将刷新...', 'success');
+        showToast('数据恢复成功，页面即将刷新...', 'success');
 
         // 延迟刷新页面
         setTimeout(() => {
@@ -309,7 +309,7 @@ async function confirmImport() {
         }, 1500);
     } catch (error: any) {
         console.error('导入备份失败:', error);
-        showToast('❌ ' + (error.message || '导入备份失败'), 'error');
+        showToast(error.message || '导入备份失败', 'error');
         isImporting.value = false;
     }
 }

@@ -29,7 +29,7 @@ export function useProfileManagement() {
 
     const handleAddProfile = () => {
         if (!config.value.profileToken?.trim()) {
-            toastStore.showToast('⚠️ 请先在"设置"中配置"订阅组分享Token"', 'error');
+            toastStore.showToast('请先在"设置"中配置"订阅组分享Token"', 'error');
             return;
         }
         isNewProfile.value = true;
@@ -56,7 +56,7 @@ export function useProfileManagement() {
 
     const handleSaveProfile = async (profileData: Profile, onSuccess?: () => void) => {
         if (!profileData?.name) {
-            toastStore.showToast('⚠️ 订阅组名称不能为空', 'error');
+            toastStore.showToast('订阅组名称不能为空', 'error');
             return;
         }
 

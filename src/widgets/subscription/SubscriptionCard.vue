@@ -35,9 +35,9 @@ const copyUrl = async () => {
     if (!props.sub.url) return;
     const success = await copyToClipboard(props.sub.url);
     if (success) {
-        toastStore.showToast('📋 链接已复制到剪贴板', 'success');
+        toastStore.showToast('链接已复制到剪贴板', 'success');
     } else {
-        toastStore.showToast('❌ 复制失败', 'error');
+        toastStore.showToast('复制失败', 'error');
     }
 };
 

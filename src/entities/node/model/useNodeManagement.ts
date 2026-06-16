@@ -55,7 +55,7 @@ export function useNodeManagement() {
     const handleSaveNode = async (updatedNode: Node | undefined, onSuccess: () => void) => {
         const nodeToSave = updatedNode || editingNode.value;
         if (!nodeToSave?.url) {
-            toastStore.showToast('⚠️ 节点链接不能为空', 'error');
+            toastStore.showToast('节点链接不能为空', 'error');
             return;
         }
 

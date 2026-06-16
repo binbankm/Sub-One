@@ -74,7 +74,7 @@ export function useNodeFetching(props: {
             console.error('获取节点信息失败:', error);
             const msg = error instanceof Error ? error.message : String(error);
             errorMessage.value = `获取节点信息失败: ${msg}`;
-            toastStore.showToast('❌ 获取节点信息失败', 'error');
+            toastStore.showToast('获取节点信息失败', 'error');
         } finally {
             isLoading.value = false;
         }
@@ -170,7 +170,7 @@ export function useNodeFetching(props: {
             console.error('获取订阅组节点信息失败:', error);
             const msg = error instanceof Error ? error.message : String(error);
             errorMessage.value = `获取节点信息失败: ${msg}`;
-            toastStore.showToast('❌ 获取节点信息失败', 'error');
+            toastStore.showToast('获取节点信息失败', 'error');
         } finally {
             isLoading.value = false;
         }
@@ -188,7 +188,7 @@ export function useNodeFetching(props: {
 
     const refreshNodes = async () => {
         await loadData();
-        toastStore.showToast('🔄 节点信息已刷新', 'success');
+        toastStore.showToast('节点信息已刷新', 'success');
     };
 
     const extractHost = (url?: string) => {

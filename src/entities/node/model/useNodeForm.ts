@@ -83,7 +83,7 @@ export function useNodeForm(
         if (!localNode.value) return;
 
         if (!validateUrl()) {
-            toastStore.showToast('⚠️ 请修正错误后再保存', 'error');
+            toastStore.showToast('请修正错误后再保存', 'error');
             return;
         }
 

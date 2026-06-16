@@ -32,24 +32,24 @@ export function useNodeSelection(filteredNodes: Ref<DisplayNode[]>) {
             .map((node: DisplayNode) => node.url);
 
         if (selectedNodeUrls.length === 0) {
-            toastStore.showToast('⚠️ 请先选择要复制的节点', 'warning');
+            toastStore.showToast('请先选择要复制的节点', 'warning');
             return;
         }
 
         const success = await copyToClipboard(selectedNodeUrls.join('\n'));
         if (success) {
-            toastStore.showToast(`📋 已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
+            toastStore.showToast(`已复制 ${selectedNodeUrls.length} 个节点到剪贴板`, 'success');
         } else {
-            toastStore.showToast('❌ 复制失败', 'error');
+            toastStore.showToast('复制失败', 'error');
         }
     };
 
     const handleCopySingle = async (url: string) => {
         const success = await copyToClipboard(url);
         if (success) {
-            toastStore.showToast('📋 已复制节点链接', 'success');
+            toastStore.showToast('已复制节点链接', 'success');
         } else {
-            toastStore.showToast('❌ 复制失败', 'error');
+            toastStore.showToast('复制失败', 'error');
         }
     };
 

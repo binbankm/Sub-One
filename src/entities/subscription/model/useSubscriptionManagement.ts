@@ -41,11 +41,11 @@ export function useSubscriptionManagement() {
 
     const handleSaveSubscription = async (updatedSub: Subscription, onSuccess: () => void) => {
         if (!updatedSub.url) {
-            toastStore.showToast('⚠️ 订阅链接不能为空', 'error');
+            toastStore.showToast('订阅链接不能为空', 'error');
             return;
         }
         if (!HTTP_REGEX.test(updatedSub.url)) {
-            toastStore.showToast('⚠️ 请输入有效的 http:// 或 https:// 订阅链接', 'error');
+            toastStore.showToast('请输入有效的 http:// 或 https:// 订阅链接', 'error');
             return;
         }
 
@@ -93,7 +93,7 @@ export function useSubscriptionManagement() {
                 `\`${nodeCount}\` 个节点`;
             await sendNotification(message);
         } else {
-            toastStore.showToast(`❌ 更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
+            toastStore.showToast(`更新失败: ${sub.errorMsg || '未知错误'}`, 'error');
         }
     };
 
@@ -115,10 +115,10 @@ export function useSubscriptionManagement() {
                     `📊 所有订阅节点信息已同步完成`;
                 await sendNotification(message);
             } else {
-                toastStore.showToast(`❌ 更新失败: ${result.message}`, 'error');
+                toastStore.showToast(`更新失败: ${result.message}`, 'error');
             }
         } catch (e) {
-            toastStore.showToast('❌ 批量更新失败', 'error');
+            toastStore.showToast('批量更新失败', 'error');
         } finally {
             isUpdatingAllSubs.value = false;
         }

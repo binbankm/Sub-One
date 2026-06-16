@@ -48,7 +48,7 @@ export function useSubscriptionImport(
             if (typeof result === 'string') {
                 textContent.value = result;
                 errorMessage.value = '';
-                toastStore.showToast(`📄 已读取文件: ${file.name}`, 'success');
+                toastStore.showToast(`已读取文件: ${file.name}`, 'success');
             }
         };
         reader.onerror = () => {
@@ -151,7 +151,7 @@ export function useSubscriptionImport(
                     if (props.onImportSuccess) {
                         await props.onImportSuccess();
                     }
-                    toastStore.showToast(`🚀 导入成功！共添加 ${nodes.length} 个节点`, 'success');
+                    toastStore.showToast(`导入成功！共添加 ${nodes.length} 个节点`, 'success');
                     emit('update:show', false);
                 } else if (subs.length > 0) {
                     errorMessage.value = `检测到 ${subs.length} 个订阅链接，请使用 URL 导入模式或在订阅管理中添加。`;
