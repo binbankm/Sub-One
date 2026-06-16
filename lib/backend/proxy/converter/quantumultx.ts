@@ -235,7 +235,6 @@ export class QuantumultXConverter extends BaseConverter {
         // test-url
         result.appendIfPresent(`,server_check_url=${proxy['test-url']}`, 'test-url');
 
-        result.append(`,tag=${proxy.name}`);
         return result.toString();
     }
 
