@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import type { Profile, Subscription } from '@/common/types/index';
 
 const props = withDefaults(
@@ -48,6 +48,8 @@ const totalNodeCount = computed(() => {
 
     return manualNodeCount + subscriptionNodeCount;
 });
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -102,8 +104,7 @@ const totalNodeCount = computed(() => {
                     </p>
                 </div>
                 <p class="text-sm leading-relaxed wrap-break-word text-gray-700 dark:text-gray-300">
-                    包含 {{ profile.subscriptions?.length ?? 0 }} 个订阅，{{ totalNodeCount }}
-                    个节点
+                    {{ t('widgets.profile.card.contains', { subCount: profile.subscriptions?.length ?? 0, nodeCount: totalNodeCount }) }}
                 </p>
             </div>
 
@@ -113,7 +114,7 @@ const totalNodeCount = computed(() => {
             >
                 <button
                     class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
-                    title="编辑"
+                    :title="t('widgets.profile.card.edit')"
                     @click.stop="emit('edit')"
                 >
                     <svg
@@ -133,7 +134,7 @@ const totalNodeCount = computed(() => {
                 </button>
                 <button
                     class="rounded-element p-1.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
-                    title="删除"
+                    :title="t('widgets.profile.card.delete')"
                     @click.stop="emit('delete')"
                 >
                     <svg
@@ -178,7 +179,7 @@ const totalNodeCount = computed(() => {
                 ></div>
                 <span
                     class="ml-3 text-xs font-medium whitespace-nowrap text-gray-600 dark:text-gray-300"
-                    >{{ profile.enabled ? '已启用' : '已禁用' }}</span
+                    >{{ profile.enabled ? t('widgets.profile.card.enabled') : t('widgets.profile.card.disabled') }}</span
                 >
             </label>
 
@@ -186,7 +187,7 @@ const totalNodeCount = computed(() => {
             <div class="flex shrink-0 items-center gap-2">
                 <button
                     class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                    title="显示节点信息"
+                    :title="t('widgets.profile.card.showNodes')"
                     @click.stop="emit('showNodes')"
                 >
                     <svg
@@ -208,7 +209,7 @@ const totalNodeCount = computed(() => {
                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                     </svg>
-                    <span>节点</span>
+                    <span>{{ t('widgets.profile.card.nodesBtn') }}</span>
                 </button>
                 <button
                     class="flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-gray-600 transition-all duration-200 hover:border-secondary-200 hover:bg-secondary-50 hover:text-secondary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-secondary-800 dark:hover:bg-secondary-900/30 dark:hover:text-secondary-400"
@@ -228,7 +229,7 @@ const totalNodeCount = computed(() => {
                             d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                         />
                     </svg>
-                    <span>链接</span>
+                    <span>{{ t('widgets.profile.card.linkBtn') }}</span>
                 </button>
             </div>
         </div>

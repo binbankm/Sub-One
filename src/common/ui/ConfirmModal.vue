@@ -12,7 +12,7 @@
     :show="showConfirm"
     @update:show="showConfirm = $event"
     @confirm="handleDelete"
-    title="确认删除"
+    :title="t('common.ui.confirmDelete')"
     message="您确定要删除此项目吗？"
     type="danger"
   />
@@ -22,8 +22,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import Modal from '@/common/ui/BaseModal.vue';
+
+const { t } = useI18n();
 
 // ==================== Props 和 Emit ====================
 
@@ -31,9 +34,9 @@ const props = withDefaults(
     defineProps<{
         /** 显示状态 */
         show: boolean;
-        /** 标题 */
+        /** 模态框标题 */
         title?: string;
-        /** 提示消息 */
+        /** 模态框正文信息 */
         message?: string;
         /** 确认按钮文字 */
         confirmText?: string;
@@ -45,10 +48,10 @@ const props = withDefaults(
         showIcon?: boolean;
     }>(),
     {
-        title: '确认操作',
-        message: '您确定要执行此操作吗？',
-        confirmText: '确认',
-        cancelText: '取消',
+        title: undefined,
+        message: undefined,
+        confirmText: undefined,
+        cancelText: undefined,
         type: 'danger',
         showIcon: true
     }
@@ -81,6 +84,9 @@ const colorClasses = {
     }
 };
 
+const iconBgClass = computed(() => colorClasses[props.type].iconBg);
+const iconColorClass = computed(() => colorClasses[props.type].icon);
+
 /** 根据类型返回对应的图标 */
 const iconPaths = {
     danger: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
@@ -97,7 +103,7 @@ type MessageSegment = {
 const stripHtmlTags = (value: string) => value.replace(/<\/?[^>]+(>|$)/g, '');
 
 const messageSegments = computed<MessageSegment[]>(() => {
-    const message = props.message ?? '';
+    const message = props.message ?? t('common.ui.confirm.message');
     const segments: MessageSegment[] = [];
     const strongRegex = /<strong\b[^>]*>(.*?)<\/strong>/gi;
 
@@ -142,37 +148,33 @@ const handleCancel = () => {
 <template>
     <Modal
         :show="props.show"
-        :confirm-text="props.confirmText"
+        :confirm-text="props.confirmText || t('common.ui.confirm.confirm')"
+        :cancel-text="props.cancelText || t('common.ui.confirm.cancel')"
         @update:show="handleCancel"
         @confirm="handleConfirm"
     >
         <template #title>
             <div class="flex items-center gap-3">
-                <!-- 图标 -->
-                <div
-                    v-if="props.showIcon"
-                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-                    :class="colorClasses[props.type].iconBg"
-                >
-                    <svg
-                        class="h-6 w-6"
-                        :class="colorClasses[props.type].icon"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            :d="iconPaths[props.type]"
-                        />
-                    </svg>
+                <div :class="['flex h-10 w-10 shrink-0 items-center justify-center rounded-full', iconBgClass]">
+                    <slot name="icon">
+                        <svg
+                            class="h-6 w-6"
+                            :class="iconColorClass"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :d="iconPaths[props.type]"
+                            />
+                        </svg>
+                    </slot>
                 </div>
-
-                <!-- 标题 -->
-                <h3 class="text-xl font-bold" :class="colorClasses[props.type].title">
-                    {{ props.title }}
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ title || t('common.ui.confirmDelete') }}
                 </h3>
             </div>
         </template>

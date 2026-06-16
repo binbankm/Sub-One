@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 /**
  * 格式化字节数
  * @param bytes 字节数
@@ -32,7 +33,7 @@ export const formatExpiry = (expireTimestamp?: number) => {
 
     return {
         date: expiryDate.toLocaleDateString(),
-        daysRemaining: diffDays < 0 ? '已过期' : diffDays === 0 ? '今天到期' : `${diffDays} 天后`,
+        daysRemaining: diffDays < 0 ? i18n.global.t('widgets.subscription.filterEditor.keywords.expired') : diffDays === 0 ? i18n.global.t('widgets.subscription.filterEditor.keywords.expired') : `${diffDays} ${i18n.global.t('widgets.subscription.filterEditor.keywords.remainingTraffic')}`,
         style: style
     };
 };

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 
 import { useToastStore } from '@/stores/useNotificationStore';
-
+import { useI18n } from 'vue-i18n';
 import ConfirmModal from '@/common/ui/ConfirmModal.vue';
 
 interface BackendInfo {
@@ -19,6 +19,8 @@ const error = ref<string>('');
 const showConfirm = ref(false);
 const targetBackend = ref<'kv' | 'd1' | null>(null);
 
+const { t } = useI18n();
+
 async function loadBackendInfo() {
     loading.value = true;
     error.value = '';
@@ -33,7 +35,7 @@ async function loadBackendInfo() {
         backendInfo.value = (await response.json()) as BackendInfo;
     } catch (err: any) {
         console.error('Failed to load backend info:', err);
-        error.value = err.message || '加载存储后端信息失败';
+        error.value = err.message || t('widgets.settings.storage.loadFail');
         showToast(error.value, 'error');
     } finally {
         loading.value = false;
@@ -59,7 +61,7 @@ async function confirmSwitch() {
     // 关闭确认框
     showConfirm.value = false;
 
-    showToast('正在迁移数据并切换存储后端...', 'info', 5000);
+    showToast(t('widgets.settings.storage.migrating'), 'info', 5000);
 
     try {
         // 第一步：执行数据迁移
@@ -83,7 +85,7 @@ async function confirmSwitch() {
         };
 
         if (!migrateResponse.ok || !migrateData.success) {
-            throw new Error(migrateData.message || migrateData.error || '数据迁移失败');
+            throw new Error(migrateData.message || migrateData.error || t('widgets.settings.storage.migrateFail'));
         }
 
         // 第二步：切换存储后端
@@ -103,25 +105,25 @@ async function confirmSwitch() {
         };
 
         if (!switchResponse.ok) {
-            throw new Error(switchData.message || switchData.error || '切换失败');
+            throw new Error(switchData.message || switchData.error || t('widgets.settings.storage.switchFail'));
         }
 
         if (switchData.success) {
             const migratedKeys = migrateData.details?.migrated || [];
             const count = migratedKeys.length;
 
-            showToast(`切换成功！已自动迁移 ${count} 项数据`, 'success');
+            showToast(t('widgets.settings.storage.switchSuccess', { count }), 'success');
 
             // 延迟刷新页面以展示成功提示
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
         } else {
-            throw new Error(switchData.message || '切换失败');
+            throw new Error(switchData.message || t('widgets.settings.storage.switchFail'));
         }
     } catch (err: any) {
         console.error('Failed to migrate and switch backend:', err);
-        error.value = err.message || '迁移或切换存储后端失败';
+        error.value = err.message || t('widgets.settings.backendFail');
         showToast(`操作失败：${error.value}`, 'error', 5000);
     } finally {
         switching.value = false;
@@ -142,14 +144,14 @@ onMounted(() => {
         <div class="mb-6 flex items-center justify-between">
             <div>
                 <h3 class="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-white">
-                    存储后端设置
+                    {{ t('widgets.settings.storage.title') }}
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">管理应用数据的存储位置</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('widgets.settings.storage.desc') }}</p>
             </div>
             <button
                 class="rounded-element p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-white/10"
                 :disabled="loading"
-                title="刷新状态"
+                :title="t('widgets.settings.storage.refresh')"
                 @click="loadBackendInfo"
             >
                 <svg
@@ -237,7 +239,7 @@ onMounted(() => {
                             <p
                                 class="mb-0.5 text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
                             >
-                                当前正在使用
+                                {{ t('widgets.settings.storage.currentlyUsing') }}
                             </p>
                             <p class="text-sm font-bold text-gray-900 dark:text-white">
                                 {{
@@ -253,7 +255,7 @@ onMounted(() => {
                         class="flex items-center gap-2 rounded-full border border-primary-100 bg-white px-3 py-1 text-xs font-semibold text-primary-600 shadow-elevated-sm dark:border-primary-900/30 dark:text-primary-400"
                     >
                         <div class="h-2 w-2 animate-pulse rounded-full bg-success-500"></div>
-                        运行中
+                        {{ t('widgets.settings.storage.running') }}
                     </div>
                 </div>
             </div>
@@ -261,7 +263,7 @@ onMounted(() => {
             <!-- 切换选项 -->
             <div v-if="backendInfo.canSwitch" class="space-y-3">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >切换存储后端</label
+                    >{{ t('widgets.settings.storage.switchTitle') }}</label
                 >
                 <div class="grid grid-cols-2 gap-4">
                     <button
@@ -334,7 +336,7 @@ onMounted(() => {
                             <span
                                 v-if="backend === backendInfo.current"
                                 class="ml-1 text-xs font-normal opacity-70"
-                                >(当前)</span
+                                >{{ t('widgets.settings.storage.current') }}</span
                             >
                         </span>
                         <span
@@ -347,8 +349,8 @@ onMounted(() => {
                         >
                             {{
                                 backend === 'kv'
-                                    ? '读取速度极快，适合数据量较小的场景。'
-                                    : '功能强大，适合大量订阅和复杂查询。'
+                                    ? t('widgets.settings.storage.kvDesc')
+                                    : t('widgets.settings.storage.d1Desc')
                             }}
                         </span>
                     </button>
@@ -377,18 +379,9 @@ onMounted(() => {
                     </svg>
                     <div>
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            无法切换存储后端
+                            {{ t('widgets.settings.storage.cannotSwitch') }}
                         </p>
-                        <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                            仅检测到一个可用的存储后端。如需使用 D1 存储，请在 Cloudflare
-                            控制台创建名为
-                            <strong class="text-primary-600 dark:text-primary-400">sub-one-d1</strong>
-                            的 D1 数据库并绑定到项目变量
-                            <code
-                                class="rounded bg-gray-100 px-1 py-0.5 font-mono text-xs text-gray-800 dark:text-gray-200"
-                                >SUB_ONE_D1</code
-                            >。
-                        </p>
+                        <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400" v-html="t('widgets.settings.storage.cannotSwitchHint')"></p>
                     </div>
                 </div>
             </div>
@@ -399,33 +392,23 @@ onMounted(() => {
             <div
                 class="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
             ></div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">正在检查存储后端配置...</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('widgets.settings.storage.checking') }}</p>
         </div>
     </div>
 
     <!-- 确认切换对话框 -->
     <ConfirmModal
         :show="showConfirm"
-        title="切换存储后端"
+        :title="t('widgets.settings.storage.confirmTitle')"
         type="warning"
-        confirm-text="确认切换"
-        cancel-text="再想想"
+        :confirm-text="t('widgets.settings.storage.confirmBtn')"
+        :cancel-text="t('widgets.settings.storage.cancelBtn')"
         @update:show="showConfirm = $event"
         @confirm="confirmSwitch"
     >
         <template #body>
             <div class="space-y-4">
-                <p class="text-gray-700 dark:text-gray-300">
-                    您即将从
-                    <strong class="text-gray-900 dark:text-white">{{
-                        backendInfo?.current.toUpperCase()
-                    }}</strong>
-                    切换到
-                    <strong class="text-primary-600 dark:text-primary-400">{{
-                        targetBackend?.toUpperCase()
-                    }}</strong
-                    >。
-                </p>
+                <p class="text-gray-700 dark:text-gray-300" v-html="t('widgets.settings.storage.switchConfirmText', { current: backendInfo?.current.toUpperCase(), target: targetBackend?.toUpperCase() })"></p>
 
                 <div
                     class="rounded-element border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
@@ -445,15 +428,13 @@ onMounted(() => {
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        自动数据迁移
+                        {{ t('widgets.settings.storage.autoMigrate') }}
                     </h4>
-                    <p class="text-xs leading-relaxed text-yellow-700 dark:text-yellow-300">
-                        系统将自动把您的<strong>订阅源、订阅组、系统设置和用户账号</strong>全量迁移到新存储后端。原有数据将保留，但切换后的新数据将写入到新后端。
-                    </p>
+                    <p class="text-xs leading-relaxed text-yellow-700 dark:text-yellow-300" v-html="t('widgets.settings.storage.autoMigrateHint')"></p>
                 </div>
 
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    切换成功后，页面将自动刷新以应用更改。
+                    {{ t('widgets.settings.storage.refreshHint') }}
                 </p>
             </div>
         </template>

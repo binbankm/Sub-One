@@ -1,19 +1,19 @@
 export const APP_TABS = {
     dashboard: {
-        title: '仪表盘',
-        description: '概览您的订阅和节点状态'
+        title: 'views.tabs.dashboard.title',
+        description: 'views.tabs.dashboard.desc'
     },
     subscriptions: {
-        title: '订阅管理',
-        description: '管理您的所有机场订阅链接'
+        title: 'views.tabs.subscriptions.title',
+        description: 'views.tabs.subscriptions.desc'
     },
     profiles: {
-        title: '订阅组',
-        description: '创建和管理订阅组合'
+        title: 'views.tabs.profiles.title',
+        description: 'views.tabs.profiles.desc'
     },
     nodes: {
-        title: '手动节点',
-        description: '添加和管理单个节点链接'
+        title: 'views.tabs.nodes.title',
+        description: 'views.tabs.nodes.desc'
     }
 } as const;
 

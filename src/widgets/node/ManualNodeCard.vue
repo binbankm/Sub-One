@@ -13,6 +13,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import type { Node } from '@/common/types/index';
 import { getProtocol, getProtocolInfo } from '@/common/utils/protocols';
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 }>();
 
 const toastStore = useToastStore();
+const { t } = useI18n();
 
 const protocol = computed(() => {
     const node = props.node as any;
@@ -46,9 +48,9 @@ const protocolInfo = computed(() => getProtocolInfo(protocol.value));
 const handleCopy = async (url: string) => {
     const success = await copyToClipboard(url);
     if (success) {
-        toastStore.showToast('已复制节点链接', 'success');
+        toastStore.showToast(t('widgets.node.manualCard.copySuccess'), 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast(t('widgets.node.manualCard.copyFail'), 'error');
     }
 };
 </script>
@@ -130,7 +132,7 @@ const handleCopy = async (url: string) => {
                 >
                     <button
                         class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/40 dark:hover:text-primary-400"
-                        title="编辑"
+                        :title="t('widgets.node.manualCard.edit')"
                         @click="emit('edit')"
                     >
                         <svg
@@ -149,7 +151,7 @@ const handleCopy = async (url: string) => {
                     </button>
                     <button
                         class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/40 dark:hover:text-rose-400"
-                        title="删除"
+                        :title="t('widgets.node.manualCard.delete')"
                         @click="emit('delete')"
                     >
                         <svg
@@ -173,9 +175,9 @@ const handleCopy = async (url: string) => {
             <div class="mb-4">
                 <h4
                     class="line-clamp-2 text-base leading-snug font-bold wrap-break-word text-gray-800 transition-all duration-300 hover:line-clamp-none dark:text-gray-100"
-                    :title="node.name || '未命名节点'"
+                    :title="node.name || t('widgets.node.manualCard.unnamed')"
                 >
-                    {{ node.name || '未命名节点' }}
+                    {{ node.name || t('widgets.node.manualCard.unnamed') }}
                 </h4>
             </div>
 
@@ -185,7 +187,7 @@ const handleCopy = async (url: string) => {
                     <!-- 服务器地址展示 (更简洁) -->
                     <div
                         class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"
-                        title="服务器地址"
+                        :title="t('widgets.node.manualCard.serverAddr')"
                     >
                         <svg
                             class="h-3.5 w-3.5 shrink-0"
@@ -209,10 +211,10 @@ const handleCopy = async (url: string) => {
                     <button
                         v-if="node.url"
                         class="flex items-center gap-1 rounded-element bg-gray-50 px-2 py-1 font-medium text-gray-500 transition-all hover:bg-primary-50 hover:text-primary-600 dark:bg-white/5 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                        title="复制完整链接"
+                        :title="t('widgets.node.manualCard.copyLink')"
                         @click.stop="handleCopy(node.url)"
                     >
-                        <span class="hidden sm:inline">复制</span>
+                        <span class="hidden sm:inline">{{ t('widgets.node.manualCard.copyBtn') }}</span>
                         <svg
                             class="h-3.5 w-3.5"
                             fill="none"

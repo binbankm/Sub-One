@@ -2,6 +2,7 @@
 import type { AppConfig, Profile } from '@/common/types/index';
 import { copyToClipboard } from '@/common/utils/utils';
 
+import { useI18n } from 'vue-i18n';
 import { useToastStore } from '@/stores/useNotificationStore';
 
 const props = defineProps<{
@@ -20,10 +21,12 @@ const close = () => {
     emit('update:show', false);
 };
 
+const { t } = useI18n();
+
 // 格式定义列表
 const exportOptions = [
     {
-        name: '通用订阅',
+        name: t('widgets.profile.exportModal.generalSub'),
         format: 'base64',
         icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'
     },
@@ -91,15 +94,15 @@ const generateUrl = (format: string) => {
 const handleCopy = async (option: (typeof exportOptions)[0]) => {
     const url = generateUrl(option.format);
     if (!url) {
-        showToast('该订阅组未配置分享 Token，无法导出', 'error');
+        showToast(t('widgets.profile.exportModal.noTokenError'), 'error');
         return;
     }
 
     const success = await copyToClipboard(url);
     if (success) {
-        showToast(`已复制 ${option.name} 订阅链接`, 'success');
+        showToast(t('widgets.profile.exportModal.copySuccess', { name: option.name }), 'success');
     } else {
-        showToast('复制失败', 'error');
+        showToast(t('widgets.profile.exportModal.copyFail'), 'error');
     }
 };
 </script>
@@ -126,7 +129,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                     class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-white/10 dark:bg-white/5"
                 >
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">导出订阅</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('widgets.profile.exportModal.title') }}</h3>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {{ profile.name }}
                         </p>
@@ -152,10 +155,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         <div
                             class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
                         >
-                            <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400">
-                                请确保已在设置中配置了
-                                <strong>订阅组分享 Token</strong>，否则链接无法访问。
-                            </p>
+                            <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400" v-html="t('widgets.profile.exportModal.tokenHint')"></p>
                         </div>
                     </div>
 
@@ -196,7 +196,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                             <!-- Copy Button -->
                             <button
                                 class="rounded-element p-2.5 text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 active:scale-95 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                                title="复制链接"
+                                :title="t('widgets.profile.exportModal.copyLink')"
                                 @click="handleCopy(option)"
                             >
                                 <svg
@@ -225,7 +225,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                         @click="emit('update:show', false)"
                     >
-                        取消
+                        {{ t('widgets.profile.exportModal.cancel') }}
                     </button>
                 </div>
             </div>

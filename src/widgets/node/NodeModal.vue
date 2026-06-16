@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { useNodeForm } from '@/entities/node/model/useNodeForm';
+import { useI18n } from 'vue-i18n';
 import type { Node } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
 
@@ -38,6 +39,8 @@ const {
     handleSave,
     handleCancel
 } = useNodeForm(props, emit);
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -62,19 +65,19 @@ const {
                         for="node-name"
                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                        节点名称
-                        <span class="ml-1 text-xs text-gray-400">(可选)</span>
+                        {{ t('widgets.node.modal.nameLabel') }}
+                        <span class="ml-1 text-xs text-gray-400">{{ t('widgets.node.modal.optional') }}</span>
                     </label>
                     <input
                         id="node-name"
                         v-model="localNode.name"
                         type="text"
-                        placeholder="留空时自动从链接提取"
+                        :placeholder="t('widgets.node.modal.namePlaceholder')"
                         class="input-modern w-full"
                         @input="handleNameInput"
                     />
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        如留空，系统将自动从节点链接中提取名称
+                        {{ t('widgets.node.modal.nameHint') }}
                     </p>
                 </div>
 
@@ -84,14 +87,14 @@ const {
                         for="node-url"
                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                        节点链接
+                        {{ t('widgets.node.modal.urlLabel') }}
                         <span class="text-danger-500">*</span>
                     </label>
                     <textarea
                         id="node-url"
                         v-model="localNode.url"
                         rows="4"
-                        placeholder="vmess://... 或 ss://... 等节点分享链接"
+                        :placeholder="t('widgets.node.modal.urlPlaceholder')"
                         class="input-modern w-full resize-none font-mono text-sm"
                         :class="{ 'border-danger-500 dark:border-danger-500': urlError }"
                         @input="handleUrlInput"
@@ -101,8 +104,7 @@ const {
                         {{ urlError }}
                     </p>
                     <p v-else class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        支持 VMess、VLESS、Trojan、SS/SSR、Hysteria、TUIC、Socks5、WireGuard、Snell
-                        等协议
+                        {{ t('widgets.node.modal.urlHint') }}
                     </p>
                 </div>
 
@@ -124,10 +126,10 @@ const {
                         </svg>
                         <div class="flex-1">
                             <p class="mb-1 text-sm font-medium text-info-900 dark:text-info-100">
-                                粘贴节点分享链接
+                                {{ t('widgets.node.modal.pasteTitle') }}
                             </p>
                             <p class="text-xs text-info-700 dark:text-info-300">
-                                从其他应用或网站复制节点分享链接，粘贴到上方输入框即可
+                                {{ t('widgets.node.modal.pasteDesc') }}
                             </p>
                         </div>
                     </div>

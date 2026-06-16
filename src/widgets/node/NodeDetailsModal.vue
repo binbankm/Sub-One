@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { useNodeFetching } from '@/entities/node/model/useNodeFetching';
 import { useNodeSelection } from '@/entities/node/model/useNodeSelection';
@@ -39,6 +40,7 @@ const emit = defineEmits<{
 }>();
 
 const searchTerm = ref('');
+const { t } = useI18n();
 
 // 抽取的核心逻辑 Hooks
 const { nodes, isLoading, errorMessage, loadData, refreshNodes, extractHost } =
@@ -103,7 +105,7 @@ onUnmounted(() => {
                     >
                         <!-- 标题 -->
                         <div class="shrink-0 p-6 pb-4">
-                            <h3 class="gradient-text text-xl font-bold">节点详情</h3>
+                            <h3 class="gradient-text text-xl font-bold">{{ t('widgets.node.detailsModal.title') }}</h3>
                         </div>
 
                         <!-- 内容 -->
@@ -123,8 +125,8 @@ onUnmounted(() => {
                                             >
                                                 {{
                                                     subscription
-                                                        ? subscription.name || '未命名订阅'
-                                                        : profile?.name || '未命名订阅组'
+                                                        ? subscription.name || t('widgets.node.detailsModal.unnamedSub')
+                                                        : profile?.name || t('widgets.node.detailsModal.unnamedProfile')
                                                 }}
                                             </h3>
                                             <p
@@ -134,24 +136,19 @@ onUnmounted(() => {
                                                     subscription.url
                                                 }}</span>
                                                 <span v-else-if="profile"
-                                                    >包含
-                                                    {{ profile.subscriptions?.length ?? 0 }}
-                                                    个订阅，{{
-                                                        profile.manualNodes?.length ?? 0
-                                                    }}
-                                                    个手动节点</span
+                                                    >{{ t('widgets.node.detailsModal.contains', { subCount: profile.subscriptions?.length ?? 0, manualCount: profile.manualNodes?.length ?? 0 }) }}</span
                                                 >
                                             </p>
                                         </div>
                                         <div class="shrink-0 text-right">
                                             <p class="text-sm text-gray-600 dark:text-gray-300">
-                                                共 {{ nodes.length }} 个节点
+                                                {{ t('widgets.node.detailsModal.totalNodes', { count: nodes.length }) }}
                                             </p>
                                             <p
                                                 v-if="subscription && subscription.nodeCount"
                                                 class="text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                上次更新: {{ subscription.nodeCount }} 个
+                                                {{ t('widgets.node.detailsModal.lastUpdate', { count: subscription.nodeCount }) }}
                                             </p>
                                         </div>
                                     </div>
@@ -163,7 +160,7 @@ onUnmounted(() => {
                                         <input
                                             v-model="searchTerm"
                                             type="text"
-                                            placeholder="搜索节点名称或链接..."
+                                            :placeholder="t('widgets.node.detailsModal.searchPlaceholder')"
                                             class="search-input-unified w-full"
                                         />
                                         <svg
@@ -207,7 +204,7 @@ onUnmounted(() => {
                                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                 ></path>
                                             </svg>
-                                            <span v-else>刷新</span>
+                                            <span v-else>{{ t('widgets.node.detailsModal.refresh') }}</span>
                                         </button>
 
                                         <button
@@ -215,7 +212,7 @@ onUnmounted(() => {
                                             class="transform rounded-element bg-linear-to-r from-success-500 to-success-600 px-4 py-2 text-sm text-white shadow-elevated transition-all duration-300 hover:scale-105 hover:from-success-600 hover:to-success-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50"
                                             @click="copySelectedNodes"
                                         >
-                                            复制选中
+                                            {{ t('widgets.node.detailsModal.copySelected') }}
                                         </button>
                                     </div>
                                 </div>
@@ -236,7 +233,7 @@ onUnmounted(() => {
                                         class="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600"
                                     ></div>
                                     <span class="ml-2 text-gray-600 dark:text-gray-400"
-                                        >正在获取节点信息...</span
+                                        >{{ t('widgets.node.detailsModal.loading') }}</span
                                     >
                                 </div>
 
@@ -263,9 +260,7 @@ onUnmounted(() => {
                                             <span
                                                 class="ml-2 text-sm text-gray-700 dark:text-gray-300"
                                             >
-                                                全选 ({{ selectedNodes.size }}/{{
-                                                    filteredNodes.length
-                                                }})
+                                                {{ t('widgets.node.detailsModal.selectAll', { selected: selectedNodes.size, total: filteredNodes.length }) }}
                                             </span>
                                         </label>
                                     </div>
@@ -376,7 +371,7 @@ onUnmounted(() => {
                                                                     "
                                                                     class="inline-flex items-center gap-1 rounded-element border border-success-100 bg-success-50 px-2 py-1 text-[10px] font-medium text-success-600 dark:border-success-800/30 dark:bg-success-900/20 dark:text-success-400"
                                                                 >
-                                                                    手动
+                                                                    {{ t('widgets.node.detailsModal.manual') }}
                                                                 </span>
                                                             </template>
                                                         </div>
@@ -398,7 +393,7 @@ onUnmounted(() => {
                                                 >
                                                     <div
                                                         class="flex items-center gap-1.5 overflow-hidden text-gray-500 dark:text-gray-400"
-                                                        title="服务器地址"
+                                                        :title="t('widgets.node.detailsModal.serverAddr')"
                                                     >
                                                         <svg
                                                             class="h-3.5 w-3.5 shrink-0"
@@ -424,10 +419,10 @@ onUnmounted(() => {
 
                                                     <button
                                                         class="flex items-center gap-1 rounded-element bg-gray-50 px-2 py-1 font-medium text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 dark:bg-white/5 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                                                        title="复制链接"
+                                                        :title="t('widgets.node.detailsModal.copyLink')"
                                                         @click.stop="handleCopySingle(node.url)"
                                                     >
-                                                        <span class="hidden sm:inline">复制</span>
+                                                        <span class="hidden sm:inline">{{ t('widgets.node.detailsModal.copyBtn') }}</span>
                                                         <svg
                                                             class="h-3.5 w-3.5"
                                                             fill="none"
@@ -466,7 +461,7 @@ onUnmounted(() => {
                                         </svg>
                                     </div>
                                     <p class="text-gray-500 dark:text-gray-400">
-                                        {{ searchTerm ? '没有找到匹配的节点' : '暂无节点信息' }}
+                                        {{ searchTerm ? t('widgets.node.detailsModal.noMatch') : t('widgets.node.detailsModal.empty') }}
                                     </p>
                                 </div>
                             </div>
@@ -480,7 +475,7 @@ onUnmounted(() => {
                                 class="rounded-element bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-300 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/10"
                                 @click="emit('update:show', false)"
                             >
-                                关闭
+                                {{ t('widgets.node.detailsModal.close') }}
                             </button>
                         </div>
                     </div>

@@ -6,6 +6,7 @@ import { Base64 } from 'js-base64';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useNotificationStore as useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export interface DisplayNode {
     id: string;
@@ -71,10 +72,10 @@ export function useNodeFetching(props: {
                 nodes.value = [];
             }
         } catch (error: unknown) {
-            console.error('获取节点信息失败:', error);
+            console.error('Failed to fetch node info:', error);
             const msg = error instanceof Error ? error.message : String(error);
-            errorMessage.value = `获取节点信息失败: ${msg}`;
-            toastStore.showToast('获取节点信息失败', 'error');
+            errorMessage.value = `${i18n.global.t('entities.node.fetching.fetchFailedPrefix')}${msg}`;
+            toastStore.showToast(i18n.global.t('entities.node.fetching.fetchFailed'), 'error');
         } finally {
             isLoading.value = false;
         }
@@ -99,7 +100,7 @@ export function useNodeFetching(props: {
                 for (const node of selectedManualNodes) {
                     profileNodes.push({
                         id: node.id,
-                        name: node.name || '未命名节点',
+                        name: node.name || i18n.global.t('entities.node.fetching.unnamedNode'),
                         url: node.url || '',
                         protocol: (
                             node.type ||
@@ -155,7 +156,7 @@ export function useNodeFetching(props: {
                                 }
                             }
                         } catch (error) {
-                            console.error(`获取订阅 ${subscription.name} 节点失败:`, error);
+                            console.error(`Failed to fetch nodes for subscription ${subscription.name}:`, error);
                         }
                     }
                     return [];
@@ -167,10 +168,10 @@ export function useNodeFetching(props: {
 
             nodes.value = profileNodes;
         } catch (error: unknown) {
-            console.error('获取订阅组节点信息失败:', error);
+            console.error('Failed to fetch profile node info:', error);
             const msg = error instanceof Error ? error.message : String(error);
-            errorMessage.value = `获取节点信息失败: ${msg}`;
-            toastStore.showToast('获取节点信息失败', 'error');
+            errorMessage.value = `${i18n.global.t('entities.node.fetching.fetchGroupFailedPrefix')}${msg}`;
+            toastStore.showToast(i18n.global.t('entities.node.fetching.fetchFailed'), 'error');
         } finally {
             isLoading.value = false;
         }
@@ -188,7 +189,7 @@ export function useNodeFetching(props: {
 
     const refreshNodes = async () => {
         await loadData();
-        toastStore.showToast('节点信息已刷新', 'success');
+        toastStore.showToast(i18n.global.t('entities.node.fetching.refreshed'), 'success');
     };
 
     const extractHost = (url?: string) => {
@@ -200,9 +201,9 @@ export function useNodeFetching(props: {
                     const decoded = Base64.decode(base64);
                     const config = JSON.parse(decoded);
                     if (config.add && config.port) return `${config.add}:${config.port}`;
-                    return config.add || '未知地址';
+                    return config.add || i18n.global.t('entities.node.fetching.unknownAddress');
                 } catch (e) {
-                    return 'VMess 格式错误';
+                    return i18n.global.t('entities.node.fetching.vmessError');
                 }
             }
             if (url.startsWith('ss://') && !url.includes('@')) {
@@ -219,7 +220,7 @@ export function useNodeFetching(props: {
             if (!urlObj.hostname) return '';
             return urlObj.port ? `${urlObj.hostname}:${urlObj.port}` : urlObj.hostname;
         } catch (e) {
-            return 'URL 解析错误';
+            return i18n.global.t('entities.node.fetching.urlError');
         }
     };
 

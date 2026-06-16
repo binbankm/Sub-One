@@ -12,6 +12,9 @@ import { formatBytes, formatExpiry, getTrafficColorClass } from '@/common/utils/
 import { copyToClipboard } from '@/common/utils/utils';
 
 import { useToastStore } from '@/stores/useNotificationStore';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     sub: Subscription;
@@ -35,9 +38,9 @@ const copyUrl = async () => {
     if (!props.sub.url) return;
     const success = await copyToClipboard(props.sub.url);
     if (success) {
-        toastStore.showToast('链接已复制到剪贴板', 'success');
+        toastStore.showToast(t('widgets.subscription.card.copySuccess'), 'success');
     } else {
-        toastStore.showToast('复制失败', 'error');
+        toastStore.showToast(t('widgets.subscription.card.copyFailed'), 'error');
     }
 };
 
@@ -174,14 +177,14 @@ const handleTestLatency = async () => {
                         <div class="min-w-0 flex-1">
                             <p
                                 class="truncate text-lg font-bold text-gray-800 transition-colors duration-300 group-hover:text-primary-600 dark:text-gray-100 dark:group-hover:text-primary-400"
-                                :title="sub.name || '未命名订阅'"
+                                :title="sub.name || t('widgets.subscription.card.unnamed')"
                             >
-                                {{ sub.name || '未命名订阅' }}
+                                {{ sub.name || t('widgets.subscription.card.unnamed') }}
                             </p>
                             <div
                                 v-if="sub.exclude && sub.exclude.trim()"
                                 class="animate-pulse-slow mt-1.5 flex w-fit items-center gap-1.5 rounded-element border border-warning-300/50 bg-linear-to-r from-warning-500/15 to-warning-500/15 px-2.5 py-1 dark:border-warning-500/30 dark:from-warning-500/20 dark:to-warning-500/20"
-                                :title="`已启用规则过滤: ${sub.exclude}`"
+                                :title="`${t('widgets.subscription.card.filterEnabledMsg')}${sub.exclude}`"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +202,7 @@ const handleTestLatency = async () => {
                                 </svg>
                                 <span
                                     class="text-[10px] font-bold tracking-wide text-warning-700 dark:text-warning-300"
-                                    >规则过滤</span
+                                    >{{ t('widgets.subscription.card.filterLabel') }}</span
                                 >
                             </div>
                         </div>
@@ -211,7 +214,7 @@ const handleTestLatency = async () => {
                 >
                     <button
                         class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
-                        title="编辑"
+                        :title="t('widgets.subscription.card.edit')"
                         @click.stop="emit('edit')"
                     >
                         <svg
@@ -231,7 +234,7 @@ const handleTestLatency = async () => {
                     </button>
                     <button
                         class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
-                        title="删除"
+                        :title="t('widgets.subscription.card.delete')"
                         @click.stop="emit('delete')"
                     >
                         <svg
@@ -256,7 +259,7 @@ const handleTestLatency = async () => {
             <div class="flex grow flex-col justify-start space-y-3 sm:space-y-4">
                 <div class="relative">
                     <label class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                        >订阅链接</label
+                        >{{ t('widgets.subscription.card.subUrl') }}</label
                     >
                     <input
                         type="text"
@@ -268,7 +271,7 @@ const handleTestLatency = async () => {
                     <div class="mt-2 flex items-center gap-2 sm:mt-3">
                         <button
                             class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-warning-500/20 hover:text-warning-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-warning-400"
-                            :title="showUrl ? '隐藏链接' : '显示链接'"
+                            :title="showUrl ? t('widgets.subscription.card.hideUrlTitle') : t('widgets.subscription.card.showUrlTitle')"
                             @click.stop="toggleUrlVisibility"
                         >
                             <svg
@@ -305,12 +308,12 @@ const handleTestLatency = async () => {
                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 />
                             </svg>
-                            {{ showUrl ? '隐藏' : '显示' }}
+                            {{ showUrl ? t('widgets.subscription.card.hideBtn') : t('widgets.subscription.card.showBtn') }}
                         </button>
                         <button
                             v-if="showUrl"
                             class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
-                            title="复制链接"
+                            :title="t('widgets.subscription.card.copyUrlTitle')"
                             @click.stop="copyUrl"
                         >
                             <svg
@@ -326,7 +329,7 @@ const handleTestLatency = async () => {
                                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                                 />
                             </svg>
-                            复制
+                            {{ t('widgets.subscription.card.copyBtn') }}
                         </button>
                     </div>
                 </div>
@@ -352,7 +355,7 @@ const handleTestLatency = async () => {
                                     clip-rule="evenodd"
                                 />
                             </svg>
-                            流量使用
+                            {{ t('widgets.subscription.card.trafficUsage') }}
                         </span>
                         <div class="text-right">
                             <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{
@@ -375,7 +378,7 @@ const handleTestLatency = async () => {
                     </div>
                     <div class="mt-2 flex items-center justify-between">
                         <span class="text-[10px] font-medium text-gray-400"
-                            >已用 {{ trafficInfo.percentage.toFixed(1) }}%</span
+                            >{{ t('widgets.subscription.card.usedPrefix') }} {{ trafficInfo.percentage.toFixed(1) }}%</span
                         >
                         <span
                             v-if="expiryInfo"
@@ -389,11 +392,11 @@ const handleTestLatency = async () => {
 
             <!-- 底部控制 -->
             <div
-                class="mt-4 flex items-center justify-between border-t border-gray-300 pt-3 dark:border-white/10/50"
+                class="mt-4 flex items-center justify-between gap-2 border-t border-gray-300 pt-3 dark:border-white/10/50 sm:gap-3"
                 @click.stop
             >
-                <div class="flex items-center gap-3">
-                    <label class="group/toggle relative inline-flex cursor-pointer items-center">
+                <div class="flex min-w-0 shrink items-center gap-2 sm:gap-3">
+                    <label class="group/toggle relative inline-flex shrink-0 cursor-pointer items-center">
                         <input
                             type="checkbox"
                             :checked="sub.enabled"
@@ -404,12 +407,12 @@ const handleTestLatency = async () => {
                             class="peer h-6 w-10 rounded-full bg-gray-200 transition-all duration-300 group-hover/toggle:shadow-elevated-sm peer-checked:bg-primary-500 peer-focus:outline-none after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:border-white dark:border-white/10 dark:bg-white/10"
                         ></div>
                     </label>
-                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300">{{
-                        sub.enabled ? '已启用' : '已禁用'
+                    <span class="truncate text-xs font-medium text-gray-600 dark:text-gray-300">{{
+                        sub.enabled ? t('widgets.subscription.card.enabled') : t('widgets.subscription.card.disabled')
                     }}</span>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex shrink-0 items-center gap-1 sm:gap-2">
                     <button
                         :disabled="isTestingLatency"
                         class="rounded-element p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
@@ -423,12 +426,12 @@ const handleTestLatency = async () => {
                         }"
                         :title="
                             isTestingLatency
-                                ? '测试中...'
+                                ? t('widgets.subscription.card.testing')
                                 : latencyResult
                                   ? latencyResult.available
-                                      ? '可用'
-                                      : '不可用'
-                                  : '测试连接'
+                                      ? t('widgets.subscription.card.available')
+                                      : t('widgets.subscription.card.unavailable')
+                                  : t('widgets.subscription.card.testConn')
                         "
                         @click.stop="handleTestLatency"
                     >
@@ -454,10 +457,10 @@ const handleTestLatency = async () => {
                         @click.stop="emit('showNodes')"
                     >
                         <span
-                            class="h-1.5 w-1.5 rounded-full"
+                            class="h-1.5 w-1.5 shrink-0 rounded-full"
                             :class="(sub.nodeCount || 0) > 0 ? 'bg-success-500' : 'bg-gray-300'"
                         ></span>
-                        {{ sub.nodeCount }} 节点
+                        <span class="whitespace-nowrap">{{ sub.nodeCount }} {{ t('widgets.subscription.card.nodes') }}</span>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             class="-ml-1 h-3 w-3 opacity-0 transition-all duration-200 group-hover/btn:opacity-100"
@@ -477,7 +480,7 @@ const handleTestLatency = async () => {
                     <button
                         :disabled="sub.isUpdating"
                         class="rounded-element p-1.5 text-gray-600 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                        :title="sub.isUpdating ? '更新中...' : '更新订阅'"
+                        :title="sub.isUpdating ? t('widgets.subscription.card.updating') : t('widgets.subscription.card.updateSub')"
                         @click.stop="emit('update')"
                     >
                         <svg

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -21,6 +22,7 @@ const { activeSubscriptions, manualNodes, profiles, totalNodeCount, activeNodeCo
     storeToRefs(dataStore);
 
 // Computed for Display
+const { t, tm } = useI18n();
 const activeProfilesCount = computed(() => profiles.value.filter((p: Profile) => p.enabled).length);
 const isUpdatingAllSubs = ref(false);
 
@@ -31,73 +33,41 @@ const handleUpdateAll = async () => {
 
     if (result.success) {
         if (result.count && result.count > 0) {
-            showToast(`成功更新 ${result.count} 个订阅`, 'success');
+            showToast(t('views.dashboard.messages.updateSuccess', { count: result.count }), 'success');
         } else {
-            showToast('所有订阅已是最新状态', 'success');
+            showToast(t('views.dashboard.messages.allUpToDate'), 'success');
         }
     } else {
-        showToast(result.message || '更新失败', 'error');
+        showToast(result.message || t('views.dashboard.messages.updateFailed'), 'error');
     }
 };
 
-/** 励志语录数据库 */
-const quotes = [
-    {
-        text: '成功不是终点，失败也不是终结，唯有勇气才是永恒。',
-        author: '温斯顿·丘吉尔',
-        category: '励志'
-    },
-    { text: '代码如诗，每一行都是对完美的追求。', author: '极客箴言', category: '技术' },
-    { text: '今天的努力，是为了明天更好的自己。', author: '佚名', category: '励志' },
-    {
-        text: '优秀的程序员不是写代码最多的，而是删代码最多的。',
-        author: '编程智慧',
-        category: '技术'
-    },
-    { text: '保持简单，保持优雅，保持高效。', author: '设计哲学', category: '技术' },
-    { text: '每一次调试，都是与bug的一场较量。', author: '程序员日常', category: '幽默' },
-    { text: '不要害怕重构，害怕的应该是技术债。', author: '代码整洁之道', category: '技术' },
-    {
-        text: '真正的智慧不在于知道所有答案，而在于提出正确的问题。',
-        author: '苏格拉底',
-        category: '励志'
-    },
-    { text: '让代码自己说话，注释只是辅助。', author: 'Clean Code', category: '技术' },
-    {
-        text: 'bug不会因为你忽视它而消失，只会在生产环境中惊艳亮相。',
-        author: '墨菲定律',
-        category: '幽默'
-    },
-    { text: '持续学习，永不止步。今天比昨天更强大。', author: '成长心态', category: '励志' },
-    { text: '好的架构不是设计出来的，而是演化出来的。', author: '架构之道', category: '技术' },
-    { text: '测试不是负担，而是对代码的信心保障。', author: 'TDD实践', category: '技术' },
-    { text: '编程不仅是科学，更是艺术。', author: 'Donald Knuth', category: '技术' },
-    { text: '越简单的方案，越容易维护。', author: 'KISS原则', category: '技术' }
-];
+const quotes = computed(() => tm('views.dashboard.quotes') as any[]);
 
-const currentQuote = ref(quotes[0]);
+const currentQuoteIndex = ref(0);
+const currentQuote = computed(() => quotes.value[currentQuoteIndex.value] || quotes.value[0]);
 const isRefreshing = ref(false);
 
 /** 获取随机语录（避免重复） */
-const getRandomQuote = () => {
-    let newQuote;
+const getRandomQuoteIndex = () => {
+    let newIndex;
     do {
-        newQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    } while (newQuote === currentQuote.value && quotes.length > 1);
-    return newQuote;
+        newIndex = Math.floor(Math.random() * quotes.value.length);
+    } while (newIndex === currentQuoteIndex.value && quotes.value.length > 1);
+    return newIndex;
 };
 
 /** 刷新语录 */
 const refreshQuote = () => {
     isRefreshing.value = true;
     setTimeout(() => {
-        currentQuote.value = getRandomQuote();
+        currentQuoteIndex.value = getRandomQuoteIndex();
         isRefreshing.value = false;
     }, 300);
 };
 
 onMounted(() => {
-    currentQuote.value = getRandomQuote();
+    currentQuoteIndex.value = getRandomQuoteIndex();
 });
 </script>
 
@@ -131,10 +101,10 @@ onMounted(() => {
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-gray-800 dark:text-white">
-                                每日一言
+                                {{ t('views.dashboard.dailyQuote') }}
                             </h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
-                                Daily Inspiration
+                                {{ t('views.dashboard.dailyInspiration') }}
                             </p>
                         </div>
                     </div>
@@ -144,11 +114,11 @@ onMounted(() => {
                         <span
                             :class="{
                                 'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300':
-                                    currentQuote.category === '励志',
+                                    currentQuote.category === 'Inspirational',
                                 'border-info-400/30 bg-info-400/20 text-info-700 dark:text-info-300':
-                                    currentQuote.category === '技术',
+                                    currentQuote.category === 'Technical',
                                 'border-success-400/30 bg-success-400/20 text-success-700 dark:text-success-300':
-                                    currentQuote.category === '幽默'
+                                    currentQuote.category === 'Humor'
                             }"
                             class="rounded-element border px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-all duration-300"
                         >
@@ -158,7 +128,7 @@ onMounted(() => {
                         <button
                             :disabled="isRefreshing"
                             class="flex h-8 w-8 items-center justify-center rounded-element border border-gray-300 bg-white/30 text-gray-700 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/50 active:scale-95 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
-                            title="换一条"
+                            :title="t('views.dashboard.nextQuote')"
                             @click="refreshQuote"
                         >
                             <svg
@@ -210,9 +180,9 @@ onMounted(() => {
             >
                 <div class="relative z-10 mb-6 flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">节点概览</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('views.dashboard.nodeOverview') }}</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Node Distribution & Status
+                            {{ t('views.dashboard.nodeDistribution') }}
                         </p>
                     </div>
                     <div class="flex gap-4">
@@ -220,7 +190,7 @@ onMounted(() => {
                             <div
                                 class="text-[10px] font-bold tracking-wider text-gray-400 uppercase"
                             >
-                                活跃率
+                                {{ t('views.dashboard.activeRate') }}
                             </div>
                             <div class="text-lg font-black text-primary-600 dark:text-primary-400">
                                 {{
@@ -250,7 +220,7 @@ onMounted(() => {
                             class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                活跃订阅
+                                {{ t('views.dashboard.activeSubscriptions') }}
                             </div>
                             <div class="text-xl font-bold text-gray-900 dark:text-white">
                                 {{ activeSubscriptions.length }}
@@ -260,7 +230,7 @@ onMounted(() => {
                             class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                活跃节点
+                                {{ t('views.dashboard.activeNodes') }}
                             </div>
                             <div class="text-xl font-bold text-success-500">
                                 {{ activeNodeCount }}
@@ -269,7 +239,7 @@ onMounted(() => {
                         <div
                             class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">订阅组</div>
+                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.profiles') }}</div>
                             <div class="text-xl font-bold text-secondary-500">
                                 {{ profiles.length }}
                             </div>
@@ -278,7 +248,7 @@ onMounted(() => {
                             class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
                         >
                             <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                手动节点
+                                {{ t('views.dashboard.manualNodes') }}
                             </div>
                             <div class="text-xl font-bold text-warning-500">
                                 {{ manualNodes.length }}
@@ -340,13 +310,13 @@ onMounted(() => {
                             </svg>
                         </div>
                         <h3 class="mb-1 text-xl font-bold text-gray-900 dark:text-white">
-                            {{ isUpdatingAllSubs ? '正在更新...' : '立即更新' }}
+                            {{ isUpdatingAllSubs ? t('views.dashboard.updating') : t('views.dashboard.updateNow') }}
                         </h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             {{
                                 isUpdatingAllSubs
-                                    ? '正在同步最新节点信息'
-                                    : '同步所有订阅源的节点信息'
+                                    ? t('views.dashboard.syncLatest')
+                                    : t('views.dashboard.syncAll')
                             }}
                         </p>
                     </div>
@@ -375,12 +345,12 @@ onMounted(() => {
                         </div>
                         <span
                             class="rounded-full bg-secondary-500 px-2 py-0.5 text-[10px] font-bold text-white"
-                            >{{ activeProfilesCount }} Active</span
+                            >{{ t('views.dashboard.activeCount', { count: activeProfilesCount }) }}</span
                         >
                     </div>
                     <div class="text-2xl font-black text-gray-900 dark:text-white">
                         {{ profiles.length }}
-                        <span class="text-sm font-normal text-gray-500">订阅组</span>
+                        <span class="text-sm font-normal text-gray-500">{{ t('views.dashboard.profiles') }}</span>
                     </div>
                     <!-- 迷你进度条 -->
                     <div
@@ -426,9 +396,9 @@ onMounted(() => {
                     <p
                         class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        添加订阅
+                        {{ t('views.dashboard.addSubscription') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">支持 HTTP/HTTPS</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.supportsHttp') }}</p>
                 </div>
             </button>
 
@@ -458,9 +428,9 @@ onMounted(() => {
                     <p
                         class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        添加节点
+                        {{ t('views.dashboard.addNode') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">支持多种协议</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.supportsProtocols') }}</p>
                 </div>
             </button>
 
@@ -490,9 +460,9 @@ onMounted(() => {
                     <p
                         class="font-bold text-gray-900 transition-colors group-hover:text-primary-600 dark:text-white dark:group-hover:text-primary-400"
                     >
-                        创建订阅组
+                        {{ t('views.dashboard.createProfile') }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">组合订阅和节点</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.combineSubs') }}</p>
                 </div>
             </button>
         </div>

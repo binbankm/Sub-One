@@ -52,7 +52,7 @@ export const getUniqueKey = (url: string): string => {
                 return 'vmess://' + JSON.stringify(sortedConfig);
             } catch (e) {
                 // 如果 VMess 解析失败（如非标准格式），回退到通用处理
-                console.warn('VMess 指纹生成回退到通用模式:', e);
+                console.warn('VMess fingerprint generation fallback to universal mode:', e);
             }
         }
 
@@ -68,7 +68,7 @@ export const getUniqueKey = (url: string): string => {
     } catch (e) {
         // 兜底逻辑：发生任何未知错误，直接使用原始 URL 作为 Key
         // 宁可不去重，也不能错误去重
-        console.error('生成节点唯一键致命错误:', url, e);
+        console.error('Fatal error generating node unique key:', url, e);
         return url;
     }
 };

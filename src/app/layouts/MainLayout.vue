@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
 
@@ -29,6 +30,7 @@ const uiStore = useUIStore();
 const dataStore = useDataStore();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const { initialData } = storeToRefs(sessionStore);
 
@@ -99,8 +101,8 @@ onMounted(() => {
                 <header class="page-header">
                     <div class="header-content">
                         <div class="header-text">
-                            <h1 class="page-title">{{ currentTabInfo.title }}</h1>
-                            <p class="page-description">{{ currentTabInfo.description }}</p>
+                            <h1 class="page-title">{{ t(currentTabInfo.title) }}</h1>
+                            <p class="page-description">{{ t(currentTabInfo.description) }}</p>
                         </div>
                     </div>
                 </header>

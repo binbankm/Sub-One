@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 /**
  * ==================== 实用工具函数模块 ====================
  *
@@ -223,7 +224,7 @@ export function extractNodeName(url: string): string {
         }
     } catch (e) {
         // 解析失败时的错误处理
-        console.error('提取节点名称时出错:', e);
+        console.error('Error extracting node name:', e);
         // 返回截断的 URL（最多 50 个字符）作为备用名称
         return trimmedUrl.substring(0, 50);
     }
@@ -246,7 +247,7 @@ export function extractHostAndPort(url: string): { host: string; port: string } 
 
     try {
         const protocolEndIndex = url.indexOf('://');
-        if (protocolEndIndex === -1) throw new Error('无效的 URL：缺少协议头');
+        if (protocolEndIndex === -1) throw new Error(i18n.global.t('common.api.formatError'));
 
         const protocol = url.substring(0, protocolEndIndex).toLowerCase();
         const fragmentStartIndex = url.indexOf('#');
@@ -344,7 +345,7 @@ export function extractHostAndPort(url: string): { host: string; port: string } 
 
         return { host: '', port: '' };
     } catch (e) {
-        console.error('提取主机和端口失败:', url, e);
+        console.error('Failed to extract host and port:', url, e);
         return { host: '', port: '' };
     }
 }
@@ -393,7 +394,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
             await navigator.clipboard.writeText(text);
             return true;
         } catch (err) {
-            console.warn('Clipboard API 复制尝试失败，将尝试回退方法:', err);
+            console.warn('Clipboard API copy attempt failed, will try fallback method:', err);
         }
     }
 
@@ -416,7 +417,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
         document.body.removeChild(textArea);
         return successful;
     } catch (err) {
-        console.error('所有复制方法均失败:', err);
+        console.error('All copy methods failed:', err);
         return false;
     }
 }

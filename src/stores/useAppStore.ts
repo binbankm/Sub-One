@@ -12,6 +12,7 @@ import * as api from '@/common/utils/api';
 import { HTTP_REGEX } from '@/common/utils/constants';
 
 import { useNotificationStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export const useDataStore = defineStore('data', () => {
     const { showToast } = useNotificationStore();
@@ -21,7 +22,7 @@ export const useDataStore = defineStore('data', () => {
 
     // We bind saveData early so domains can use it
     async function saveData(
-        reason: string = '数据变动',
+        reason: string = i18n.global.t('app.stores.data.dataChanged'),
         showSuccessToast: boolean = true
     ): Promise<boolean> {
         if (isLoading.value) return false;
@@ -44,16 +45,16 @@ export const useDataStore = defineStore('data', () => {
             const response = await api.saveAllData(payload);
 
             if (response.success) {
-                if (showSuccessToast) showToast(`${reason} 已保存`, 'success');
+                if (showSuccessToast) showToast(`${reason} ${i18n.global.t('app.stores.data.savedSuffix')}`, 'success');
                 hasUnsavedChanges.value = false;
                 return true;
             } else {
-                showToast(`保存失败: ${response.message}`, 'error');
+                showToast(`${i18n.global.t('app.stores.data.saveFailedPrefix')}${response.message}`, 'error');
                 return false;
             }
         } catch (error) {
             console.error('Save failed:', error);
-            showToast('保存数据时发生未知错误', 'error');
+            showToast(i18n.global.t('app.stores.data.saveError'), 'error');
             return false;
         } finally {
             isLoading.value = false;

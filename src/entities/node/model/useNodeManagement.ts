@@ -5,6 +5,7 @@ import { createNode, parseImportText } from '@/common/utils/importer';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export function useNodeManagement() {
     const dataStore = useDataStore();
@@ -55,7 +56,7 @@ export function useNodeManagement() {
     const handleSaveNode = async (updatedNode: Node | undefined, onSuccess: () => void) => {
         const nodeToSave = updatedNode || editingNode.value;
         if (!nodeToSave?.url) {
-            toastStore.showToast('节点链接不能为空', 'error');
+            toastStore.showToast(i18n.global.t('entities.node.management.urlEmpty'), 'error');
             return;
         }
 
@@ -100,7 +101,7 @@ export function useNodeManagement() {
         }
 
         toastStore.showToast(
-            `成功导入 ${subs.length} 条订阅和 ${nodes.length} 个手动节点`,
+            i18n.global.t('entities.node.management.importSuccess').replace('{subs}', String(subs.length)).replace('{nodes}', String(nodes.length)),
             'success'
         );
         showBulkImportModal.value = false;
@@ -120,7 +121,7 @@ export function useNodeManagement() {
     };
 
     const handleSaveSort = async () => {
-        await dataStore.saveData('节点排序');
+        await dataStore.saveData(i18n.global.t('entities.node.management.nodeSort'));
         hasUnsavedSortChanges.value = false;
         isSortingNodes.value = false;
     };

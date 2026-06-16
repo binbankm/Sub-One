@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { PieChart } from 'echarts/charts';
 import type { PieSeriesOption } from 'echarts/charts';
@@ -22,6 +23,7 @@ use([PieChart, TooltipComponent, LegendComponent, SVGRenderer]);
 const chartRef = ref<HTMLElement | null>(null);
 const chartInstance = shallowRef<EChartsType | null>(null);
 const themeStore = useThemeStore();
+const { t } = useI18n();
 
 type NodeChartOption = ComposeOption<
     PieSeriesOption | TooltipComponentOption | LegendComponentOption
@@ -73,7 +75,7 @@ const getOption = (): NodeChartOption => {
         },
         series: [
             {
-                name: '节点分布',
+                name: t('widgets.dashboard.chart.nodeDistribution'),
                 type: 'pie',
                 radius: ['55%', '75%'],
                 center: ['50%', '42%'],
@@ -104,7 +106,7 @@ const getOption = (): NodeChartOption => {
                 data: [
                     {
                         value: props.subscribedNodes,
-                        name: '订阅节点',
+                        name: t('widgets.dashboard.chart.subscriptionNodes'),
                         itemStyle: {
                             color: new graphic.LinearGradient(0, 0, 0, 1, [
                                 { offset: 0, color: primaryColor },
@@ -114,7 +116,7 @@ const getOption = (): NodeChartOption => {
                     },
                     {
                         value: props.manualNodes,
-                        name: '手动节点',
+                        name: t('widgets.dashboard.chart.manualNodes'),
                         itemStyle: {
                             color: new graphic.LinearGradient(0, 0, 0, 1, [
                                 { offset: 0, color: warningColor },

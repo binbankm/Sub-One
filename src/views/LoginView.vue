@@ -24,6 +24,7 @@
 import { computed, ref } from 'vue';
 import { useSessionStore } from '@/stores/useSessionStore';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 /**
  * 组件属性定义 (保留接口兼容性，但优先使用 Store)
@@ -66,6 +67,8 @@ const isLoading = ref(false);
 /** 错误消息 */
 const error = ref('');
 
+const { t } = useI18n();
+
 // ==================== 登录处理 ====================
 
 /**
@@ -79,28 +82,28 @@ const error = ref('');
 const handleSubmit = async () => {
     // 验证用户名不为空
     if (!username.value.trim()) {
-        error.value = '请输入用户名';
+        error.value = t('views.login.errors.emptyUsername');
         return;
     }
 
     // 验证密码不为空
     if (!password.value.trim()) {
-        error.value = '请输入密码';
+        error.value = t('views.login.errors.emptyPassword');
         return;
     }
 
     // 如果是设置模式，验证确认密码
     if (actualIsSetup.value) {
         if (!confirmPassword.value.trim()) {
-            error.value = '请确认密码';
+            error.value = t('views.login.errors.emptyConfirmPassword');
             return;
         }
         if (password.value !== confirmPassword.value) {
-            error.value = '两次输入的密码不一致';
+            error.value = t('views.login.errors.passwordMismatch');
             return;
         }
         if (password.value.length < 6) {
-            error.value = '密码长度至少为6位';
+            error.value = t('views.login.errors.passwordTooShort');
             return;
         }
     }
@@ -118,7 +121,7 @@ const handleSubmit = async () => {
     } catch (err: unknown) {
         // 捕获并显示错误信息
         const msg = err instanceof Error ? err.message : String(err);
-        error.value = msg || '登录失败，请重试';
+        error.value = msg || t('views.login.errors.loginFailed');
     } finally {
         // 无论成功失败都重置加载状态
         isLoading.value = false;
@@ -169,7 +172,7 @@ const handleSubmit = async () => {
                 <p
                     class="text-xs font-medium tracking-wide text-gray-600 sm:text-sm dark:text-gray-400"
                 >
-                    {{ actualIsSetup ? '首次使用，请创建管理员账号' : '现代化订阅管理平台' }}
+                    {{ actualIsSetup ? t('views.login.setupSubtitle') : t('views.login.subtitle') }}
                 </p>
             </div>
 
@@ -195,7 +198,7 @@ const handleSubmit = async () => {
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                         </svg>
-                        <span>用户名</span>
+                        <span>{{ t('views.login.username') }}</span>
                     </label>
 
                     <div class="group relative">
@@ -205,7 +208,7 @@ const handleSubmit = async () => {
                             type="text"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error && !username }"
-                            placeholder="请输入您的用户名"
+                            :placeholder="t('views.login.placeholders.username')"
                             autocomplete="username"
                             :disabled="isLoading"
                             @keydown.enter="handleSubmit"
@@ -269,7 +272,7 @@ const handleSubmit = async () => {
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                             />
                         </svg>
-                        <span>密码</span>
+                        <span>{{ t('views.login.password') }}</span>
                     </label>
 
                     <div class="group relative">
@@ -279,7 +282,7 @@ const handleSubmit = async () => {
                             type="password"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
-                            placeholder="请输入您的密码"
+                            :placeholder="t('views.login.placeholders.password')"
                             autocomplete="current-password"
                             :disabled="isLoading"
                             @keydown.enter="handleSubmit"
@@ -371,7 +374,7 @@ const handleSubmit = async () => {
                                 d="M9 12l2 2 4-4m5.818-4.818A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                             />
                         </svg>
-                        <span>确认密码</span>
+                        <span>{{ t('views.login.confirmPassword') }}</span>
                     </label>
 
                     <div class="group relative">
@@ -381,7 +384,7 @@ const handleSubmit = async () => {
                             type="password"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
-                            placeholder="请再次输入密码"
+                            :placeholder="t('views.login.placeholders.confirmPassword')"
                             autocomplete="new-password"
                             :disabled="isLoading"
                             @keydown.enter="handleSubmit"
@@ -467,13 +470,13 @@ const handleSubmit = async () => {
                                 "
                             />
                         </svg>
-                        {{ actualIsSetup ? '创建管理员账号' : '立即登录' }}
+                        {{ actualIsSetup ? t('views.login.createAdmin') : t('views.login.loginBtn') }}
                     </span>
 
                     <!-- 加载状态 - 显示加载动画 -->
                     <span v-else class="flex items-center justify-center gap-2">
                         <div class="spinner h-4 w-4 border-2 sm:h-5 sm:w-5"></div>
-                        {{ actualIsSetup ? '创建中...' : '登录中...' }}
+                        {{ actualIsSetup ? t('views.login.creating') : t('views.login.loggingIn') }}
                     </span>
                 </button>
 
@@ -498,7 +501,7 @@ const handleSubmit = async () => {
                                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                             />
                         </svg>
-                        <span>安全加密传输</span>
+                        <span>{{ t('views.login.secureTransport') }}</span>
                     </div>
                 </div>
             </form>

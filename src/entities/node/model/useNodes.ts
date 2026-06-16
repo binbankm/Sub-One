@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue';
 
 import type { Node } from '@/common/types/index';
+import i18n from '@/i18n';
 
 export function useNodes(saveData: (reason: string, showToast?: boolean) => Promise<boolean>) {
     const manualNodes = ref<Node[]>([]);
@@ -9,14 +10,14 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
 
     async function addNode(node: Node) {
         manualNodes.value.unshift(node);
-        await saveData('新增节点');
+        await saveData(i18n.global.t('entities.node.actions.add'));
     }
 
     async function updateNode(node: Node) {
         const idx = manualNodes.value.findIndex((n: Node) => n.id === node.id);
         if (idx !== -1) {
             manualNodes.value[idx] = { ...node };
-            await saveData('更新节点');
+            await saveData(i18n.global.t('entities.node.actions.update'));
         }
     }
 
@@ -26,7 +27,7 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
     ) {
         manualNodes.value = manualNodes.value.filter((n: Node) => n.id !== id);
         removeIdFromProfiles(id, 'manualNodes');
-        await saveData('删除节点');
+        await saveData(i18n.global.t('entities.node.actions.delete'));
     }
 
     async function deleteAllNodes(
@@ -34,7 +35,7 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
     ) {
         manualNodes.value = [];
         clearProfilesField('manualNodes');
-        await saveData('清空节点');
+        await saveData(i18n.global.t('entities.node.actions.clear'));
     }
 
     async function batchDeleteNodes(
@@ -44,13 +45,13 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
         const idSet = new Set(ids);
         manualNodes.value = manualNodes.value.filter((n: Node) => !idSet.has(n.id + ''));
         ids.forEach((id: string) => removeIdFromProfiles(id, 'manualNodes'));
-        await saveData('批量删除节点');
+        await saveData(i18n.global.t('entities.node.actions.batchDelete'));
     }
 
     async function addNodesFromBulk(nodes: Node[]) {
         if (nodes.length > 0) {
             manualNodes.value.unshift(...nodes);
-            await saveData('批量导入节点');
+            await saveData(i18n.global.t('entities.node.actions.batchImport'));
         }
     }
 
@@ -65,7 +66,7 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
 
         if (manualNodes.value.length !== unique.size) {
             manualNodes.value = Array.from(unique.values());
-            await saveData('节点去重');
+            await saveData(i18n.global.t('entities.node.actions.deduplicate'));
         }
     }
 
@@ -73,7 +74,7 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
         manualNodes.value.sort((a: Node, b: Node) =>
             (a.name || '').localeCompare(b.name || '', 'zh-CN')
         );
-        await saveData('自动排序');
+        await saveData(i18n.global.t('entities.node.actions.autoSort'));
     }
 
     return {

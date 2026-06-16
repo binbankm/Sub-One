@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = withDefaults(
     defineProps<{
@@ -9,8 +12,7 @@ const props = withDefaults(
         deleteLabel?: string;
     }>(),
     {
-        accent: 'primary',
-        deleteLabel: '删除选中'
+        accent: 'primary'
     }
 );
 
@@ -71,13 +73,13 @@ const accentStyles = computed(() => styleMap[props.accent]);
                             clip-rule="evenodd"
                         />
                     </svg>
-                    批量删除模式
+                    {{ t('common.ui.batch.batchMode') }}
                     <span
                         v-if="selectedCount > 0"
                         class="ml-2 rounded-full px-3 py-1 text-xs font-bold text-white shadow-elevated-sm"
                         :class="accentStyles.badge"
                     >
-                        已选 {{ selectedCount }}
+                        {{ t('common.ui.batch.selectedCount', { count: selectedCount }) }}
                     </span>
                 </div>
 
@@ -86,19 +88,19 @@ const accentStyles = computed(() => styleMap[props.accent]);
                         class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('select-all')"
                     >
-                        全选
+                        {{ t('common.ui.batch.selectAll') }}
                     </button>
                     <button
                         class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('invert-selection')"
                     >
-                        反选
+                        {{ t('common.ui.batch.invertSelection') }}
                     </button>
                     <button
                         class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('deselect-all')"
                     >
-                        清空选择
+                        {{ t('common.ui.batch.clearSelection') }}
                     </button>
                     <button
                         :disabled="selectedCount === 0"
@@ -117,13 +119,13 @@ const accentStyles = computed(() => styleMap[props.accent]);
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        {{ deleteLabel }} ({{ selectedCount }})
+                        {{ deleteLabel || t('common.ui.batch.deleteSelected') }} ({{ selectedCount }})
                     </button>
                     <button
                         class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('cancel')"
                     >
-                        取消
+                        {{ t('common.ui.batch.cancel') }}
                     </button>
                 </div>
             </div>

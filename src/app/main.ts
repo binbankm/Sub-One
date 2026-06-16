@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ==================== 应用入口文件 ====================
  *
  * 功能说明：
@@ -20,6 +20,7 @@ import App from '@/app/App.vue';
 // 导入全局样式文件（包含 Tailwind CSS 和自定义样式）
 import '@/assets/styles/main.css';
 import router from '@/app/router';
+import i18n from '@/i18n'; // 导入 i18n 配置
 
 // 创建 Pinia 实例（全局状态管理）
 const pinia = createPinia();
@@ -29,5 +30,6 @@ const app = createApp(App);
 // 注册 Pinia 插件
 app.use(pinia);
 app.use(router);
+app.use(i18n); // 注册 i18n 插件
 // 将应用挂载到 id 为 'app' 的 DOM 元素
 app.mount('#app');

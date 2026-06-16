@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps<{
     currentPage: number;
     totalPages: number;
@@ -19,13 +23,13 @@ defineEmits<{
             class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             @click="$emit('change-page', currentPage - 1)"
         >
-            &laquo;<span class="xs:inline ml-1 hidden">上一页</span>
+            &laquo;<span class="xs:inline ml-1 hidden">{{ t('common.ui.pagination.prev') }}</span>
         </button>
 
         <span
             class="min-w-20 text-center text-xs font-medium whitespace-nowrap text-gray-700 sm:min-w-25 sm:text-sm dark:text-gray-300"
         >
-            第{{ currentPage }}/{{ totalPages }}页
+            {{ t('common.ui.pagination.page', { current: currentPage, total: totalPages }) }}
         </span>
 
         <button
@@ -33,7 +37,7 @@ defineEmits<{
             class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
             @click="$emit('change-page', currentPage + 1)"
         >
-            <span class="xs:inline mr-1 hidden">下一页</span>&raquo;
+            <span class="xs:inline mr-1 hidden">{{ t('common.ui.pagination.next') }}</span>&raquo;
         </button>
     </div>
 </template>

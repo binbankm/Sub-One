@@ -16,6 +16,9 @@ import { useSubscriptionForm } from '@/entities/subscription/model/useSubscripti
 import type { Subscription } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
 import NodeFilterRuleEditor from '@/widgets/subscription/NodeFilterRuleEditor.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** 显示状态 */
@@ -81,7 +84,7 @@ const {
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        基础信息
+                        {{ t('widgets.subscription.modal.basicInfo') }}
                     </h4>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -90,13 +93,13 @@ const {
                             <label
                                 class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                订阅名称
-                                <span class="ml-1 text-xs text-gray-400">(可选)</span>
+                                {{ t('widgets.subscription.modal.subName') }}
+                                <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
                             </label>
                             <input
                                 v-model="localSubscription.name"
                                 type="text"
-                                placeholder="留空自动提取"
+                                :placeholder="t('widgets.subscription.modal.namePlaceholder')"
                                 class="input-modern w-full"
                                 @input="handleNameInput"
                             />
@@ -107,13 +110,13 @@ const {
                             <label
                                 class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
-                                订阅链接
+                                {{ t('widgets.subscription.modal.subUrl') }}
                                 <span class="text-danger-500">*</span>
                             </label>
                             <input
                                 v-model="localSubscription.url"
                                 type="url"
-                                placeholder="https://example.com/sub?token=xxx"
+                                :placeholder="t('widgets.subscription.modal.urlPlaceholder')"
                                 class="input-modern w-full font-mono text-sm"
                                 :class="{ 'border-danger-500 dark:border-danger-500': urlError }"
                                 @blur="handleUrlBlur"
@@ -126,7 +129,7 @@ const {
 
                     <div class="px-1 text-xs text-gray-500 dark:text-gray-400">
                         <p v-if="nameError" class="mb-1 text-danger-600">{{ nameError }}</p>
-                        <p v-else>名称留空将自动从链接中提取</p>
+                        <p v-else>{{ t('widgets.subscription.modal.nameHint') }}</p>
                     </div>
                 </div>
 
@@ -148,7 +151,7 @@ const {
                                 clip-rule="evenodd"
                             />
                         </svg>
-                        高级选项
+                        {{ t('widgets.subscription.modal.advancedOptions') }}
                     </button>
 
                     <Transition name="slide-fade">
@@ -158,19 +161,19 @@ const {
                                 <label
                                     class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    节点过滤规则
-                                    <span class="ml-1 text-xs text-gray-400">(可选)</span>
+                                    {{ t('widgets.subscription.modal.filterRules') }}
+                                    <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
                                 </label>
                                 <NodeFilterRuleEditor
                                     v-model="localSubscription.exclude"
-                                    placeholder="输入节点过滤规则..."
+                                    :placeholder="t('widgets.subscription.modal.filterPlaceholder')"
                                 />
                                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                    支持正则表达式，多个规则用换行分隔。使用
+                                    {{ t('widgets.subscription.modal.filterHint1') }}
                                     <code class="rounded bg-gray-200 px-1 py-0.5 dark:bg-white/10"
-                                        >keep:</code
+                                        >{{ t('widgets.subscription.modal.filterHintKeep') }}</code
                                     >
-                                    前缀表示白名单
+                                    {{ t('widgets.subscription.modal.filterHint2') }}
                                 </p>
                             </div>
                         </div>
@@ -196,10 +199,10 @@ const {
                         </svg>
                         <div class="flex-1">
                             <p class="mb-1 text-sm font-medium text-info-900 dark:text-info-100">
-                                添加订阅后自动获取节点
+                                {{ t('widgets.subscription.modal.addHintTitle') }}
                             </p>
                             <p class="text-xs text-info-700 dark:text-info-300">
-                                保存后系统将自动从订阅链接获取节点数量和流量信息
+                                {{ t('widgets.subscription.modal.addHintDesc') }}
                             </p>
                         </div>
                     </div>

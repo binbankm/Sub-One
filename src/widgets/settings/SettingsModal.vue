@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import type { AppConfig } from '@/common/types/index';
 import { fetchSettings, saveSettings } from '@/common/utils/api';
 import Modal from '@/common/ui/BaseModal.vue';
@@ -41,6 +41,8 @@ const { showToast } = useToastStore();
 const dataStore = useDataStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
+
+const { t } = useI18n();
 
 // 默认设置值（与后端保持一致）
 const defaultSettings: AppConfig = {
@@ -111,8 +113,8 @@ const loadSettings = async () => {
             }
         }
     } catch (error) {
-        console.error('加载设置出错:', error);
-        showToast('加载设置失败，将使用默认值', 'warning');
+        console.error('Error loading settings:', error);
+        showToast(t('widgets.settings.modal.loadFail'), 'warning');
     } finally {
         isLoading.value = false;
     }
@@ -120,7 +122,7 @@ const loadSettings = async () => {
 
 const handleSave = async () => {
     if (hasWhitespace.value) {
-        showToast('输入项中不能包含空格，请检查后再试。', 'error');
+        showToast(t('widgets.settings.modal.noWhitespace'), 'error');
         return;
     }
 
@@ -129,14 +131,14 @@ const handleSave = async () => {
         const result = await saveSettings(settings.value);
         if (result.success) {
             // 弹出成功提示
-            showToast('设置已保存', 'success');
+            showToast(t('widgets.settings.modal.saveSuccess'), 'success');
 
             // 同步到 Store，防止在此期间的其他操作覆盖配置
             dataStore.updateConfig(settings.value);
 
             // 仅在非存储标签页（常规/高级设置）保存时刷新页面
             if (activeTab.value !== 'storage') {
-                showToast('设置已保存，页面将自动刷新...', 'success');
+                showToast(t('widgets.settings.modal.saveSuccessRefresh'), 'success');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -145,7 +147,7 @@ const handleSave = async () => {
                 emit('update:show', false);
             }
         } else {
-            throw new Error(result.message || '保存失败');
+            throw new Error(result.message || t('widgets.settings.modal.saveFail'));
         }
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -163,9 +165,9 @@ const copyCronUrl = async () => {
     if (!cronUrl.value) return;
     try {
         await navigator.clipboard.writeText(cronUrl.value);
-        showToast('触发链接已复制到剪贴板', 'success');
+        showToast(t('widgets.settings.modal.copySuccess'), 'success');
     } catch (err) {
-        showToast('复制失败，请手动复制', 'error');
+        showToast(t('widgets.settings.modal.copyFail'), 'error');
     }
 };
 
@@ -191,7 +193,7 @@ watch(
         :show="show"
         :is-saving="isSaving"
         :confirm-disabled="hasWhitespace"
-        confirm-button-title="输入内容包含空格，无法保存"
+        :confirm-button-title="t('widgets.settings.modal.saveDisabled')"
         size="4xl"
         @update:show="emit('update:show', $event)"
         @confirm="handleSave"
@@ -220,7 +222,7 @@ watch(
                         />
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white">系统设置</h3>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ t('widgets.settings.modal.title') }}</h3>
             </div>
         </template>
         <template #body>
@@ -228,7 +230,7 @@ watch(
                 <div
                     class="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
                 ></div>
-                <p class="font-medium text-gray-500">正在加载配置...</p>
+                <p class="font-medium text-gray-500">{{ t('widgets.settings.modal.loading') }}</p>
             </div>
 
             <div v-else class="space-y-6 px-1">
@@ -244,7 +246,7 @@ watch(
                             ]"
                             @click="activeTab = 'general'"
                         >
-                            常规设置
+                            {{ t('widgets.settings.modal.tabGeneral') }}
                         </button>
                         <button
                             :class="[
@@ -255,7 +257,7 @@ watch(
                             ]"
                             @click="activeTab = 'advanced'"
                         >
-                            高级设置
+                            {{ t('widgets.settings.modal.tabAdvanced') }}
                         </button>
                         <button
                             :class="[
@@ -266,7 +268,7 @@ watch(
                             ]"
                             @click="activeTab = 'storage'"
                         >
-                            存储与备份
+                            {{ t('widgets.settings.modal.tabStorage') }}
                         </button>
                     </nav>
                 </div>
@@ -294,35 +296,35 @@ watch(
                                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                                     />
                                 </svg>
-                                基础配置
+                                {{ t('widgets.settings.modal.basic.title') }}
                             </h4>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div class="group">
                                     <label
                                         for="fileName"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
-                                        >自定义订阅文件名</label
+                                        >{{ t('widgets.settings.modal.basic.filename') }}</label
                                     >
                                     <input
                                         id="fileName"
                                         v-model="settings.FileName"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="例如：my_subscription"
+                                        :placeholder="t('widgets.settings.modal.basic.filenamePlaceholder')"
                                     />
                                 </div>
                                 <div class="group">
                                     <label
                                         for="myToken"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
-                                        >自定义订阅Token</label
+                                        >{{ t('widgets.settings.modal.basic.token') }}</label
                                     >
                                     <input
                                         id="myToken"
                                         v-model="settings.mytoken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="用于访问订阅链接的Token"
+                                        :placeholder="t('widgets.settings.modal.basic.tokenPlaceholder')"
                                     />
                                 </div>
                             </div>
@@ -347,7 +349,7 @@ watch(
                                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                                     />
                                 </svg>
-                                订阅组与节点
+                                {{ t('widgets.settings.modal.profile.title') }}
                             </h4>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <!-- 分享Token (全宽) -->
@@ -355,14 +357,14 @@ watch(
                                     <label
                                         for="profileToken"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
-                                        >订阅组分享Token</label
+                                        >{{ t('widgets.settings.modal.profile.token') }}</label
                                     >
                                     <input
                                         id="profileToken"
                                         v-model="settings.profileToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="例如：my（必须与订阅Token不同）"
+                                        :placeholder="t('widgets.settings.modal.profile.tokenPlaceholder')"
                                     />
                                     <p
                                         class="mt-2 flex items-start gap-1 text-xs text-warning-600 dark:text-warning-400"
@@ -382,7 +384,7 @@ watch(
                                             />
                                         </svg>
                                         <span
-                                            >重要：此Token必须与"自定义订阅Token"不同。留空则无法使用订阅组分享。</span
+                                            >{{ t('widgets.settings.modal.profile.tokenHint') }}</span
                                         >
                                     </p>
                                 </div>
@@ -391,7 +393,7 @@ watch(
                                 <div>
                                     <label
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >节点名前缀</label
+                                        >{{ t('widgets.settings.modal.profile.prefixLabel') }}</label
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -400,12 +402,12 @@ watch(
                                             <p
                                                 class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >
-                                                自动添加前缀
+                                                {{ t('widgets.settings.modal.profile.prefixTitle') }}
                                             </p>
                                             <p
                                                 class="mt-1 mr-2 text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                将订阅名作为节点名前缀
+                                                {{ t('widgets.settings.modal.profile.prefixDesc') }}
                                             </p>
                                         </div>
                                         <label
@@ -427,7 +429,7 @@ watch(
                                 <div>
                                     <label
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >节点去重</label
+                                        >{{ t('widgets.settings.modal.profile.dedupeLabel') }}</label
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -436,12 +438,12 @@ watch(
                                             <p
                                                 class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >
-                                                自动去重
+                                                {{ t('widgets.settings.modal.profile.dedupeTitle') }}
                                             </p>
                                             <p
                                                 class="mt-1 mr-2 text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                去除相同节点(IP+Port)
+                                                {{ t('widgets.settings.modal.profile.dedupeDesc') }}
                                             </p>
                                         </div>
                                         <label
@@ -463,7 +465,7 @@ watch(
                                 <div class="md:col-span-2">
                                     <label
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >订阅转换方式</label
+                                        >{{ t('widgets.settings.modal.convert.title') }}</label
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -472,12 +474,12 @@ watch(
                                             <p
                                                 class="text-sm font-medium text-gray-700 dark:text-gray-200"
                                             >
-                                                使用外部转换API
+                                                {{ t('widgets.settings.modal.convert.useExternal') }}
                                             </p>
                                             <p
                                                 class="mt-1 mr-2 text-xs text-gray-500 dark:text-gray-400"
                                             >
-                                                关闭时使用后端自带转换
+                                                {{ t('widgets.settings.modal.convert.useExternalDesc') }}
                                             </p>
                                         </div>
                                         <label
@@ -503,7 +505,7 @@ watch(
                                     <label
                                         for="externalConverterUrl"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
-                                        >外部转换API地址</label
+                                        >{{ t('widgets.settings.modal.convert.apiUrl') }}</label
                                     >
                                     <div class="flex gap-2">
                                         <select
@@ -517,14 +519,14 @@ watch(
                                             >
                                                 {{ api }}
                                             </option>
-                                            <option value="custom">-- 手动输入 --</option>
+                                            <option value="custom">{{ t('widgets.settings.modal.convert.manualInput') }}</option>
                                         </select>
                                         <input
                                             id="externalConverterUrl"
                                             v-model="settings.externalConverterUrl"
                                             type="text"
                                             class="input-modern-enhanced flex-1"
-                                            placeholder="例如：api-suc.0z.gs"
+                                            :placeholder="t('widgets.settings.modal.convert.apiUrlPlaceholder')"
                                         />
                                     </div>
                                     <p
@@ -545,7 +547,7 @@ watch(
                                             />
                                         </svg>
                                         <span
-                                            >提示：直接填写域名即可，系统会自动补全路径并拼接参数。</span
+                                            >{{ t('widgets.settings.modal.convert.apiUrlHint') }}</span
                                         >
                                     </p>
                                 </div>
@@ -575,7 +577,7 @@ watch(
                                         d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
                                     />
                                 </svg>
-                                Telegram 通知
+                                {{ t('widgets.settings.modal.tg.title') }}
                             </h4>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div class="group">
@@ -589,7 +591,7 @@ watch(
                                         v-model="settings.BotToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="从 @BotFather 获取的Bot Token"
+                                        :placeholder="t('widgets.settings.modal.tg.tokenPlaceholder')"
                                     />
                                 </div>
                                 <div class="group">
@@ -603,7 +605,7 @@ watch(
                                         v-model="settings.ChatID"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="接收通知的聊天ID"
+                                        :placeholder="t('widgets.settings.modal.tg.chatIdPlaceholder')"
                                     />
                                 </div>
                             </div>
@@ -628,7 +630,7 @@ watch(
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                                     />
                                 </svg>
-                                通知阈值
+                                {{ t('widgets.settings.modal.notify.title') }}
                             </h4>
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <!-- 到期提醒阈值 -->
@@ -637,7 +639,7 @@ watch(
                                         for="notifyThresholdDays"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
-                                        到期提醒阈值（天）
+                                        {{ t('widgets.settings.modal.notify.expireDays') }}
                                     </label>
                                     <input
                                         id="notifyThresholdDays"
@@ -646,10 +648,10 @@ watch(
                                         min="1"
                                         max="30"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="例如：3"
+                                        :placeholder="t('widgets.settings.modal.notify.daysPlaceholder')"
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        当订阅剩余天数小于此值时发送提醒
+                                        {{ t('widgets.settings.modal.notify.expireHint') }}
                                     </p>
                                 </div>
 
@@ -659,7 +661,7 @@ watch(
                                         for="notifyThresholdPercent"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
-                                        流量提醒阈值（%）
+                                        {{ t('widgets.settings.modal.notify.trafficPercent') }}
                                     </label>
                                     <input
                                         id="notifyThresholdPercent"
@@ -668,10 +670,10 @@ watch(
                                         min="50"
                                         max="100"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="例如：90"
+                                        :placeholder="t('widgets.settings.modal.notify.percentPlaceholder')"
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        当流量使用超过此百分比时发送提醒
+                                        {{ t('widgets.settings.modal.notify.trafficHint') }}
                                     </p>
                                 </div>
                             </div>
@@ -691,14 +693,14 @@ watch(
                                 >
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                自动更新(Cron)配置
+                                {{ t('widgets.settings.modal.cron.title') }}
                             </h4>
                             <!-- 定时更新总开关 -->
                             <div class="mb-6 flex items-center justify-between rounded-element bg-gray-50 p-4 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                 <div>
-                                    <h5 class="text-sm font-semibold text-gray-900 dark:text-gray-100">启用定时更新</h5>
+                                    <h5 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ t('widgets.settings.modal.cron.enable') }}</h5>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        开启后，可通过第三方 Cron 服务自动更新订阅
+                                        {{ t('widgets.settings.modal.cron.enableDesc') }}
                                     </p>
                                 </div>
                                 <label class="relative inline-flex cursor-pointer items-center">
@@ -725,25 +727,25 @@ watch(
                                         for="cronSecret"
                                         class="mb-2 block text-sm font-medium text-gray-700 transition-colors group-hover:text-primary-600 dark:text-gray-300 dark:group-hover:text-primary-400"
                                     >
-                                        Cron 安全密钥（Token）
+                                        {{ t('widgets.settings.modal.cron.secret') }}
                                     </label>
                                     <input
                                         id="cronSecret"
                                         v-model="settings.cronSecret"
                                         type="text"
                                         class="input-modern-enhanced w-full"
-                                        placeholder="任意复杂的字符串，例如：my_secret_token"
+                                        :placeholder="t('widgets.settings.modal.cron.secretPlaceholder')"
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：<br />
-                                        <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-white/5 text-primary-600 dark:text-primary-400 rounded inline-block select-all">/api/cron/trigger?token=您的密钥</code><br />
-                                        如果您使用的是 Cloudflare Pages，由于平台限制必须通过这种接口方式触发定时任务；Docker 用户自带内部定时器，可选择配置。
+                                        <span v-html="t('widgets.settings.modal.cron.hint1')"></span>
+                                        <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-white/5 text-primary-600 dark:text-primary-400 rounded inline-block select-all">/api/cron/trigger?token={{ settings.cronSecret || 'YOUR_TOKEN' }}</code><br />
+                                        {{ t('widgets.settings.modal.cron.hint2') }}
                                     </p>
                                     
                                     <!-- 动态生成的触发链接展示 -->
                                     <div v-if="cronUrl" class="mt-4 rounded-element bg-gray-50 p-3 dark:bg-white/5 border border-gray-200 dark:border-white/10">
                                         <label class="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                            生成的专属触发链接：
+                                            {{ t('widgets.settings.modal.cron.triggerUrl') }}
                                         </label>
                                         <div class="flex items-center gap-2">
                                             <input

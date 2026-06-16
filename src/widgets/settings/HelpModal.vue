@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 import Modal from '@/common/ui/BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
@@ -40,58 +40,60 @@ const toggleFaq = (index: number) => {
     activeFaqIndex.value = activeFaqIndex.value === index ? null : index;
 };
 
+const { t } = useI18n();
+
 // ==================== 数据源 ====================
 
 const faqs = [
     {
-        q: '如何添加订阅？',
-        a: '在首页点击"添加订阅"按钮，输入订阅链接（支持 HTTP/HTTPS），系统会自动解析其中的节点信息。支持 Clash、Surge、V2Ray 等多种格式链接。',
+        q: t('widgets.settings.help.faq.add_q'),
+        a: t('widgets.settings.help.faq.add_a'),
         icon: 'M12 4v16m8-8H4'
     },
     {
-        q: '如何生成订阅链接？',
-        a: '在仪表盘或订阅组卡片中，点击"导出"或"链接"按钮。选择您需要的客户端格式（如 Clash, Shadowrocket），然后点击复制即可。',
+        q: t('widgets.settings.help.faq.export_q'),
+        a: t('widgets.settings.help.faq.export_a'),
         icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1'
     },
     {
-        q: '支持哪些客户端格式？',
-        a: 'Sub-One 支持几乎所有主流客户端，包括 Clash (Meta), Surge, Loon, Egern, Shadowrocket, Quantumult X, Sing-Box, V2Ray, Surfboard 等。',
+        q: t('widgets.settings.help.faq.clients_q'),
+        a: t('widgets.settings.help.faq.clients_a'),
         icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
     },
     {
-        q: '什么是订阅 Token？',
-        a: '订阅 Token 是用于生成固定订阅链接的密钥。在"系统设置"中配置后，您的订阅链接将包含此 Token，即使服务器重启或迁移，只要 Token 不变，链接依然有效。',
+        q: t('widgets.settings.help.faq.token_q'),
+        a: t('widgets.settings.help.faq.token_a'),
         icon: 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
     },
     {
-        q: '如何进行批量操作？',
-        a: '在订阅列表页，点击右上角的"多选/批量"图标进入批量模式。选择多个订阅后，可以进行批量删除、批量更新或批量启用/禁用操作。',
+        q: t('widgets.settings.help.faq.batch_q'),
+        a: t('widgets.settings.help.faq.batch_a'),
         icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
     }
 ];
 
 const features = [
     {
-        title: '订阅管理',
-        desc: '支持多种格式订阅自动解析，流量与过期时间监控，定时自动更新。',
+        title: t('widgets.settings.help.features.sub_title'),
+        desc: t('widgets.settings.help.features.sub_desc'),
         icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
         color: 'from-info-500 to-primary-600'
     },
     {
-        title: '订阅组',
-        desc: '将多个订阅源组合成一个大的订阅，支持自定义筛选规则和排除规则。',
+        title: t('widgets.settings.help.features.profile_title'),
+        desc: t('widgets.settings.help.features.profile_desc'),
         icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
         color: 'from-secondary-500 to-pink-600'
     },
     {
-        title: '手动节点',
-        desc: '支持手动添加单个节点，或批量导入节点链接，支持智能去重排序。',
+        title: t('widgets.settings.help.features.manual_title'),
+        desc: t('widgets.settings.help.features.manual_desc'),
         icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
         color: 'from-success-500 to-success-600'
     },
     {
-        title: '格式转换',
-        desc: '内置强大的格式转换引擎，支持生成适配各种主流客户端的配置文件。',
+        title: t('widgets.settings.help.features.convert_title'),
+        desc: t('widgets.settings.help.features.convert_desc'),
         icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
         color: 'from-warning-500 to-danger-600'
     }
@@ -126,8 +128,8 @@ const features = [
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">帮助中心</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Documentation & Guides</p>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('widgets.settings.help.title') }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('widgets.settings.help.subtitle') }}</p>
                 </div>
             </div>
         </template>
@@ -139,9 +141,9 @@ const features = [
                     <nav class="-mb-px flex space-x-8">
                         <button
                             v-for="tab in [
-                                { id: 'guide', label: '🚀 快速上手' },
-                                { id: 'features', label: '✨ 功能详解' },
-                                { id: 'faq', label: '❓ 常见问题' }
+                                { id: 'guide', label: t('widgets.settings.help.tab_guide') },
+                                { id: 'features', label: t('widgets.settings.help.tab_features') },
+                                { id: 'faq', label: t('widgets.settings.help.tab_faq') }
                             ]"
                             :key="tab.id"
                             :class="[
@@ -179,13 +181,9 @@ const features = [
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        添加订阅源
+                                        {{ t('widgets.settings.help.guide.step1_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        在首页点击<span class="font-bold text-primary-600">
-                                            + 添加订阅</span
-                                        >按钮，粘贴您的机场订阅链接。系统会自动下载并解析所有节点信息。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step1_desc')"></p>
                                 </div>
                             </div>
 
@@ -202,13 +200,9 @@ const features = [
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        创建订阅组 (可选)
+                                        {{ t('widgets.settings.help.guide.step2_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        如果您有多个订阅，可以创建一个
-                                        <span class="font-bold text-secondary-600">订阅组</span>。
-                                        将它们聚合在一起，还可以设置过滤规则来排除不需要的节点。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step2_desc')"></p>
                                 </div>
                             </div>
 
@@ -225,14 +219,9 @@ const features = [
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
                                     >
-                                        导出使用
+                                        {{ t('widgets.settings.help.guide.step3_title') }}
                                     </h4>
-                                    <p class="text-gray-600 dark:text-gray-300">
-                                        点击订阅或订阅组上的
-                                        <span class="font-bold text-success-600">导出/链接</span>
-                                        按钮。 选择适配您的客户端（如 Clash, Shadowrocket）的格式，
-                                        复制链接即可使用。
-                                    </p>
+                                    <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step3_desc')"></p>
                                 </div>
                             </div>
                         </div>

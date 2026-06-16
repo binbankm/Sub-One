@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 /**
  * ==================== API 请求模块 ====================
  *
@@ -35,14 +36,14 @@ export async function fetchInitialData(): Promise<{
 
         // 检查 HTTP 响应状态
         if (!response.ok) {
-            console.error('会话无效或 API 错误，状态码:', response.status);
+            console.error('Invalid session or API error, status code:', response.status);
             return null;
         }
 
         // 解析并返回 JSON 数据（后端返回格式：{ subs, profiles, config }）
         return await response.json();
     } catch (error) {
-        console.error('获取初始数据失败:', error);
+        console.error('Failed to fetch initial data:', error);
         return null;
     }
 }
@@ -64,7 +65,7 @@ export async function checkSystemStatus(): Promise<{ needsSetup: boolean }> {
         }
         return await response.json();
     } catch (error) {
-        console.error('检查系统状态失败:', error);
+        console.error('Failed to check system status:', error);
         return { needsSetup: false };
     }
 }
@@ -88,8 +89,8 @@ export async function initializeSystem(
         });
         return response;
     } catch (error) {
-        console.error('系统初始化失败:', error);
-        return { ok: false, error: '网络请求失败' };
+        console.error('System initialization failed:', error);
+        return { ok: false, error: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -120,9 +121,9 @@ export async function login(
 
         return response;
     } catch (error) {
-        console.error('登录请求失败:', error);
+        console.error('Login request failed:', error);
         // 网络请求失败时返回自定义错误对象
-        return { ok: false, error: '网络请求失败' };
+        return { ok: false, error: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -142,7 +143,7 @@ export async function logout(): Promise<boolean> {
         });
         return response.ok;
     } catch (error) {
-        console.error('登出请求失败:', error);
+        console.error('Logout request failed:', error);
         return false;
     }
 }
@@ -164,7 +165,7 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
     try {
         // 数据预验证：确保传入的参数是数组类型
         if (!Array.isArray(subs) || !Array.isArray(profiles)) {
-            return { success: false, message: '数据格式错误：subs 和 profiles 必须是数组' };
+            return { success: false, message: 'Data format error: subs and profiles must be arrays' };
         }
 
         // 发送 POST 请求保存数据
@@ -180,20 +181,20 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
             // 尝试解析错误响应
             const errorData = (await response.json().catch(() => ({}))) as any;
             const errorMessage =
-                errorData.message || errorData.error || `服务器错误 (${response.status})`;
+                errorData.message || errorData.error || `Server error (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
         // 返回服务器响应的 JSON 数据
         return (await response.json()) as ApiResponse;
     } catch (error: unknown) {
-        console.error('保存订阅数据失败:', error);
+        console.error('Failed to save subscription data:', error);
 
         // 根据错误类型返回更具体的错误信息
         if (error instanceof TypeError && (error as TypeError).message.includes('fetch')) {
-            return { success: false, message: '网络连接失败，请检查网络连接' };
+            return { success: false, message: i18n.global.t('common.api.networkConnectionFail') };
         } else if (error instanceof SyntaxError) {
-            return { success: false, message: '服务器响应格式错误' };
+            return { success: false, message: i18n.global.t('common.api.formatError') };
         } else if (error instanceof Error) {
             return { success: false, message: `网络请求失败: ${(error as Error).message}` };
         } else {
@@ -229,9 +230,9 @@ export async function saveAllData(data: {
 
         if (!subsResult.success) return subsResult;
 
-        return { success: true, message: '数据保存成功' };
+        return { success: true, message: i18n.global.t('common.api.saveSuccess') };
     } catch (e: unknown) {
-        return { success: false, message: (e as Error).message || '保存失败' };
+        return { success: false, message: (e as Error).message || i18n.global.t('common.api.saveFail') };
     }
 }
 
@@ -263,7 +264,7 @@ export async function fetchNodeCount(
         // 直接返回完整对象（包含 count 和 userInfo 字段）
         return data;
     } catch (e) {
-        console.error('获取节点数量失败:', e);
+        console.error('Failed to get node count:', e);
         // 请求失败时返回默认值
         return { count: 0, userInfo: null };
     }
@@ -288,7 +289,7 @@ export async function fetchSettings(): Promise<Partial<AppConfig>> {
 
         return await response.json();
     } catch (error) {
-        console.error('获取配置失败:', error);
+        console.error('Failed to get config:', error);
         return {};
     }
 }
@@ -320,20 +321,20 @@ export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
                 error?: string;
             };
             const errorMessage =
-                errorData.message || errorData.error || `服务器错误 (${response.status})`;
+                errorData.message || errorData.error || `Server error (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
         // 返回服务器响应
         return (await response.json()) as ApiResponse;
     } catch (error: unknown) {
-        console.error('保存配置失败:', error);
+        console.error('Failed to save config:', error);
 
         // 根据错误类型返回更具体的错误信息
         if (error instanceof TypeError && error.message.includes('fetch')) {
-            return { success: false, message: '网络连接失败，请检查网络连接' };
+            return { success: false, message: i18n.global.t('common.api.networkConnectionFail') };
         } else if (error instanceof SyntaxError) {
-            return { success: false, message: '服务器响应格式错误' };
+            return { success: false, message: i18n.global.t('common.api.formatError') };
         } else if (error instanceof Error) {
             return { success: false, message: `网络请求失败: ${error.message}` };
         } else {
@@ -368,7 +369,7 @@ export async function batchUpdateNodes(subscriptionIds: string[]): Promise<ApiRe
             // 尝试解析错误响应
             const errorData = (await response.json().catch(() => ({}))) as any;
             const errorMessage =
-                errorData.message || errorData.error || `服务器错误 (${response.status})`;
+                errorData.message || errorData.error || `Server error (${response.status})`;
             return { success: false, message: errorMessage };
         }
 
@@ -376,8 +377,8 @@ export async function batchUpdateNodes(subscriptionIds: string[]): Promise<ApiRe
         const result = (await response.json()) as ApiResponse;
         return result;
     } catch (error) {
-        console.error('批量更新节点失败:', error);
-        return { success: false, message: '网络请求失败，请检查网络连接' };
+        console.error('Failed to batch update nodes:', error);
+        return { success: false, message: i18n.global.t('common.api.networkConnectionFail') };
     }
 }
 
@@ -418,8 +419,8 @@ export async function testLatency(
         // 返回测试结果（包含延迟时间）
         return await response.json();
     } catch (error) {
-        console.error('延迟测试失败:', error);
-        return { success: false, message: '网络请求失败' };
+        console.error('Latency test failed:', error);
+        return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -452,16 +453,16 @@ export async function exportBackup(): Promise<{
             };
             return {
                 success: false,
-                error: errorData.message || errorData.error || '导出失败'
+                error: errorData.message || errorData.error || i18n.global.t('common.api.exportFail')
             };
         }
 
         return await response.json();
     } catch (error) {
-        console.error('导出备份失败:', error);
+        console.error('Failed to export backup:', error);
         return {
             success: false,
-            error: error instanceof Error ? error.message : '网络请求失败'
+            error: error instanceof Error ? error.message : i18n.global.t('common.api.networkError')
         };
     }
 }
@@ -492,16 +493,16 @@ export async function importBackup(
             const errorData = (await response.json().catch(() => ({}))) as any;
             return {
                 success: false,
-                message: errorData.message || errorData.error || '导入失败'
+                message: errorData.message || errorData.error || i18n.global.t('common.api.importFail')
             };
         }
 
         return (await response.json()) as ApiResponse;
     } catch (error) {
-        console.error('导入备份失败:', error);
+        console.error('Failed to import backup:', error);
         return {
             success: false,
-            message: error instanceof Error ? error.message : '网络请求失败'
+            message: error instanceof Error ? error.message : i18n.global.t('common.api.networkError')
         };
     }
 }
@@ -531,16 +532,16 @@ export async function validateBackupFile(backupData: unknown): Promise<{
         if (!response.ok) {
             return {
                 valid: false,
-                error: '验证请求失败'
+                error: i18n.global.t('common.api.authFail')
             };
         }
 
         return await response.json();
     } catch (error) {
-        console.error('验证备份失败:', error);
+        console.error('Failed to verify backup:', error);
         return {
             valid: false,
-            error: error instanceof Error ? error.message : '网络请求失败'
+            error: error instanceof Error ? error.message : i18n.global.t('common.api.networkError')
         };
     }
 }
@@ -557,8 +558,8 @@ export async function createSnapshot(name: string): Promise<ApiResponse & { data
         });
         return await response.json();
     } catch (error) {
-        console.error('创建快照失败:', error);
-        return { success: false, message: '网络请求失败' };
+        console.error('Failed to create snapshot:', error);
+        return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -570,7 +571,7 @@ export async function fetchSnapshots(): Promise<{ success: boolean; data: any[] 
         const response = await fetch('/api/backup/snapshot/list');
         return await response.json();
     } catch (error) {
-        console.error('获取快照列表失败:', error);
+        console.error('Failed to fetch snapshot list:', error);
         return { success: false, data: [] };
     }
 }
@@ -588,7 +589,7 @@ export async function deleteSnapshot(id: string): Promise<boolean> {
         const result = (await response.json()) as { success: boolean };
         return result.success;
     } catch (error) {
-        console.error('删除快照失败:', error);
+        console.error('Failed to delete snapshot:', error);
         return false;
     }
 }
@@ -607,8 +608,8 @@ export async function batchDeleteSnapshots(
         });
         return await response.json();
     } catch (error) {
-        console.error('批量删除快照失败:', error);
-        return { success: false, message: '网络请求失败' };
+        console.error('Failed to batch delete snapshots:', error);
+        return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -627,8 +628,8 @@ export async function restoreSnapshot(
         });
         return await response.json();
     } catch (error) {
-        console.error('恢复快照失败:', error);
-        return { success: false, message: '网络请求失败' };
+        console.error('Failed to restore snapshot:', error);
+        return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }
 
@@ -659,13 +660,13 @@ export async function sendNotification(message: string): Promise<ApiResponse> {
             };
             return {
                 success: false,
-                message: errorData.message || errorData.error || `服务器错误 (${response.status})`
+                message: errorData.message || errorData.error || `Server error (${response.status})`
             };
         }
 
         return await response.json();
     } catch (error) {
-        console.error('发送通知失败:', error);
-        return { success: false, message: '网络请求失败' };
+        console.error('Failed to send notification:', error);
+        return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }

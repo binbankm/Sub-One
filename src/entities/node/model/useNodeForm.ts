@@ -3,8 +3,8 @@ import { computed, ref, watch } from 'vue';
 import type { Node } from '@/common/types/index';
 import { getProtocol } from '@/common/utils/protocols';
 import { extractHostAndPort, extractNodeName } from '@/common/utils/utils';
-
 import { useToastStore } from '@/stores/useNotificationStore';
+import i18n from '@/i18n';
 
 export function useNodeForm(
     props: { show: boolean; node: Node | null; isNew: boolean },
@@ -16,8 +16,8 @@ export function useNodeForm(
     const urlError = ref('');
     const hasAutoExtractedName = ref(false);
 
-    const modalTitle = computed(() => (props.isNew ? '新增手动节点' : '编辑手动节点'));
-    const saveButtonText = computed(() => (props.isNew ? '添加' : '保存'));
+    const modalTitle = computed(() => (props.isNew ? i18n.global.t('entities.node.form.newManualNode') : i18n.global.t('entities.node.form.editManualNode')));
+    const saveButtonText = computed(() => (props.isNew ? i18n.global.t('entities.node.form.add') : i18n.global.t('entities.node.form.save')));
     const canSave = computed(() => {
         return localNode.value?.url && !urlError.value;
     });
@@ -38,19 +38,19 @@ export function useNodeForm(
         urlError.value = '';
 
         if (!localNode.value?.url) {
-            urlError.value = '节点链接不能为空';
+            urlError.value = i18n.global.t('entities.node.form.urlEmpty');
             return false;
         }
 
         const url = localNode.value.url.trim();
 
         if (!url) {
-            urlError.value = '节点链接不能为空';
+            urlError.value = i18n.global.t('entities.node.form.urlEmpty');
             return false;
         }
 
         if (!url.includes('://')) {
-            urlError.value = '无效的节点链接格式';
+            urlError.value = i18n.global.t('entities.node.form.urlInvalid');
             return false;
         }
 
@@ -68,7 +68,7 @@ export function useNodeForm(
 
         if (url && !localNode.value.name && !hasAutoExtractedName.value) {
             const extractedName = extractNodeName(url);
-            if (extractedName && extractedName !== '未命名节点') {
+            if (extractedName && extractedName !== i18n.global.t('entities.node.fetching.unnamedNode')) {
                 localNode.value.name = extractedName;
                 hasAutoExtractedName.value = true;
             }
@@ -83,7 +83,7 @@ export function useNodeForm(
         if (!localNode.value) return;
 
         if (!validateUrl()) {
-            toastStore.showToast('请修正错误后再保存', 'error');
+            toastStore.showToast(i18n.global.t('common.form.fixErrors'), 'error');
             return;
         }
 

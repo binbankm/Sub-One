@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 import { useSubscriptionImport } from '@/entities/node/model/useSubscriptionImport';
 import type { Node } from '@/common/types/index';
@@ -39,6 +40,8 @@ const {
     importSubscription
 } = useSubscriptionImport(props, emit);
 
+const { t } = useI18n();
+
 // Local UI Refs and Handlers
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const triggerFileInput = () => {
@@ -54,16 +57,16 @@ const vFocus = {
 <template>
     <Modal
         :show="show"
-        confirm-text="导入"
+        :confirm-text="t('widgets.node.importModal.importBtn')"
         :confirm-disabled="isLoading"
         @update:show="emit('update:show', $event)"
         @confirm="importSubscription"
     >
         <template #title>
             <div class="flex flex-col gap-1">
-                <h3 class="gradient-text text-lg font-bold">导入订阅</h3>
+                <h3 class="gradient-text text-lg font-bold">{{ t('widgets.node.importModal.title') }}</h3>
                 <p class="text-xs font-normal text-gray-400">
-                    支持 URL 链接、纯文本、Base64 以及 Clash/YAML 配置文件
+                    {{ t('widgets.node.importModal.subtitle') }}
                 </p>
             </div>
         </template>
@@ -82,7 +85,7 @@ const vFocus = {
                     "
                     @click="mode = m"
                 >
-                    {{ m === 'url' ? '链接导入' : '文本/文件导入' }}
+                    {{ m === 'url' ? t('widgets.node.importModal.urlMode') : t('widgets.node.importModal.textMode') }}
                 </button>
             </div>
 
@@ -90,7 +93,7 @@ const vFocus = {
             <div v-if="mode === 'url'" class="space-y-4">
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                        >订阅链接</label
+                        >{{ t('widgets.node.importModal.urlLabel') }}</label
                     >
                     <input
                         v-model="subscriptionUrl"
@@ -105,9 +108,8 @@ const vFocus = {
                 <div
                     class="rounded-element border border-info-100 bg-info-50 p-3 text-xs leading-relaxed text-info-600 dark:border-info-800/30 dark:bg-info-900/10 dark:text-info-400"
                 >
-                    <p class="mb-1 font-bold">💡 提示：</p>
-                    此模式通过后端服务器下载订阅内容，适合需要定期更新的订阅源。如果链接包含敏感参数（如
-                    Token），它们将安全地传输给后端。
+                    <p class="mb-1 font-bold">{{ t('widgets.node.importModal.hintTitle') }}</p>
+                    {{ t('widgets.node.importModal.urlHintDesc') }}
                 </div>
             </div>
 
@@ -155,9 +157,9 @@ const vFocus = {
                         </div>
                         <div class="flex-1">
                             <p class="text-sm font-medium text-gray-700 dark:text-gray-200">
-                                点击上传或拖拽文件
+                                {{ t('widgets.node.importModal.uploadTitle') }}
                             </p>
-                            <p class="text-xs text-gray-400">支持 YAML, JSON, TXT 等格式</p>
+                            <p class="text-xs text-gray-400">{{ t('widgets.node.importModal.uploadDesc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -166,16 +168,16 @@ const vFocus = {
                 <div>
                     <div class="mb-1.5 flex items-center justify-between">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >订阅内容</label
+                            >{{ t('widgets.node.importModal.contentLabel') }}</label
                         >
                         <span v-if="textContent" class="text-xs text-gray-400">
-                            {{ textContent.length }} 字符
+                            {{ textContent.length }} {{ t('widgets.node.importModal.chars') }}
                         </span>
                     </div>
                     <textarea
                         v-model="textContent"
                         rows="6"
-                        placeholder="在此处粘贴 Base64、节点链接列表或 Clash 配置内容..."
+                        :placeholder="t('widgets.node.importModal.contentPlaceholder')"
                         class="input-modern w-full resize-none font-mono text-xs leading-relaxed"
                     ></textarea>
                 </div>

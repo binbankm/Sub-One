@@ -2,6 +2,7 @@ import { ref } from 'vue';
 
 import type { Profile } from '@/common/types/index';
 import { generateShortId, generateUUID } from '@/common/utils/utils';
+import i18n from '@/i18n';
 
 export function useProfiles(
     saveData: (reason: string, showToast?: boolean) => Promise<boolean>,
@@ -20,12 +21,12 @@ export function useProfiles(
         }
 
         if (profiles.value.some((p: Profile) => p.customId === newProfile.customId)) {
-            showToast('自定义ID已存在，请修改', 'error');
+            showToast(i18n.global.t('entities.profile.actions.customIdExists'), 'error');
             return false;
         }
 
         profiles.value.unshift(newProfile);
-        return await saveData('新增订阅组');
+        return await saveData(i18n.global.t('entities.profile.actions.add'));
     }
 
     async function updateProfile(profile: Profile): Promise<boolean> {
@@ -34,7 +35,7 @@ export function useProfiles(
 
         if (profile.customId !== profiles.value[idx].customId) {
             if (!profile.customId?.trim()) {
-                showToast('自定义ID不能为空', 'error');
+                showToast(i18n.global.t('entities.profile.actions.customIdEmpty'), 'error');
                 return false;
             }
             if (
@@ -42,36 +43,36 @@ export function useProfiles(
                     (p: Profile) => p.id !== profile.id && p.customId === profile.customId
                 )
             ) {
-                showToast('自定义ID已存在', 'error');
+                showToast(i18n.global.t('entities.profile.actions.customIdExists2'), 'error');
                 return false;
             }
         }
 
         profiles.value[idx] = { ...profile };
-        return await saveData('更新订阅组');
+        return await saveData(i18n.global.t('entities.profile.actions.update'));
     }
 
     async function deleteProfile(id: string) {
         profiles.value = profiles.value.filter((p: Profile) => p.id !== id);
-        await saveData('删除订阅组');
+        await saveData(i18n.global.t('entities.profile.actions.delete'));
     }
 
     async function deleteAllProfiles() {
         profiles.value = [];
-        await saveData('清空订阅组');
+        await saveData(i18n.global.t('entities.profile.actions.clear'));
     }
 
     async function batchDeleteProfiles(ids: string[]) {
         const idSet = new Set(ids);
         profiles.value = profiles.value.filter((p: Profile) => !idSet.has(p.id));
-        await saveData('批量删除订阅组');
+        await saveData(i18n.global.t('entities.profile.actions.batchDelete'));
     }
 
     async function toggleProfile(id: string, enabled: boolean) {
         const p = profiles.value.find((p: Profile) => p.id === id);
         if (p) {
             p.enabled = enabled;
-            await saveData('切换订阅组状态', false);
+            await saveData(i18n.global.t('entities.profile.actions.toggleStatus'), false);
         }
     }
 

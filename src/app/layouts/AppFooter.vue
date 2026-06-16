@@ -19,6 +19,9 @@
 <script setup lang="ts">
 // ==================== 导入依赖 ====================
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // ==================== 计算属性 ====================
 
@@ -72,7 +75,7 @@ const currentYear = computed(() => new Date().getFullYear());
                 <span class="mx-2">·</span>
 
                 <!-- 版权声明 -->
-                <span class="text-xs">All Rights Reserved</span>
+                <span class="text-xs">{{ t('layout.footer.rights') }}</span>
             </p>
 
             <!-- ==================== 特色标签 ==================== -->
@@ -83,7 +86,7 @@ const currentYear = computed(() => new Date().getFullYear());
                 <!-- 安全可靠标签 - 绿色脉冲指示灯 -->
                 <span class="flex items-center space-x-1">
                     <div class="h-2 w-2 animate-pulse rounded-full bg-success-400"></div>
-                    <span>安全可靠</span>
+                    <span>{{ t('layout.footer.secure') }}</span>
                 </span>
 
                 <!-- 高效管理标签 - 蓝色脉冲指示灯（延迟0.5s） -->
@@ -92,7 +95,7 @@ const currentYear = computed(() => new Date().getFullYear());
                         class="h-2 w-2 animate-pulse rounded-full bg-info-400"
                         style="animation-delay: 0.5s"
                     ></div>
-                    <span>高效管理</span>
+                    <span>{{ t('layout.footer.efficient') }}</span>
                 </span>
 
                 <!-- 隐私保护标签 - 紫色脉冲指示灯（延迟1s） -->
@@ -101,7 +104,7 @@ const currentYear = computed(() => new Date().getFullYear());
                         class="h-2 w-2 animate-pulse rounded-full bg-secondary-400"
                         style="animation-delay: 1s"
                     ></div>
-                    <span>隐私保护</span>
+                    <span>{{ t('layout.footer.privacy') }}</span>
                 </span>
             </div>
         </div>
