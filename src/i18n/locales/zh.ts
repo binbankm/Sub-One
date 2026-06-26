@@ -13,7 +13,7 @@ export default {
             },
             tg: {
                 title: 'Telegram 通知',
-                tokenPlaceholder: '从 @BotFather 获取的Bot Token',
+                tokenPlaceholder: '从 {\'@\'}BotFather 获取的Bot Token',
                 chatIdPlaceholder: '接收通知的聊天ID'
             },
             notify: {
@@ -609,7 +609,7 @@ export default {
                 tg: {
                     title: 'Telegram 通知',
                     token: 'Bot Token',
-                    tokenPlaceholder: '从 @BotFather 获取的Bot Token',
+                    tokenPlaceholder: '从 {\'@\'}BotFather 获取的Bot Token',
                     chatId: 'Chat ID',
                     chatIdPlaceholder: '接收通知的聊天ID'
                 },
