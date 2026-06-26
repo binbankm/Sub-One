@@ -13,7 +13,7 @@ export default {
             },
             tg: {
                 title: 'Telegram Notification',
-                tokenPlaceholder: 'Bot Token from @BotFather',
+                tokenPlaceholder: 'Bot Token from {\'@\'}BotFather',
                 chatIdPlaceholder: 'Chat ID for receiving notifications'
             },
             notify: {
@@ -610,7 +610,7 @@ export default {
                 tg: {
                     title: 'Telegram Notification',
                     token: 'Bot Token',
-                    tokenPlaceholder: 'Bot Token from @BotFather',
+                    tokenPlaceholder: 'Bot Token from {\'@\'}BotFather',
                     chatId: 'Chat ID',
                     chatIdPlaceholder: 'Chat ID to receive notifications'
                 },
