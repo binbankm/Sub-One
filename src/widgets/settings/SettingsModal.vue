@@ -759,7 +759,7 @@ watch(
                                                 class="rounded-element bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50 transition-colors"
                                                 @click="copyCronUrl"
                                             >
-                                                复制链接
+                                                {{ t('widgets.settings.modal.cron.copy') }}
                                             </button>
                                         </div>
                                     </div>
@@ -773,7 +773,7 @@ watch(
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                         </svg>
-                                        定时更新功能已关闭
+                                        {{ t('widgets.settings.modal.cron.disabled') }}
                                     </span>
                                 </p>
                             </div>
@@ -802,7 +802,7 @@ watch(
                                         d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
                                     />
                                 </svg>
-                                存储设置
+                                {{ t('widgets.settings.modal.storage.title') }}
                             </h4>
                             <StorageBackendSwitcher />
                         </section>

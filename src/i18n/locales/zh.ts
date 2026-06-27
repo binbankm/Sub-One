@@ -183,6 +183,7 @@ export default {
                 desc: '每行一个订阅链接或分享节点。将自动识别节点名称。'
             },
             confirm: {
+                confirm: '确认',
                 title: '确认操作',
                 message: '您确定要执行此操作吗？',
                 

@@ -124,7 +124,7 @@ async function confirmSwitch() {
     } catch (err: any) {
         console.error('Failed to migrate and switch backend:', err);
         error.value = err.message || t('widgets.settings.backendFail');
-        showToast(`操作失败：${error.value}`, 'error', 5000);
+        showToast(t('widgets.settings.storage.opFail', { error: error.value }), 'error', 5000);
     } finally {
         switching.value = false;
         targetBackend.value = null;
