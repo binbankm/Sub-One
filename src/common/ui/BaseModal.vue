@@ -31,10 +31,6 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-// ==================== Props 定义 ====================
-
-const { t } = useI18n();
-
 withDefaults(
     defineProps<{
         /** 显示状态 */
@@ -61,6 +57,10 @@ const emit = defineEmits<{
     /** 确认事件 */
     (e: 'confirm'): void;
 }>();
+
+// ==================== Props 定义 ====================
+
+const { t } = useI18n();
 
 // ==================== Slots 定义 ====================
 

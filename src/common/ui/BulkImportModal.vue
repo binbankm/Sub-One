@@ -15,8 +15,6 @@ import { useI18n } from 'vue-i18n';
 
 import Modal from '@/common/ui/BaseModal.vue';
 
-const { t } = useI18n();
-
 // ==================== Props 和 Emit ====================
 
 defineProps<{
@@ -28,6 +26,8 @@ const emit = defineEmits<{
     (e: 'update:show', value: boolean): void;
     (e: 'import', text: string): void;
 }>();
+
+const { t } = useI18n();
 
 // ==================== 状态 ====================
 

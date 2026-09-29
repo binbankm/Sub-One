@@ -14,8 +14,6 @@ import { copyToClipboard } from '@/common/utils/utils';
 import { useToastStore } from '@/stores/useNotificationStore';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 const props = defineProps<{
     sub: Subscription;
     isBatchMode?: boolean;
@@ -30,6 +28,8 @@ const emit = defineEmits<{
     (e: 'showNodes'): void;
     (e: 'toggleSelect'): void;
 }>();
+
+const { t } = useI18n();
 
 const toastStore = useToastStore();
 

@@ -31,7 +31,7 @@ export default {
                 enableDesc: '开启后，可通过第三方 Cron 服务自动更新订阅',
                 secret: 'Cron 安全密钥（Token）',
                 secretPlaceholder: '任意复杂的字符串，例如：my_secret_token',
-                hint1: '配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：<br />',
+                hint1: '配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：',
                 hint2: '如果您使用的是 Cloudflare Pages，由于平台限制必须通过这种接口方式触发定时任务；Docker 用户自带内部定时器，可选择配置。',
                 triggerUrl: '生成的专属触发链接：'
             },
@@ -486,7 +486,10 @@ export default {
                 selectManual: '选择手动节点',
                 searchNodePlaceholder: '搜索节点...',
                 unnamedNode: '未命名节点',
-                noNodeFound: '没有找到节点'
+                noNodeFound: '没有找到节点',
+                renameRules: '订阅组专属重命名规则 (可选)',
+                renameRulesHint: '在所有订阅汇入此组后做最终重命名',
+                renameRulesPlaceholder: '# 订阅组专属重命名规则 (每行一条: 匹配@替换，省略@内容直接删除)\n# 支持正则表达式\n香港|Hong Kong@HK\n\\[.*?\\]@'
             },
             exportModal: {
                 generalSub: '通用订阅',
@@ -596,7 +599,11 @@ export default {
                     prefixDesc: '将订阅名作为节点名前缀',
                     dedupeLabel: '节点去重',
                     dedupeTitle: '自动去重',
-                    dedupeDesc: '去除相同节点(IP+Port)'
+                    dedupeDesc: '去除相同节点(IP+Port)',
+                    renameLabel: '全局节点重命名',
+                    renameTitle: '全局重命名规则',
+                    renameDesc: '对所有订阅生效的通用节点重命名规则（每行一条: 匹配@替换）',
+                    renamePlaceholder: '# 全局节点重命名规则 (每行一条: 匹配@替换，省略@内容直接删除)\n# 支持正则表达式\n香港|Hong Kong@HK\n日本|Japan@JP\n美国|United States@US\n\\[.*?\\]@'
                 },
                 convert: {
                     title: '订阅转换方式',
@@ -629,7 +636,7 @@ export default {
                     enableDesc: '开启后，可通过第三方 Cron 服务自动更新订阅',
                     secret: 'Cron 安全密钥（Token）',
                     secretPlaceholder: '任意复杂的字符串，例如：my_secret_token',
-                    hint1: '配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：<br />',
+                    hint1: '配置后，您可以使用第三方工具（如 UptimeRobot、宝塔计划任务）定期请求：',
                     hint2: '如果您使用的是 Cloudflare Pages，由于平台限制必须通过这种接口方式触发定时任务；Docker 用户自带内部定时器，可选择配置。',
                     triggerUrl: '生成的专属触发链接：',
                     copy: '复制链接',
@@ -729,8 +736,31 @@ export default {
                 filterHint1: '支持正则表达式，多个规则用换行分隔。使用 ',
                 filterHintKeep: 'keep:',
                 filterHint2: ' 前缀表示白名单',
+                renameRules: '节点重命名规则',
+                renamePlaceholder: '输入节点重命名规则，每行一条: 匹配内容@替换内容',
                 addHintTitle: '添加订阅后自动获取节点',
                 addHintDesc: '保存后系统将自动从订阅链接获取节点数量和流量信息'
+            },
+            renameEditor: {
+                quickPresets: '常用预设',
+                showTester: '测试重命名',
+                hideTester: '隐藏测试',
+                showHelp: '规则说明',
+                hideHelp: '收起说明',
+                clear: '清空',
+                syntaxTitle: '重命名语法规则说明：',
+                syntax1: '每行一条规则，格式为：匹配内容@替换内容',
+                syntax2: '如果省略 @替换内容，则匹配到的文本将被直接删除',
+                syntax3: '支持正则表达式匹配与捕获组引用（如 HK-(\\d+)@香港 $1）',
+                syntax4: '匹配特殊符号请进行转义，例如匹配方括号使用 \\[专线\\]@',
+                defaultPlaceholder: '# 格式：匹配内容@替换内容 (省略@内容则直接删除)\n# 支持正则表达式，如需匹配 [] () 等请转义\n香港|Hong Kong@HK\n\\[专线\\]@',
+                testerTitle: '重命名实时测试',
+                testerDesc: '输入示例节点名即时预览效果',
+                sampleInput: '输入测试节点名称',
+                sampleOutput: '实时预览效果',
+                modified: '已匹配并替换',
+                noResult: '(替换后无名称)',
+                emptyFallback: '(名称被清空)'
             },
             card: {
                 copySuccess: '链接已复制到剪贴板',

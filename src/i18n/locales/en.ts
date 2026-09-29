@@ -31,7 +31,7 @@ export default {
                 enableDesc: 'When enabled, subscriptions can be auto-updated via third-party Cron services',
                 secret: 'Cron Security Token',
                 secretPlaceholder: 'Any complex string, e.g., my_secret_token',
-                hint1: 'Once configured, you can use third-party tools (like UptimeRobot) to periodically request:<br />',
+                hint1: 'Once configured, you can use third-party tools (like UptimeRobot) to periodically request:',
                 hint2: 'If you use Cloudflare Pages, you must trigger tasks via this interface due to platform limits. Docker users have an internal timer and can optionally configure this.',
                 triggerUrl: 'Generated Trigger URL:'
             },
@@ -486,7 +486,10 @@ export default {
                 selectManual: 'Select Manual Nodes',
                 searchNodePlaceholder: 'Search nodes...',
                 unnamedNode: 'Unnamed Node',
-                noNodeFound: 'No nodes found'
+                noNodeFound: 'No nodes found',
+                renameRules: 'Profile-Level Rename Rules (Optional)',
+                renameRulesHint: 'Final rename applied after merging all subs in this profile',
+                renameRulesPlaceholder: '# Profile rename rules (One per line: pattern@replacement, omit replacement to delete)\n# Supports regex\nHong Kong@HK\n\\[.*?\\]@'
             },
             exportModal: {
                 generalSub: 'General Sub',
@@ -596,7 +599,11 @@ export default {
                     prefixDesc: 'Use subscription name as node prefix',
                     dedupeLabel: 'Node Deduplication',
                     dedupeTitle: 'Auto Deduplicate',
-                    dedupeDesc: 'Remove identical nodes (IP+Port)'
+                    dedupeDesc: 'Remove identical nodes (IP+Port)',
+                    renameLabel: 'Global Node Rename',
+                    renameTitle: 'Global Rename Rules',
+                    renameDesc: 'Universal node rename rules applied to all subscriptions (One per line: pattern@replacement)',
+                    renamePlaceholder: '# Global rename rules (One per line: pattern@replacement, omit replacement to delete)\n# Supports regex\nHong Kong@HK\nJapan@JP\n\\[.*?\\]@'
                 },
                 convert: {
                     title: 'Subscription Conversion',
@@ -629,7 +636,7 @@ export default {
                     enableDesc: 'When enabled, subscriptions can be auto-updated via third-party Cron services',
                     secret: 'Cron Secret (Token)',
                     secretPlaceholder: 'Any complex string, e.g., my_secret_token',
-                    hint1: 'Once configured, you can use third-party tools (like UptimeRobot) to periodically request:<br />',
+                    hint1: 'Once configured, you can use third-party tools (like UptimeRobot) to periodically request:',
                     hint2: 'If you are using Cloudflare Pages, due to platform limitations, you must use this API to trigger scheduled tasks. Docker users have built-in internal timers and can configure this optionally.',
                     triggerUrl: 'Generated Trigger Link:',
                     copy: 'Copy Link',
@@ -729,8 +736,31 @@ export default {
                 filterHint1: 'Supports regex, separate multiple rules with line breaks. Use ',
                 filterHintKeep: 'keep:',
                 filterHint2: ' prefix for whitelist',
+                renameRules: 'Node Rename Rules',
+                renamePlaceholder: 'Enter node rename rules, one per line: pattern@replacement',
                 addHintTitle: 'Auto-fetch Nodes After Add',
                 addHintDesc: 'System will automatically fetch node count and traffic info from the URL after saving'
+            },
+            renameEditor: {
+                quickPresets: 'Quick Presets',
+                showTester: 'Test Rules',
+                hideTester: 'Hide Tester',
+                showHelp: 'Syntax Help',
+                hideHelp: 'Hide Help',
+                clear: 'Clear',
+                syntaxTitle: 'Rename Syntax Guidelines:',
+                syntax1: 'One rule per line: pattern@replacement',
+                syntax2: 'If @replacement is omitted, matched content is deleted directly',
+                syntax3: 'Supports regex and capture groups (e.g., HK-(\\d+)@Hong Kong $1)',
+                syntax4: 'Escape special regex characters like brackets: \\[VIP\\]@',
+                defaultPlaceholder: '# Format: pattern@replacement (omit @replacement to delete)\n# Supports regex, escape [] () when needed\nHong Kong@HK\n\\[VIP\\]@',
+                testerTitle: 'Rename Live Tester',
+                testerDesc: 'Enter a sample node name to test your rules in real-time',
+                sampleInput: 'Sample Node Name',
+                sampleOutput: 'Preview Result',
+                modified: 'Matched & Replaced',
+                noResult: '(No name after replace)',
+                emptyFallback: '(Name cleared)'
             },
             card: {
                 copySuccess: 'Link copied to clipboard',

@@ -23,6 +23,7 @@ import type { AppConfig } from '@/common/types/index';
 import { fetchSettings, saveSettings } from '@/common/utils/api';
 import Modal from '@/common/ui/BaseModal.vue';
 import StorageBackendSwitcher from '@/widgets/settings/StorageBackendSwitcher.vue';
+import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vue';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
@@ -53,6 +54,7 @@ const defaultSettings: AppConfig = {
 
     prependSubName: false,
     dedupe: false, // 默认关闭去重，保留所有节点
+    renameRules: '', // 全局节点重命名规则
 
     // 转换配置
     useExternalConverter: false, // 默认使用后端自带转换
@@ -461,6 +463,20 @@ watch(
                                     </div>
                                 </div>
 
+                                <!-- 全局节点重命名规则 -->
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    >
+                                        {{ t('widgets.settings.modal.profile.renameLabel') }}
+                                        <span class="ml-1 text-xs text-gray-400">({{ t('widgets.settings.modal.profile.renameDesc') }})</span>
+                                    </label>
+                                    <NodeRenameRuleEditor
+                                        v-model="settings.renameRules"
+                                        :placeholder="t('widgets.settings.modal.profile.renamePlaceholder')"
+                                    />
+                                </div>
+
                                 <!-- 开关组：使用外部转换API -->
                                 <div class="md:col-span-2">
                                     <label
@@ -737,7 +753,7 @@ watch(
                                         :placeholder="t('widgets.settings.modal.cron.secretPlaceholder')"
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        <span v-html="t('widgets.settings.modal.cron.hint1')"></span>
+                                        <span>{{ t('widgets.settings.modal.cron.hint1') }}</span><br />
                                         <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-white/5 text-primary-600 dark:text-primary-400 rounded inline-block select-all">/api/cron/trigger?token={{ settings.cronSecret || 'YOUR_TOKEN' }}</code><br />
                                         {{ t('widgets.settings.modal.cron.hint2') }}
                                     </p>

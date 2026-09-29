@@ -1,6 +1,6 @@
 import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
 import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
-import { ProxyNode, convert, parse, process } from '../proxy';
+import { ProxyNode, convert, parse, process, handleRenaming } from '../proxy';
 import { AppConfig, Profile, SubConfig, Subscription } from '../proxy/types';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
@@ -20,7 +20,8 @@ async function getStorage(env: Env) {
 async function generateCombinedNodeList(
     config: SubConfig,
     userAgent: string,
-    subs: Subscription[]
+    subs: Subscription[],
+    profileRename?: string
 ): Promise<ProxyNode[]> {
     // 1. 处理手动节点
     const manualNodes = subs.filter((sub) => {
@@ -33,6 +34,7 @@ async function generateCombinedNodeList(
     processedManualNodes = await process(
         processedManualNodes,
         {
+            globalRename: config.renameRules,
             prependSubName: config.prependSubName,
             dedupe: config.dedupe
         },
@@ -66,6 +68,8 @@ async function generateCombinedNodeList(
                 nodes,
                 {
                     exclude: sub.exclude,
+                    rename: sub.rename,
+                    globalRename: config.renameRules,
                     prependSubName: config.prependSubName,
                     dedupe: config.dedupe
                 },
@@ -78,7 +82,11 @@ async function generateCombinedNodeList(
     });
 
     const processedSubResults = await Promise.all(subPromises);
-    const allNodes: ProxyNode[] = [...processedManualNodes, ...processedSubResults.flat()];
+    let allNodes: ProxyNode[] = [...processedManualNodes, ...processedSubResults.flat()];
+
+    if (profileRename && profileRename.trim()) {
+        allNodes = handleRenaming(allNodes, profileRename);
+    }
 
     return allNodes;
 }
@@ -273,6 +281,7 @@ export async function handleSubRequest(
     let targetSubs: Subscription[];
     let subName = config.FileName;
     let isProfileExpired = false;
+    let activeProfile: Profile | null = null;
 
     const DEFAULT_EXPIRED_NODE = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent('您的订阅已失效')}`;
 
@@ -282,6 +291,7 @@ export async function handleSubRequest(
         }
         const profile = allProfiles.find((p) => p.customId === profileIdentifier);
         if (profile && profile.enabled) {
+            activeProfile = profile;
             if (profile.expiresAt) {
                 const expiryDate = new Date(profile.expiresAt);
                 const now = new Date();
@@ -466,7 +476,8 @@ export async function handleSubRequest(
             const combinedNodes = await generateCombinedNodeList(
                 config,
                 upstreamUserAgent,
-                targetSubs
+                targetSubs,
+                activeProfile?.rename
             );
             convertedContent = await convert(combinedNodes, targetFormat, {
                 filename: subName
