@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 
 import type { Profile } from '@/common/types/index';
+import { formatBytes, getTrafficColorClass } from '@/common/utils/format';
 import NodeDistributionChart from '@/widgets/dashboard/NodeDistributionChart.vue';
 
 import { useDataStore } from '@/stores/useAppStore';
@@ -24,6 +25,70 @@ const { activeSubscriptions, manualNodes, profiles, totalNodeCount, activeNodeCo
 // Computed for Display
 const { t, tm } = useI18n();
 const activeProfilesCount = computed(() => profiles.value.filter((p: Profile) => p.enabled).length);
+interface SoonestExpire {
+    name: string;
+    expire: number;
+    daysLeft: number;
+}
+
+interface TrafficSummary {
+    hasData: boolean;
+    totalUsedFormatted: string;
+    totalQuotaFormatted: string;
+    remainingFormatted: string;
+    percentage: number;
+    colorClass: string;
+    soonestExpireSub: SoonestExpire | null;
+}
+
+const trafficSummary = computed<TrafficSummary>(() => {
+    let totalUsed = 0;
+    let totalQuota = 0;
+    let hasData = false;
+
+    let soonestExpireSub: SoonestExpire | null = null;
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    activeSubscriptions.value.forEach((sub) => {
+        if (sub.userInfo) {
+            const used = (sub.userInfo.upload || 0) + (sub.userInfo.download || 0);
+            const total = sub.userInfo.total || 0;
+            if (total > 0 || used > 0) {
+                totalUsed += used;
+                totalQuota += total;
+                hasData = true;
+            }
+
+            if (sub.userInfo.expire && sub.userInfo.expire > 0) {
+                const expireSec = sub.userInfo.expire;
+                const daysLeft = Math.ceil((expireSec - nowSec) / 86400);
+                if (daysLeft >= 0) {
+                    if (!soonestExpireSub || expireSec < soonestExpireSub.expire) {
+                        soonestExpireSub = {
+                            name: sub.name,
+                            expire: expireSec,
+                            daysLeft
+                        };
+                    }
+                }
+            }
+        }
+    });
+
+    const percentage =
+        totalQuota > 0 ? Math.min(100, Math.round((totalUsed / totalQuota) * 100)) : 0;
+
+    return {
+        hasData,
+        totalUsedFormatted: formatBytes(totalUsed),
+        totalQuotaFormatted: formatBytes(totalQuota),
+        remainingFormatted: formatBytes(Math.max(0, totalQuota - totalUsed)),
+        percentage,
+        colorClass: getTrafficColorClass(percentage),
+        soonestExpireSub
+    };
+});
+
 const isUpdatingAllSubs = ref(false);
 
 const handleUpdateAll = async () => {
@@ -175,6 +240,83 @@ onMounted(() => {
                             <div class="h-px flex-1 bg-gray-300/30 dark:bg-white/10"></div>
                         </footer>
                     </blockquote>
+                </div>
+            </div>
+        </div>
+
+        <!-- 全局聚合流量与到期概览卡片 -->
+        <div
+            class="card-glass group relative overflow-hidden rounded-card p-5 shadow-elevated transition-all duration-300 hover:shadow-card"
+        >
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <!-- 左侧：全局流量汇总进度 -->
+                <div class="flex-1 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
+                                📊
+                            </span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">
+                                {{ t('views.dashboard.trafficOverview') }}
+                            </span>
+                        </div>
+                        <div v-if="trafficSummary.hasData" class="flex items-baseline gap-1 text-xs">
+                            <span class="font-bold text-gray-900 dark:text-white">{{ trafficSummary.totalUsedFormatted }}</span>
+                            <span class="text-gray-400">/ {{ trafficSummary.totalQuotaFormatted }}</span>
+                            <span class="ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-xs" :class="trafficSummary.colorClass">
+                                {{ trafficSummary.percentage }}% {{ t('views.dashboard.usedPercentage') }}
+                            </span>
+                        </div>
+                        <div v-else class="text-xs text-gray-400">
+                            {{ t('views.dashboard.noTrafficData') }}
+                        </div>
+                    </div>
+
+                    <!-- 进度条 -->
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200/80 dark:bg-white/10">
+                        <div
+                            class="h-full rounded-full transition-all duration-1000"
+                            :class="trafficSummary.colorClass"
+                            :style="{ width: `${trafficSummary.percentage}%` }"
+                        ></div>
+                    </div>
+
+                    <div v-if="trafficSummary.hasData" class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                        <span>{{ t('views.dashboard.remainingTraffic') }}: <strong class="text-gray-700 dark:text-gray-300 font-mono">{{ trafficSummary.remainingFormatted }}</strong></span>
+                        <span class="hidden sm:inline opacity-75">{{ t('views.dashboard.trafficOverviewDesc') }}</span>
+                    </div>
+                </div>
+
+                <!-- 分割线 -->
+                <div class="hidden h-12 w-px bg-gray-200 md:block dark:bg-white/10"></div>
+                <div class="h-px w-full bg-gray-200 md:hidden dark:bg-white/10"></div>
+
+                <!-- 右侧：到期提醒状态 -->
+                <div class="flex items-center gap-3 md:min-w-60">
+                    <div
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-button text-lg"
+                        :class="trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? 'bg-danger-500/10 text-danger-500 dark:bg-danger-500/20' : 'bg-success-500/10 text-success-500 dark:bg-success-500/20'"
+                    >
+                        {{ trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? '⚠️' : '🛡️' }}
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold" :class="trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? 'text-danger-600 dark:text-danger-400' : 'text-gray-800 dark:text-gray-200'">
+                            <template v-if="trafficSummary.soonestExpireSub">
+                                <span v-if="trafficSummary.soonestExpireSub.daysLeft === 0">
+                                    {{ t('views.dashboard.expiringToday', { name: trafficSummary.soonestExpireSub.name }) }}
+                                </span>
+                                <span v-else>
+                                    {{ t('views.dashboard.expiringSoon', { name: trafficSummary.soonestExpireSub.name, days: trafficSummary.soonestExpireSub.daysLeft }) }}
+                                </span>
+                            </template>
+                            <template v-else>
+                                {{ t('views.dashboard.allSubsHealthy') }}
+                            </template>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                            {{ activeSubscriptions.length }} 个活跃订阅源实时在线
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

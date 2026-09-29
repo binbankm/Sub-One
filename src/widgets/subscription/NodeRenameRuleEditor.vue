@@ -296,6 +296,11 @@ const sampleTestResults = computed(() => {
 // 丰富多样的预设规则库
 const presets = [
     {
+        label: '剔除广告节点',
+        tooltip: '匹配并完全剔除带官网、防失联、剩余/已用流量、到期、公告教程等非代理节点',
+        rule: '.*(官网|地址|防失联|群组|发布页|剩余|已用|到期|总量|更新|教程|线路|禁止|\\.cc|\\.com|\\.net).*@'
+    },
+    {
         label: '去标签符号',
         tooltip: '去除 [专线] 等方括号标签',
         rule: '\\[[^\\]]*\\]@'
@@ -307,18 +312,18 @@ const presets = [
     },
     {
         label: '常见国家代码',
-        tooltip: '将香港、日本、美国等统一为标准代码 HK, JP, US 等',
-        rule: '香港|Hong Kong@HK\n日本|Japan@JP\n美国|United States@US\n新加坡|Singapore@SG\n台湾|Taiwan@TW\n韩国|Korea@KR'
+        tooltip: '将香港、日本、美国、新加坡、越南、瑞士、德国等统一为标准代码 HK, JP, US 等',
+        rule: '香港|Hong Kong@HK\n日本|Japan@JP\n美国|United States@US\n新加坡|Singapore@SG\n台湾|Taiwan@TW\n韩国|Korea@KR\n越南@VN\n德国@DE\n瑞士@CH\n英国|United Kingdom@UK'
+    },
+    {
+        label: '去协议杂项后缀',
+        tooltip: '去除节点中如 -anytls, -hy2, -下载专用, -极速 等冗余技术后缀',
+        rule: '-(下载专用|极速|直连|中继|BGP|IEPL|IPLC|anytls|hy2|vmess|vless|trojan|ss)@'
     },
     {
         label: '序号补零 (1->01)',
         tooltip: '将单数字序号规范为两位数对齐 (如 HK 1 -> HK 01)',
         rule: '\\b([A-Za-z]+)\\s*(\\d)\\b@$1 0$2'
-    },
-    {
-        label: '剔除广告节点',
-        tooltip: '匹配并完全剔除带官网、防失联、公告等纯广告非代理节点',
-        rule: '.*(官网|防失联|群组|发布页|剩余流量|到期时间|禁止).*@'
     },
     {
         label: '去全部 Emoji',
@@ -327,8 +332,8 @@ const presets = [
     },
     {
         label: '补齐国旗 Emoji',
-        tooltip: '为标准国家代码补上国旗 (如 HK -> 🇭🇰 HK)',
-        rule: '\\bHK\\b@🇭🇰 HK\n\\bJP\\b@🇯🇵 JP\n\\bUS\\b@🇺🇸 US\n\\bSG\\b@🇸🇬 SG\n\\bTW\\b@🇹🇼 TW\n\\bKR\\b@🇰🇷 KR'
+        tooltip: '为标准国家代码补上国旗 (如 HK -> 🇭🇰 HK, US -> 🇺🇸 US)',
+        rule: '\\bHK\\b@🇭🇰 HK\n\\bJP\\b@🇯🇵 JP\n\\bUS\\b@🇺🇸 US\n\\bSG\\b@🇸🇬 SG\n\\bTW\\b@🇹🇼 TW\n\\bKR\\b@🇰🇷 KR\n\\bVN\\b@🇻🇳 VN\n\\bDE\\b@🇩🇪 DE\n\\bCH\\b@🇨🇭 CH\n\\bUK\\b@🇬🇧 UK'
     }
 ];
 

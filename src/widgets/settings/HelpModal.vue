@@ -183,6 +183,7 @@ const features = [
                                     >
                                         {{ t('widgets.settings.help.guide.step1_title') }}
                                     </h4>
+                                    <!-- eslint-disable-next-line vue/no-v-html -->
                                     <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step1_desc')"></p>
                                 </div>
                             </div>
@@ -202,6 +203,7 @@ const features = [
                                     >
                                         {{ t('widgets.settings.help.guide.step2_title') }}
                                     </h4>
+                                    <!-- eslint-disable-next-line vue/no-v-html -->
                                     <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step2_desc')"></p>
                                 </div>
                             </div>
@@ -221,6 +223,7 @@ const features = [
                                     >
                                         {{ t('widgets.settings.help.guide.step3_title') }}
                                     </h4>
+                                    <!-- eslint-disable-next-line vue/no-v-html -->
                                     <p class="text-gray-600 dark:text-gray-300" v-html="t('widgets.settings.help.guide.step3_desc')"></p>
                                 </div>
                             </div>

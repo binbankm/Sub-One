@@ -32,18 +32,14 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
         if (!sub.url.startsWith('http') || !sub.enabled) return;
 
         try {
-            const singleRequest = fetch(
+            const response = await fetch(
                 new Request(sub.url, {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
                     redirect: 'follow',
-                    cf: { insecureSkipVerify: true }
-                } as RequestInit)
+                    cf: { insecureSkipVerify: true },
+                    signal: AbortSignal.timeout(15000)
+                } as any)
             );
-
-            const response = (await Promise.race([
-                singleRequest,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ])) as Response;
 
             if (response.ok) {
                 const updateData: { userInfo?: SubscriptionUserInfo; nodeCount?: number } = {};

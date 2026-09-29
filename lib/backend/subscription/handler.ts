@@ -48,16 +48,14 @@ async function generateCombinedNodeList(
     });
     const subPromises = httpSubs.map(async (sub) => {
         try {
-            const response = (await Promise.race([
-                fetch(
-                    new Request(sub.url, {
-                        headers: { 'User-Agent': userAgent },
-                        redirect: 'follow',
-                        cf: { insecureSkipVerify: true }
-                    })
-                ),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ])) as Response;
+            const response = await fetch(
+                new Request(sub.url, {
+                    headers: { 'User-Agent': userAgent },
+                    redirect: 'follow',
+                    cf: { insecureSkipVerify: true },
+                    signal: AbortSignal.timeout(15000)
+                } as any)
+            );
 
             if (!response.ok) return [];
             const text = await response.text();

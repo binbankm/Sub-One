@@ -155,6 +155,7 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
                         <div
                             class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
                         >
+                            <!-- eslint-disable-next-line vue/no-v-html -->
                             <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400" v-html="t('widgets.profile.exportModal.tokenHint')"></p>
                         </div>
                     </div>

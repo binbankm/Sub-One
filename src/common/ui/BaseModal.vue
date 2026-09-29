@@ -45,7 +45,8 @@ withDefaults(
     }>(),
     {
         size: 'sm',
-        confirmDisabled: false
+        confirmDisabled: false,
+        confirmButtonTitle: undefined
     }
 );
 

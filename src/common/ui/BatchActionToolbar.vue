@@ -10,7 +10,8 @@ const props = withDefaults(
         deleteLabel?: string;
     }>(),
     {
-        accent: 'primary'
+        accent: 'primary',
+        deleteLabel: undefined
     }
 );
 
