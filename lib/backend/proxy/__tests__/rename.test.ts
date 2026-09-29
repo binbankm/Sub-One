@@ -70,11 +70,22 @@ describe('Node Rename Processor', () => {
         expect(result[0].name).toBe('HK 01');
     });
 
-    it('should retain fallback if replacement empties the node name', () => {
-        const nodes = [createMockNode('香港')];
-        const rules = '香港@';
+    it('should drop node if rules completely clear the node name (e.g. ad/notice nodes)', () => {
+        const nodes = [
+            createMockNode('官网: fly.com (加群防失联)'),
+            createMockNode('香港 01')
+        ];
+        const rules = '.*(官网|防失联).*@';
         const result = handleRenaming(nodes, rules);
-        expect(result[0].name).toBe('香港');
+        expect(result.length).toBe(1);
+        expect(result[0].name).toBe('香港 01');
+    });
+
+    it('should collapse multiple consecutive spaces into a single space', () => {
+        const nodes = [createMockNode('[VIP专线]   香港   01')];
+        const rules = '\\[VIP专线\\]@';
+        const result = handleRenaming(nodes, rules);
+        expect(result[0].name).toBe('香港 01');
     });
 
     it('should execute in correct order with process(): sub rename -> global rename -> prepend sub name', async () => {

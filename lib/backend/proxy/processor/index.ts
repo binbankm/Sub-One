@@ -94,7 +94,9 @@ export function handleRenaming(nodes: ProxyNode[], renameRulesStr?: string): Pro
 
     if (rules.length === 0) return nodes;
 
-    nodes.forEach((node) => {
+    const resultNodes: ProxyNode[] = [];
+
+    for (const node of nodes) {
         let currentName = node.name;
         for (const rule of rules) {
             if (rule.regex) {
@@ -103,13 +105,16 @@ export function handleRenaming(nodes: ProxyNode[], renameRulesStr?: string): Pro
                 currentName = currentName.split(rule.literal).join(rule.replacement);
             }
         }
-        currentName = currentName.trim();
+        // 清理连续多余空格及首尾空格
+        currentName = currentName.replace(/\s+/g, ' ').trim();
+        // 如果节点重命名后不为空，保留该节点；若被规则全量清空（如公告、广告节点），则自动丢弃剔除
         if (currentName) {
             node.name = currentName;
+            resultNodes.push(node);
         }
-    });
+    }
 
-    return nodes;
+    return resultNodes;
 }
 
 /**

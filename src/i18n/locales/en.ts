@@ -768,6 +768,8 @@ export default {
                 unnamed: 'Unnamed Subscription',
                 filterEnabledMsg: 'Filter rule enabled: ',
                 filterLabel: 'Rule Filtered',
+                renameEnabledMsg: 'Node rename rule enabled: ',
+                renameLabel: 'Renamed',
                 edit: 'Edit',
                 delete: 'Delete',
                 subUrl: 'Subscription URL',

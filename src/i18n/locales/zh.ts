@@ -768,6 +768,8 @@ export default {
                 unnamed: '未命名订阅',
                 filterEnabledMsg: '已启用规则过滤: ',
                 filterLabel: '规则过滤',
+                renameEnabledMsg: '已启用节点重命名: ',
+                renameLabel: '重命名',
                 edit: '编辑',
                 delete: '删除',
                 subUrl: '订阅链接',
