@@ -20,7 +20,8 @@ export function useProfileForm(props: UseProfileFormProps, onSave: (profile: Pro
         manualNodes: [],
         customId: '',
         expiresAt: '',
-        type: 'base64'
+        type: 'base64',
+        rename: ''
     });
 
     const subscriptionSearchTerm = ref('');

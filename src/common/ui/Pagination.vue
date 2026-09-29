@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 defineProps<{
     currentPage: number;
     totalPages: number;
@@ -11,6 +9,9 @@ defineProps<{
 defineEmits<{
     (e: 'change-page', page: number): void;
 }>();
+
+const { t } = useI18n();
+
 </script>
 
 <template>

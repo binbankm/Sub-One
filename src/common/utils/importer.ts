@@ -59,7 +59,9 @@ export function createSubscription(url: string, name?: string): Subscription {
         // 初始不在更新中
         isUpdating: false,
         // 初始排除规则为空
-        exclude: ''
+        exclude: '',
+        // 初始重命名规则为空
+        rename: ''
     };
 }
 

@@ -16,9 +16,8 @@ import { useSubscriptionForm } from '@/entities/subscription/model/useSubscripti
 import type { Subscription } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
 import NodeFilterRuleEditor from '@/widgets/subscription/NodeFilterRuleEditor.vue';
+import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vue';
 import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 const props = defineProps<{
     /** 显示状态 */
@@ -33,6 +32,8 @@ const emit = defineEmits<{
     (e: 'update:show', value: boolean): void;
     (e: 'save', subscription: Subscription, silent?: boolean): void;
 }>();
+
+const { t } = useI18n();
 
 const {
     localSubscription,
@@ -175,6 +176,21 @@ const {
                                     >
                                     {{ t('widgets.subscription.modal.filterHint2') }}
                                 </p>
+                            </div>
+
+                            <!-- 节点重命名规则 -->
+                            <div>
+                                <label
+                                    class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {{ t('widgets.subscription.modal.renameRules') }}
+                                    <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
+                                </label>
+                                <NodeRenameRuleEditor
+                                    v-model="localSubscription.rename"
+                                    :subscription-url="localSubscription.url"
+                                    :placeholder="t('widgets.subscription.modal.renamePlaceholder')"
+                                />
                             </div>
                         </div>
                     </Transition>

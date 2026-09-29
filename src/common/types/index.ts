@@ -45,7 +45,8 @@ export type {
 
     // 其他
     User,
-    UserRole
+    UserRole,
+    CronLogEntry
 } from '../../../lib/backend/proxy/types';
 
 // ==================== 3. 类型扩展定义 ====================

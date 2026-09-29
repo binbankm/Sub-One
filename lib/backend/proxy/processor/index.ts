@@ -13,8 +13,8 @@ import { buildRegex, getNodeFingerprint, isNotEmpty } from '../utils';
  * 1. 基础过滤 (Filter)
  * 2. 基础去重 (Deduplicate)
  * 3. 基础排序 (Sort)
- * 4. 基础重命名 (Rename)
- * 5. 高级操作符 (Advanced Operators)
+ * 4. 基础重命名 (Rename: 专属规则 -> 全局规则)
+ * 5. 前缀添加 (PrependSubName)
  */
 export async function process(
     nodes: ProxyNode[],
@@ -31,7 +31,15 @@ export async function process(
         result = handleDeduplicate(result);
     }
 
-    // 4. 重命名逻辑
+    // 3. 节点重命名逻辑 (订阅专属规则 -> 全局规则)
+    if (options.rename) {
+        result = handleRenaming(result, options.rename);
+    }
+    if (options.globalRename) {
+        result = handleRenaming(result, options.globalRename);
+    }
+
+    // 4. 前缀逻辑
     if (options.prependSubName && isNotEmpty(subscriptionName)) {
         result.forEach((node) => {
             if (!node.name.startsWith(subscriptionName)) {
@@ -41,6 +49,72 @@ export async function process(
     }
 
     return result;
+}
+
+/**
+ * 节点重命名逻辑
+ *
+ * 语法格式:
+ * - 每行一条规则: pattern@replacement
+ * - 若无 @，则默认直接删除匹配到的内容
+ * - 支持正则表达式 (例如 \[[^\]]*\]@ 或 HK-(\d+)@香港 $1)
+ * - 支持行注释 (以 # 或 // 开头)
+ */
+export function handleRenaming(nodes: ProxyNode[], renameRulesStr?: string): ProxyNode[] {
+    if (!renameRulesStr || !renameRulesStr.trim()) return nodes;
+
+    const lines = renameRulesStr.split(/\r?\n/);
+    const rules: Array<{ regex: RegExp | null; literal: string; replacement: string }> = [];
+
+    for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#') || line.startsWith('//')) continue;
+
+        const atIndex = line.indexOf('@');
+        let pattern = '';
+        let replacement = '';
+        if (atIndex !== -1) {
+            pattern = line.substring(0, atIndex).trim();
+            replacement = line.substring(atIndex + 1).replace(/\r$/, '');
+        } else {
+            pattern = line;
+            replacement = '';
+        }
+
+        if (!pattern) continue;
+
+        let regex: RegExp | null = null;
+        try {
+            regex = new RegExp(pattern, 'gi');
+        } catch {
+            regex = null;
+        }
+        rules.push({ regex, literal: pattern, replacement });
+    }
+
+    if (rules.length === 0) return nodes;
+
+    const resultNodes: ProxyNode[] = [];
+
+    for (const node of nodes) {
+        let currentName = node.name;
+        for (const rule of rules) {
+            if (rule.regex) {
+                currentName = currentName.replace(rule.regex, rule.replacement);
+            } else {
+                currentName = currentName.split(rule.literal).join(rule.replacement);
+            }
+        }
+        // 清理连续多余空格及首尾空格
+        currentName = currentName.replace(/\s+/g, ' ').trim();
+        // 如果节点重命名后不为空，保留该节点；若被规则全量清空（如公告、广告节点），则自动丢弃剔除
+        if (currentName) {
+            node.name = currentName;
+            resultNodes.push(node);
+        }
+    }
+
+    return resultNodes;
 }
 
 /**

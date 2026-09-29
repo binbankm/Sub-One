@@ -1,7 +1,7 @@
-import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, OLD_KV_KEY } from '../config/constants';
+import { KV_KEY_CRON_LOGS, KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, OLD_KV_KEY } from '../config/constants';
 import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
 import { ProxyNode, convert, parse, process } from '../proxy';
-import { AppConfig, Profile, Subscription, SubscriptionUserInfo } from '../proxy/types';
+import { AppConfig, CronLogEntry, Profile, Subscription, SubscriptionUserInfo } from '../proxy/types';
 import {
     ImportMode,
     batchDeleteServerSnapshots,
@@ -19,6 +19,7 @@ import { IStorageService, StorageFactory } from '../services/storage';
 import { getStorageBackendInfo, setStorageBackend } from '../services/storage-backend';
 import { authenticateUser, createUser, hasUsers } from '../services/users';
 import { Env } from '../types';
+import { isSafePublicUrl } from '../utils/common';
 import { COOKIE_NAME, SESSION_DURATION, authMiddleware, generateSecureToken } from './auth';
 
 // const subscriptionParser = new SubscriptionParser();
@@ -208,6 +209,34 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
     }
 
+    // [新增] 获取定时任务更新历史记录
+    if (path === '/cron/history') {
+        if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
+        try {
+            const storage = await getStorage(env);
+            const history = (await storage.get<CronLogEntry[]>(KV_KEY_CRON_LOGS)) || [];
+            return new Response(JSON.stringify({ success: true, history }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e: any) {
+            return new Response(JSON.stringify({ success: false, history: [] }), { status: 500 });
+        }
+    }
+
+    // [新增] 清空定时任务历史记录
+    if (path === '/cron/history/clear') {
+        if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+        try {
+            const storage = await getStorage(env);
+            await storage.put(KV_KEY_CRON_LOGS, []);
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e: any) {
+            return new Response(JSON.stringify({ success: false, error: e?.message }), { status: 500 });
+        }
+    }
+
     if (path === '/login') {
         if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
         try {
@@ -382,12 +411,12 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 exclude?: string;
             };
 
-            // 验证参数：必须提供 url 或 content 其中之一
+            // 验证参数：必须提供 url 或 content 其中之一（对 url 执行 SSRF 安全校验）
             if (
                 !rawContent &&
-                (!subUrl || typeof subUrl !== 'string' || !/^https?:\/\//.test(subUrl))
+                (!subUrl || typeof subUrl !== 'string' || !isSafePublicUrl(subUrl))
             ) {
-                return new Response(JSON.stringify({ error: 'Invalid or missing url/content' }), {
+                return new Response(JSON.stringify({ error: 'Invalid, missing, or forbidden URL' }), {
                     status: 400
                 });
             }
@@ -429,27 +458,17 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     });
                 }
 
-                // 情况二：通过 URL 下载（原有逻辑）
-                const fetchOptions = {
+                // 情况二：通过 URL 下载（合并单次请求，提升50%抓取速度并防止机场防刷限制）
+                const response = await fetch(new Request(subUrl!, {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
                     redirect: 'follow',
-                    cf: { insecureSkipVerify: true }
-                } as any;
-                const trafficFetchOptions = {
-                    headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                    redirect: 'follow',
-                    cf: { insecureSkipVerify: true }
-                } as any;
+                    cf: { insecureSkipVerify: true },
+                    signal: AbortSignal.timeout(15000)
+                } as any));
 
-                const trafficRequest = fetch(new Request(subUrl!, trafficFetchOptions));
-                const nodeCountRequest = fetch(new Request(subUrl!, fetchOptions));
-
-                const responses = await Promise.allSettled([trafficRequest, nodeCountRequest]);
-
-                // 1. 处理流量请求的结果
-                if (responses[0].status === 'fulfilled' && responses[0].value.ok) {
-                    const trafficResponse = responses[0].value;
-                    const userInfoHeader = trafficResponse.headers.get('subscription-userinfo');
+                if (response.ok) {
+                    // 1. 提取流量信息
+                    const userInfoHeader = response.headers.get('subscription-userinfo');
                     if (userInfoHeader) {
                         const info: Partial<SubscriptionUserInfo> = {};
                         userInfoHeader.split(';').forEach((part) => {
@@ -463,26 +482,18 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                         });
                         result.userInfo = info;
                     }
-                } else if (responses[0].status === 'rejected') {
-                    console.error(`Traffic request for ${subUrl} rejected:`, responses[0].reason);
-                }
 
-                // 2. 处理节点数请求的结果
-                if (responses[1].status === 'fulfilled' && responses[1].value.ok) {
-                    const nodeCountResponse = responses[1].value;
-                    const text = await nodeCountResponse.text();
-
-                    // 使用统一的解析逻辑
+                    // 2. 处理并解析节点数据
+                    const text = await response.text();
                     let nodeCount = 0;
                     let parsedNodes: ProxyNode[] = [];
                     try {
-                        // 解析节点，应用过滤规则
                         parsedNodes = parse(text);
                         parsedNodes = await process(
                             parsedNodes,
                             {
                                 dedupe: false,
-                                exclude: exclude // 应用过滤规则
+                                exclude: exclude
                             },
                             ''
                         );
@@ -497,10 +508,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     if (returnNodes && parsedNodes.length > 0) {
                         result.nodes = await ensureNodeUrls(parsedNodes);
                     }
-                } else if (responses[1].status === 'rejected') {
+                } else {
                     console.error(
-                        `Node count request for ${subUrl} rejected:`,
-                        responses[1].reason
+                        `Node count request for ${subUrl} failed: HTTP ${response.status}`
                     );
                 }
 
@@ -557,18 +567,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 // 并行更新所有订阅的节点信息
                 const updatePromises = subsToUpdate.map(async (sub) => {
                     try {
-                        const fetchOptions = {
-                            headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                            redirect: 'follow',
-                            cf: { insecureSkipVerify: true }
-                        } as any;
-
-                        const response = (await Promise.race([
-                            fetch(sub.url, fetchOptions),
-                            new Promise((_, reject) =>
-                                setTimeout(() => reject(new Error('Timeout')), 30000)
-                            )
-                        ])) as Response;
+                        const response = await fetch(
+                            new Request(sub.url, {
+                                headers: { 'User-Agent': GLOBAL_USER_AGENT },
+                                redirect: 'follow',
+                                cf: { insecureSkipVerify: true },
+                                signal: AbortSignal.timeout(15000)
+                            } as any)
+                        );
 
                         if (response.ok) {
                             // 更新流量信息

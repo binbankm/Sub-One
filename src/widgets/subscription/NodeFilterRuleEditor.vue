@@ -20,8 +20,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import Modal from '@/common/ui/BaseModal.vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 // ==================== Props 和 Emit ====================
 
 const props = withDefaults(
@@ -38,6 +36,8 @@ const emit = defineEmits<{
     /** 更新过滤规则 */
     (e: 'update:modelValue', value: string): void;
 }>();
+
+const { t } = useI18n();
 
 // ==================== 预定义数据 ====================
 

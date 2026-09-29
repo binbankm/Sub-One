@@ -7,7 +7,7 @@
 export * from './types';
 export * from './constants';
 export { parse } from './parser/index';
-export { process } from './processor/index';
+export { process, handleRenaming } from './processor/index';
 export { convert } from './converter/index';
 export { normalizeProxyNode } from './parser/normalizer';
 export * from './utils';

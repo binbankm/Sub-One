@@ -7,6 +7,7 @@ export const defaultSettings: AppConfig = {
 
     prependSubName: false,
     dedupe: false,
+    renameRules: '',
 
     // 转换配置
     useExternalConverter: false,

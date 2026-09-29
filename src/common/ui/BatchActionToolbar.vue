@@ -2,8 +2,6 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
-
 const props = withDefaults(
     defineProps<{
         visible: boolean;
@@ -12,7 +10,8 @@ const props = withDefaults(
         deleteLabel?: string;
     }>(),
     {
-        accent: 'primary'
+        accent: 'primary',
+        deleteLabel: undefined
     }
 );
 
@@ -23,6 +22,8 @@ const emit = defineEmits<{
     (e: 'delete-selected'): void;
     (e: 'cancel'): void;
 }>();
+
+const { t } = useI18n();
 
 const styleMap = {
     primary: {

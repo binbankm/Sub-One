@@ -381,6 +381,7 @@ onMounted(() => {
                         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
                             {{ t('widgets.settings.storage.cannotSwitch') }}
                         </p>
+                        <!-- eslint-disable-next-line vue/no-v-html -->
                         <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400" v-html="t('widgets.settings.storage.cannotSwitchHint')"></p>
                     </div>
                 </div>
@@ -408,6 +409,7 @@ onMounted(() => {
     >
         <template #body>
             <div class="space-y-4">
+                <!-- eslint-disable-next-line vue/no-v-html -->
                 <p class="text-gray-700 dark:text-gray-300" v-html="t('widgets.settings.storage.switchConfirmText', { current: backendInfo?.current.toUpperCase(), target: targetBackend?.toUpperCase() })"></p>
 
                 <div
@@ -430,6 +432,7 @@ onMounted(() => {
                         </svg>
                         {{ t('widgets.settings.storage.autoMigrate') }}
                     </h4>
+                    <!-- eslint-disable-next-line vue/no-v-html -->
                     <p class="text-xs leading-relaxed text-yellow-700 dark:text-yellow-300" v-html="t('widgets.settings.storage.autoMigrateHint')"></p>
                 </div>
 

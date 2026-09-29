@@ -1,13 +1,31 @@
-import { KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
+import { KV_KEY_CRON_LOGS, KV_KEY_SETTINGS, KV_KEY_SUBS } from '../config/constants';
 import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
 import { parse } from '../proxy';
-import { AppConfig, Subscription, SubscriptionUserInfo } from '../proxy/types';
+import { AppConfig, CronLogEntry, Subscription, SubscriptionUserInfo } from '../proxy/types';
 import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
 import { Env } from '../types';
 
-// const subscriptionParser = new SubscriptionParser();
+/**
+ * 记录定时任务执行历史（保留最新 10 条）
+ */
+async function recordCronLog(
+    storage: any,
+    entry: Omit<CronLogEntry, 'id'>
+) {
+    try {
+        const history = ((await storage.get(KV_KEY_CRON_LOGS)) as CronLogEntry[] | null) || [];
+        const newLog: CronLogEntry = {
+            id: crypto.randomUUID(),
+            ...entry
+        };
+        const updated = [newLog, ...history].slice(0, 10);
+        await storage.put(KV_KEY_CRON_LOGS, updated);
+    } catch (e) {
+        console.error('[Cron] Failed to save cron log:', e);
+    }
+}
 
 /**
  * 获取当前活动的存储服务实例
@@ -32,18 +50,14 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
         if (!sub.url.startsWith('http') || !sub.enabled) return;
 
         try {
-            const singleRequest = fetch(
+            const response = await fetch(
                 new Request(sub.url, {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
                     redirect: 'follow',
-                    cf: { insecureSkipVerify: true }
-                } as RequestInit)
+                    cf: { insecureSkipVerify: true },
+                    signal: AbortSignal.timeout(15000)
+                } as any)
             );
-
-            const response = (await Promise.race([
-                singleRequest,
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-            ])) as Response;
 
             if (response.ok) {
                 const updateData: { userInfo?: SubscriptionUserInfo; nodeCount?: number } = {};
@@ -128,6 +142,16 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
             await storage.put(KV_KEY_SUBS, latestSubs);
             console.log(`[Cron] Saved ${updatedCount} subscriptions to storage`);
 
+            // 记录成功日志
+            await recordCronLog(storage, {
+                timestamp: Date.now(),
+                status: 'success',
+                triggerType: 'external',
+                updatedCount,
+                totalCount: initialSubs.length,
+                message: `成功自动刷新了 ${updatedCount} 个订阅的数据`
+            });
+
             // 发送自动更新结果汇总到 TG
             const summaryMsg = 
                 `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
@@ -136,10 +160,31 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                 `✅ 成功刷新了 \`${updatedCount}\` 个订阅的数据\n` +
                 `📅 所有订阅节点信息已同步至最新状态`;
             await sendTgNotification(settings as AppConfig, summaryMsg);
+        } else {
+            // 记录无变动日志
+            await recordCronLog(storage, {
+                timestamp: Date.now(),
+                status: 'warning',
+                triggerType: 'external',
+                updatedCount: 0,
+                totalCount: initialSubs.length,
+                message: '定时任务已触发，所有订阅数据已是最新'
+            });
         }
     } else {
         console.log('Cron job finished. No changes detected.');
+        await recordCronLog(storage, {
+            timestamp: Date.now(),
+            status: 'warning',
+            triggerType: 'external',
+            updatedCount: 0,
+            totalCount: initialSubs.length,
+            message: '定时任务已触发，但没有找到需要更新的 HTTP 订阅'
+        });
     }
 
-    return new Response('Cron job completed successfully.', { status: 200 });
+    return new Response(JSON.stringify({ success: true, message: 'Cron job completed successfully.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
 }

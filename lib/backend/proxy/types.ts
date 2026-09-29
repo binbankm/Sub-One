@@ -385,6 +385,8 @@ export interface ProxyNode {
 export interface ProcessOptions {
     subscriptionName?: string; // 订阅名称
     exclude?: string; // 排除规则 (旧版正则字符串)
+    rename?: string; // 节点重命名规则 (每行一条: 匹配@替换)
+    globalRename?: string; // 全局节点重命名规则 (每行一条: 匹配@替换)
     prependSubName?: boolean; // 是否在节点名前添加订阅名
     dedupe?: boolean; // 是否去重
     includeRules?: string[]; // 包含规则列表
@@ -475,6 +477,7 @@ export interface AppConfig {
     profileToken: string;
     prependSubName: boolean;
     dedupe: boolean;
+    renameRules?: string; // 全局节点重命名规则 (每行一条: 匹配@替换)
 
     // 转换配置
     useExternalConverter?: boolean; // 是否使用外部转换API
@@ -508,6 +511,16 @@ export interface User {
     updatedAt: number;
 }
 
+export interface CronLogEntry {
+    id: string;
+    timestamp: number;
+    status: 'success' | 'warning' | 'error';
+    triggerType: 'cron' | 'manual' | 'external';
+    updatedCount: number;
+    totalCount: number;
+    message: string;
+}
+
 export interface SubscriptionUserInfo {
     upload: number;
     download: number;
@@ -535,6 +548,7 @@ export interface Subscription {
     type?: string;
     ua?: string;
     exclude?: string;
+    rename?: string; // 节点重命名规则 (每行一条: 匹配@替换)
 
     // 通知记录
     lastNotifiedExpire?: number;
@@ -551,4 +565,5 @@ export interface Profile {
     expiresAt?: string; // ISO Date String
     type?: string; // Output format (e.g., 'base64')
     updatedAt?: number;
+    rename?: string; // 订阅组节点重命名规则 (每行一条: 匹配@替换)
 }

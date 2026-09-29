@@ -20,9 +20,10 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { AppConfig } from '@/common/types/index';
-import { fetchSettings, saveSettings } from '@/common/utils/api';
+import { fetchSettings, saveSettings, fetchCronHistory, clearCronHistory } from '@/common/utils/api';
 import Modal from '@/common/ui/BaseModal.vue';
 import StorageBackendSwitcher from '@/widgets/settings/StorageBackendSwitcher.vue';
+import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vue';
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
@@ -53,6 +54,7 @@ const defaultSettings: AppConfig = {
 
     prependSubName: false,
     dedupe: false, // 默认关闭去重，保留所有节点
+    renameRules: '', // 全局节点重命名规则
 
     // 转换配置
     useExternalConverter: false, // 默认使用后端自带转换
@@ -171,8 +173,60 @@ const copyCronUrl = async () => {
     }
 };
 
+// 自动更新/Cron 执行历史记录
+interface CronHistoryRecord {
+    id: string;
+    timestamp: number;
+    status: 'success' | 'warning' | 'error';
+    triggerType: string;
+    updatedCount: number;
+    totalCount: number;
+    message: string;
+}
+
+const cronLogs = ref<CronHistoryRecord[]>([]);
+const isLoadingCronLogs = ref(false);
+const isClearingCronLogs = ref(false);
+
+const loadCronHistory = async () => {
+    isLoadingCronLogs.value = true;
+    try {
+        cronLogs.value = await fetchCronHistory();
+    } finally {
+        isLoadingCronLogs.value = false;
+    }
+};
+
+const handleClearCronHistory = async () => {
+    isClearingCronLogs.value = true;
+    try {
+        const ok = await clearCronHistory();
+        if (ok) {
+            cronLogs.value = [];
+            showToast(t('widgets.settings.modal.cron.historyCleared'), 'success');
+        }
+    } finally {
+        isClearingCronLogs.value = false;
+    }
+};
+
+const formatLogTime = (ts: number): string => {
+    try {
+        const d = new Date(ts);
+        return d.toLocaleString();
+    } catch {
+        return '';
+    }
+};
+
 // 标签页状态
 const activeTab = ref<'general' | 'advanced' | 'storage'>('general');
+
+watch(activeTab, (tab) => {
+    if (tab === 'advanced' && settings.value.cronEnabled) {
+        loadCronHistory();
+    }
+});
 
 // 监听 show 属性，当模态框显示时加载设置
 // 添加 immediate: true 确保组件挂载时如果 show 为 true 也能触发
@@ -461,6 +515,20 @@ watch(
                                     </div>
                                 </div>
 
+                                <!-- 全局节点重命名规则 -->
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    >
+                                        {{ t('widgets.settings.modal.profile.renameLabel') }}
+                                        <span class="ml-1 text-xs text-gray-400">({{ t('widgets.settings.modal.profile.renameDesc') }})</span>
+                                    </label>
+                                    <NodeRenameRuleEditor
+                                        v-model="settings.renameRules"
+                                        :placeholder="t('widgets.settings.modal.profile.renamePlaceholder')"
+                                    />
+                                </div>
+
                                 <!-- 开关组：使用外部转换API -->
                                 <div class="md:col-span-2">
                                     <label
@@ -737,7 +805,7 @@ watch(
                                         :placeholder="t('widgets.settings.modal.cron.secretPlaceholder')"
                                     />
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        <span v-html="t('widgets.settings.modal.cron.hint1')"></span>
+                                        <span>{{ t('widgets.settings.modal.cron.hint1') }}</span><br />
                                         <code class="px-1 py-0.5 mt-1 bg-gray-100 dark:bg-white/5 text-primary-600 dark:text-primary-400 rounded inline-block select-all">/api/cron/trigger?token={{ settings.cronSecret || 'YOUR_TOKEN' }}</code><br />
                                         {{ t('widgets.settings.modal.cron.hint2') }}
                                     </p>
@@ -761,6 +829,95 @@ watch(
                                             >
                                                 {{ t('widgets.settings.modal.cron.copy') }}
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- 定时任务触发历史记录 -->
+                                    <div class="mt-4 rounded-element border border-gray-200 bg-gray-50/50 p-3.5 dark:border-white/10 dark:bg-white/2">
+                                        <div class="mb-2.5 flex items-center justify-between">
+                                            <div class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                <svg class="h-3.5 w-3.5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span>{{ t('widgets.settings.modal.cron.historyTitle') }}</span>
+                                                <span v-if="cronLogs.length" class="ml-1 rounded-full bg-primary-100 px-1.5 py-0.2 text-[10px] font-bold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                                                    {{ cronLogs.length }}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    :disabled="isLoadingCronLogs"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50 dark:text-primary-400 dark:hover:text-primary-300"
+                                                    @click="loadCronHistory"
+                                                >
+                                                    <svg :class="['h-3 w-3', isLoadingCronLogs ? 'animate-spin' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    <span>{{ t('widgets.settings.modal.cron.refreshHistory') }}</span>
+                                                </button>
+                                                <button
+                                                    v-if="cronLogs.length > 0"
+                                                    type="button"
+                                                    :disabled="isClearingCronLogs"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-medium text-red-500 hover:text-red-600 disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                                                    @click="handleClearCronHistory"
+                                                >
+                                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    <span>{{ t('widgets.settings.modal.cron.clearHistory') }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- 记录列表 -->
+                                        <div v-if="cronLogs.length > 0" class="divide-y divide-gray-200/60 overflow-hidden rounded-md border border-gray-200 bg-white text-xs dark:divide-white/5 dark:border-white/10 dark:bg-black/40">
+                                            <div
+                                                v-for="log in cronLogs"
+                                                :key="log.id"
+                                                class="flex items-center justify-between gap-3 px-3 py-2 transition-colors hover:bg-gray-50/50 dark:hover:bg-white/2"
+                                            >
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <span
+                                                        :class="[
+                                                            'inline-block h-2 w-2 shrink-0 rounded-full',
+                                                            log.status === 'success' ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-950' :
+                                                            log.status === 'warning' ? 'bg-amber-500 ring-2 ring-amber-200 dark:ring-amber-950' :
+                                                            'bg-red-500 ring-2 ring-red-200 dark:ring-red-950'
+                                                        ]"
+                                                    ></span>
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="truncate font-medium text-gray-800 dark:text-gray-200">{{ log.message }}</span>
+                                                            <span
+                                                                :class="[
+                                                                    'shrink-0 rounded px-1.5 py-0.2 text-[10px] font-medium',
+                                                                    log.status === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                                                    log.status === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                                    'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                                ]"
+                                                            >
+                                                                {{ log.status === 'success' ? t('widgets.settings.modal.cron.statusSuccess') :
+                                                                   log.status === 'warning' ? t('widgets.settings.modal.cron.statusWarning') :
+                                                                   t('widgets.settings.modal.cron.statusError') }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="text-[11px] text-gray-400 dark:text-gray-500">
+                                                            <span>{{ formatLogTime(log.timestamp) }}</span>
+                                                            <span v-if="log.totalCount > 0" class="ml-2">
+                                                                ({{ log.updatedCount }}/{{ log.totalCount }})
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-white/5 dark:text-gray-400 font-mono">
+                                                    {{ log.triggerType }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-else class="py-4 text-center text-xs text-gray-400 dark:text-gray-500">
+                                            {{ t('widgets.settings.modal.cron.noHistory') }}
                                         </div>
                                     </div>
                                 </div>

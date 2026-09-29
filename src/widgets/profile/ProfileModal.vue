@@ -21,6 +21,7 @@ import { useProfileForm } from '@/entities/profile/model/useProfileForm';
 import { useI18n } from 'vue-i18n';
 import type { Node, Profile, Subscription } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
+import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vue';
 
 const props = withDefaults(
     defineProps<{
@@ -158,6 +159,18 @@ const { t } = useI18n();
                             {{ t('widgets.profile.modal.expiresHint') }}
                         </p>
                     </div>
+                </div>
+
+                <!-- 订阅组专属重命名规则 (可选) -->
+                <div>
+                    <label class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-300">
+                        {{ t('widgets.profile.modal.renameRules') }}
+                        <span class="ml-1 text-xs font-normal text-gray-400">({{ t('widgets.profile.modal.renameRulesHint') }})</span>
+                    </label>
+                    <NodeRenameRuleEditor
+                        v-model="localProfile.rename"
+                        :placeholder="t('widgets.profile.modal.renameRulesPlaceholder')"
+                    />
                 </div>
 
                 <!-- 选择区域 -->

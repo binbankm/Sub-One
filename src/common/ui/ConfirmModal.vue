@@ -26,8 +26,6 @@ import { useI18n } from 'vue-i18n';
 
 import Modal from '@/common/ui/BaseModal.vue';
 
-const { t } = useI18n();
-
 // ==================== Props 和 Emit ====================
 
 const props = withDefaults(
@@ -62,6 +60,8 @@ const emit = defineEmits<{
     (e: 'confirm'): void;
     (e: 'cancel'): void;
 }>();
+
+const { t } = useI18n();
 
 // ==================== 样式配置 ====================
 
