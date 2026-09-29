@@ -282,6 +282,16 @@ export default {
             allSubsHealthy: 'All subscriptions are active & valid',
             expiringSoon: '{name} expires in {days} days',
             expiringToday: '{name} expires today',
+            cronMonitor: {
+                title: 'Auto-Update Monitor',
+                lastTrigger: 'Last Triggered',
+                noTriggerYet: 'No auto-trigger records yet',
+                viewLogs: 'View Logs',
+                statusNormal: 'Success',
+                statusWarning: 'No Changes',
+                statusError: 'Failed',
+                configurePrompt: 'Go to Settings to configure Cron'
+            },
             messages: {
                 updateSuccess: 'Successfully updated {count} subscriptions',
                 allUpToDate: 'All subscriptions are up to date',
@@ -650,7 +660,15 @@ export default {
                     hint2: 'If you are using Cloudflare Pages, due to platform limitations, you must use this API to trigger scheduled tasks. Docker users have built-in internal timers and can configure this optionally.',
                     triggerUrl: 'Generated Trigger Link:',
                     copy: 'Copy Link',
-                    disabled: 'Scheduled update is disabled'
+                    disabled: 'Scheduled update is disabled',
+                    historyTitle: 'Recent Auto-Trigger History',
+                    refreshHistory: 'Refresh',
+                    clearHistory: 'Clear History',
+                    noHistory: 'No trigger history yet (will appear here when the trigger URL is requested)',
+                    historyCleared: 'History cleared',
+                    statusSuccess: 'Success',
+                    statusWarning: 'No Changes',
+                    statusError: 'Failed'
                 },
                 storage: {
                     title: 'Storage Settings'

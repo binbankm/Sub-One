@@ -511,6 +511,16 @@ export interface User {
     updatedAt: number;
 }
 
+export interface CronLogEntry {
+    id: string;
+    timestamp: number;
+    status: 'success' | 'warning' | 'error';
+    triggerType: 'cron' | 'manual' | 'external';
+    updatedCount: number;
+    totalCount: number;
+    message: string;
+}
+
 export interface SubscriptionUserInfo {
     upload: number;
     download: number;

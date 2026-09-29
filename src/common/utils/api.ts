@@ -670,3 +670,30 @@ export async function sendNotification(message: string): Promise<ApiResponse> {
         return { success: false, message: i18n.global.t('common.api.networkError') };
     }
 }
+
+/**
+ * 获取定时任务执行历史
+ */
+export async function fetchCronHistory(): Promise<{ id: string; timestamp: number; status: 'success' | 'warning' | 'error'; triggerType: string; updatedCount: number; totalCount: number; message: string }[]> {
+    try {
+        const response = await fetch('/api/cron/history');
+        if (!response.ok) return [];
+        const data = (await response.json()) as any;
+        return data.history || [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * 清空定时任务执行历史
+ */
+export async function clearCronHistory(): Promise<boolean> {
+    try {
+        const response = await fetch('/api/cron/history/clear', { method: 'POST' });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+

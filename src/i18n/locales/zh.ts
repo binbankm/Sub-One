@@ -282,6 +282,16 @@ export default {
             allSubsHealthy: '所有订阅有效期正常',
             expiringSoon: '{name} 将在 {days} 天后到期',
             expiringToday: '{name} 将在今天到期',
+            cronMonitor: {
+                title: '自动定时更新监控',
+                lastTrigger: '最近触发',
+                noTriggerYet: '暂无自动触发记录',
+                viewLogs: '查看历史日志',
+                statusNormal: '更新正常',
+                statusWarning: '无变动',
+                statusError: '更新异常',
+                configurePrompt: '前往设置开启定时更新'
+            },
             messages: {
                 updateSuccess: '成功更新 {count} 个订阅',
                 allUpToDate: '所有订阅已是最新状态',
@@ -650,7 +660,15 @@ export default {
                     hint2: '如果您使用的是 Cloudflare Pages，由于平台限制必须通过这种接口方式触发定时任务；Docker 用户自带内部定时器，可选择配置。',
                     triggerUrl: '生成的专属触发链接：',
                     copy: '复制链接',
-                    disabled: '定时更新功能已关闭'
+                    disabled: '定时更新功能已关闭',
+                    historyTitle: '最近自动触发历史记录',
+                    refreshHistory: '刷新记录',
+                    clearHistory: '清空历史',
+                    noHistory: '暂无定时触发历史记录（当外部服务请求触发链接后将自动显示在这里）',
+                    historyCleared: '历史记录已清空',
+                    statusSuccess: '成功',
+                    statusWarning: '无变动',
+                    statusError: '失败'
                 },
                 storage: {
                     title: '存储设置'

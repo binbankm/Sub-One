@@ -5,11 +5,12 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 
 import type { Profile } from '@/common/types/index';
+import { fetchCronHistory } from '@/common/utils/api';
 import { formatBytes, getTrafficColorClass } from '@/common/utils/format';
 import NodeDistributionChart from '@/widgets/dashboard/NodeDistributionChart.vue';
 
 import { useDataStore } from '@/stores/useAppStore';
-import { useNotificationStore as useToastStore } from '@/stores/useNotificationStore';
+import { useNotificationStore as useToastStore, useUIStore } from '@/stores/useNotificationStore';
 
 defineEmits<{
     (e: 'add-subscription'): void;
@@ -145,8 +146,44 @@ const quoteCategoryClass = computed(() => {
     return 'border-primary-400/30 bg-primary-400/20 text-primary-700 dark:text-primary-300';
 });
 
+const uiStore = useUIStore();
+interface CronLogItem {
+    id: string;
+    timestamp: number;
+    status: 'success' | 'warning' | 'error';
+    triggerType: string;
+    updatedCount: number;
+    totalCount: number;
+    message: string;
+}
+
+const latestCronLogs = ref<CronLogItem[]>([]);
+const isLoadingCron = ref(false);
+
+const loadDashboardCronLogs = async () => {
+    isLoadingCron.value = true;
+    try {
+        latestCronLogs.value = await fetchCronHistory();
+    } finally {
+        isLoadingCron.value = false;
+    }
+};
+
+const formatRelativeTime = (ts: number): string => {
+    const diffSec = Math.floor((Date.now() - ts) / 1000);
+    if (diffSec < 60) return '刚刚';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} 分钟前`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} 小时前`;
+    return new Date(ts).toLocaleDateString();
+};
+
+const openSettingsModal = () => {
+    uiStore.show();
+};
+
 onMounted(() => {
     currentQuoteIndex.value = getRandomQuoteIndex();
+    loadDashboardCronLogs();
 });
 </script>
 
@@ -514,6 +551,89 @@ onMounted(() => {
                                         : '0%'
                             }"
                         ></div>
+                    </div>
+                </div>
+
+                <!-- 定时自动更新监控 (Cron Monitor) 卡片 -->
+                <div class="card-glass relative flex-1 rounded-card p-6 shadow-elevated-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-element bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">
+                                {{ t('views.dashboard.cronMonitor.title') }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                :disabled="isLoadingCron"
+                                :title="t('widgets.settings.modal.cron.refreshHistory')"
+                                class="flex h-7 w-7 items-center justify-center rounded-element text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-200 transition-colors"
+                                @click="loadDashboardCronLogs"
+                            >
+                                <svg :class="['h-3.5 w-3.5', isLoadingCron ? 'animate-spin' : '']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                class="text-[11px] font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                                @click="openSettingsModal"
+                            >
+                                {{ t('views.dashboard.cronMonitor.viewLogs') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="latestCronLogs.length > 0">
+                        <div class="flex items-center justify-between rounded-lg bg-gray-50/80 p-2.5 dark:bg-white/3 border border-gray-200/60 dark:border-white/5">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span
+                                    :class="[
+                                        'inline-block h-2.5 w-2.5 shrink-0 rounded-full',
+                                        latestCronLogs[0].status === 'success' ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-950' :
+                                        latestCronLogs[0].status === 'warning' ? 'bg-amber-500 ring-2 ring-amber-200 dark:ring-amber-950' :
+                                        'bg-red-500 ring-2 ring-red-200 dark:ring-red-950'
+                                    ]"
+                                ></span>
+                                <div class="min-w-0">
+                                    <div class="truncate text-xs font-semibold text-gray-800 dark:text-gray-200">
+                                        {{ latestCronLogs[0].message }}
+                                    </div>
+                                    <div class="text-[10px] text-gray-400 dark:text-gray-500">
+                                        {{ formatRelativeTime(latestCronLogs[0].timestamp) }} · {{ latestCronLogs[0].triggerType }}
+                                    </div>
+                                </div>
+                            </div>
+                            <span
+                                :class="[
+                                    'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium',
+                                    latestCronLogs[0].status === 'success' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                    latestCronLogs[0].status === 'warning' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                    'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                ]"
+                            >
+                                {{ latestCronLogs[0].status === 'success' ? t('views.dashboard.cronMonitor.statusNormal') :
+                                   latestCronLogs[0].status === 'warning' ? t('views.dashboard.cronMonitor.statusWarning') :
+                                   t('views.dashboard.cronMonitor.statusError') }}
+                            </span>
+                        </div>
+                    </div>
+                    <div v-else class="flex flex-col items-center justify-center py-4 text-center">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-1.5">
+                            {{ t('views.dashboard.cronMonitor.noTriggerYet') }}
+                        </p>
+                        <button
+                            type="button"
+                            class="text-[11px] font-medium text-primary-600 hover:underline dark:text-primary-400"
+                            @click="openSettingsModal"
+                        >
+                            {{ t('views.dashboard.cronMonitor.configurePrompt') }} &rarr;
+                        </button>
                     </div>
                 </div>
             </div>

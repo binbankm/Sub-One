@@ -1,7 +1,7 @@
-import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, OLD_KV_KEY } from '../config/constants';
+import { KV_KEY_CRON_LOGS, KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, OLD_KV_KEY } from '../config/constants';
 import { GLOBAL_USER_AGENT, defaultSettings } from '../config/defaults';
 import { ProxyNode, convert, parse, process } from '../proxy';
-import { AppConfig, Profile, Subscription, SubscriptionUserInfo } from '../proxy/types';
+import { AppConfig, CronLogEntry, Profile, Subscription, SubscriptionUserInfo } from '../proxy/types';
 import {
     ImportMode,
     batchDeleteServerSnapshots,
@@ -206,6 +206,34 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         } catch (e: any) {
             console.error('[API Error /cron/trigger]', e);
             return new Response(JSON.stringify({ error: 'Cron execute failed' }), { status: 500 });
+        }
+    }
+
+    // [新增] 获取定时任务更新历史记录
+    if (path === '/cron/history') {
+        if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
+        try {
+            const storage = await getStorage(env);
+            const history = (await storage.get<CronLogEntry[]>(KV_KEY_CRON_LOGS)) || [];
+            return new Response(JSON.stringify({ success: true, history }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e: any) {
+            return new Response(JSON.stringify({ success: false, history: [] }), { status: 500 });
+        }
+    }
+
+    // [新增] 清空定时任务历史记录
+    if (path === '/cron/history/clear') {
+        if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+        try {
+            const storage = await getStorage(env);
+            await storage.put(KV_KEY_CRON_LOGS, []);
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e: any) {
+            return new Response(JSON.stringify({ success: false, error: e?.message }), { status: 500 });
         }
     }
 
