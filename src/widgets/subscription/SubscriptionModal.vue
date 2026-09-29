@@ -12,7 +12,6 @@
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useSubscriptionForm } from '@/entities/subscription/model/useSubscriptionForm';
 import type { Subscription } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
@@ -54,11 +53,6 @@ const {
     (subscription: Subscription) => emit('save', subscription),
     () => emit('update:show', false)
 );
-
-const sampleNodeNames = computed(() => {
-    const nodes = localSubscription.value?.nodes || [];
-    return nodes.map((n) => n.name).filter(Boolean).slice(0, 5);
-});
 </script>
 
 <template>
@@ -194,7 +188,7 @@ const sampleNodeNames = computed(() => {
                                 </label>
                                 <NodeRenameRuleEditor
                                     v-model="localSubscription.rename"
-                                    :sample-nodes="sampleNodeNames"
+                                    :subscription-url="localSubscription.url"
                                     :placeholder="t('widgets.subscription.modal.renamePlaceholder')"
                                 />
                             </div>

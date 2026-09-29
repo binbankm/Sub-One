@@ -5,28 +5,32 @@
   - 节点批量正则替换/重命名规则编辑
   - 支持按行配置：匹配内容@替换内容（无@表示直接删除）
   - 支持常用规则预设一键插入（去广告、去倍率、国家代码规范、序号补零、国旗补齐等）
-  - 支持真实节点抽样批量预览 + 自定义单行实时测试
+  - 支持实时从订阅链接/已存订阅/手动节点一键拉取真实节点进行测试
   - 自动清理连续多余空格，并智能标记被完全删除的无效/广告节点
   
   ==================================================
 -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useDataStore } from '@/stores/useAppStore';
 
 const props = withDefaults(
     defineProps<{
         /** 绑定的重命名规则文本 */
         modelValue?: string;
         placeholder?: string;
-        /** 可选：来自当前订阅的真实节点名称抽样列表 */
+        /** 可选：外部传入的节点样本 */
         sampleNodes?: string[];
+        /** 可选：当前编辑的订阅 URL，用于直接拉取真实节点 */
+        subscriptionUrl?: string;
     }>(),
     {
         modelValue: '',
         placeholder: '',
-        sampleNodes: () => []
+        sampleNodes: () => [],
+        subscriptionUrl: ''
     }
 );
 
@@ -35,6 +39,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const dataStore = useDataStore();
 
 // 实时测试控制
 const showTester = ref(false);
@@ -44,7 +49,7 @@ const testMode = ref<'custom' | 'samples'>('samples');
 // 自定义单行测试输入
 const customTestInput = ref('[VIP专线] 香港 01 - 1.5x | 官网: abc.com');
 
-// 默认预设的抽样节点列表（当没有外部真实节点传入时使用）
+// 默认预设的抽样节点列表（当没有真实节点时保底展示）
 const defaultSampleNodes = [
     '[VIP专线] 香港 01 - 1.5x | 官网: abc.com',
     '🇯🇵 日本 Tokyo BGP 2 [2.0倍率]',
@@ -52,11 +57,175 @@ const defaultSampleNodes = [
     '官网: fly666.com (点击防失联公告)'
 ];
 
+// 真实节点抓取状态
+const isFetching = ref(false);
+const fetchError = ref('');
+const fetchedNodes = ref<string[]>([]);
+const nodeCache = ref<Record<string, string[]>>({});
+
+// 可选的数据来源列表
+const availableSources = computed(() => {
+    const list: Array<{ id: string; label: string; url?: string; isManual?: boolean; isDemo?: boolean }> = [];
+
+    // 1. 如果传入了当前订阅 URL，置顶显示
+    if (props.subscriptionUrl) {
+        list.push({
+            id: 'current-sub',
+            label: `🎯 ${t('widgets.subscription.renameEditor.sourceCurrentSub')}`,
+            url: props.subscriptionUrl
+        });
+    }
+
+    // 2. 从 dataStore 获取所有已保存的订阅
+    if (dataStore.subscriptions && dataStore.subscriptions.length > 0) {
+        dataStore.subscriptions.forEach((sub) => {
+            if (sub.url && sub.url !== props.subscriptionUrl) {
+                list.push({
+                    id: `sub-${sub.id}`,
+                    label: `📡 ${sub.name || '未命名'} (${sub.nodeCount || 0} 节点)`,
+                    url: sub.url
+                });
+            }
+        });
+    }
+
+    // 3. 手动节点
+    if (dataStore.manualNodes && dataStore.manualNodes.length > 0) {
+        list.push({
+            id: 'manual',
+            label: `📝 ${t('widgets.subscription.renameEditor.sourceManual')} (${dataStore.manualNodes.length} 个)`,
+            isManual: true
+        });
+    }
+
+    // 4. 示例样本
+    list.push({
+        id: 'demo',
+        label: `💡 ${t('widgets.subscription.renameEditor.sourceDemo')}`,
+        isDemo: true
+    });
+
+    return list;
+});
+
+// 当前选中的来源 ID
+const selectedSourceId = ref<string>('');
+
+// 初始化选中的来源
+const initSelectedSource = () => {
+    if (props.subscriptionUrl) {
+        selectedSourceId.value = 'current-sub';
+    } else if (availableSources.value.length > 0) {
+        selectedSourceId.value = availableSources.value[0].id;
+    } else {
+        selectedSourceId.value = 'demo';
+    }
+};
+
+initSelectedSource();
+
+// 拉取/加载指定来源的真实节点
+const loadSourceNodes = async (force: boolean = false) => {
+    fetchError.value = '';
+
+    const source = availableSources.value.find((s) => s.id === selectedSourceId.value);
+    if (!source || source.isDemo) {
+        fetchedNodes.value = defaultSampleNodes;
+        return;
+    }
+
+    if (source.isManual) {
+        const nodes = (dataStore.manualNodes || []).map((n: any) => n.name).filter(Boolean);
+        fetchedNodes.value = nodes.length > 0 ? nodes : defaultSampleNodes;
+        return;
+    }
+
+    const targetUrl = source.url || props.subscriptionUrl;
+    if (!targetUrl) {
+        fetchedNodes.value = defaultSampleNodes;
+        return;
+    }
+
+    if (!force && nodeCache.value[targetUrl] && nodeCache.value[targetUrl].length > 0) {
+        fetchedNodes.value = nodeCache.value[targetUrl];
+        return;
+    }
+
+    isFetching.value = true;
+    try {
+        const response = await fetch('/api/node_count', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url: targetUrl,
+                returnNodes: true
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = (await response.json()) as any;
+        const names: string[] = (data.nodes || [])
+            .map((n: any) => n.name)
+            .filter((name: any) => typeof name === 'string' && name.trim().length > 0);
+
+        if (names.length > 0) {
+            nodeCache.value[targetUrl] = names;
+            fetchedNodes.value = names;
+        } else {
+            fetchError.value = '未从该订阅解析到有效节点';
+            fetchedNodes.value = defaultSampleNodes;
+        }
+    } catch (err: any) {
+        fetchError.value = err?.message || '网络请求失败';
+        if (fetchedNodes.value.length === 0) {
+            fetchedNodes.value = defaultSampleNodes;
+        }
+    } finally {
+        isFetching.value = false;
+    }
+};
+
+// 监听展开测试器或切换来源
+watch(showTester, (shown) => {
+    if (shown && testMode.value === 'samples' && fetchedNodes.value.length === 0) {
+        loadSourceNodes();
+    }
+});
+
+watch(selectedSourceId, () => {
+    if (showTester.value && testMode.value === 'samples') {
+        loadSourceNodes();
+    }
+});
+
+watch(
+    () => props.subscriptionUrl,
+    (newUrl) => {
+        if (newUrl) {
+            selectedSourceId.value = 'current-sub';
+            if (showTester.value && testMode.value === 'samples') {
+                loadSourceNodes(true);
+            }
+        }
+    }
+);
+
 const activeSamples = computed(() => {
+    if (fetchedNodes.value.length > 0) {
+        return fetchedNodes.value.slice(0, 15);
+    }
     if (props.sampleNodes && props.sampleNodes.length > 0) {
-        return props.sampleNodes.slice(0, 5);
+        return props.sampleNodes.slice(0, 15);
     }
     return defaultSampleNodes;
+});
+
+const isRealNodesActive = computed(() => {
+    const source = availableSources.value.find((s) => s.id === selectedSourceId.value);
+    return source && !source.isDemo && fetchedNodes.value.length > 0 && fetchedNodes.value !== defaultSampleNodes;
 });
 
 const localRules = computed({
@@ -259,7 +428,7 @@ const clearRules = () => {
                 v-if="showTester"
                 class="rounded-element border border-primary-200 bg-primary-50/50 p-3.5 dark:border-primary-800/40 dark:bg-primary-950/20"
             >
-                <div class="mb-3 flex items-center justify-between">
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-bold text-primary-900 dark:text-primary-300">
                             🧪 {{ t('widgets.subscription.renameEditor.testerTitle') }}
@@ -272,7 +441,7 @@ const clearRules = () => {
                                 :class="testMode === 'samples' ? 'bg-primary-600 text-white font-medium shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-primary-600'"
                                 @click="testMode = 'samples'"
                             >
-                                {{ props.sampleNodes && props.sampleNodes.length > 0 ? '真实节点抽样' : '示例样本抽样' }}
+                                {{ isRealNodesActive ? '真实节点测试' : '节点抽样测试' }}
                             </button>
                             <button
                                 type="button"
@@ -290,24 +459,66 @@ const clearRules = () => {
                 </div>
 
                 <!-- 模式 A：抽样节点列表实时预览 -->
-                <div v-if="testMode === 'samples'" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                    <div
-                        v-for="(item, idx) in sampleTestResults"
-                        :key="idx"
-                        class="rounded border border-gray-200/80 bg-white/90 p-2 text-xs transition-colors dark:border-white/5 dark:bg-white/5"
-                    >
-                        <div class="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500 mb-1">
-                            <span class="truncate max-w-[70%] font-mono">{{ item.original }}</span>
-                            <span v-if="item.isDropped" class="rounded bg-danger-100 px-1.5 py-0.2 text-[10px] font-bold text-danger-600 dark:bg-danger-900/40 dark:text-danger-300">
-                                🚫 已自动剔除 (广告/空名)
+                <div v-if="testMode === 'samples'" class="space-y-2">
+                    <!-- 真实节点来源选择与刷新工具条 -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 rounded border border-primary-100 bg-white/70 p-2 text-xs backdrop-blur-xs dark:border-white/5 dark:bg-white/5">
+                        <div class="flex items-center gap-1.5 flex-1 min-w-50">
+                            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                {{ t('widgets.subscription.renameEditor.sourceSelect') }}:
                             </span>
-                            <span v-else-if="item.isChanged" class="rounded bg-success-100 px-1.5 py-0.2 text-[10px] font-bold text-success-600 dark:bg-success-900/40 dark:text-success-300">
-                                ✨ 已重命名
-                            </span>
-                            <span v-else class="text-[10px] opacity-75">未匹配(保持原样)</span>
+                            <select
+                                v-model="selectedSourceId"
+                                class="input-modern text-xs py-1 px-2 flex-1 max-w-xs"
+                            >
+                                <option
+                                    v-for="source in availableSources"
+                                    :key="source.id"
+                                    :value="source.id"
+                                >
+                                    {{ source.label }}
+                                </option>
+                            </select>
                         </div>
-                        <div v-if="!item.isDropped" class="font-mono font-bold text-xs" :class="item.isChanged ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">
-                            ↳ {{ item.modified }}
+
+                        <div class="flex items-center gap-2">
+                            <span v-if="isRealNodesActive" class="text-[10px] text-success-600 dark:text-success-400 font-medium">
+                                {{ t('widgets.subscription.renameEditor.realNodeCount', { count: fetchedNodes.length }) }}
+                            </span>
+                            <span v-if="fetchError" class="text-[10px] text-danger-500 font-medium">
+                                ⚠️ {{ fetchError }}
+                            </span>
+                            <button
+                                type="button"
+                                :disabled="isFetching"
+                                class="inline-flex items-center gap-1 rounded bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-xs border border-gray-300 transition-all hover:border-primary-500 hover:text-primary-600 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
+                                @click="loadSourceNodes(true)"
+                            >
+                                <span :class="{ 'animate-spin': isFetching }">🔄</span>
+                                <span>{{ isFetching ? t('widgets.subscription.renameEditor.fetching') : t('widgets.subscription.renameEditor.fetchRealNodes') }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 节点列表 -->
+                    <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        <div
+                            v-for="(item, idx) in sampleTestResults"
+                            :key="idx"
+                            class="rounded border border-gray-200/80 bg-white/90 p-2 text-xs transition-colors dark:border-white/5 dark:bg-white/5"
+                        >
+                            <div class="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500 mb-1">
+                                <span class="truncate max-w-[70%] font-mono" :title="item.original">{{ item.original }}</span>
+                                <span v-if="item.isDropped" class="rounded bg-danger-100 px-1.5 py-0.2 text-[10px] font-bold text-danger-600 dark:bg-danger-900/40 dark:text-danger-300">
+                                    🚫 已自动剔除 (广告/空名)
+                                </span>
+                                <span v-else-if="item.isChanged" class="rounded bg-success-100 px-1.5 py-0.2 text-[10px] font-bold text-success-600 dark:bg-success-900/40 dark:text-success-300">
+                                    ✨ 已重命名
+                                </span>
+                                <span v-else class="text-[10px] opacity-75">未匹配(保持原样)</span>
+                            </div>
+                            <div v-if="!item.isDropped" class="font-mono font-bold text-xs" :class="item.isChanged ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">
+                                ↳ {{ item.modified }}
+                            </div>
                         </div>
                     </div>
                 </div>

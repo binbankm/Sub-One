@@ -755,12 +755,20 @@ export default {
                 syntax4: 'Escape special regex characters like brackets: \\[VIP\\]{\'@\'}',
                 defaultPlaceholder: '# Format: pattern{\'@\'}replacement (omit {\'@\'}replacement to delete)\n# Supports regex, escape [] () when needed\nHong Kong{\'@\'}HK\n\\[VIP\\]{\'@\'}',
                 testerTitle: 'Rename Live Tester',
-                testerDesc: 'Enter a sample node name to test your rules in real-time',
+                testerDesc: 'Enter a sample node name or load real subscription nodes to test in real-time',
                 sampleInput: 'Sample Node Name',
                 sampleOutput: 'Preview Result',
                 modified: 'Matched & Replaced',
                 noResult: '(No name after replace)',
-                emptyFallback: '(Name cleared)'
+                emptyFallback: '(Name cleared)',
+                sourceSelect: 'Sample Source',
+                sourceCurrentSub: 'Current Subscription',
+                sourceManual: 'Manual Nodes',
+                sourceDemo: 'Built-in Demo Samples',
+                fetchRealNodes: 'Fetch Real Nodes',
+                fetching: 'Fetching...',
+                realNodeCount: 'Loaded {count} real nodes',
+                fetchFailed: 'Failed to fetch real nodes'
             },
             card: {
                 copySuccess: 'Link copied to clipboard',

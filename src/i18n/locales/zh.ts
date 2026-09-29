@@ -755,12 +755,20 @@ export default {
                 syntax4: '匹配特殊符号请进行转义，例如匹配方括号使用 \\[专线\\]{\'@\'}',
                 defaultPlaceholder: '# 格式：匹配内容{\'@\'}替换内容 (省略{\'@\'}内容则直接删除)\n# 支持正则表达式，如需匹配 [] () 等请转义\n香港|Hong Kong{\'@\'}HK\n\\[专线\\]{\'@\'}',
                 testerTitle: '重命名实时测试',
-                testerDesc: '输入示例节点名即时预览效果',
+                testerDesc: '输入示例节点名或通过真实订阅节点即时预览效果',
                 sampleInput: '输入测试节点名称',
                 sampleOutput: '实时预览效果',
                 modified: '已匹配并替换',
                 noResult: '(替换后无名称)',
-                emptyFallback: '(名称被清空)'
+                emptyFallback: '(名称被清空)',
+                sourceSelect: '样本来源',
+                sourceCurrentSub: '当前编辑订阅',
+                sourceManual: '手动节点',
+                sourceDemo: '预设演示样本',
+                fetchRealNodes: '获取真实节点',
+                fetching: '正在拉取...',
+                realNodeCount: '已载入 {count} 个真实节点',
+                fetchFailed: '拉取真实节点失败'
             },
             card: {
                 copySuccess: '链接已复制到剪贴板',

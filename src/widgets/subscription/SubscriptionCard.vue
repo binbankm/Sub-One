@@ -337,7 +337,7 @@ const handleTestLatency = async () => {
                 <!-- 流量信息 -->
                 <div
                     v-if="trafficInfo"
-                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]"
+                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/5 dark:bg-white/2"
                 >
                     <div class="mb-2 flex items-end justify-between">
                         <span
