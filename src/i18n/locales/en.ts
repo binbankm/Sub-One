@@ -489,7 +489,7 @@ export default {
                 noNodeFound: 'No nodes found',
                 renameRules: 'Profile-Level Rename Rules (Optional)',
                 renameRulesHint: 'Final rename applied after merging all subs in this profile',
-                renameRulesPlaceholder: '# Profile rename rules (One per line: pattern@replacement, omit replacement to delete)\n# Supports regex\nHong Kong@HK\n\\[.*?\\]@'
+                renameRulesPlaceholder: '# Profile rename rules (One per line: pattern{\'@\'}replacement, omit replacement to delete)\n# Supports regex\nHong Kong{\'@\'}HK\n\\[.*?\\]{\'@\'}'
             },
             exportModal: {
                 generalSub: 'General Sub',
@@ -602,8 +602,8 @@ export default {
                     dedupeDesc: 'Remove identical nodes (IP+Port)',
                     renameLabel: 'Global Node Rename',
                     renameTitle: 'Global Rename Rules',
-                    renameDesc: 'Universal node rename rules applied to all subscriptions (One per line: pattern@replacement)',
-                    renamePlaceholder: '# Global rename rules (One per line: pattern@replacement, omit replacement to delete)\n# Supports regex\nHong Kong@HK\nJapan@JP\n\\[.*?\\]@'
+                    renameDesc: 'Universal node rename rules applied to all subscriptions (One per line: pattern{\'@\'}replacement)',
+                    renamePlaceholder: '# Global rename rules (One per line: pattern{\'@\'}replacement, omit replacement to delete)\n# Supports regex\nHong Kong{\'@\'}HK\nJapan{\'@\'}JP\n\\[.*?\\]{\'@\'}'
                 },
                 convert: {
                     title: 'Subscription Conversion',
@@ -737,7 +737,7 @@ export default {
                 filterHintKeep: 'keep:',
                 filterHint2: ' prefix for whitelist',
                 renameRules: 'Node Rename Rules',
-                renamePlaceholder: 'Enter node rename rules, one per line: pattern@replacement',
+                renamePlaceholder: 'Enter node rename rules, one per line: pattern{\'@\'}replacement',
                 addHintTitle: 'Auto-fetch Nodes After Add',
                 addHintDesc: 'System will automatically fetch node count and traffic info from the URL after saving'
             },
@@ -749,11 +749,11 @@ export default {
                 hideHelp: 'Hide Help',
                 clear: 'Clear',
                 syntaxTitle: 'Rename Syntax Guidelines:',
-                syntax1: 'One rule per line: pattern@replacement',
-                syntax2: 'If @replacement is omitted, matched content is deleted directly',
-                syntax3: 'Supports regex and capture groups (e.g., HK-(\\d+)@Hong Kong $1)',
-                syntax4: 'Escape special regex characters like brackets: \\[VIP\\]@',
-                defaultPlaceholder: '# Format: pattern@replacement (omit @replacement to delete)\n# Supports regex, escape [] () when needed\nHong Kong@HK\n\\[VIP\\]@',
+                syntax1: 'One rule per line: pattern{\'@\'}replacement',
+                syntax2: 'If {\'@\'}replacement is omitted, matched content is deleted directly',
+                syntax3: 'Supports regex and capture groups (e.g., HK-(\\d+){\'@\'}Hong Kong $1)',
+                syntax4: 'Escape special regex characters like brackets: \\[VIP\\]{\'@\'}',
+                defaultPlaceholder: '# Format: pattern{\'@\'}replacement (omit {\'@\'}replacement to delete)\n# Supports regex, escape [] () when needed\nHong Kong{\'@\'}HK\n\\[VIP\\]{\'@\'}',
                 testerTitle: 'Rename Live Tester',
                 testerDesc: 'Enter a sample node name to test your rules in real-time',
                 sampleInput: 'Sample Node Name',

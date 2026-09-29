@@ -489,7 +489,7 @@ export default {
                 noNodeFound: '没有找到节点',
                 renameRules: '订阅组专属重命名规则 (可选)',
                 renameRulesHint: '在所有订阅汇入此组后做最终重命名',
-                renameRulesPlaceholder: '# 订阅组专属重命名规则 (每行一条: 匹配@替换，省略@内容直接删除)\n# 支持正则表达式\n香港|Hong Kong@HK\n\\[.*?\\]@'
+                renameRulesPlaceholder: '# 订阅组专属重命名规则 (每行一条: 匹配{\'@\'}替换，省略{\'@\'}内容直接删除)\n# 支持正则表达式\n香港|Hong Kong{\'@\'}HK\n\\[.*?\\]{\'@\'}'
             },
             exportModal: {
                 generalSub: '通用订阅',
@@ -602,8 +602,8 @@ export default {
                     dedupeDesc: '去除相同节点(IP+Port)',
                     renameLabel: '全局节点重命名',
                     renameTitle: '全局重命名规则',
-                    renameDesc: '对所有订阅生效的通用节点重命名规则（每行一条: 匹配@替换）',
-                    renamePlaceholder: '# 全局节点重命名规则 (每行一条: 匹配@替换，省略@内容直接删除)\n# 支持正则表达式\n香港|Hong Kong@HK\n日本|Japan@JP\n美国|United States@US\n\\[.*?\\]@'
+                    renameDesc: '对所有订阅生效的通用节点重命名规则（每行一条: 匹配{\'@\'}替换）',
+                    renamePlaceholder: '# 全局节点重命名规则 (每行一条: 匹配{\'@\'}替换，省略{\'@\'}内容直接删除)\n# 支持正则表达式\n香港|Hong Kong{\'@\'}HK\n日本|Japan{\'@\'}JP\n美国|United States{\'@\'}US\n\\[.*?\\]{\'@\'}'
                 },
                 convert: {
                     title: '订阅转换方式',
@@ -737,7 +737,7 @@ export default {
                 filterHintKeep: 'keep:',
                 filterHint2: ' 前缀表示白名单',
                 renameRules: '节点重命名规则',
-                renamePlaceholder: '输入节点重命名规则，每行一条: 匹配内容@替换内容',
+                renamePlaceholder: '输入节点重命名规则，每行一条: 匹配内容{\'@\'}替换内容',
                 addHintTitle: '添加订阅后自动获取节点',
                 addHintDesc: '保存后系统将自动从订阅链接获取节点数量和流量信息'
             },
@@ -749,11 +749,11 @@ export default {
                 hideHelp: '收起说明',
                 clear: '清空',
                 syntaxTitle: '重命名语法规则说明：',
-                syntax1: '每行一条规则，格式为：匹配内容@替换内容',
-                syntax2: '如果省略 @替换内容，则匹配到的文本将被直接删除',
-                syntax3: '支持正则表达式匹配与捕获组引用（如 HK-(\\d+)@香港 $1）',
-                syntax4: '匹配特殊符号请进行转义，例如匹配方括号使用 \\[专线\\]@',
-                defaultPlaceholder: '# 格式：匹配内容@替换内容 (省略@内容则直接删除)\n# 支持正则表达式，如需匹配 [] () 等请转义\n香港|Hong Kong@HK\n\\[专线\\]@',
+                syntax1: '每行一条规则，格式为：匹配内容{\'@\'}替换内容',
+                syntax2: '如果省略 {\'@\'}替换内容，则匹配到的文本将被直接删除',
+                syntax3: '支持正则表达式匹配与捕获组引用（如 HK-(\\d+){\'@\'}香港 $1）',
+                syntax4: '匹配特殊符号请进行转义，例如匹配方括号使用 \\[专线\\]{\'@\'}',
+                defaultPlaceholder: '# 格式：匹配内容{\'@\'}替换内容 (省略{\'@\'}内容则直接删除)\n# 支持正则表达式，如需匹配 [] () 等请转义\n香港|Hong Kong{\'@\'}HK\n\\[专线\\]{\'@\'}',
                 testerTitle: '重命名实时测试',
                 testerDesc: '输入示例节点名即时预览效果',
                 sampleInput: '输入测试节点名称',
