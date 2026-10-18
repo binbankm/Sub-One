@@ -78,6 +78,10 @@ const toggleLanguage = () => {
     localStorage.setItem('locale', newLocale);
 };
 
+/** 构建信息 */
+const buildId = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : '';
+const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+
 // ==================== 本地状态 ====================
 
 /** 侧边栏是否折叠（桌面端） */
@@ -324,11 +328,20 @@ onUnmounted(() => {
                 <!-- Logo 文字（折叠时隐藏） -->
                 <transition name="fade">
                     <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                        <h1
-                            class="gradient-text-animated text-xl leading-tight font-extrabold tracking-tight"
-                        >
-                            Sub-One
-                        </h1>
+                        <div class="flex items-center gap-2">
+                            <h1
+                                class="gradient-text-animated text-xl leading-tight font-extrabold tracking-tight"
+                            >
+                                Sub-One
+                            </h1>
+                            <span
+                                v-if="buildId"
+                                class="rounded-md border border-primary-500/20 bg-primary-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary-600 dark:border-primary-400/20 dark:bg-primary-500/15 dark:text-primary-400"
+                                :title="`Build: ${buildTime}`"
+                            >
+                                #{{ buildId }}
+                            </span>
+                        </div>
                         <p class="mt-0.5 text-xs font-semibold text-gray-600 dark:text-gray-400">
                             Manager
                         </p>

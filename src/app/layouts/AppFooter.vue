@@ -30,6 +30,10 @@ const { t } = useI18n();
  * 自动获取并显示当前年份，无需手动更新
  */
 const currentYear = computed(() => new Date().getFullYear());
+
+/** 构建信息 */
+const buildId = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : '';
+const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 </script>
 
 <template>
@@ -76,6 +80,23 @@ const currentYear = computed(() => new Date().getFullYear());
 
                 <!-- 版权声明 -->
                 <span class="text-xs">{{ t('layout.footer.rights') }}</span>
+
+                <!-- 构建版本 ID -->
+                <template v-if="buildId">
+                    <span class="mx-2">·</span>
+                    <a
+                        v-if="buildId !== 'dev'"
+                        :href="`https://github.com/binbankm/Sub-One/commit/${buildId}`"
+                        target="_blank"
+                        class="font-mono text-xs text-gray-400 transition-colors hover:text-primary-500 dark:text-gray-500"
+                        :title="`Build Time: ${buildTime}`"
+                    >
+                        #{{ buildId }}
+                    </a>
+                    <span v-else class="font-mono text-xs text-gray-400 dark:text-gray-500" :title="`Build Time: ${buildTime}`">
+                        #{{ buildId }}
+                    </span>
+                </template>
             </p>
 
             <!-- ==================== 特色标签 ==================== -->

@@ -12,6 +12,9 @@
 // 引用 Vite 客户端类型定义
 /// <reference types="vite/client" />
 
+declare const __BUILD_ID__: string;
+declare const __BUILD_TIME__: string;
+
 /**
  * 声明 .vue 文件模块类型
  *
