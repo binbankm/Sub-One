@@ -185,10 +185,13 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
             }
         }
 
-        proxy.udp = !!params['udp'];
+        if (isPresent(params, 'udp')) {
+            proxy.udp = /(true)|1/i.test(String(params['udp']));
+        }
 
         if (/(&|\?)uot=(1|true)/i.test(query)) {
             proxy['udp-over-tcp'] = true;
+            if (proxy.udp === undefined) proxy.udp = true;
         }
 
         if (/(&|\?)tfo=(1|true)/i.test(query)) {
@@ -401,7 +404,9 @@ export function parseTrojan(uri: string): ProxyNode | null {
             }
         }
 
-        proxy.udp = /TRUE|1/i.test(params.udp);
+        if (isPresent(params, 'udp')) {
+            proxy.udp = /TRUE|1/i.test(params.udp);
+        }
 
         // Reality support
         if (params.security === 'reality' || params.pbk) {
@@ -490,6 +495,7 @@ export function parseSOCKS5(uri: string): ProxyNode | null {
             if (params.get('tls') === '1' || params.get('tls') === 'true') proxy.tls = true;
             if (params.get('sni')) proxy.sni = params.get('sni')!;
             if (params.get('skip-cert-verify') === 'true') proxy['skip-cert-verify'] = true;
+            if (params.has('udp')) proxy.udp = /(true)|1/i.test(params.get('udp')!);
         }
 
         return proxy as ProxyNode;
@@ -604,6 +610,10 @@ export function parseVMess(uri: string): ProxyNode | null {
             alterId: parseInt(params.aid || params.alterId || '0', 10),
             tls: ['tls', true, 1, '1'].includes(params.tls)
         };
+
+        if (isPresent(params, 'udp')) {
+            proxy.udp = /(true)|1/i.test(String(params.udp));
+        }
 
         if (isPresent(params, 'verify_cert')) {
             proxy['skip-cert-verify'] = !params.verify_cert;
@@ -811,6 +821,7 @@ export function parseVLESS(uri: string): ProxyNode | null {
         proxy['skip-cert-verify'] = /(TRUE)|1/i.test(params.allowInsecure);
 
         // Enhance with additional fields
+        if (isPresent(params, 'udp')) proxy.udp = /(true)|1/i.test(String(params.udp));
         if (params.encryption) proxy.encryption = params.encryption;
         if (params.headerType) proxy.headerType = params.headerType;
         if (params.ech) proxy._ech = params.ech;
@@ -992,6 +1003,7 @@ export function parseHysteria(uri: string): ProxyNode | null {
         proxy.alpn = params.alpn ? params.alpn.split(',') : undefined;
         proxy.ports = params.mport || params.ports;
         proxy.tfo = params['fast-open'] === 'true' || params['fast-open'] === '1';
+        if (isPresent(params, 'udp')) proxy.udp = /(true)|1/i.test(String(params.udp));
 
         return proxy as ProxyNode;
     } catch (e) {
@@ -1186,6 +1198,8 @@ export function parseHysteria2(uri: string): ProxyNode | null {
                 proxy.ports = value;
             } else if (normalizedKey === 'sni') {
                 proxy.sni = value;
+            } else if (normalizedKey === 'udp') {
+                proxy.udp = /(TRUE)|1/i.test(value);
             } else if (normalizedKey.match(/^(up|down)(-?mbps)?$/)) {
                 const speedKey = normalizedKey.startsWith('up') ? 'up' : 'down';
                 proxy[speedKey] = parseSpeed(value);
@@ -1249,6 +1263,8 @@ export function parseTUIC(uri: string): ProxyNode | null {
                 proxy[normalizedKey] = /(TRUE)|1/i.test(value);
             } else if (normalizedKey === 'congestion-control') {
                 proxy['congestion-controller'] = value;
+            } else if (normalizedKey === 'udp') {
+                proxy.udp = /(TRUE)|1/i.test(value);
             } else if (!Object.keys(proxy).includes(normalizedKey)) {
                 proxy[normalizedKey] = value;
             }

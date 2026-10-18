@@ -1422,6 +1422,26 @@ describe('24. 流量属性与附加参数', () => {
 
         const loon = await convert([node], 'loon');
         expect(loon).toContain('udp=true');
+
+        const uri = await convert([node], 'uri');
+        expect(uri).toContain('udp=1');
+
+        const nodeFalse = makeNode({
+            type: 'trojan', name: 'UDP-False', server: '1.2.3.4', port: 443,
+            password: 'pass', udp: false
+        });
+        const uriFalse = await convert([nodeFalse], 'uri');
+        expect(uriFalse).toContain('udp=0');
+
+        // 验证 URI 解析不会无故将缺失 udp 的节点重置为 false
+        const parsedWithoutUdp = parse('trojan://pass@1.2.3.4:443#No-UDP');
+        expect(parsedWithoutUdp[0].udp).toBeUndefined();
+
+        const parsedWithUdp1 = parse('trojan://pass@1.2.3.4:443?udp=1#With-UDP');
+        expect(parsedWithUdp1[0].udp).toBe(true);
+
+        const parsedWithUdp0 = parse('trojan://pass@1.2.3.4:443?udp=0#Disable-UDP');
+        expect(parsedWithUdp0[0].udp).toBe(false);
     });
 
     it('24.3 skip-cert-verify 参数在支持平台正确输出', async () => {
