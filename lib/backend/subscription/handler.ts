@@ -125,7 +125,8 @@ async function convertViaExternalApi(
     externalApiUrl: string,
     subscriptionUrl: string,
     targetFormat: string,
-    filename: string
+    filename: string,
+    options: { udp?: string | null } = {}
 ): Promise<string> {
     let finalApiUrl = externalApiUrl.trim();
     if (!finalApiUrl.startsWith('http')) {
@@ -179,6 +180,9 @@ async function convertViaExternalApi(
 
             // Sublink Worker 的 config 参数：传入订阅 URL
             apiUrl.searchParams.set('config', subscriptionUrl);
+            if (options.udp !== undefined && options.udp !== null) {
+                apiUrl.searchParams.set('udp', options.udp);
+            }
 
             console.log(
                 `Calling Sublink Worker API: ${apiUrl.toString()}`
@@ -214,6 +218,8 @@ async function convertViaExternalApi(
             apiUrl.searchParams.set('url', subscriptionUrl);
             apiUrl.searchParams.set('filename', filename);
             apiUrl.searchParams.set('emoji', 'true');
+            const udpValue = options.udp !== undefined && options.udp !== null ? options.udp : 'true';
+            apiUrl.searchParams.set('udp', udpValue);
 
             console.log(
                 `Calling Subconverter API: ${apiUrl.origin}${apiUrl.pathname}?target=${targetFormat}...`
@@ -460,11 +466,13 @@ export async function handleSubRequest(
             // 某些外部 API 需要正确的 User-Agent 才能从 Sub-One 抓取数据
             // 我们直接调用外部 API
             const finalApiUrl = config.externalConverterUrl.trim();
+            const udpParam = url.searchParams.get('udp');
             convertedContent = await convertViaExternalApi(
                 finalApiUrl,
                 callbackUrl.toString(), // 传递回调链接而非庞大的 data URI
                 targetFormat,
-                subName
+                subName,
+                { udp: udpParam }
             );
         } else {
             // --- 内置转换模式 (或者是回调请求本身) ---
@@ -477,6 +485,13 @@ export async function handleSubRequest(
                 targetSubs,
                 activeProfile?.rename
             );
+            const udpParam = url.searchParams.get('udp');
+            if (udpParam !== null) {
+                const forceUdp = /true|1/i.test(udpParam);
+                combinedNodes.forEach((node) => {
+                    node.udp = forceUdp;
+                });
+            }
             convertedContent = await convert(combinedNodes, targetFormat, {
                 filename: subName
             });

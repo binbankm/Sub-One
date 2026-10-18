@@ -82,6 +82,7 @@ export class URIConverter extends BaseConverter {
 
         if (node['udp-over-tcp']) params.set('uot', '1');
         if (node.tfo) params.set('tfo', '1');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
 
         this.appendTransportParams(params, node);
         this.appendTLSParams(params, node);
@@ -154,6 +155,7 @@ export class URIConverter extends BaseConverter {
         const params = new URLSearchParams();
         params.set('sni', node.sni || node.server.replace(/[\[\]]/g, ''));
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
         this.appendTransportParams(params, node);
         this.appendTLSParams(params, node);
         let queryString = params.toString();
@@ -174,6 +176,7 @@ export class URIConverter extends BaseConverter {
         if (node.ports) params.set('mport', String(node.ports));
         if (node['hop-interval']) params.set('hop-interval', String(node['hop-interval']));
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -195,6 +198,7 @@ export class URIConverter extends BaseConverter {
         if (node['tls-fingerprint']) params.set('pinSHA256', node['tls-fingerprint']);
         if (node['hop-interval']) params.set('hop-interval', String(node['hop-interval']));
         if (node.keepalive) params.set('keepalive', String(node.keepalive));
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -220,6 +224,7 @@ export class URIConverter extends BaseConverter {
             params.set('max_udp_relay_packet_size', String(node['max-udp-relay-packet-size']));
         if (node['max-open-streams'])
             params.set('max_open_streams', String(node['max-open-streams']));
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -262,8 +267,14 @@ export class URIConverter extends BaseConverter {
         const auth = node.username
             ? Base64.encode(`${node.username}:${node.password || ''}`, true)
             : '';
+        const params = new URLSearchParams();
+        if (node.tls) params.set('tls', '1');
+        if (node.sni) params.set('sni', node.sni);
+        if (node['skip-cert-verify']) params.set('skip-cert-verify', 'true');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
+        const query = params.toString() ? `?${params.toString()}` : '';
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `socks://${auth ? auth + '@' : ''}${node.server}:${node.port}${hash}`;
+        return `socks://${auth ? auth + '@' : ''}${node.server}:${node.port}${query}${hash}`;
     }
 
     private http(node: ProxyNode): string {
@@ -279,7 +290,7 @@ export class URIConverter extends BaseConverter {
         if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
         if (node['skip-cert-verify']) params.set('insecure', '1');
-        if (node.udp) params.set('udp', '1');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
         if (node['idle-session-check-interval'] !== undefined)
             params.set('idle-session-check-interval', String(node['idle-session-check-interval']));
         if (node['idle-session-timeout'] !== undefined)
@@ -396,6 +407,7 @@ export class URIConverter extends BaseConverter {
         // 强制设置 encryption=none，提高外部转换兼容性
         params.set('encryption', node.encryption || 'none');
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
 
         if (node._extra) {
             const extra = typeof node._extra === 'string' ? node._extra : JSON.stringify(node._extra);
