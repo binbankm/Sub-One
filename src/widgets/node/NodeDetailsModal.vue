@@ -158,10 +158,13 @@ onUnmounted(() => {
                                 <div class="flex items-center justify-between gap-4">
                                     <div class="relative flex-1">
                                         <input
+                                            id="detailsSearchTerm"
+                                            name="detailsSearchTerm"
                                             v-model="searchTerm"
                                             type="text"
                                             :placeholder="t('widgets.node.detailsModal.searchPlaceholder')"
                                             class="search-input-unified w-full"
+                                            :aria-label="t('widgets.node.detailsModal.searchPlaceholder') || '搜索节点'"
                                         />
                                         <svg
                                             class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -243,8 +246,10 @@ onUnmounted(() => {
                                     <div
                                         class="flex items-center justify-between rounded-element bg-gray-50/60 p-3 dark:bg-white/5"
                                     >
-                                        <label class="flex cursor-pointer items-center">
+                                        <label for="detailsSelectAll" class="flex cursor-pointer items-center">
                                             <input
+                                                id="detailsSelectAll"
+                                                name="detailsSelectAll"
                                                 type="checkbox"
                                                 :checked="
                                                     selectedNodes.size === filteredNodes.length &&
@@ -256,6 +261,7 @@ onUnmounted(() => {
                                                 "
                                                 class="h-4 w-4 rounded border-gray-300 text-primary-600"
                                                 @change="toggleSelectAll"
+                                                aria-label="全选节点"
                                             />
                                             <span
                                                 class="ml-2 text-sm text-gray-700 dark:text-gray-300"
@@ -297,10 +303,13 @@ onUnmounted(() => {
                                                     >
                                                         <!-- 选择框 -->
                                                         <div class="shrink-0" @click.stop>
-                                                            <div
-                                                                class="relative flex h-5 w-5 items-center justify-center"
+                                                            <label
+                                                                :for="`details-node-${node.id}`"
+                                                                class="relative flex h-5 w-5 items-center justify-center cursor-pointer"
                                                             >
                                                                 <input
+                                                                    :id="`details-node-${node.id}`"
+                                                                    name="detailsNodeItem"
                                                                     type="checkbox"
                                                                     :checked="
                                                                         selectedNodes.has(node.id)
@@ -309,6 +318,7 @@ onUnmounted(() => {
                                                                     @change="
                                                                         toggleNodeSelection(node.id)
                                                                     "
+                                                                    aria-label="选择节点"
                                                                 />
                                                                 <svg
                                                                     class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
@@ -324,7 +334,7 @@ onUnmounted(() => {
                                                                         stroke-linejoin="round"
                                                                     />
                                                                 </svg>
-                                                            </div>
+                                                            </label>
                                                         </div>
 
                                                         <div

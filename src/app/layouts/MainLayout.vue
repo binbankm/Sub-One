@@ -116,9 +116,11 @@ onMounted(() => {
                                     :tab-action="tabAction"
                                     @action-handled="tabAction = null"
                                     @show-nodes="handleShowNodes"
-                                    @add-subscription="router.push('/subscriptions')"
-                                    @add-node="router.push('/nodes')"
-                                    @add-profile="router.push('/profiles')"
+                                    v-on="route.name === 'dashboard' ? {
+                                        'add-subscription': () => router.push('/subscriptions'),
+                                        'add-node': () => router.push('/nodes'),
+                                        'add-profile': () => router.push('/profiles')
+                                    } : {}"
                                 />
                             </div>
                         </Transition>

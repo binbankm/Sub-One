@@ -92,10 +92,12 @@ const vFocus = {
             <!-- 模式 1: URL 导入 -->
             <div v-if="mode === 'url'" class="space-y-4">
                 <div>
-                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    <label for="subImportUrl" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
                         >{{ t('widgets.node.importModal.urlLabel') }}</label
                     >
                     <input
+                        id="subImportUrl"
+                        name="subImportUrl"
                         v-model="subscriptionUrl"
                         v-focus
                         type="text"
@@ -124,11 +126,14 @@ const vFocus = {
                     @click="triggerFileInput"
                 >
                     <input
+                        id="subImportFileInput"
+                        name="subImportFileInput"
                         ref="fileInputRef"
                         type="file"
                         class="hidden"
                         accept=".yaml,.yml,.txt,.json,.conf"
                         @change="handleFileSelect"
+                        aria-label="导入文件"
                     />
 
                     <div
@@ -167,7 +172,7 @@ const vFocus = {
                 <!-- 文本内容区域 -->
                 <div>
                     <div class="mb-1.5 flex items-center justify-between">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        <label for="subImportContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
                             >{{ t('widgets.node.importModal.contentLabel') }}</label
                         >
                         <span v-if="textContent" class="text-xs text-gray-400">
@@ -175,6 +180,8 @@ const vFocus = {
                         </span>
                     </div>
                     <textarea
+                        id="subImportContent"
+                        name="subImportContent"
                         v-model="textContent"
                         rows="6"
                         :placeholder="t('widgets.node.importModal.contentPlaceholder')"

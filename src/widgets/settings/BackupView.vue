@@ -338,11 +338,14 @@ async function confirmImport() {
                 <!-- 快速创建 -->
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <input
+                        id="snapshotName"
+                        name="snapshotName"
                         v-model="snapshotName"
                         type="text"
                         :placeholder="t('widgets.settings.backup.snapshotNamePlaceholder')"
                         class="rounded-element border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white sm:w-48"
                         @keyup.enter="handleCreateSnapshot"
+                        aria-label="快照名称"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
@@ -371,12 +374,15 @@ async function confirmImport() {
                 <!-- 批量操作栏 -->
                 <div v-if="batch.isBatchDeleteMode.value" class="mb-4 flex items-center justify-between rounded-element bg-primary-50 p-3 px-4 dark:bg-primary-900/20">
                     <div class="flex items-center gap-4">
-                        <label class="flex cursor-pointer items-center gap-2">
+                        <label for="backupSelectAll" class="flex cursor-pointer items-center gap-2">
                             <input
+                                id="backupSelectAll"
+                                name="backupSelectAll"
                                 type="checkbox"
                                 :checked="batch.selectedCount.value === snapshots.length && snapshots.length > 0"
                                 class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                 @change="batch.selectedCount.value === snapshots.length ? batch.deselectAll() : batch.selectAll()"
+                                aria-label="全选快照"
                             />
                             <span class="text-sm font-medium text-primary-900 dark:text-primary-300">
                                 {{ t('widgets.settings.backup.selectAll') }} ({{ batch.selectedCount.value }}/{{ snapshots.length }})
@@ -420,12 +426,17 @@ async function confirmImport() {
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                             <!-- 批量选择框 -->
                             <div v-if="batch.isBatchDeleteMode.value" class="flex items-center shrink-0" @click.stop>
-                                <input
-                                    type="checkbox"
-                                    :checked="batch.isSelected(snapshot.id)"
-                                    class="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                    @change="batch.toggleSelection(snapshot.id)"
-                                />
+                                <label :for="`snapshot-item-${snapshot.id}`" class="cursor-pointer flex items-center">
+                                    <input
+                                        :id="`snapshot-item-${snapshot.id}`"
+                                        name="snapshotItem"
+                                        type="checkbox"
+                                        :checked="batch.isSelected(snapshot.id)"
+                                        class="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        @change="batch.toggleSelection(snapshot.id)"
+                                        aria-label="选择快照"
+                                    />
+                                </label>
                             </div>
 
                             <div class="flex h-10 w-10 items-center justify-center rounded-element bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">
@@ -545,11 +556,14 @@ async function confirmImport() {
                     @drop.prevent="handleDrop"
                 >
                     <input
+                        id="backupFileInput"
+                        name="backupFileInput"
                         ref="fileInput"
                         type="file"
                         accept=".json"
                         class="hidden"
                         @change="handleFileSelect"
+                        aria-label="备份文件上传"
                     />
 
                     <div
@@ -690,12 +704,13 @@ async function confirmImport() {
 
                     <!-- 恢复模式 -->
                     <div>
-                        <label
+                        <div
                             class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                            >{{ t('widgets.settings.backup.restoreModeLabel') }}</label
+                            >{{ t('widgets.settings.backup.restoreModeLabel') }}</div
                         >
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <label
+                                for="restoreMerge"
                                 class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'merge'
@@ -704,6 +719,8 @@ async function confirmImport() {
                                 "
                             >
                                 <input
+                                    id="restoreMerge"
+                                    name="restoreMode"
                                     v-model="restoreMode"
                                     type="radio"
                                     value="merge"
@@ -736,6 +753,7 @@ async function confirmImport() {
                             </label>
 
                             <label
+                                for="restoreOverwrite"
                                 class="relative flex cursor-pointer items-start rounded-element border p-3 transition-all hover:bg-gray-50 dark:hover:bg-white/10"
                                 :class="
                                     restoreMode === 'overwrite'
@@ -744,6 +762,8 @@ async function confirmImport() {
                                 "
                             >
                                 <input
+                                    id="restoreOverwrite"
+                                    name="restoreMode"
                                     v-model="restoreMode"
                                     type="radio"
                                     value="overwrite"

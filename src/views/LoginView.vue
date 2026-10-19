@@ -204,6 +204,7 @@ const handleSubmit = async () => {
                     <div class="group relative">
                         <input
                             id="username"
+                            name="username"
                             v-model="username"
                             type="text"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
@@ -278,6 +279,7 @@ const handleSubmit = async () => {
                     <div class="group relative">
                         <input
                             id="password"
+                            name="password"
                             v-model="password"
                             type="password"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
@@ -380,6 +382,7 @@ const handleSubmit = async () => {
                     <div class="group relative">
                         <input
                             id="confirmPassword"
+                            name="confirmPassword"
                             v-model="confirmPassword"
                             type="password"
                             class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"

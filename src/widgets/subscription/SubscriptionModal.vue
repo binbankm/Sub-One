@@ -92,12 +92,15 @@ const {
                         <!-- 订阅名称 (1列) -->
                         <div class="md:col-span-1">
                             <label
+                                for="subModalName"
                                 class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
                                 {{ t('widgets.subscription.modal.subName') }}
                                 <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
                             </label>
                             <input
+                                id="subModalName"
+                                name="subModalName"
                                 v-model="localSubscription.name"
                                 type="text"
                                 :placeholder="t('widgets.subscription.modal.namePlaceholder')"
@@ -109,12 +112,15 @@ const {
                         <!-- 订阅链接 (2列) -->
                         <div class="md:col-span-2">
                             <label
+                                for="subModalUrl"
                                 class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                             >
                                 {{ t('widgets.subscription.modal.subUrl') }}
                                 <span class="text-danger-500">*</span>
                             </label>
                             <input
+                                id="subModalUrl"
+                                name="subModalUrl"
                                 v-model="localSubscription.url"
                                 type="url"
                                 :placeholder="t('widgets.subscription.modal.urlPlaceholder')"
@@ -159,12 +165,12 @@ const {
                         <div v-if="showAdvanced" class="mt-4 space-y-4">
                             <!-- 节点过滤规则 -->
                             <div>
-                                <label
+                                <div
                                     class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
                                     {{ t('widgets.subscription.modal.filterRules') }}
                                     <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
-                                </label>
+                                </div>
                                 <NodeFilterRuleEditor
                                     v-model="localSubscription.exclude"
                                     :placeholder="t('widgets.subscription.modal.filterPlaceholder')"
@@ -180,12 +186,12 @@ const {
 
                             <!-- 节点重命名规则 -->
                             <div>
-                                <label
+                                <div
                                     class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
                                     {{ t('widgets.subscription.modal.renameRules') }}
                                     <span class="ml-1 text-xs text-gray-400">{{ t('widgets.subscription.modal.optional') }}</span>
-                                </label>
+                                </div>
                                 <NodeRenameRuleEditor
                                     v-model="localSubscription.rename"
                                     :subscription-url="localSubscription.url"

@@ -53,14 +53,17 @@ const handleConfirm = () => {
             <h3 class="gradient-text text-lg font-bold">{{ t('common.ui.bulk.title') }}</h3>
         </template>
         <template #body>
-            <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            <label for="bulkImportText" class="mb-4 block text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
                 {{ t('common.ui.bulk.desc') }}
-            </p>
+            </label>
             <textarea
+                id="bulkImportText"
+                name="bulkImportText"
                 v-model="importText"
                 rows="8"
                 class="input-modern w-full resize-none font-mono text-sm"
                 placeholder="http://...&#10;https://...&#10;vmess://...&#10;vless://...&#10;trojan://..."
+                :aria-label="t('common.ui.bulk.desc') || '批量导入内容'"
             ></textarea>
         </template>
     </Modal>
