@@ -65,12 +65,15 @@ const { t } = useI18n();
         <div class="relative z-10 flex items-start justify-between gap-3">
             <!-- 批量模式复选框 -->
             <div v-if="isBatchMode" class="shrink-0" @click.stop>
-                <label class="relative inline-flex cursor-pointer items-center">
+                <label :for="`profile-select-${profile.id}`" class="relative inline-flex cursor-pointer items-center">
                     <input
+                        :id="`profile-select-${profile.id}`"
+                        name="profileSelect"
                         type="checkbox"
                         :checked="isSelected"
                         class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-secondary-600 dark:border-white/10 dark:bg-white/10"
                         @change="emit('toggleSelect')"
+                        aria-label="选择订阅组"
                     />
                 </label>
             </div>
@@ -163,8 +166,10 @@ const { t } = useI18n();
         >
             <!-- 启用/禁用开关 -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <label class="group/toggle relative inline-flex cursor-pointer items-center">
+                <label :for="`profile-enabled-${profile.id}`" class="group/toggle relative inline-flex cursor-pointer items-center">
                     <input
+                        :id="`profile-enabled-${profile.id}`"
+                        name="profileEnabled"
                         type="checkbox"
                         :checked="profile.enabled"
                         class="peer sr-only"

@@ -144,8 +144,10 @@ const handleTestLatency = async () => {
             <!-- 头部 -->
             <div class="mb-4 flex items-start justify-between gap-3 sm:mb-6">
                 <div v-if="isBatchMode" class="shrink-0 pt-1" @click.stop>
-                    <label class="relative inline-flex cursor-pointer items-center">
+                    <label :for="`sub-select-${sub.id}`" class="relative inline-flex cursor-pointer items-center">
                         <input
+                            :id="`sub-select-${sub.id}`"
+                            name="subSelect"
                             type="checkbox"
                             :checked="isSelected"
                             class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-primary-600 dark:border-white/10 dark:bg-white/10"
@@ -258,10 +260,12 @@ const handleTestLatency = async () => {
             <!-- URL区域 -->
             <div class="flex grow flex-col justify-start space-y-3 sm:space-y-4">
                 <div class="relative">
-                    <label class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                    <label :for="`sub-url-${sub.id}`" class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
                         >{{ t('widgets.subscription.card.subUrl') }}</label
                     >
                     <input
+                        :id="`sub-url-${sub.id}`"
+                        name="subUrl"
                         type="text"
                         :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'"
                         readonly
@@ -396,8 +400,10 @@ const handleTestLatency = async () => {
                 @click.stop
             >
                 <div class="flex items-center gap-2 sm:gap-3">
-                    <label class="group/toggle relative inline-flex cursor-pointer items-center">
+                    <label :for="`sub-enabled-${sub.id}`" class="group/toggle relative inline-flex cursor-pointer items-center">
                         <input
+                            :id="`sub-enabled-${sub.id}`"
+                            name="subEnabled"
                             type="checkbox"
                             :checked="sub.enabled"
                             class="peer sr-only"

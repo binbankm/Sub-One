@@ -26,9 +26,12 @@ const props = withDefaults(
     defineProps<{
         /** 绑定的过滤规则字符串 */
         modelValue?: string;
+        /** 占位提示符 */
+        placeholder?: string;
     }>(),
     {
-        modelValue: ''
+        modelValue: '',
+        placeholder: undefined
     }
 );
 
@@ -466,12 +469,12 @@ const confirmClear = () => {
         <!-- 协议选择 -->
         <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <label
+                <div
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
                     <span class="h-5 w-1 rounded-full bg-primary-500"></span>
                     {{ t('widgets.subscription.filterEditor.protocolType') }}
-                </label>
+                </div>
                 <span v-if="selectedProtocols.length > 0" class="text-xs text-gray-400">
                     {{ t('widgets.subscription.filterEditor.selected') }} {{ selectedProtocols.length }} {{ t('widgets.subscription.filterEditor.count') }}
                 </span>
@@ -497,12 +500,12 @@ const confirmClear = () => {
         <!-- 地区选择 -->
         <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <label
+                <div
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
                     <span class="h-5 w-1 rounded-full bg-success-500"></span>
                     {{ t('widgets.subscription.filterEditor.commonRegions') }}
-                </label>
+                </div>
                 <span v-if="selectedRegions.length > 0" class="text-xs text-gray-400">
                     {{ t('widgets.subscription.filterEditor.selected') }} {{ selectedRegions.length }} {{ t('widgets.subscription.filterEditor.count') }}
                 </span>
@@ -528,12 +531,12 @@ const confirmClear = () => {
         <!-- 关键词过滤 -->
         <div class="space-y-3">
             <div class="flex items-center justify-between">
-                <label
+                <div
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
                     <span class="h-5 w-1 rounded-full bg-warning-500"></span>
                     {{ t('widgets.subscription.filterEditor.keywordFilter') }}
-                </label>
+                </div>
                 <span v-if="customKeywords.length > 0" class="text-xs text-gray-400">
                     {{ t('widgets.subscription.filterEditor.selected') }} {{ customKeywords.length }} {{ t('widgets.subscription.filterEditor.count') }}
                 </span>
@@ -559,6 +562,8 @@ const confirmClear = () => {
             <!-- 自定义输入 -->
             <div class="flex gap-2">
                 <input
+                    id="filterKeywordInput"
+                    name="filterKeywordInput"
                     v-model="newKeyword"
                     type="text"
                     :placeholder="t('widgets.subscription.filterEditor.keywordPlaceholder')"
@@ -598,6 +603,7 @@ const confirmClear = () => {
         <div class="border-t-2 border-gray-300 pt-4 dark:border-white/10">
             <div class="mb-3 flex items-center justify-between">
                 <label
+                    for="filterRuleTextarea"
                     class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
                 >
                     <span class="h-5 w-1 rounded-full bg-secondary-500"></span>
@@ -611,10 +617,12 @@ const confirmClear = () => {
                 </button>
             </div>
             <textarea
+                id="filterRuleTextarea"
+                name="filterRuleTextarea"
                 :value="modelValue"
                 :readonly="!isManualMode"
                 rows="4"
-                :placeholder="isManualMode ? t('widgets.subscription.filterEditor.manualPlaceholder') : t('widgets.subscription.filterEditor.autoPlaceholder')"
+                :placeholder="placeholder || (isManualMode ? t('widgets.subscription.filterEditor.manualPlaceholder') : t('widgets.subscription.filterEditor.autoPlaceholder'))"
                 class="w-full rounded-element border-2 border-gray-300 bg-gray-900 px-4 py-3 font-mono text-sm text-success-400 transition-all focus:ring-2 focus:ring-secondary-500 focus:outline-none dark:border-white/10 dark:bg-black"
                 :class="{
                     'cursor-not-allowed opacity-60': !isManualMode,

@@ -262,8 +262,8 @@ onMounted(() => {
 
             <!-- 切换选项 -->
             <div v-if="backendInfo.canSwitch" class="space-y-3">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >{{ t('widgets.settings.storage.switchTitle') }}</label
+                <div class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >{{ t('widgets.settings.storage.switchTitle') }}</div
                 >
                 <div class="grid grid-cols-2 gap-4">
                     <button
