@@ -42,11 +42,20 @@ withDefaults(
         confirmDisabled?: boolean;
         /** 确认按钮提示文字 */
         confirmButtonTitle?: string;
+        /** 确认按钮文字 */
+        confirmText?: string;
+        /** 取消按钮文字 */
+        cancelText?: string;
+        /** 保存/加载中状态 */
+        isSaving?: boolean;
     }>(),
     {
         size: 'sm',
         confirmDisabled: false,
-        confirmButtonTitle: undefined
+        confirmButtonTitle: undefined,
+        confirmText: undefined,
+        cancelText: undefined,
+        isSaving: false
     }
 );
 
@@ -153,16 +162,26 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                                 class="rounded-element bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20"
                                 @click="emit('update:show', false)"
                             >
-                                {{ t('common.ui.modal.cancel') }}
+                                {{ cancelText || t('common.ui.modal.cancel') }}
                             </button>
                             <!-- 确认按钮 -->
                             <button
-                                :disabled="confirmDisabled"
-                                :title="confirmDisabled ? confirmButtonTitle : t('common.ui.modal.confirm')"
-                                class="btn-modern px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
+                                :disabled="confirmDisabled || isSaving"
+                                :title="confirmDisabled && confirmButtonTitle ? confirmButtonTitle : (confirmButtonTitle || confirmText || t('common.ui.modal.confirm'))"
+                                class="btn-modern flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
                                 @click="handleConfirm"
                             >
-                                {{ confirmButtonTitle || t('common.ui.modal.confirm') }}
+                                <svg
+                                    v-if="isSaving"
+                                    class="h-4 w-4 animate-spin text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>{{ confirmText || t('common.ui.modal.confirm') }}</span>
                             </button>
                         </div>
                     </div>

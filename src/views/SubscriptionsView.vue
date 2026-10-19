@@ -322,31 +322,31 @@ useTabActionTrigger(
                 </svg>
             </template>
         </EmptyState>
+
+        <!-- ==================== Modals ==================== -->
+
+        <SubscriptionModal
+            v-if="showSubModal"
+            v-model:show="showSubModal"
+            :subscription="editingSubscription"
+            :is-new="isNewSubscription"
+            @save="handleSaveSubWrapper"
+        />
+
+        <ConfirmModal
+            v-model:show="showDeleteAllSubsModal"
+            :title="t('views.subscriptions.clearAllModal.title')"
+            :message="t('views.subscriptions.clearAllModal.desc')"
+            type="danger"
+            @confirm="handleDeleteAllSubscriptionsWithCleanup"
+        />
+
+        <ConfirmModal
+            v-model:show="showDeleteSingleSubModal"
+            :title="t('views.subscriptions.deleteModal.title')"
+            :message="t('views.subscriptions.deleteModal.desc')"
+            type="danger"
+            @confirm="handleConfirmDeleteSingleSub"
+        />
     </div>
-
-    <!-- ==================== Modals ==================== -->
-
-    <SubscriptionModal
-        v-if="showSubModal"
-        v-model:show="showSubModal"
-        :subscription="editingSubscription"
-        :is-new="isNewSubscription"
-        @save="handleSaveSubWrapper"
-    />
-
-    <ConfirmModal
-        v-model:show="showDeleteAllSubsModal"
-        :title="t('views.subscriptions.clearAllModal.title')"
-        :message="t('views.subscriptions.clearAllModal.desc')"
-        type="danger"
-        @confirm="handleDeleteAllSubscriptionsWithCleanup"
-    />
-
-    <ConfirmModal
-        v-model:show="showDeleteSingleSubModal"
-        :title="t('views.subscriptions.deleteModal.title')"
-        :message="t('views.subscriptions.deleteModal.desc')"
-        type="danger"
-        @confirm="handleConfirmDeleteSingleSub"
-    />
 </template>

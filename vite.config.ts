@@ -93,9 +93,9 @@ export default defineConfig({
 
             /**
              * /sub 路径代理
-             * 订阅链接相关请求代理
+             * 订阅链接相关请求代理 (使用正则精准匹配，避免意外匹配前端路由如 /subscriptions)
              */
-            '/sub': {
+            '^/sub($|[/?])': {
                 target: 'http://127.0.0.1:3055', // 目标服务器地址
                 changeOrigin: true // 改变源地址，解决跨域问题
             }

@@ -248,6 +248,7 @@ watch(
         :is-saving="isSaving"
         :confirm-disabled="hasWhitespace"
         :confirm-button-title="t('widgets.settings.modal.saveDisabled')"
+        :confirm-text="t('entities.subscription.modal.saveBtn')"
         size="4xl"
         @update:show="emit('update:show', $event)"
         @confirm="handleSave"
@@ -361,6 +362,7 @@ watch(
                                     >
                                     <input
                                         id="fileName"
+                                        name="fileName"
                                         v-model="settings.FileName"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -375,6 +377,7 @@ watch(
                                     >
                                     <input
                                         id="myToken"
+                                        name="myToken"
                                         v-model="settings.mytoken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -415,6 +418,7 @@ watch(
                                     >
                                     <input
                                         id="profileToken"
+                                        name="profileToken"
                                         v-model="settings.profileToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -445,9 +449,9 @@ watch(
 
                                 <!-- 开关组：自动前缀 -->
                                 <div>
-                                    <label
+                                    <div
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >{{ t('widgets.settings.modal.profile.prefixLabel') }}</label
+                                        >{{ t('widgets.settings.modal.profile.prefixLabel') }}</div
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -465,9 +469,12 @@ watch(
                                             </p>
                                         </div>
                                         <label
+                                            for="prependSubName"
                                             class="relative inline-flex shrink-0 cursor-pointer items-center"
                                         >
                                             <input
+                                                id="prependSubName"
+                                                name="prependSubName"
                                                 v-model="settings.prependSubName"
                                                 type="checkbox"
                                                 class="peer sr-only"
@@ -481,9 +488,9 @@ watch(
 
                                 <!-- 开关组：自动去重 -->
                                 <div>
-                                    <label
+                                    <div
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >{{ t('widgets.settings.modal.profile.dedupeLabel') }}</label
+                                        >{{ t('widgets.settings.modal.profile.dedupeLabel') }}</div
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -501,9 +508,12 @@ watch(
                                             </p>
                                         </div>
                                         <label
+                                            for="dedupe"
                                             class="relative inline-flex shrink-0 cursor-pointer items-center"
                                         >
                                             <input
+                                                id="dedupe"
+                                                name="dedupe"
                                                 v-model="settings.dedupe"
                                                 type="checkbox"
                                                 class="peer sr-only"
@@ -517,12 +527,12 @@ watch(
 
                                 <!-- 全局节点重命名规则 -->
                                 <div class="md:col-span-2">
-                                    <label
+                                    <div
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                                     >
                                         {{ t('widgets.settings.modal.profile.renameLabel') }}
                                         <span class="ml-1 text-xs text-gray-400">({{ t('widgets.settings.modal.profile.renameDesc') }})</span>
-                                    </label>
+                                    </div>
                                     <NodeRenameRuleEditor
                                         v-model="settings.renameRules"
                                         :placeholder="t('widgets.settings.modal.profile.renamePlaceholder')"
@@ -531,9 +541,9 @@ watch(
 
                                 <!-- 开关组：使用外部转换API -->
                                 <div class="md:col-span-2">
-                                    <label
+                                    <div
                                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        >{{ t('widgets.settings.modal.convert.title') }}</label
+                                        >{{ t('widgets.settings.modal.convert.title') }}</div
                                     >
                                     <div
                                         class="flex h-22 items-center justify-between rounded-element border border-gray-300 bg-gray-50/80 p-4 transition-colors hover:border-primary-200 dark:border-white/10 dark:bg-white/5 dark:hover:border-primary-800"
@@ -551,9 +561,12 @@ watch(
                                             </p>
                                         </div>
                                         <label
+                                            for="useExternalConverter"
                                             class="relative inline-flex shrink-0 cursor-pointer items-center"
                                         >
                                             <input
+                                                id="useExternalConverter"
+                                                name="useExternalConverter"
                                                 v-model="settings.useExternalConverter"
                                                 type="checkbox"
                                                 class="peer sr-only"
@@ -577,8 +590,11 @@ watch(
                                     >
                                     <div class="flex gap-2">
                                         <select
+                                            id="externalConverterPreset"
+                                            name="externalConverterPreset"
                                             v-model="settings.externalConverterUrl"
                                             class="input-modern-enhanced w-1/3 min-w-37.5"
+                                            aria-label="外部转换API预设"
                                         >
                                             <option
                                                 v-for="api in settings.externalConverterApis"
@@ -591,6 +607,7 @@ watch(
                                         </select>
                                         <input
                                             id="externalConverterUrl"
+                                            name="externalConverterUrl"
                                             v-model="settings.externalConverterUrl"
                                             type="text"
                                             class="input-modern-enhanced flex-1"
@@ -656,6 +673,7 @@ watch(
                                     >
                                     <input
                                         id="tgBotToken"
+                                        name="tgBotToken"
                                         v-model="settings.BotToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -670,6 +688,7 @@ watch(
                                     >
                                     <input
                                         id="tgChatID"
+                                        name="tgChatID"
                                         v-model="settings.ChatID"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -711,6 +730,7 @@ watch(
                                     </label>
                                     <input
                                         id="notifyThresholdDays"
+                                        name="notifyThresholdDays"
                                         v-model.number="settings.NotifyThresholdDays"
                                         type="number"
                                         min="1"
@@ -733,6 +753,7 @@ watch(
                                     </label>
                                     <input
                                         id="notifyThresholdPercent"
+                                        name="notifyThresholdPercent"
                                         v-model.number="settings.NotifyThresholdPercent"
                                         type="number"
                                         min="50"
@@ -771,8 +792,10 @@ watch(
                                         {{ t('widgets.settings.modal.cron.enableDesc') }}
                                     </p>
                                 </div>
-                                <label class="relative inline-flex cursor-pointer items-center">
+                                <label for="cronEnabled" class="relative inline-flex cursor-pointer items-center">
                                     <input
+                                        id="cronEnabled"
+                                        name="cronEnabled"
                                         v-model="settings.cronEnabled"
                                         type="checkbox"
                                         class="peer sr-only"
@@ -799,6 +822,7 @@ watch(
                                     </label>
                                     <input
                                         id="cronSecret"
+                                        name="cronSecret"
                                         v-model="settings.cronSecret"
                                         type="text"
                                         class="input-modern-enhanced w-full"
@@ -812,11 +836,13 @@ watch(
                                     
                                     <!-- 动态生成的触发链接展示 -->
                                     <div v-if="cronUrl" class="mt-4 rounded-element bg-gray-50 p-3 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-                                        <label class="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                        <label for="cronTriggerUrl" class="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-gray-300">
                                             {{ t('widgets.settings.modal.cron.triggerUrl') }}
                                         </label>
                                         <div class="flex items-center gap-2">
                                             <input
+                                                id="cronTriggerUrl"
+                                                name="cronTriggerUrl"
                                                 type="text"
                                                 readonly
                                                 :value="cronUrl"

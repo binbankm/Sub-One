@@ -165,10 +165,13 @@ useTabActionTrigger(
                 <!-- 搜索框 -->
                 <div class="relative mb-2 w-full shrink-0 sm:mb-0 sm:w-56">
                     <input
+                        id="nodesSearchTerm"
+                        name="nodesSearchTerm"
                         v-model="searchTerm"
                         type="text"
                         :placeholder="t('views.nodes.searchPlaceholder')"
                         class="search-input-unified w-full text-base"
+                        :aria-label="t('views.nodes.searchPlaceholder') || '搜索节点'"
                     />
                     <svg
                         class="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400"

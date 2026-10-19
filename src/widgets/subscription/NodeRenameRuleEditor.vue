@@ -420,6 +420,9 @@ const clearRules = () => {
         <!-- 规则文本输入区域 -->
         <div class="relative">
             <textarea
+                id="nodeRenameRules"
+                name="nodeRenameRules"
+                aria-label="节点重命名规则"
                 v-model="localRules"
                 rows="4"
                 :placeholder="placeholder || t('widgets.subscription.renameEditor.defaultPlaceholder')"
@@ -468,10 +471,12 @@ const clearRules = () => {
                     <!-- 真实节点来源选择与刷新工具条 -->
                     <div class="flex flex-wrap items-center justify-between gap-2 rounded border border-primary-100 bg-white/70 p-2 text-xs backdrop-blur-xs dark:border-white/5 dark:bg-white/5">
                         <div class="flex items-center gap-1.5 flex-1 min-w-50">
-                            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            <label for="renameSourceSelect" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                 {{ t('widgets.subscription.renameEditor.sourceSelect') }}:
-                            </span>
+                            </label>
                             <select
+                                id="renameSourceSelect"
+                                name="renameSourceSelect"
                                 v-model="selectedSourceId"
                                 class="input-modern text-xs py-1 px-2 flex-1 max-w-xs"
                             >
@@ -531,10 +536,12 @@ const clearRules = () => {
                 <!-- 模式 B：自定义单行输入测试 -->
                 <div v-else class="space-y-2">
                     <div>
-                        <label class="mb-1 block text-[11px] text-gray-600 dark:text-gray-400">
+                        <label for="customTestInput" class="mb-1 block text-[11px] text-gray-600 dark:text-gray-400">
                             {{ t('widgets.subscription.renameEditor.sampleInput') }}:
                         </label>
                         <input
+                            id="customTestInput"
+                            name="customTestInput"
                             v-model="customTestInput"
                             type="text"
                             class="input-modern w-full font-mono text-xs py-1.5"
