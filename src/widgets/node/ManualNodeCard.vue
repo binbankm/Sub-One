@@ -87,8 +87,8 @@ const handleCopy = async (url: string) => {
                                 type="checkbox"
                                 :checked="isSelected"
                                 class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-success-500 checked:bg-success-500 dark:border-white/10"
-                                @change="emit('toggleSelect')"
                                 aria-label="选择节点"
+                                @change="emit('toggleSelect')"
                             />
                             <svg
                                 class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"

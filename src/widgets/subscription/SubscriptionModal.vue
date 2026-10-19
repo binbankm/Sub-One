@@ -100,8 +100,8 @@ const {
                             </label>
                             <input
                                 id="subModalName"
-                                name="subModalName"
                                 v-model="localSubscription.name"
+                                name="subModalName"
                                 type="text"
                                 :placeholder="t('widgets.subscription.modal.namePlaceholder')"
                                 class="input-modern w-full"
@@ -120,8 +120,8 @@ const {
                             </label>
                             <input
                                 id="subModalUrl"
-                                name="subModalUrl"
                                 v-model="localSubscription.url"
+                                name="subModalUrl"
                                 type="url"
                                 :placeholder="t('widgets.subscription.modal.urlPlaceholder')"
                                 class="input-modern w-full font-mono text-sm"

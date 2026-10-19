@@ -58,8 +58,8 @@ const handleConfirm = () => {
             </label>
             <textarea
                 id="bulkImportText"
-                name="bulkImportText"
                 v-model="importText"
+                name="bulkImportText"
                 rows="8"
                 class="input-modern w-full resize-none font-mono text-sm"
                 placeholder="http://...&#10;https://...&#10;vmess://...&#10;vless://...&#10;trojan://..."

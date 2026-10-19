@@ -5,6 +5,10 @@ module.exports = {
         es2021: true,
         node: true
     },
+    globals: {
+        __BUILD_ID__: 'readonly',
+        __BUILD_TIME__: 'readonly'
+    },
     extends: [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',

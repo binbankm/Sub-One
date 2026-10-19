@@ -166,8 +166,8 @@ useTabActionTrigger(
                 <div class="relative mb-2 w-full shrink-0 sm:mb-0 sm:w-56">
                     <input
                         id="nodesSearchTerm"
-                        name="nodesSearchTerm"
                         v-model="searchTerm"
+                        name="nodesSearchTerm"
                         type="text"
                         :placeholder="t('views.nodes.searchPlaceholder')"
                         class="search-input-unified w-full text-base"

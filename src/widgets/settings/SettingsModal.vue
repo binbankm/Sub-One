@@ -362,8 +362,8 @@ watch(
                                     >
                                     <input
                                         id="fileName"
-                                        name="fileName"
                                         v-model="settings.FileName"
+                                        name="fileName"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.basic.filenamePlaceholder')"
@@ -377,8 +377,8 @@ watch(
                                     >
                                     <input
                                         id="myToken"
-                                        name="myToken"
                                         v-model="settings.mytoken"
+                                        name="myToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.basic.tokenPlaceholder')"
@@ -418,8 +418,8 @@ watch(
                                     >
                                     <input
                                         id="profileToken"
-                                        name="profileToken"
                                         v-model="settings.profileToken"
+                                        name="profileToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.profile.tokenPlaceholder')"
@@ -474,8 +474,8 @@ watch(
                                         >
                                             <input
                                                 id="prependSubName"
-                                                name="prependSubName"
                                                 v-model="settings.prependSubName"
+                                                name="prependSubName"
                                                 type="checkbox"
                                                 class="peer sr-only"
                                             />
@@ -513,8 +513,8 @@ watch(
                                         >
                                             <input
                                                 id="dedupe"
-                                                name="dedupe"
                                                 v-model="settings.dedupe"
+                                                name="dedupe"
                                                 type="checkbox"
                                                 class="peer sr-only"
                                             />
@@ -566,8 +566,8 @@ watch(
                                         >
                                             <input
                                                 id="useExternalConverter"
-                                                name="useExternalConverter"
                                                 v-model="settings.useExternalConverter"
+                                                name="useExternalConverter"
                                                 type="checkbox"
                                                 class="peer sr-only"
                                             />
@@ -591,8 +591,8 @@ watch(
                                     <div class="flex gap-2">
                                         <select
                                             id="externalConverterPreset"
-                                            name="externalConverterPreset"
                                             v-model="settings.externalConverterUrl"
+                                            name="externalConverterPreset"
                                             class="input-modern-enhanced w-1/3 min-w-37.5"
                                             aria-label="外部转换API预设"
                                         >
@@ -607,8 +607,8 @@ watch(
                                         </select>
                                         <input
                                             id="externalConverterUrl"
-                                            name="externalConverterUrl"
                                             v-model="settings.externalConverterUrl"
+                                            name="externalConverterUrl"
                                             type="text"
                                             class="input-modern-enhanced flex-1"
                                             :placeholder="t('widgets.settings.modal.convert.apiUrlPlaceholder')"
@@ -673,8 +673,8 @@ watch(
                                     >
                                     <input
                                         id="tgBotToken"
-                                        name="tgBotToken"
                                         v-model="settings.BotToken"
+                                        name="tgBotToken"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.tg.tokenPlaceholder')"
@@ -688,8 +688,8 @@ watch(
                                     >
                                     <input
                                         id="tgChatID"
-                                        name="tgChatID"
                                         v-model="settings.ChatID"
+                                        name="tgChatID"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.tg.chatIdPlaceholder')"
@@ -730,8 +730,8 @@ watch(
                                     </label>
                                     <input
                                         id="notifyThresholdDays"
-                                        name="notifyThresholdDays"
                                         v-model.number="settings.NotifyThresholdDays"
+                                        name="notifyThresholdDays"
                                         type="number"
                                         min="1"
                                         max="30"
@@ -753,8 +753,8 @@ watch(
                                     </label>
                                     <input
                                         id="notifyThresholdPercent"
-                                        name="notifyThresholdPercent"
                                         v-model.number="settings.NotifyThresholdPercent"
+                                        name="notifyThresholdPercent"
                                         type="number"
                                         min="50"
                                         max="100"
@@ -795,8 +795,8 @@ watch(
                                 <label for="cronEnabled" class="relative inline-flex cursor-pointer items-center">
                                     <input
                                         id="cronEnabled"
-                                        name="cronEnabled"
                                         v-model="settings.cronEnabled"
+                                        name="cronEnabled"
                                         type="checkbox"
                                         class="peer sr-only"
                                     />
@@ -822,8 +822,8 @@ watch(
                                     </label>
                                     <input
                                         id="cronSecret"
-                                        name="cronSecret"
                                         v-model="settings.cronSecret"
+                                        name="cronSecret"
                                         type="text"
                                         class="input-modern-enhanced w-full"
                                         :placeholder="t('widgets.settings.modal.cron.secretPlaceholder')"

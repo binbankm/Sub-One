@@ -339,13 +339,13 @@ async function confirmImport() {
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <input
                         id="snapshotName"
-                        name="snapshotName"
                         v-model="snapshotName"
+                        name="snapshotName"
                         type="text"
                         :placeholder="t('widgets.settings.backup.snapshotNamePlaceholder')"
                         class="rounded-element border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white sm:w-48"
-                        @keyup.enter="handleCreateSnapshot"
                         aria-label="快照名称"
+                        @keyup.enter="handleCreateSnapshot"
                     />
                     <button
                         :disabled="isCreatingSnapshot"
@@ -381,8 +381,8 @@ async function confirmImport() {
                                 type="checkbox"
                                 :checked="batch.selectedCount.value === snapshots.length && snapshots.length > 0"
                                 class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                @change="batch.selectedCount.value === snapshots.length ? batch.deselectAll() : batch.selectAll()"
                                 aria-label="全选快照"
+                                @change="batch.selectedCount.value === snapshots.length ? batch.deselectAll() : batch.selectAll()"
                             />
                             <span class="text-sm font-medium text-primary-900 dark:text-primary-300">
                                 {{ t('widgets.settings.backup.selectAll') }} ({{ batch.selectedCount.value }}/{{ snapshots.length }})
@@ -433,8 +433,8 @@ async function confirmImport() {
                                         type="checkbox"
                                         :checked="batch.isSelected(snapshot.id)"
                                         class="h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                        @change="batch.toggleSelection(snapshot.id)"
                                         aria-label="选择快照"
+                                        @change="batch.toggleSelection(snapshot.id)"
                                     />
                                 </label>
                             </div>
@@ -557,13 +557,13 @@ async function confirmImport() {
                 >
                     <input
                         id="backupFileInput"
-                        name="backupFileInput"
                         ref="fileInput"
+                        name="backupFileInput"
                         type="file"
                         accept=".json"
                         class="hidden"
-                        @change="handleFileSelect"
                         aria-label="备份文件上传"
+                        @change="handleFileSelect"
                     />
 
                     <div
@@ -720,8 +720,8 @@ async function confirmImport() {
                             >
                                 <input
                                     id="restoreMerge"
-                                    name="restoreMode"
                                     v-model="restoreMode"
+                                    name="restoreMode"
                                     type="radio"
                                     value="merge"
                                     class="sr-only"
@@ -763,8 +763,8 @@ async function confirmImport() {
                             >
                                 <input
                                     id="restoreOverwrite"
-                                    name="restoreMode"
                                     v-model="restoreMode"
+                                    name="restoreMode"
                                     type="radio"
                                     value="overwrite"
                                     class="sr-only"

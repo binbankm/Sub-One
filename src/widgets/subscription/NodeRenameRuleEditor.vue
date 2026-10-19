@@ -421,9 +421,9 @@ const clearRules = () => {
         <div class="relative">
             <textarea
                 id="nodeRenameRules"
+                v-model="localRules"
                 name="nodeRenameRules"
                 aria-label="节点重命名规则"
-                v-model="localRules"
                 rows="4"
                 :placeholder="placeholder || t('widgets.subscription.renameEditor.defaultPlaceholder')"
                 class="w-full resize-y rounded-element border border-gray-300 bg-white p-3 font-mono text-xs text-gray-800 shadow-inner focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-100"
@@ -476,8 +476,8 @@ const clearRules = () => {
                             </label>
                             <select
                                 id="renameSourceSelect"
-                                name="renameSourceSelect"
                                 v-model="selectedSourceId"
+                                name="renameSourceSelect"
                                 class="input-modern text-xs py-1 px-2 flex-1 max-w-xs"
                             >
                                 <option
@@ -541,8 +541,8 @@ const clearRules = () => {
                         </label>
                         <input
                             id="customTestInput"
-                            name="customTestInput"
                             v-model="customTestInput"
+                            name="customTestInput"
                             type="text"
                             class="input-modern w-full font-mono text-xs py-1.5"
                             placeholder="输入要测试的原节点名"

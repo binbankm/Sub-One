@@ -86,8 +86,8 @@ const { t } = useI18n();
                         </label>
                         <input
                             id="profile-name"
-                            name="profileName"
                             v-model="localProfile.name"
+                            name="profileName"
                             type="text"
                             :placeholder="t('widgets.profile.modal.namePlaceholder')"
                             class="input-modern-enhanced"
@@ -105,8 +105,8 @@ const { t } = useI18n();
                         <div class="flex gap-2">
                             <input
                                 id="profile-custom-id"
-                                name="profileCustomId"
                                 v-model="localProfile.customId"
+                                name="profileCustomId"
                                 type="text"
                                 :placeholder="t('widgets.profile.modal.customIdPlaceholder')"
                                 class="input-modern-enhanced flex-1"
@@ -152,8 +152,8 @@ const { t } = useI18n();
                         <div class="relative">
                             <input
                                 id="profile-expires-at"
-                                name="profileExpiresAt"
                                 v-model="localProfile.expiresAt"
+                                name="profileExpiresAt"
                                 type="date"
                                 class="input-modern-enhanced"
                             />
@@ -205,8 +205,8 @@ const { t } = useI18n();
                         <div class="relative mb-3">
                             <input
                                 id="subSearchTerm"
-                                name="subSearchTerm"
                                 v-model="subscriptionSearchTerm"
+                                name="subSearchTerm"
                                 type="text"
                                 :placeholder="t('widgets.profile.modal.searchSubPlaceholder')"
                                 class="search-input-unified"
@@ -315,8 +315,8 @@ const { t } = useI18n();
                         <div class="relative mb-3">
                             <input
                                 id="profileNodeSearchTerm"
-                                name="profileNodeSearchTerm"
                                 v-model="nodeSearchTerm"
+                                name="profileNodeSearchTerm"
                                 type="text"
                                 :placeholder="t('widgets.profile.modal.searchNodePlaceholder')"
                                 class="search-input-unified"

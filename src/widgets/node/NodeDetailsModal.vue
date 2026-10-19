@@ -159,8 +159,8 @@ onUnmounted(() => {
                                     <div class="relative flex-1">
                                         <input
                                             id="detailsSearchTerm"
-                                            name="detailsSearchTerm"
                                             v-model="searchTerm"
+                                            name="detailsSearchTerm"
                                             type="text"
                                             :placeholder="t('widgets.node.detailsModal.searchPlaceholder')"
                                             class="search-input-unified w-full"
@@ -260,8 +260,8 @@ onUnmounted(() => {
                                                     selectedNodes.size < filteredNodes.length
                                                 "
                                                 class="h-4 w-4 rounded border-gray-300 text-primary-600"
-                                                @change="toggleSelectAll"
                                                 aria-label="全选节点"
+                                                @change="toggleSelectAll"
                                             />
                                             <span
                                                 class="ml-2 text-sm text-gray-700 dark:text-gray-300"
@@ -315,10 +315,10 @@ onUnmounted(() => {
                                                                         selectedNodes.has(node.id)
                                                                     "
                                                                     class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-primary-500 checked:bg-primary-500 dark:border-white/10"
+                                                                    aria-label="选择节点"
                                                                     @change="
                                                                         toggleNodeSelection(node.id)
                                                                     "
-                                                                    aria-label="选择节点"
                                                                 />
                                                                 <svg
                                                                     class="pointer-events-none absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"

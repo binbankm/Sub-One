@@ -72,8 +72,8 @@ const { t } = useI18n();
                         type="checkbox"
                         :checked="isSelected"
                         class="h-5 w-5 cursor-pointer rounded border-gray-300 bg-gray-100 text-secondary-600 dark:border-white/10 dark:bg-white/10"
-                        @change="emit('toggleSelect')"
                         aria-label="选择订阅组"
+                        @change="emit('toggleSelect')"
                     />
                 </label>
             </div>

@@ -563,8 +563,8 @@ const confirmClear = () => {
             <div class="flex gap-2">
                 <input
                     id="filterKeywordInput"
-                    name="filterKeywordInput"
                     v-model="newKeyword"
+                    name="filterKeywordInput"
                     type="text"
                     :placeholder="t('widgets.subscription.filterEditor.keywordPlaceholder')"
                     class="flex-1 rounded-element border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-warning-500 focus:ring-2 focus:ring-warning-500 focus:outline-none dark:border-white/10 dark:bg-white/5"

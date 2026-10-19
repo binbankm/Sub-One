@@ -97,9 +97,9 @@ const vFocus = {
                     >
                     <input
                         id="subImportUrl"
-                        name="subImportUrl"
                         v-model="subscriptionUrl"
                         v-focus
+                        name="subImportUrl"
                         type="text"
                         placeholder="https://example.com/api/v1/client/subscribe?token=..."
                         class="input-modern w-full"
@@ -127,13 +127,13 @@ const vFocus = {
                 >
                     <input
                         id="subImportFileInput"
-                        name="subImportFileInput"
                         ref="fileInputRef"
+                        name="subImportFileInput"
                         type="file"
                         class="hidden"
                         accept=".yaml,.yml,.txt,.json,.conf"
-                        @change="handleFileSelect"
                         aria-label="导入文件"
+                        @change="handleFileSelect"
                     />
 
                     <div
@@ -181,8 +181,8 @@ const vFocus = {
                     </div>
                     <textarea
                         id="subImportContent"
-                        name="subImportContent"
                         v-model="textContent"
+                        name="subImportContent"
                         rows="6"
                         :placeholder="t('widgets.node.importModal.contentPlaceholder')"
                         class="input-modern w-full resize-none font-mono text-xs leading-relaxed"
