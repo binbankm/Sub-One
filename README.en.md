@@ -288,6 +288,12 @@ Sub-One/
 
 ---
 
+## Sponsors
+
+Sponsored by [ForZTN](https://sponsorship.forztn.com/github.com/binbankm/Sub-One).
+
+---
+
 ## 📄 License
 
 This project is open-source under the [MIT License](LICENSE). Contributions and forks are welcomed!
