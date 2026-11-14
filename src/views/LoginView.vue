@@ -61,6 +61,12 @@ const password = ref('');
 /** 确认密码输入值（仅设置模式） */
 const confirmPassword = ref('');
 
+/** 是否显示密码明文 */
+const showPassword = ref(false);
+
+/** 是否显示确认密码明文 */
+const showConfirmPassword = ref(false);
+
 /** 登录加载状态 */
 const isLoading = ref(false);
 
@@ -281,8 +287,8 @@ const handleSubmit = async () => {
                             id="password"
                             v-model="password"
                             name="password"
-                            type="password"
-                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
+                            :type="showPassword ? 'text' : 'password'"
+                            class="form-input-login bg-gray-50/50 py-2.5 pr-10 text-sm transition-colors focus:bg-white sm:py-3 sm:pr-12 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
                             :placeholder="t('views.login.placeholders.password')"
                             autocomplete="current-password"
@@ -290,15 +296,17 @@ const handleSubmit = async () => {
                             @keydown.enter="handleSubmit"
                         />
 
-                        <!-- 输入框右侧图标 - 根据状态显示不同图标 -->
-                        <div
-                            class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 transition-all duration-300 sm:right-4"
+                        <!-- 密码明文切换按钮 -->
+                        <button
+                            type="button"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none sm:right-4 dark:hover:text-gray-200"
+                            :title="showPassword ? '隐藏密码' : '显示密码'"
+                            @click="showPassword = !showPassword"
                         >
-                            <!-- 空密码时显示钥匙图标 -->
                             <svg
-                                v-if="!password"
+                                v-if="!showPassword"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-gray-400 transition-colors group-hover:text-gray-500 sm:h-5 sm:w-5 dark:group-hover:text-gray-300"
+                                class="h-4 w-4 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -307,11 +315,15 @@ const handleSubmit = async () => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 />
                             </svg>
-
-                            <!-- 有密码时显示勾选图标 -->
                             <svg
                                 v-else
                                 xmlns="http://www.w3.org/2000/svg"
@@ -324,10 +336,10 @@ const handleSubmit = async () => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
                                 />
                             </svg>
-                        </div>
+                        </button>
                     </div>
 
                     <!-- 错误消息 - 带抖动动画 -->
@@ -384,8 +396,8 @@ const handleSubmit = async () => {
                             id="confirmPassword"
                             v-model="confirmPassword"
                             name="confirmPassword"
-                            type="password"
-                            class="form-input-login bg-gray-50/50 py-2.5 text-sm transition-colors focus:bg-white sm:py-3 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
+                            :type="showConfirmPassword ? 'text' : 'password'"
+                            class="form-input-login bg-gray-50/50 py-2.5 pr-10 text-sm transition-colors focus:bg-white sm:py-3 sm:pr-12 sm:text-base dark:bg-white/5 dark:focus:bg-white/10"
                             :class="{ 'input-error': error }"
                             :placeholder="t('views.login.placeholders.confirmPassword')"
                             autocomplete="new-password"
@@ -393,13 +405,17 @@ const handleSubmit = async () => {
                             @keydown.enter="handleSubmit"
                         />
 
-                        <div
-                            class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 transition-all duration-300 sm:right-4"
+                        <!-- 确认密码明文切换按钮 -->
+                        <button
+                            type="button"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none sm:right-4 dark:hover:text-gray-200"
+                            :title="showConfirmPassword ? '隐藏密码' : '显示密码'"
+                            @click="showConfirmPassword = !showConfirmPassword"
                         >
                             <svg
-                                v-if="!confirmPassword"
+                                v-if="!showConfirmPassword"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-gray-400 transition-colors group-hover:text-gray-500 sm:h-5 sm:w-5 dark:group-hover:text-gray-300"
+                                class="h-4 w-4 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -408,30 +424,19 @@ const handleSubmit = async () => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                                 />
-                            </svg>
-
-                            <svg
-                                v-else-if="password === confirmPassword && confirmPassword"
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-success-500 sm:h-5 sm:w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                 />
                             </svg>
-
                             <svg
                                 v-else
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 text-danger-500 sm:h-5 sm:w-5"
+                                class="h-4 w-4 text-primary-500 sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -440,10 +445,10 @@ const handleSubmit = async () => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
                                 />
                             </svg>
-                        </div>
+                        </button>
                     </div>
                 </div>
 

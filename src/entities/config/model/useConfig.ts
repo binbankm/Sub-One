@@ -1,19 +1,10 @@
 import { ref } from 'vue';
 
 import type { AppConfig } from '@/common/types/index';
+import { defaultSettings } from '@shared';
 
 export function useConfig() {
-    const config = ref<AppConfig>({
-        mytoken: 'auto',
-        profileToken: '',
-        FileName: 'Sub-One',
-        udp: false,
-        skipCertVerify: false,
-        prependSubName: false,
-        dedupe: false,
-        NotifyThresholdDays: 3,
-        NotifyThresholdPercent: 90
-    });
+    const config = ref<AppConfig>({ ...defaultSettings });
 
     const isInitialized = ref(false);
     const isLoading = ref(false);

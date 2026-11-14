@@ -101,6 +101,14 @@ module.exports = {
         // 关闭不必要的规则以配合 Prettier
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-unused-vars': [
+            'error',
+            {
+                argsIgnorePattern: '^_',
+                varsIgnorePattern: '^_',
+                caughtErrorsIgnorePattern: '^_'
+            }
+        ],
         'vue/multi-word-component-names': 'off'
     }
 };

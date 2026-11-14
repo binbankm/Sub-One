@@ -121,8 +121,8 @@ export function handleRenaming(nodes: ProxyNode[], renameRulesStr?: string): Pro
  * 内部: 过滤逻辑
  */
 function handleFiltering(nodes: ProxyNode[], options: ProcessOptions): ProxyNode[] {
-    const includeRules = options.includeRules || [];
-    const excludeRules = options.excludeRules || [];
+    const includeRules = options.includeRules ? [...options.includeRules] : [];
+    const excludeRules = options.excludeRules ? [...options.excludeRules] : [];
 
     if (options.exclude) {
         const legacyRules = options.exclude

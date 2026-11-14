@@ -11,7 +11,7 @@ export const defaultSettings: AppConfig = {
 
     // 转换配置
     useExternalConverter: false,
-    externalConverterUrl: '',
+    externalConverterUrl: 'api-suc.0z.gs',
     externalConverterApis: [
         'api-suc.0z.gs',
         'subapi.fxxk.dedyn.io',

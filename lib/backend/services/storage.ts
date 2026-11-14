@@ -52,14 +52,15 @@ export class KVStorage implements IStorageService {
  * D1 存储实现
  */
 export class D1Storage implements IStorageService {
-    constructor(private db: D1Database) {
-        this.initDatabase();
-    }
+    private static initialized = false;
+
+    constructor(private db: D1Database) {}
 
     /**
-     * 初始化数据库表结构（如果不存在）
+     * 确保数据库表结构已初始化（惰性单次检查）
      */
-    private async initDatabase(): Promise<void> {
+    private async ensureInitialized(): Promise<void> {
+        if (D1Storage.initialized) return;
         try {
             await this.db
                 .prepare(
@@ -73,7 +74,6 @@ export class D1Storage implements IStorageService {
                 )
                 .run();
 
-            // 创建索引以提高查询性能
             await this.db
                 .prepare(
                     `
@@ -81,6 +81,7 @@ export class D1Storage implements IStorageService {
             `
                 )
                 .run();
+            D1Storage.initialized = true;
         } catch (error) {
             console.error('[D1Storage] Failed to initialize database:', error);
         }
@@ -88,6 +89,7 @@ export class D1Storage implements IStorageService {
 
     async get<T = unknown>(key: string): Promise<T | null> {
         try {
+            await this.ensureInitialized();
             const result = await this.db
                 .prepare('SELECT value FROM storage WHERE key = ?')
                 .bind(key)
@@ -104,6 +106,7 @@ export class D1Storage implements IStorageService {
 
     async put(key: string, value: unknown): Promise<void> {
         try {
+            await this.ensureInitialized();
             const jsonValue = JSON.stringify(value);
             const timestamp = Date.now();
 
@@ -127,6 +130,7 @@ export class D1Storage implements IStorageService {
 
     async delete(key: string): Promise<void> {
         try {
+            await this.ensureInitialized();
             await this.db.prepare('DELETE FROM storage WHERE key = ?').bind(key).run();
         } catch (error) {
             console.error(`[D1Storage] Failed to delete key "${key}":`, error);
@@ -136,6 +140,7 @@ export class D1Storage implements IStorageService {
 
     async list(prefix?: string): Promise<string[]> {
         try {
+            await this.ensureInitialized();
             const query = prefix
                 ? 'SELECT key FROM storage WHERE key LIKE ? ORDER BY key'
                 : 'SELECT key FROM storage ORDER BY key';

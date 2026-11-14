@@ -173,7 +173,7 @@ watch(
             <div
                 class="mt-1 text-[10px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
             >
-                Total
+                {{ t('widgets.dashboard.chart.total') }}
             </div>
         </div>
     </div>

@@ -14,7 +14,7 @@
         "test:ui": "vitest --ui",
         "test:coverage": "vitest run --coverage",
         "test:proxy": "vitest lib/backend/proxy/__tests__/*.test.ts",
-        "lint": "eslint src --ext .vue,.js,jsx,cjs,mjs,ts,tsx,cts,mts --fix",
+        "lint": "eslint \"{src,lib,docker,functions}/**/*.{vue,js,jsx,cjs,mjs,ts,tsx,cts,mts}\" --fix",
         "format": "prettier --write ."
     },
     "dependencies": {

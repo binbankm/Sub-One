@@ -209,34 +209,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
     }
 
-    // [新增] 获取定时任务更新历史记录
-    if (path === '/cron/history') {
-        if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
-        try {
-            const storage = await getStorage(env);
-            const history = (await storage.get<CronLogEntry[]>(KV_KEY_CRON_LOGS)) || [];
-            return new Response(JSON.stringify({ success: true, history }), {
-                headers: { 'Content-Type': 'application/json' }
-            });
-        } catch (e: any) {
-            return new Response(JSON.stringify({ success: false, history: [] }), { status: 500 });
-        }
-    }
-
-    // [新增] 清空定时任务历史记录
-    if (path === '/cron/history/clear') {
-        if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-        try {
-            const storage = await getStorage(env);
-            await storage.put(KV_KEY_CRON_LOGS, []);
-            return new Response(JSON.stringify({ success: true }), {
-                headers: { 'Content-Type': 'application/json' }
-            });
-        } catch (e: any) {
-            return new Response(JSON.stringify({ success: false, error: e?.message }), { status: 500 });
-        }
-    }
-
     if (path === '/login') {
         if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
         try {
@@ -286,6 +258,32 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
     }
 
     switch (path) {
+        case '/cron/history': {
+            if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const storage = await getStorage(env);
+                const history = (await storage.get<CronLogEntry[]>(KV_KEY_CRON_LOGS)) || [];
+                return new Response(JSON.stringify({ success: true, history }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                return new Response(JSON.stringify({ success: false, history: [] }), { status: 500 });
+            }
+        }
+
+        case '/cron/history/clear': {
+            if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const storage = await getStorage(env);
+                await storage.put(KV_KEY_CRON_LOGS, []);
+                return new Response(JSON.stringify({ success: true }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                return new Response(JSON.stringify({ success: false, error: e?.message }), { status: 500 });
+            }
+        }
+
         case '/logout': {
             const isSecure = request.url.startsWith('https://');
             const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -444,7 +442,6 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                         'Imported'
                     );
 
-                    result.count = nodes.length;
                     result.count = nodes.length;
                     if (returnNodes) {
                         const nodesWithIds = nodes.map((n) => ({
@@ -646,18 +643,30 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     }
                 });
 
+                // 检查到期和流量预警并更新持久化通知时间戳
+                const settings =
+                    (await storage.get<Partial<AppConfig>>(KV_KEY_SETTINGS)) || defaultSettings;
+                await Promise.allSettled(
+                    latestSubs.map(async (sub) => {
+                        const prevExpire = sub.lastNotifiedExpire;
+                        const prevTraffic = sub.lastNotifiedTraffic;
+                        try {
+                            await checkAndNotify(sub, settings as AppConfig);
+                            if (
+                                sub.lastNotifiedExpire !== prevExpire ||
+                                sub.lastNotifiedTraffic !== prevTraffic
+                            ) {
+                                hasChanges = true;
+                            }
+                        } catch (err) {
+                            console.error(`[Batch Update] 通知检查失败 for ${sub.name}:`, err);
+                        }
+                    })
+                );
+
                 if (hasChanges) {
                     await storage.put(KV_KEY_SUBS, latestSubs);
                 }
-
-                // 检查到期和流量预警（非阻塞）
-                const settings =
-                    (await storage.get<Partial<AppConfig>>(KV_KEY_SETTINGS)) || defaultSettings;
-                latestSubs.forEach((sub) => {
-                    checkAndNotify(sub, settings as AppConfig).catch((err) => {
-                        console.error(`[Batch Update] 通知检查失败 for ${sub.name}:`, err);
-                    });
-                });
 
                 console.log(
                     `[Batch Update] Completed batch update, ${updateResultsArray.filter((r) => r.success).length} successful`
@@ -758,8 +767,13 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 return new Response('Method Not Allowed', { status: 405 });
             const { url: testUrl } = (await request.json()) as any;
 
-            if (!testUrl || typeof testUrl !== 'string' || !/^https?:\/\//.test(testUrl)) {
-                return new Response(JSON.stringify({ error: 'Invalid or missing url' }), {
+            if (
+                !testUrl ||
+                typeof testUrl !== 'string' ||
+                !/^https?:\/\//.test(testUrl) ||
+                !isSafePublicUrl(testUrl)
+            ) {
+                return new Response(JSON.stringify({ error: 'Invalid, missing, or forbidden url' }), {
                     status: 400
                 });
             }
@@ -767,7 +781,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             try {
                 const startTime = Date.now();
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
                 const response = await fetch(testUrl, {
                     method: 'HEAD', // Try HEAD first for speed
@@ -794,7 +808,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     // If HEAD fails (some servers block it), try GET
                     const startTimeGet = Date.now();
                     const controllerGet = new AbortController();
-                    const timeoutIdGet = setTimeout(() => controllerGet.abort(), 30000);
+                    const timeoutIdGet = setTimeout(() => controllerGet.abort(), 10000);
 
                     const responseGet = await fetch(testUrl, {
                         method: 'GET',

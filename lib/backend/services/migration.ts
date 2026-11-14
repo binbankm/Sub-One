@@ -1,4 +1,10 @@
-import { KV_KEY_PROFILES, KV_KEY_SETTINGS, KV_KEY_SUBS, KV_KEY_USERS } from '../config/constants';
+import {
+    KV_KEY_PROFILES,
+    KV_KEY_SECRET,
+    KV_KEY_SETTINGS,
+    KV_KEY_SUBS,
+    KV_KEY_USERS
+} from '../config/constants';
 import { Env } from '../types';
 import { D1Storage, KVStorage } from './storage';
 import { getStorageBackend } from './storage-backend';
@@ -12,7 +18,8 @@ const MIGRATION_KEYS = [
     KV_KEY_SUBS, // 订阅源数据
     KV_KEY_PROFILES, // 订阅组数据
     KV_KEY_SETTINGS, // 系统设置
-    KV_KEY_USERS // 用户数据
+    KV_KEY_USERS, // 用户数据
+    KV_KEY_SECRET // 会话签名密钥
 ];
 
 /**

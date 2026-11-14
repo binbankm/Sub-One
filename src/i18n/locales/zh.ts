@@ -290,7 +290,10 @@ export default {
                 statusNormal: '更新正常',
                 statusWarning: '无变动',
                 statusError: '更新异常',
-                configurePrompt: '前往设置开启定时更新'
+                configurePrompt: '前往设置开启定时更新',
+                justNow: '刚刚',
+                minutesAgo: '{m} 分钟前',
+                hoursAgo: '{h} 小时前'
             },
             messages: {
                 updateSuccess: '成功更新 {count} 个订阅',
@@ -413,7 +416,8 @@ export default {
             chart: {
                 nodeDistribution: '节点分布',
                 subscriptionNodes: '订阅节点',
-                manualNodes: '手动节点'
+                manualNodes: '手动节点',
+                total: '总节点'
             }
         },
         node: {

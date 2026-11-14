@@ -278,6 +278,7 @@ export const REGEX_PATTERNS = {
     base64: /^[A-Za-z0-9+/]+=*$/,
 
     // ASCII
+    // eslint-disable-next-line no-control-regex
     ascii: /^[\x00-\x7F]+$/,
 
     // 端口

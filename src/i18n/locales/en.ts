@@ -290,7 +290,10 @@ export default {
                 statusNormal: 'Success',
                 statusWarning: 'No Changes',
                 statusError: 'Failed',
-                configurePrompt: 'Go to Settings to configure Cron'
+                configurePrompt: 'Go to Settings to configure Cron',
+                justNow: 'Just now',
+                minutesAgo: '{m}m ago',
+                hoursAgo: '{h}h ago'
             },
             messages: {
                 updateSuccess: 'Successfully updated {count} subscriptions',
@@ -413,7 +416,8 @@ export default {
             chart: {
                 nodeDistribution: 'Node Distribution',
                 subscriptionNodes: 'Subscription Nodes',
-                manualNodes: 'Manual Nodes'
+                manualNodes: 'Manual Nodes',
+                total: 'Total'
             }
         },
         node: {

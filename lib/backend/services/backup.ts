@@ -114,7 +114,7 @@ export async function exportAllData(
             storage.get(KV_KEY_SUBS).then((res) => res || []),
             storage.get(KV_KEY_PROFILES).then((res) => res || []),
             storage.get(KV_KEY_SETTINGS).then((res) => res || {}),
-            storage.get(KV_KEY_USERS).then((res) => res || {})
+            storage.get(KV_KEY_USERS).then((res) => (Array.isArray(res) ? res : []))
         ]);
 
         const manualNodesCount = Array.isArray(subscriptions)
@@ -145,7 +145,11 @@ export async function exportAllData(
                 profiles: Array.isArray(profiles) ? profiles.length : 0,
                 manualNodes: manualNodesCount,
                 proxyCount: proxyCount,
-                users: typeof users === 'object' && users !== null ? Object.keys(users).length : 0
+                users: Array.isArray(users)
+                    ? users.length
+                    : typeof users === 'object' && users !== null
+                      ? Object.keys(users).length
+                      : 0
             }
         };
 
@@ -154,7 +158,7 @@ export async function exportAllData(
             subscriptions: Array.isArray(subscriptions) ? subscriptions : [],
             profiles: Array.isArray(profiles) ? profiles : [],
             settings: settings || {},
-            users: users || {}
+            users: Array.isArray(users) ? users : []
         };
 
         // 4. 生成校验和
@@ -301,7 +305,7 @@ export async function importAllData(
         let finalSubscriptions = data.subscriptions;
         let finalProfiles = data.profiles;
         let finalSettings = data.settings;
-        let finalUsers = data.users;
+        let finalUsers = Array.isArray(data.users) ? data.users : [];
 
         if (mode === 'merge') {
             // 合并模式：保留现有数据，更新匹配项，添加新项
@@ -351,17 +355,18 @@ export async function importAllData(
                 };
             }
 
-            // 用户：合并对象
-            if (
-                existingUsers &&
-                typeof existingUsers === 'object' &&
-                !Array.isArray(existingUsers)
-            ) {
-                finalUsers = {
-                    ...(existingUsers as Record<string, unknown>),
-                    ...(data.users as Record<string, unknown>)
-                };
-            }
+            // 用户：合并数组（按 username 或 id 去重合并）
+            const currentUsers: any[] = Array.isArray(existingUsers) ? existingUsers : [];
+            const importUsers: any[] = Array.isArray(data.users) ? data.users : [];
+            const userMap = new Map<string, any>();
+            currentUsers.forEach((u: any) => userMap.set(u.username || u.id, u));
+            importUsers.forEach((u: any) => {
+                const key = u.username || u.id;
+                if (key) {
+                    userMap.set(key, { ...(userMap.get(key) || {}), ...u });
+                }
+            });
+            finalUsers = Array.from(userMap.values());
         }
 
         // 3. 写入所有数据

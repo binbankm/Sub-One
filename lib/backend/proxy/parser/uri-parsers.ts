@@ -583,7 +583,7 @@ export function parseVMess(uri: string): ProxyNode | null {
                     }
                 }
 
-                const contentMatch = /(^[^:]+?):([^:]+?)@(.*):(\ d+)$/.exec(content);
+                const contentMatch = /(^[^:]+?):([^:]+?)@(.*):(\d+)$/.exec(content);
                 if (contentMatch) {
                     const [, cipher, uuid, server, port] = contentMatch;
                     params.scy = cipher;
@@ -775,7 +775,8 @@ export function parseVLESS(uri: string): ProxyNode | null {
 
         if (!parsed) return null;
 
-        let [, uuid, server, portStr, query = '', name] = parsed;
+        const [, rawUuid, server, portStr, query = '', name] = parsed;
+        let uuid = rawUuid;
 
         if (isShadowrocket) {
             uuid = uuid.replace(/^.*?:/g, '');

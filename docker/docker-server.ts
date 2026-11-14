@@ -11,6 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set('trust proxy', true);
 const port = process.env.PORT || 3055;
 const DATA_DIR = path.resolve(process.cwd(), './data');
 const KV_FILE = path.join(DATA_DIR, 'kv.json');
@@ -217,6 +218,33 @@ class NodeKV {
         });
     }
 
+    async flush() {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = null;
+            try {
+                const tempFile = `${KV_FILE}.tmp`;
+                await fs.writeFile(
+                    tempFile,
+                    JSON.stringify(this.data, null, 2),
+                    'utf-8'
+                );
+                await fs.rename(tempFile, KV_FILE);
+                const resolves = [...this.pendingResolves];
+                this.pendingResolves = [];
+                this.pendingRejects = [];
+                resolves.forEach((r) => r());
+            } catch (err) {
+                console.error('KV flush error:', err);
+                const rejects = [...this.pendingRejects];
+                this.pendingResolves = [];
+                this.pendingRejects = [];
+                rejects.forEach((r) => r(err));
+            }
+        }
+        await this.savePromise;
+    }
+
     async get(key: string, type: string = 'text') {
         if (!this.initialized) await this.init();
         const val = this.data[key];
@@ -289,7 +317,13 @@ const env = {
 app.use(express.raw({ type: '*/*', limit: '50mb' }));
 
 // 适配器：将 Express Request 转换为标准 Request，并将标准 Response 转换回 Express
-async function cloudflareAdapter(req: express.Request, res: express.Response, handler: Function) {
+type CloudflareHandler = (req: Request, env: any, ctx: any) => Promise<Response>;
+
+async function cloudflareAdapter(
+    req: express.Request,
+    res: express.Response,
+    handler: CloudflareHandler
+) {
     try {
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
         const standardRequest = new Request(url, {
@@ -312,7 +346,16 @@ async function cloudflareAdapter(req: express.Request, res: express.Response, ha
 
         // 发送响应
         res.status(response.status);
+        if (typeof (response.headers as any).getSetCookie === 'function') {
+            const cookies = (response.headers as any).getSetCookie();
+            if (cookies && cookies.length > 0) {
+                res.setHeader('Set-Cookie', cookies);
+            }
+        }
         response.headers.forEach((value: string, key: string) => {
+            if (key.toLowerCase() === 'set-cookie' && typeof (response.headers as any).getSetCookie === 'function') {
+                return;
+            }
             res.setHeader(key, value);
         });
         const body = await response.arrayBuffer();
@@ -386,6 +429,11 @@ ensureDataDir().then(() => {
             async () => {
                 console.log('⏰ Internal cron scheduler triggered.');
                 try {
+                    const settings = await kv.get('settings', 'json');
+                    if (settings && settings.cronEnabled === false) {
+                        console.log('⏰ Internal cron skipped (disabled in settings).');
+                        return;
+                    }
                     // 构造模拟的 Env 对象
                     const cronEnv = { ...env };
                     // 调用 Cron 逻辑
@@ -398,5 +446,20 @@ ensureDataDir().then(() => {
             },
             6 * 60 * 60 * 1000
         );
+
+        const shutdown = async (signal: string) => {
+            console.log(`Received ${signal}. Shutting down server, flushing data...`);
+            try {
+                await kv.flush();
+                if (db) {
+                    db.close();
+                }
+            } catch (e) {
+                console.error('Error during shutdown:', e);
+            }
+            process.exit(0);
+        };
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        process.on('SIGINT', () => shutdown('SIGINT'));
     });
 });

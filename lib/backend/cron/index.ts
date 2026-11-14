@@ -6,6 +6,7 @@ import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
 import { Env } from '../types';
+import { isSafePublicUrl } from '../utils/common';
 
 /**
  * 记录定时任务执行历史（保留最新 10 条）
@@ -42,12 +43,21 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
     const initialSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
     const settings = (await storage.get<AppConfig>(KV_KEY_SETTINGS)) || defaultSettings;
 
-    // 存储更新结果: Map<subId, {userInfo, nodeCount}>
-    const updates = new Map<string, { userInfo?: SubscriptionUserInfo; nodeCount?: number }>();
+    // 存储更新结果: Map<subId, {userInfo, nodeCount, lastNotifiedExpire, lastNotifiedTraffic}>
+    const updates = new Map<
+        string,
+        {
+            userInfo?: SubscriptionUserInfo;
+            nodeCount?: number;
+            lastNotifiedExpire?: number;
+            lastNotifiedTraffic?: number;
+        }
+    >();
 
-    // 并行执行所有请求以减少总耗时
-    const updatePromises = initialSubs.map(async (sub) => {
-        if (!sub.url.startsWith('http') || !sub.enabled) return;
+    // 分批并发执行，防止单次并发超出 Cloudflare Workers 限制 (50 subrequests)
+    const BATCH_SIZE = 5;
+    const processSubscription = async (sub: Subscription) => {
+        if (!sub.url.startsWith('http') || !sub.enabled || !isSafePublicUrl(sub.url)) return;
 
         try {
             const response = await fetch(
@@ -60,7 +70,12 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
             );
 
             if (response.ok) {
-                const updateData: { userInfo?: SubscriptionUserInfo; nodeCount?: number } = {};
+                const updateData: {
+                    userInfo?: SubscriptionUserInfo;
+                    nodeCount?: number;
+                    lastNotifiedExpire?: number;
+                    lastNotifiedTraffic?: number;
+                } = {};
                 let hasUpdate = false;
 
                 // 1. 提取流量信息（从headers）
@@ -83,6 +98,12 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
 
                     // 检查到期和流量预警
                     await checkAndNotify(sub, settings as AppConfig);
+                    if (sub.lastNotifiedExpire !== undefined) {
+                        updateData.lastNotifiedExpire = sub.lastNotifiedExpire;
+                    }
+                    if (sub.lastNotifiedTraffic !== undefined) {
+                        updateData.lastNotifiedTraffic = sub.lastNotifiedTraffic;
+                    }
                     hasUpdate = true;
                 }
 
@@ -106,9 +127,12 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
         } catch (e) {
             console.error(`Cron: Failed to process ${sub.name}:`, e);
         }
-    });
+    };
 
-    await Promise.allSettled(updatePromises);
+    for (let i = 0; i < initialSubs.length; i += BATCH_SIZE) {
+        const batch = initialSubs.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(batch.map((sub) => processSubscription(sub)));
+    }
 
     if (updates.size > 0) {
         // 关键修复：再次获取最新数据，应用更新，防止覆盖用户期间的修改
@@ -130,6 +154,14 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                 }
                 if (update.nodeCount !== undefined) {
                     sub.nodeCount = update.nodeCount;
+                    hasChanges = true;
+                }
+                if (update.lastNotifiedExpire !== undefined) {
+                    sub.lastNotifiedExpire = update.lastNotifiedExpire;
+                    hasChanges = true;
+                }
+                if (update.lastNotifiedTraffic !== undefined) {
+                    sub.lastNotifiedTraffic = update.lastNotifiedTraffic;
                     hasChanges = true;
                 }
                 updatedCount++;

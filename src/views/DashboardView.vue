@@ -171,9 +171,9 @@ const loadDashboardCronLogs = async () => {
 
 const formatRelativeTime = (ts: number): string => {
     const diffSec = Math.floor((Date.now() - ts) / 1000);
-    if (diffSec < 60) return '刚刚';
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} 分钟前`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} 小时前`;
+    if (diffSec < 60) return t('views.dashboard.cronMonitor.justNow');
+    if (diffSec < 3600) return t('views.dashboard.cronMonitor.minutesAgo', { m: Math.floor(diffSec / 60) });
+    if (diffSec < 86400) return t('views.dashboard.cronMonitor.hoursAgo', { h: Math.floor(diffSec / 3600) });
     return new Date(ts).toLocaleDateString();
 };
 

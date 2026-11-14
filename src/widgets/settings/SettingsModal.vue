@@ -27,6 +27,7 @@ import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vu
 
 import { useDataStore } from '@/stores/useAppStore';
 import { useToastStore } from '@/stores/useNotificationStore';
+import { defaultSettings } from '@shared';
 
 import BackupView from '@/widgets/settings/BackupView.vue';
 
@@ -45,42 +46,11 @@ const isSaving = ref(false);
 
 const { t } = useI18n();
 
-// 默认设置值（与后端保持一致）
-const defaultSettings: AppConfig = {
-    // 基础配置
-    FileName: 'Sub-One',
-    mytoken: 'auto',
-    profileToken: '', // 默认为空，用户需主动设置
-
-    prependSubName: false,
-    dedupe: false, // 默认关闭去重，保留所有节点
-    renameRules: '', // 全局节点重命名规则
-
-    // 转换配置
-    useExternalConverter: false, // 默认使用后端自带转换
-    externalConverterUrl: 'api-suc.0z.gs', // 默认外部转换API
-    externalConverterApis: [
-        'api-suc.0z.gs',
-        'subapi.fxxk.dedyn.io',
-        'subapi.cmliussss.net',
-        'url.v1.mk',
-        'api.v1.mk'
-    ],
-
-    // Telegram 通知配置
-    BotToken: '',
-    ChatID: '',
-
-    // 通知阈值配置
-    NotifyThresholdDays: 3, // 订阅到期提醒阈值（剩余天数）
-    NotifyThresholdPercent: 90 // 流量使用提醒阈值（使用百分比）
-};
-
 // 初始化时直接使用默认值，确保界面不会显示空白
 const settings = ref<AppConfig>({ ...defaultSettings });
 
 const hasWhitespace = computed(() => {
-    const fieldsToCkeck: (keyof AppConfig)[] = [
+    const fieldsToCheck: (keyof AppConfig)[] = [
         'FileName',
         'mytoken',
         'profileToken',
@@ -89,7 +59,7 @@ const hasWhitespace = computed(() => {
         'cronSecret'
     ];
 
-    for (const key of fieldsToCkeck) {
+    for (const key of fieldsToCheck) {
         const value = settings.value[key];
         if (value && typeof value === 'string' && /\s/.test(value)) {
             return true;
