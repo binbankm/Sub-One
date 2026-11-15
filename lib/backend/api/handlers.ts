@@ -17,7 +17,15 @@ import { autoMigrate } from '../services/migration';
 import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { IStorageService, StorageFactory } from '../services/storage';
 import { getStorageBackendInfo, setStorageBackend } from '../services/storage-backend';
-import { authenticateUser, createUser, hasUsers } from '../services/users';
+import {
+    authenticateUser,
+    createUser,
+    deleteUser,
+    getAllUsers,
+    hasUsers,
+    updateUser,
+    verifyPassword
+} from '../services/users';
 import { Env } from '../types';
 import { isSafePublicUrl } from '../utils/common';
 import { COOKIE_NAME, SESSION_DURATION, authMiddleware, generateSecureToken } from './auth';
@@ -293,6 +301,276 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 `${COOKIE_NAME}=; Path=/; HttpOnly${secureFlag}; SameSite=Strict; Max-Age=0`
             );
             return new Response(JSON.stringify({ success: true }), { headers });
+        }
+
+        case '/user/change_password':
+        case '/user/password': {
+            if (request.method !== 'POST' && request.method !== 'PUT') {
+                return new Response('Method Not Allowed', { status: 405 });
+            }
+            try {
+                const body = (await request.json()) as {
+                    oldPassword?: string;
+                    newPassword?: string;
+                    password?: string;
+                };
+                const newPass = body.newPassword || body.password;
+                if (!newPass) {
+                    return new Response(JSON.stringify({ error: '新密码不能为空' }), { status: 400 });
+                }
+                if (newPass.length < 6) {
+                    return new Response(JSON.stringify({ error: '新密码长度至少为6位' }), { status: 400 });
+                }
+
+                // 获取当前登录用户
+                const users = await getAllUsers(env);
+                const currentUser = users.find((u) => u.id === authResult.userId);
+                if (!currentUser) {
+                    return new Response(JSON.stringify({ error: '当前登录用户不存在' }), { status: 404 });
+                }
+
+                // 校验原密码
+                if (currentUser.passwordHash) {
+                    if (!body.oldPassword) {
+                        return new Response(JSON.stringify({ error: '请输入原密码' }), { status: 400 });
+                    }
+                    const valid = await verifyPassword(body.oldPassword, currentUser.passwordHash);
+                    if (!valid) {
+                        return new Response(JSON.stringify({ error: '原密码不正确' }), { status: 400 });
+                    }
+                }
+
+                await updateUser(env, currentUser.id, { password: newPass });
+                return new Response(JSON.stringify({ success: true, message: '密码修改成功' }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                console.error('[API Error /user/password]', e);
+                return new Response(JSON.stringify({ error: e?.message || '密码修改失败' }), { status: 500 });
+            }
+        }
+
+        case '/user/current':
+        case '/user/profile': {
+            if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
+            try {
+                const users = await getAllUsers(env);
+                const currentUser = users.find((u) => u.id === authResult.userId);
+                if (!currentUser) {
+                    return new Response(JSON.stringify({ error: '用户不存在' }), { status: 404 });
+                }
+                return new Response(
+                    JSON.stringify({
+                        success: true,
+                        user: {
+                            id: currentUser.id,
+                            username: currentUser.username,
+                            role: currentUser.role,
+                            createdAt: currentUser.createdAt,
+                            updatedAt: currentUser.updatedAt
+                        }
+                    }),
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            } catch (e: any) {
+                return new Response(JSON.stringify({ error: '获取用户信息失败' }), { status: 500 });
+            }
+        }
+
+        case '/users/delete':
+        case '/user/delete': {
+            if (request.method !== 'POST' && request.method !== 'DELETE') {
+                return new Response('Method Not Allowed', { status: 405 });
+            }
+            try {
+                const users = await getAllUsers(env);
+                const currentUser = users.find((u) => u.id === authResult.userId);
+                if (!currentUser || currentUser.role !== 'admin') {
+                    return new Response(JSON.stringify({ error: '权限不足，仅管理员可删除用户' }), { status: 403 });
+                }
+                let id = url.searchParams.get('id');
+                if (!id) {
+                    const body = (await request.json().catch(() => ({}))) as { id?: string };
+                    id = body.id || null;
+                }
+                if (!id) {
+                    return new Response(JSON.stringify({ error: '缺少用户 ID' }), { status: 400 });
+                }
+                if (id === authResult.userId) {
+                    return new Response(JSON.stringify({ error: '不能删除当前登录账号' }), { status: 400 });
+                }
+                const success = await deleteUser(env, id);
+                if (!success) {
+                    return new Response(JSON.stringify({ error: '用户不存在' }), { status: 404 });
+                }
+                return new Response(JSON.stringify({ success: true, message: '用户已删除' }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (e: any) {
+                return new Response(JSON.stringify({ error: e?.message || '删除用户失败' }), { status: 500 });
+            }
+        }
+
+        case '/users/update':
+        case '/user/update': {
+            if (request.method !== 'POST' && request.method !== 'PUT') {
+                return new Response('Method Not Allowed', { status: 405 });
+            }
+            try {
+                const users = await getAllUsers(env);
+                const currentUser = users.find((u) => u.id === authResult.userId);
+                if (!currentUser || currentUser.role !== 'admin') {
+                    return new Response(JSON.stringify({ error: '权限不足，仅管理员可修改其他用户' }), { status: 403 });
+                }
+                const body = (await request.json()) as {
+                    id?: string;
+                    password?: string;
+                    role?: any;
+                };
+                if (!body.id) {
+                    return new Response(JSON.stringify({ error: '缺少用户 ID' }), { status: 400 });
+                }
+                if (body.password && body.password.length < 6) {
+                    return new Response(JSON.stringify({ error: '密码长度至少为6位' }), { status: 400 });
+                }
+                const updated = await updateUser(env, body.id, {
+                    password: body.password,
+                    role: body.role
+                });
+                return new Response(
+                    JSON.stringify({
+                        success: true,
+                        data: {
+                            id: updated.id,
+                            username: updated.username,
+                            role: updated.role,
+                            updatedAt: updated.updatedAt
+                        }
+                    }),
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            } catch (e: any) {
+                return new Response(JSON.stringify({ error: e?.message || '更新用户失败' }), { status: 500 });
+            }
+        }
+
+        case '/users':
+        case '/user/list': {
+            if (request.method === 'GET') {
+                try {
+                    const users = await getAllUsers(env);
+                    const safeUsers = users.map((u) => ({
+                        id: u.id,
+                        username: u.username,
+                        role: u.role,
+                        createdAt: u.createdAt,
+                        updatedAt: u.updatedAt
+                    }));
+                    return new Response(JSON.stringify({ success: true, data: safeUsers }), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                } catch (e: any) {
+                    return new Response(JSON.stringify({ error: e?.message || '获取用户列表失败' }), {
+                        status: 500
+                    });
+                }
+            } else if (request.method === 'POST') {
+                try {
+                    const users = await getAllUsers(env);
+                    const currentUser = users.find((u) => u.id === authResult.userId);
+                    if (!currentUser || currentUser.role !== 'admin') {
+                        return new Response(JSON.stringify({ error: '权限不足，仅管理员可创建用户' }), { status: 403 });
+                    }
+                    const { username, password, role } = (await request.json()) as {
+                        username?: string;
+                        password?: string;
+                        role?: any;
+                    };
+                    if (!username || !password) {
+                        return new Response(JSON.stringify({ error: '用户名和密码不能为空' }), {
+                            status: 400
+                        });
+                    }
+                    if (password.length < 6) {
+                        return new Response(JSON.stringify({ error: '密码长度至少为6位' }), {
+                            status: 400
+                        });
+                    }
+                    const newUser = await createUser(env, username, password, role || 'user');
+                    return new Response(
+                        JSON.stringify({
+                            success: true,
+                            data: {
+                                id: newUser.id,
+                                username: newUser.username,
+                                role: newUser.role,
+                                createdAt: newUser.createdAt
+                            }
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                } catch (e: any) {
+                    return new Response(JSON.stringify({ error: e?.message || '创建用户失败' }), {
+                        status: 400
+                    });
+                }
+            } else if (request.method === 'PUT') {
+                try {
+                    const body = (await request.json()) as {
+                        id?: string;
+                        password?: string;
+                        role?: any;
+                    };
+                    if (!body.id) {
+                        return new Response(JSON.stringify({ error: '缺少用户 ID' }), { status: 400 });
+                    }
+                    if (body.password && body.password.length < 6) {
+                        return new Response(JSON.stringify({ error: '密码长度至少为6位' }), { status: 400 });
+                    }
+                    const updated = await updateUser(env, body.id, {
+                        password: body.password,
+                        role: body.role
+                    });
+                    return new Response(
+                        JSON.stringify({
+                            success: true,
+                            data: {
+                                id: updated.id,
+                                username: updated.username,
+                                role: updated.role,
+                                updatedAt: updated.updatedAt
+                            }
+                        }),
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                } catch (e: any) {
+                    return new Response(JSON.stringify({ error: e?.message || '更新用户失败' }), { status: 500 });
+                }
+            } else if (request.method === 'DELETE') {
+                try {
+                    let id = url.searchParams.get('id');
+                    if (!id) {
+                        const body = (await request.json().catch(() => ({}))) as { id?: string };
+                        id = body.id || null;
+                    }
+                    if (!id) {
+                        return new Response(JSON.stringify({ error: '缺少用户 ID' }), { status: 400 });
+                    }
+                    if (id === authResult.userId) {
+                        return new Response(JSON.stringify({ error: '不能删除当前登录账号' }), { status: 400 });
+                    }
+                    const success = await deleteUser(env, id);
+                    if (!success) {
+                        return new Response(JSON.stringify({ error: '用户不存在' }), { status: 404 });
+                    }
+                    return new Response(JSON.stringify({ success: true, message: '用户已删除' }), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                } catch (e: any) {
+                    return new Response(JSON.stringify({ error: e?.message || '删除用户失败' }), { status: 500 });
+                }
+            }
+            return new Response('Method Not Allowed', { status: 405 });
         }
 
         case '/data': {

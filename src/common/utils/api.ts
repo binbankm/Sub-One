@@ -697,3 +697,98 @@ export async function clearCronHistory(): Promise<boolean> {
     }
 }
 
+/**
+ * 修改当前登录用户密码
+ */
+export async function changePassword(
+    newPassword: string,
+    oldPassword?: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+        const response = await fetch('/api/user/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newPassword, oldPassword })
+        });
+        const data = (await response.json()) as any;
+        if (!response.ok) {
+            return { success: false, error: data.error || '修改密码失败' };
+        }
+        return { success: true, message: data.message || '密码修改成功' };
+    } catch (e: any) {
+        return { success: false, error: e?.message || '请求失败' };
+    }
+}
+
+/**
+ * 获取当前登录用户信息
+ */
+export async function fetchCurrentUser(): Promise<any | null> {
+    try {
+        const response = await fetch('/api/user/profile');
+        if (!response.ok) return null;
+        const data = (await response.json()) as any;
+        return data.user || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * 获取所有用户列表
+ */
+export async function fetchUsers(): Promise<any[]> {
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) return [];
+        const data = (await response.json()) as any;
+        return data.data || [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * 创建新用户
+ */
+export async function createNewUser(
+    username: string,
+    password: string,
+    role: 'admin' | 'user' = 'user'
+): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, role })
+        });
+        const data = (await response.json()) as any;
+        if (!response.ok) {
+            return { success: false, error: data.error || '创建用户失败' };
+        }
+        return { success: true, data: data.data };
+    } catch (e: any) {
+        return { success: false, error: e?.message || '请求失败' };
+    }
+}
+
+/**
+ * 删除用户
+ */
+export async function deleteUserAccount(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const response = await fetch('/api/users/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = (await response.json()) as any;
+        if (!response.ok) {
+            return { success: false, error: data.error || '删除失败' };
+        }
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e?.message || '请求失败' };
+    }
+}
+

@@ -73,7 +73,7 @@ export class URIConverter extends BaseConverter {
             if (node.plugin === 'obfs') {
                 pluginStr = `simple-obfs;obfs=${opts.mode}${opts.host ? ';obfs-host=' + opts.host : ''}`;
             } else if (node.plugin === 'v2ray-plugin') {
-                pluginStr = `v2ray-plugin;obfs=${opts.mode}${opts.host ? ';obfs-host' + opts.host : ''}${opts.tls ? ';tls' : ''}`;
+                pluginStr = `v2ray-plugin;obfs=${opts.mode}${opts.host ? ';obfs-host=' + opts.host : ''}${opts.path ? ';path=' + opts.path : ''}${opts.tls ? ';tls' : ''}`;
             } else if (node.plugin === 'shadow-tls') {
                 pluginStr = `shadow-tls;host=${opts.host};password=${opts.password};version=${opts.version}`;
             }

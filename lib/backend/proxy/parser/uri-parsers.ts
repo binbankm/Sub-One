@@ -70,7 +70,7 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
         const rawUserInfoStr = decodeURIComponent(content.split('@')[0]);
         let userInfoStr: string;
 
-        if (rawUserInfoStr?.startsWith('2022-blake3-')) {
+        if (rawUserInfoStr?.includes(':') || rawUserInfoStr?.startsWith('2022-blake3-')) {
             userInfoStr = rawUserInfoStr;
         } else if (rawUserInfoStr) {
             userInfoStr = Base64.decode(rawUserInfoStr);
@@ -109,7 +109,6 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                 const parsed = content.match(/(\?.*)$/);
                 if (parsed) query = parsed[1];
             }
-            userInfoStr = Base64.decode(rawUserInfoStr);
         }
 
         const userInfo = userInfoStr.match(/(^.*?):(.*$)/);
@@ -977,11 +976,11 @@ export function parseHysteria(uri: string): ProxyNode | null {
 
     try {
         const line = uri.split(/hysteria:\/\//i)[1];
-        const parsed = /^(.*?):(\d+)\/?(?:\?([^#]*))?(?:#(.*))?$/.exec(line);
+        const parsed = /^(?:(.*?)@)?(.*?):(\d+)\/?(?:\?([^#]*))?(?:#(.*))?$/.exec(line);
 
         if (!parsed) return null;
 
-        const [, server, portStr, query = '', name] = parsed;
+        const [, authPart, server, portStr, query = '', name] = parsed;
         const port = parsePort(portStr);
 
         const proxy: Partial<ProxyNode> = {
@@ -994,7 +993,8 @@ export function parseHysteria(uri: string): ProxyNode | null {
 
         const params = parseQueryParams(query);
 
-        proxy.auth = params.auth || params['auth-str'] || '';
+        proxy.auth = params.auth || params['auth-str'] || (authPart ? decodeURIComponent(authPart) : '') || '';
+        if (proxy.auth) proxy['auth-str'] = proxy.auth;
         proxy.up = params.upmbps ? parseInt(params.upmbps, 10) : undefined;
         proxy.down = params.downmbps ? parseInt(params.downmbps, 10) : undefined;
         proxy.sni = params.peer || params.sni;
@@ -1029,12 +1029,19 @@ export function parseSnell(uri: string): ProxyNode | null {
         const [, psk, server, portStr, query = '', name] = parsed;
         const port = parsePort(portStr);
 
+        let password = psk;
+        try {
+            password = decodeURIComponent(psk);
+        } catch {
+            password = psk;
+        }
+
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
             type: 'snell',
             server,
             port,
-            password: decodeURIComponent(psk),
+            password,
             name: name ? decodeURIComponent(name) : `Snell ${server}:${port}`
         };
 
@@ -1042,6 +1049,19 @@ export function parseSnell(uri: string): ProxyNode | null {
 
         if (params.version) {
             proxy.version = parseInt(params.version, 10);
+        }
+        const obfsMode = params.obfs || params['obfs-mode'] || params.mode;
+        if (obfsMode) {
+            proxy.obfs = obfsMode;
+        }
+        if (params.host || params['obfs-host']) {
+            proxy['obfs-host'] = params.host || params['obfs-host'];
+        }
+        if (proxy.obfs || proxy['obfs-host']) {
+            proxy['obfs-opts'] = {
+                mode: proxy.obfs,
+                host: proxy['obfs-host']
+            };
         }
 
         return proxy as ProxyNode;
@@ -1147,7 +1167,7 @@ export function parseHysteria2(uri: string): ProxyNode | null {
         const matched = parsed as RegExpExecArray;
         const password = matched[1];
         const server = matched[2];
-        const portPart = matched[4]; // The ports string without the leading colon
+        const portPart = matched[3]; // The ports string without the leading colon
         const query = matched[8] || '';
         const name = matched[9];
 
@@ -1232,7 +1252,12 @@ export function parseTUIC(uri: string): ProxyNode | null {
         const [, auth, server, portStr, query = '', name] = parsed;
         const port = portStr ? parsePort(portStr) : 443;
 
-        const authDecoded = decodeURIComponent(auth);
+        let authDecoded = auth;
+        try {
+            authDecoded = decodeURIComponent(auth);
+        } catch {
+            authDecoded = auth;
+        }
         const [uuid, ...passwordParts] = authDecoded.split(':');
         const password = passwordParts.join(':');
 
@@ -1242,7 +1267,7 @@ export function parseTUIC(uri: string): ProxyNode | null {
             server,
             port,
             uuid,
-            password: decodeURIComponent(password),
+            password,
             name: name ? decodeURIComponent(name) : `TUIC ${server}:${port}`
         };
 
@@ -1374,24 +1399,50 @@ export function parseWireGuard(uri: string): ProxyNode | null {
 // ============================================================================
 
 export function parseNaive(uri: string): ProxyNode | null {
-    if (!uri.toLowerCase().startsWith('naive+')) return null;
+    if (!/^(naive|naive\+https|naive\+http):\/\//i.test(uri)) return null;
 
     try {
         const line = uri.split(/:\/\//i)[1];
-        const parsed = /^(?:(.*?):(.*?)@)?(.*?):(\d+)\/?(?:\?([^#]*))?(?:#(.*))?$/.exec(line);
+        const parsed = /^(?:([^@]+)@)?(.*?):(\d+)\/?(?:\?([^#]*))?(?:#(.*))?$/.exec(line);
 
         if (!parsed) return null;
 
-        const [, username, password, server, portStr, query = '', name] = parsed;
+        const [, auth, server, portStr, query = '', name] = parsed;
         const port = parsePort(portStr);
+
+        let username: string | undefined;
+        let password: string | undefined;
+        if (auth) {
+            const colonIdx = auth.indexOf(':');
+            if (colonIdx >= 0) {
+                const u = auth.substring(0, colonIdx);
+                const p = auth.substring(colonIdx + 1);
+                try {
+                    username = decodeURIComponent(u);
+                } catch {
+                    username = u;
+                }
+                try {
+                    password = decodeURIComponent(p);
+                } catch {
+                    password = p;
+                }
+            } else {
+                try {
+                    username = decodeURIComponent(auth);
+                } catch {
+                    username = auth;
+                }
+            }
+        }
 
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
             type: 'naive',
             server,
             port,
-            username: username ? decodeURIComponent(username) : undefined,
-            password: password ? decodeURIComponent(password) : undefined,
+            username,
+            password,
             name: name ? decodeURIComponent(name) : `Naive ${server}:${port}`,
             tls: true
         };

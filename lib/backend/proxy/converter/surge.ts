@@ -157,6 +157,14 @@ export class SurgeConverter extends BaseConverter {
         result.append(
             `${proxy.name}=snell,${proxy.server},${proxy.port},psk=${proxy.password},version=${proxy.version || 3}`
         );
+        const obfs = proxy['obfs-opts']?.mode || proxy.obfs;
+        const obfsHost = proxy['obfs-opts']?.host || proxy['obfs-host'];
+        if (obfs) {
+            result.append(`,obfs=${obfs}`);
+            if (obfsHost) {
+                result.append(`,obfs-host=${obfsHost}`);
+            }
+        }
         this.appendCommon(result, proxy);
         return result.toString();
     }

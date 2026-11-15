@@ -138,7 +138,7 @@ export class SingboxConverter extends BaseConverter {
                     outbound.security = node.cipher || 'auto';
                     outbound.alter_id = node.alterId || 0;
                     if (isPresent(node, 'aead')) outbound.authenticated_length = node.aead;
-                    this.appendTLS(outbound, node);
+                    if (node.tls) this.appendTLS(outbound, node);
                     this.appendTransport(outbound, node);
                     break;
                 case 'vless':
@@ -149,7 +149,7 @@ export class SingboxConverter extends BaseConverter {
                     }
                     outbound.uuid = node.uuid;
                     outbound.flow = node.flow || '';
-                    this.appendTLS(outbound, node);
+                    if (node.tls || node['reality-opts']) this.appendTLS(outbound, node);
                     this.appendTransport(outbound, node);
                     break;
                 case 'trojan':
@@ -301,7 +301,7 @@ export class SingboxConverter extends BaseConverter {
     private appendTLS(outbound: any, node: ProxyNode) {
         const tls: any = {
             enabled: true,
-            server_name: node.sni || node.server,
+            server_name: node.sni || node.servername || node.server,
             insecure: node['skip-cert-verify'] || false,
             alpn: Array.isArray(node.alpn) ? node.alpn : node.alpn ? [node.alpn] : undefined
         };

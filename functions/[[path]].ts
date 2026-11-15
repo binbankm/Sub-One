@@ -18,7 +18,8 @@ export async function onRequest(context: EventContext<Env, any, any>) {
 
     // UI Vue Router 前端单页路由白名单，拦截后交由静态文件（index.html）处理
     const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes', '/login'];
-    if (frontendRoutes.includes(url.pathname)) {
+    const normalizedPath = url.pathname.replace(/\/+$/, '') || '/';
+    if (normalizedPath === '/' || frontendRoutes.includes(normalizedPath)) {
         // 对前端路由返回首页，支持 SPA 刷新
         return env.ASSETS.fetch(new Request(new URL('/', request.url)));
     }

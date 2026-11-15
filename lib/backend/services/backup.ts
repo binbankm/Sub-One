@@ -305,7 +305,7 @@ export async function importAllData(
         let finalSubscriptions = data.subscriptions;
         let finalProfiles = data.profiles;
         let finalSettings = data.settings;
-        let finalUsers = Array.isArray(data.users) ? data.users : [];
+        let finalUsers: any[] | null = Array.isArray(data.users) && data.users.length > 0 ? data.users : null;
 
         if (mode === 'merge') {
             // 合并模式：保留现有数据，更新匹配项，添加新项
@@ -370,12 +370,17 @@ export async function importAllData(
         }
 
         // 3. 写入所有数据
-        await Promise.all([
+        const putPromises = [
             storage.put(KV_KEY_SUBS, finalSubscriptions),
             storage.put(KV_KEY_PROFILES, finalProfiles),
-            storage.put(KV_KEY_SETTINGS, finalSettings),
-            storage.put(KV_KEY_USERS, finalUsers)
-        ]);
+            storage.put(KV_KEY_SETTINGS, finalSettings)
+        ];
+        // 只有当备份中包含有效用户数据，或者在合并模式下产生了有效用户列表时，才覆盖写入用户
+        // 避免备份中未包含 users 字段时在 overwrite 模式下清空现有管理员账号
+        if (finalUsers !== null) {
+            putPromises.push(storage.put(KV_KEY_USERS, finalUsers));
+        }
+        await Promise.all(putPromises);
 
         console.log('[Backup Import] 数据导入成功:', {
             mode,

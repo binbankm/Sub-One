@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 
 import { handleApiRequest } from '../lib/backend/api/handlers';
 import { handleSubRequest } from '../lib/backend/subscription/handler';
+import { KV_KEY_SETTINGS } from '../lib/backend/config/constants';
+import { StorageFactory } from '../lib/backend/services/storage';
+import { getStorageBackendInfo } from '../lib/backend/services/storage-backend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -392,9 +395,10 @@ app.get('*', (req: express.Request, res: express.Response, next: express.NextFun
 
     // UI Vue Router 前端单页路由白名单，拦截后交由 index.html 处理
     const frontendRoutes = ['/dashboard', '/subscriptions', '/profiles', '/nodes', '/login'];
+    const normalizedPath = pathname.replace(/\/+$/, '') || '/';
 
     // 3. 特殊处理：如果是根路径或者是在前端白名单路由内，且没有带 token，则是 UI 访问
-    if ((pathname === '/' || frontendRoutes.includes(pathname)) && !hasToken) {
+    if ((normalizedPath === '/' || frontendRoutes.includes(normalizedPath)) && !hasToken) {
         return next();
     }
 
@@ -429,13 +433,14 @@ ensureDataDir().then(() => {
             async () => {
                 console.log('⏰ Internal cron scheduler triggered.');
                 try {
-                    const settings = await kv.get('settings', 'json');
+                    const cronEnv = { ...env };
+                    const storageInfo = await getStorageBackendInfo(cronEnv);
+                    const storage = StorageFactory.create(cronEnv, storageInfo.current);
+                    const settings = (await storage.get<any>(KV_KEY_SETTINGS)) || {};
                     if (settings && settings.cronEnabled === false) {
                         console.log('⏰ Internal cron skipped (disabled in settings).');
                         return;
                     }
-                    // 构造模拟的 Env 对象
-                    const cronEnv = { ...env };
                     // 调用 Cron 逻辑
                     await import('../lib/backend/cron/index').then((m) =>
                         m.handleCronTrigger(cronEnv)

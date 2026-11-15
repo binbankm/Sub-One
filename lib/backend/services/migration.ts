@@ -1,4 +1,6 @@
 import {
+    KV_KEY_BACKUPS,
+    KV_KEY_CRON_LOGS,
     KV_KEY_PROFILES,
     KV_KEY_SECRET,
     KV_KEY_SETTINGS,
@@ -19,8 +21,44 @@ const MIGRATION_KEYS = [
     KV_KEY_PROFILES, // 订阅组数据
     KV_KEY_SETTINGS, // 系统设置
     KV_KEY_USERS, // 用户数据
-    KV_KEY_SECRET // 会话签名密钥
+    KV_KEY_SECRET, // 会话签名密钥
+    KV_KEY_BACKUPS, // 服务器快照元数据列表
+    KV_KEY_CRON_LOGS // 定时任务执行日志
 ];
+
+/**
+ * 迁移快照物理数据文件
+ */
+async function migrateSnapshots(
+    source: KVStorage | D1Storage,
+    target: KVStorage | D1Storage,
+    migrated: string[],
+    failed: string[]
+) {
+    try {
+        const backups = await source.get<any[]>(KV_KEY_BACKUPS);
+        if (Array.isArray(backups) && backups.length > 0) {
+            for (const snapshot of backups) {
+                if (snapshot && snapshot.id) {
+                    const snapKey = `backup_data_${snapshot.id}`;
+                    try {
+                        const snapData = await source.get(snapKey);
+                        if (snapData !== null && snapData !== undefined) {
+                            await target.put(snapKey, snapData);
+                            migrated.push(snapKey);
+                            console.log(`[Migration] Successfully migrated snapshot payload: ${snapKey}`);
+                        }
+                    } catch (err) {
+                        console.error(`[Migration] Failed to migrate snapshot payload: ${snapKey}`, err);
+                        failed.push(snapKey);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[Migration] Failed to retrieve snapshot list from source', err);
+    }
+}
 
 /**
  * 从 KV 迁移到 D1
@@ -65,6 +103,9 @@ export async function migrateKVtoD1(env: Env): Promise<{
             failed.push(key);
         }
     }
+
+    // 迁移所有服务器快照实体文件
+    await migrateSnapshots(kvStorage, d1Storage, migrated, failed);
 
     const total = migrated.length + failed.length;
 
@@ -125,6 +166,9 @@ export async function migrateD1toKV(env: Env): Promise<{
             failed.push(key);
         }
     }
+
+    // 迁移所有服务器快照实体文件
+    await migrateSnapshots(d1Storage, kvStorage, migrated, failed);
 
     const total = migrated.length + failed.length;
 

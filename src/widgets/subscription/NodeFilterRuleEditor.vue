@@ -57,7 +57,7 @@ const protocols = [
     { label: 'AnyTLS', value: 'anytls' },
     { label: 'Socks5', value: 'socks5' },
     { label: 'HTTP', value: 'http' },
-    { label: 'WireGuard', value: 'wg|wireguard' },
+    { label: 'WireGuard', value: 'wireguard' },
     { label: 'Snell', value: 'snell' },
     { label: 'Reality', value: 'reality' }
 ];
@@ -256,7 +256,14 @@ const parseValue = (val: string) => {
         if (line.startsWith('proto:')) {
             line.replace('proto:', '')
                 .split(',')
-                .forEach((p: string) => foundProtocols.add(p));
+                .forEach((p: string) => {
+                    const trimmed = p.trim();
+                    if (trimmed === 'wg' || trimmed === 'wireguard' || trimmed === 'wg|wireguard') {
+                        foundProtocols.add('wireguard');
+                    } else {
+                        foundProtocols.add(trimmed);
+                    }
+                });
         } else {
             const cleanStr = line.replace(/^\(/, '').replace(/\)$/, '');
             // 这里的 parts 是正则中的各个分支

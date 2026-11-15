@@ -156,8 +156,20 @@ function handleFiltering(nodes: ProxyNode[], options: ProcessOptions): ProxyNode
  */
 function matchRule(node: ProxyNode, rule: string): boolean {
     if (rule.startsWith('proto:')) {
-        const protos = rule.replace('proto:', '').toLowerCase().split(',');
-        return protos.includes(node.type.toLowerCase());
+        const rawProtos = rule.replace('proto:', '').toLowerCase().split(',');
+        const protos = rawProtos.flatMap((p) => p.split('|').map((s) => s.trim()));
+        return protos.some((p) => {
+            if (p === 'reality') {
+                return !!node['reality-opts'];
+            }
+            if (p === 'wireguard' || p === 'wg') {
+                return node.type.toLowerCase() === 'wireguard' || node.type.toLowerCase() === 'wg';
+            }
+            if (p === 'hysteria2' || p === 'hy2') {
+                return node.type.toLowerCase() === 'hysteria2' || node.type.toLowerCase() === 'hy2';
+            }
+            return node.type.toLowerCase() === p;
+        });
     }
     try {
         const re = buildRegex(rule, 'i');

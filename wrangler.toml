@@ -17,6 +17,4 @@ database_name = "sub-one-d1"
 database_id = "" # 留空，让 Fork 用户自己填写
 
 
-[triggers]
-# 定时触发器示例
-crons = ["0 */6 * * *"] 
+ 

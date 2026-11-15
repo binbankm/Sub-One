@@ -99,11 +99,20 @@ async function generateCombinedNodeList(
  */
 type ExternalApiType = 'subconverter' | 'sublink-worker';
 
+// 内存缓存外部 API 类型，避免高频无缓存探测
+const apiTypeCache = new Map<string, { type: ExternalApiType; expiresAt: number }>();
+
 /**
  * 检测外部 API 类型（Subconverter 还是 Sublink Worker）
- * 通过访问首页的 title 判断
+ * 通过访问首页的 title 判断并缓存结果 (1小时)
  */
 async function detectExternalApiType(apiBaseUrl: string): Promise<ExternalApiType> {
+    const cached = apiTypeCache.get(apiBaseUrl);
+    if (cached && Date.now() < cached.expiresAt) {
+        return cached.type;
+    }
+
+    let detected: ExternalApiType = 'subconverter';
     try {
         const resp = await fetch(apiBaseUrl, {
             method: 'GET',
@@ -113,12 +122,75 @@ async function detectExternalApiType(apiBaseUrl: string): Promise<ExternalApiTyp
         const text = await resp.text();
         // Sublink Worker 的首页 title 包含 "Sublink Worker"
         if (text.includes('Sublink Worker') || text.includes('sublink-worker')) {
-            return 'sublink-worker';
+            detected = 'sublink-worker';
         }
     } catch {
         // 忽略检测错误，默认走 subconverter
     }
-    return 'subconverter';
+
+    apiTypeCache.set(apiBaseUrl, { type: detected, expiresAt: Date.now() + 60 * 60 * 1000 });
+    return detected;
+}
+
+/**
+ * 生成安全的短期回调临时令牌，防止在外部转换器 URL 中泄露永久管理员 Profile Token
+ */
+async function generateInternalCallbackToken(
+    secret: string,
+    targetIdentifier: string
+): Promise<string> {
+    const timestamp = Date.now();
+    const nonce = crypto.randomUUID().substring(0, 8);
+    const message = `internal:${targetIdentifier}:${timestamp}:${nonce}`;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
+    const sigHex = Array.from(new Uint8Array(signature))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    return `${message}:${sigHex}`;
+}
+
+/**
+ * 校验短期回调临时令牌
+ */
+async function verifyInternalCallbackToken(
+    token: string,
+    secret: string
+): Promise<{ valid: boolean; targetIdentifier?: string }> {
+    try {
+        const parts = token.split(':');
+        if (parts.length !== 5 || parts[0] !== 'internal') return { valid: false };
+        const [, targetIdentifier, timestampStr, nonce, sigHex] = parts;
+        const timestamp = parseInt(timestampStr, 10);
+        // 令牌有效期为 10 分钟
+        if (isNaN(timestamp) || Math.abs(Date.now() - timestamp) > 10 * 60 * 1000) {
+            return { valid: false };
+        }
+        const message = `internal:${targetIdentifier}:${timestampStr}:${nonce}`;
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['verify']
+        );
+        const sigBytes = new Uint8Array(sigHex.length / 2);
+        for (let i = 0; i < sigHex.length; i += 2) {
+            sigBytes[i / 2] = parseInt(sigHex.substring(i, i + 2), 16);
+        }
+        const isValid = await crypto.subtle.verify('HMAC', key, sigBytes, encoder.encode(message));
+        return { valid: isValid, targetIdentifier };
+    } catch {
+        return { valid: false };
+    }
 }
 
 async function convertViaExternalApi(
@@ -269,7 +341,7 @@ export async function handleSubRequest(
     let token: string | null = '';
     let profileIdentifier: string | null = null;
     const pathSegments = url.pathname
-        .replace(/^\/sub\//, '/')
+        .replace(/^\/sub(?:\/|$)/, '/')
         .split('/')
         .filter(Boolean);
 
@@ -278,8 +350,13 @@ export async function handleSubRequest(
         if (pathSegments.length > 1) {
             profileIdentifier = pathSegments[1] || null;
         }
-    } else {
+    }
+    if (!token) {
         token = url.searchParams.get('token');
+    }
+
+    if (!profileIdentifier) {
+        profileIdentifier = url.searchParams.get('profile') || url.searchParams.get('id') || null;
     }
 
     let targetSubs: Subscription[];
@@ -289,11 +366,64 @@ export async function handleSubRequest(
 
     const DEFAULT_EXPIRED_NODE = `trojan://00000000-0000-0000-0000-000000000000@127.0.0.1:443#${encodeURIComponent('您的订阅已失效')}`;
 
-    if (profileIdentifier) {
+    const internalCallbackToken = url.searchParams.get('_internal_token');
+    if (internalCallbackToken) {
+        const verifyResult = await verifyInternalCallbackToken(
+            internalCallbackToken,
+            config.profileToken || config.mytoken || 'internal'
+        );
+        if (!verifyResult.valid) {
+            return new Response('Invalid or Expired Internal Callback Token', { status: 403 });
+        }
+        const targetId = verifyResult.targetIdentifier;
+        if (targetId && targetId !== 'all') {
+            let decodedTargetId = targetId;
+            try {
+                decodedTargetId = decodeURIComponent(targetId);
+            } catch {
+                decodedTargetId = targetId;
+            }
+            const profile = allProfiles.find(
+                (p) =>
+                    (p.customId && (p.customId === targetId || p.customId === decodedTargetId)) ||
+                    String(p.id) === targetId ||
+                    String(p.id) === decodedTargetId
+            );
+            if (profile && profile.enabled) {
+                activeProfile = profile;
+                subName = profile.name;
+                const profileSubIds = new Set(profile.subscriptions || []);
+                const profileNodeIds = new Set(profile.manualNodes || []);
+                targetSubs = allSubs.filter((item) => {
+                    const u = item.url || '';
+                    const isSub = u.startsWith('http');
+                    const belongs =
+                        (isSub && profileSubIds.has(item.id)) ||
+                        (!isSub && profileNodeIds.has(item.id));
+                    return item.enabled && belongs;
+                });
+            } else {
+                return new Response('Profile not found or disabled', { status: 404 });
+            }
+        } else {
+            targetSubs = allSubs.filter((s) => s.enabled);
+        }
+    } else if (profileIdentifier) {
         if (!token || token !== config.profileToken) {
             return new Response('Invalid Profile Token', { status: 403 });
         }
-        const profile = allProfiles.find((p) => p.customId === profileIdentifier);
+        let decodedProfileId = profileIdentifier;
+        try {
+            decodedProfileId = decodeURIComponent(profileIdentifier);
+        } catch {
+            decodedProfileId = profileIdentifier;
+        }
+        const profile = allProfiles.find(
+            (p) =>
+                (p.customId && (p.customId === profileIdentifier || p.customId === decodedProfileId)) ||
+                String(p.id) === profileIdentifier ||
+                String(p.id) === decodedProfileId
+        );
         if (profile && profile.enabled) {
             activeProfile = profile;
             if (profile.expiresAt) {
@@ -458,10 +588,18 @@ export async function handleSubRequest(
         ) {
             console.log('Using external converter API (Callback Mode)');
 
-            // 构建一个指向当前 Sub-One 的回调链接，让外部 API 来抓取处理好的 base64 节点
-            const callbackUrl = new URL(request.url);
+            // 构建一个指向当前 Sub-One 的无凭据泄露回调链接，让外部 API 来抓取处理好的 base64 节点
+            const targetId = activeProfile ? (activeProfile.customId || activeProfile.id) : 'all';
+            const internalToken = await generateInternalCallbackToken(
+                config.profileToken || config.mytoken || 'internal',
+                targetId
+            );
+
+            const callbackUrl = new URL(url.origin);
+            callbackUrl.pathname = `/internal/sub/${encodeURIComponent(targetId)}`;
             callbackUrl.searchParams.set('target', 'base64');
-            callbackUrl.searchParams.set('_internal', 'true'); // 关键：告诉下一级请求只返回节点，不要再调外部 API
+            callbackUrl.searchParams.set('_internal', 'true');
+            callbackUrl.searchParams.set('_internal_token', internalToken);
 
             // 某些外部 API 需要正确的 User-Agent 才能从 Sub-One 抓取数据
             // 我们直接调用外部 API
@@ -469,7 +607,7 @@ export async function handleSubRequest(
             const udpParam = url.searchParams.get('udp');
             convertedContent = await convertViaExternalApi(
                 finalApiUrl,
-                callbackUrl.toString(), // 传递回调链接而非庞大的 data URI
+                callbackUrl.toString(), // 传递安全短期回调链接而非泄露管理员 Token
                 targetFormat,
                 subName,
                 { udp: udpParam }

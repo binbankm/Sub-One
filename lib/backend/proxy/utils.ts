@@ -298,11 +298,23 @@ export function getNodeFingerprint(node: {
     if (node.network) {
         parts.push(node.network);
 
-        // 添加路径 (ws/grpc/h2)
-        if (node.network === 'ws' && node['ws-path']) {
-            parts.push(node['ws-path']);
-        } else if (node.network === 'grpc' && node['grpc-service-name']) {
-            parts.push(node['grpc-service-name']);
+        // 添加路径 (ws/grpc/h2/http)
+        const wsPath = node['ws-opts']?.path || node['ws-path'];
+        const grpcService =
+            node['grpc-opts']?.['service-name'] ||
+            node['grpc-opts']?.['grpc-service-name'] ||
+            node['grpc-service-name'];
+        const h2Path = node['h2-opts']?.path;
+        const httpPath = node['http-opts']?.path;
+
+        if (node.network === 'ws' && wsPath) {
+            parts.push(wsPath);
+        } else if (node.network === 'grpc' && grpcService) {
+            parts.push(grpcService);
+        } else if (node.network === 'h2' && h2Path) {
+            parts.push(h2Path);
+        } else if (node.network === 'http' && httpPath) {
+            parts.push(httpPath);
         }
     }
 

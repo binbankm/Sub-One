@@ -84,7 +84,7 @@ const generateUrl = (format: string) => {
 
     if (!token) return '';
 
-    const id = props.profile.customId || props.profile.id;
+    const id = (props.profile.customId && props.profile.customId.trim()) || props.profile.id;
     const url = `${baseUrl}/${token}/${id}`;
 
     if (format === 'base64') return url;

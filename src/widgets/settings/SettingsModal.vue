@@ -20,7 +20,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { AppConfig } from '@/common/types/index';
-import { fetchSettings, saveSettings, fetchCronHistory, clearCronHistory } from '@/common/utils/api';
+import { fetchSettings, saveSettings, fetchCronHistory, clearCronHistory, changePassword } from '@/common/utils/api';
 import Modal from '@/common/ui/BaseModal.vue';
 import StorageBackendSwitcher from '@/widgets/settings/StorageBackendSwitcher.vue';
 import NodeRenameRuleEditor from '@/widgets/subscription/NodeRenameRuleEditor.vue';
@@ -43,6 +43,44 @@ const { showToast } = useToastStore();
 const dataStore = useDataStore();
 const isLoading = ref(false);
 const isSaving = ref(false);
+
+const oldPassword = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const isChangingPassword = ref(false);
+
+const handleChangePassword = async () => {
+    if (!oldPassword.value) {
+        showToast('请输入原密码', 'error');
+        return;
+    }
+    if (!newPassword.value) {
+        showToast('请输入新密码', 'error');
+        return;
+    }
+    if (newPassword.value.length < 6) {
+        showToast('新密码长度至少为 6 位', 'error');
+        return;
+    }
+    if (newPassword.value !== confirmPassword.value) {
+        showToast('两次输入的新密码不一致', 'error');
+        return;
+    }
+    isChangingPassword.value = true;
+    try {
+        const res = await changePassword(newPassword.value, oldPassword.value || undefined);
+        if (res.success) {
+            showToast(res.message || '密码修改成功', 'success');
+            oldPassword.value = '';
+            newPassword.value = '';
+            confirmPassword.value = '';
+        } else {
+            showToast(res.error || '密码修改失败', 'error');
+        }
+    } finally {
+        isChangingPassword.value = false;
+    }
+};
 
 const { t } = useI18n();
 
@@ -599,6 +637,72 @@ watch(
                                         >
                                     </p>
                                 </div>
+                            </div>
+                        </section>
+
+                        <!-- 账号与安全 (管理员密码修改) -->
+                        <section class="border-t border-gray-100 pt-6 dark:border-gray-800">
+                            <h4
+                                class="mb-4 flex items-center gap-2 text-sm font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
+                                </svg>
+                                账号安全 (修改登录密码)
+                            </h4>
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">原密码</label>
+                                    <input
+                                        v-model="oldPassword"
+                                        type="password"
+                                        autocomplete="current-password"
+                                        placeholder="请输入原密码"
+                                        class="input-modern-enhanced w-full text-xs"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">新密码</label>
+                                    <input
+                                        v-model="newPassword"
+                                        type="password"
+                                        autocomplete="new-password"
+                                        placeholder="至少 6 位字符"
+                                        class="input-modern-enhanced w-full text-xs"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300">确认新密码</label>
+                                    <input
+                                        v-model="confirmPassword"
+                                        type="password"
+                                        autocomplete="new-password"
+                                        placeholder="请再次输入新密码"
+                                        class="input-modern-enhanced w-full text-xs"
+                                    />
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-end">
+                                <button
+                                    type="button"
+                                    :disabled="isChangingPassword || !newPassword"
+                                    class="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                                    @click="handleChangePassword"
+                                >
+                                    <span v-if="isChangingPassword">修改中...</span>
+                                    <span v-else>确认修改密码</span>
+                                </button>
                             </div>
                         </section>
                     </div>
