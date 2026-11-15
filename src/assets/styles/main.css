@@ -21,6 +21,7 @@
     --color-primary-700: hsl(243, 58%, 39%);
     --color-primary-800: hsl(243, 54%, 31%);
     --color-primary-900: hsl(243, 47%, 24%);
+    --color-primary-950: hsl(243, 50%, 15%);
 
     --color-secondary-50: hsl(280, 100%, 97%);
     --color-secondary-100: hsl(280, 95%, 93%);
@@ -32,6 +33,7 @@
     --color-secondary-700: hsl(280, 59%, 37%);
     --color-secondary-800: hsl(280, 54%, 30%);
     --color-secondary-900: hsl(280, 48%, 24%);
+    --color-secondary-950: hsl(280, 50%, 15%);
 
     --color-success-50: hsl(152, 69%, 95%);
     --color-success-100: hsl(152, 64%, 90%);
@@ -43,6 +45,7 @@
     --color-success-700: hsl(164, 56%, 32%);
     --color-success-800: hsl(166, 60%, 26%);
     --color-success-900: hsl(168, 64%, 22%);
+    --color-success-950: hsl(168, 70%, 12%);
 
     --color-info-50: hsl(221, 100%, 97%);
     --color-info-100: hsl(224, 94%, 94%);
@@ -54,6 +57,7 @@
     --color-info-700: hsl(226, 68%, 37%);
     --color-info-800: hsl(228, 64%, 31%);
     --color-info-900: hsl(230, 55%, 24%);
+    --color-info-950: hsl(230, 60%, 15%);
 
     --color-warning-50: hsl(48, 96%, 95%);
     --color-warning-100: hsl(48, 93%, 90%);
@@ -65,6 +69,7 @@
     --color-warning-700: hsl(26, 90%, 37%);
     --color-warning-800: hsl(23, 83%, 31%);
     --color-warning-900: hsl(22, 78%, 26%);
+    --color-warning-950: hsl(22, 85%, 15%);
 
     --color-danger-50: hsl(0, 100%, 97%);
     --color-danger-100: hsl(0, 96%, 93%);
@@ -76,19 +81,20 @@
     --color-danger-700: hsl(0, 65%, 42%);
     --color-danger-800: hsl(0, 59%, 34%);
     --color-danger-900: hsl(0, 52%, 28%);
+    --color-danger-950: hsl(0, 65%, 15%);
 
     --spacing-18: 4.5rem;
     --spacing-88: 22rem;
 
-    --radius-card: 2rem;
-    --radius-button: 1rem;
-    --radius-element: 0.75rem;
+    --radius-card: 1rem;
+    --radius-button: 0.5rem;
+    --radius-element: 0.5rem;
 
-    --shadow-glow-primary: 0 0 30px rgba(99, 102, 241, 0.4);
-    --shadow-card: 0 20px 25px rgba(0, 0, 0, 0.1);
-    --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.25);
-    --shadow-elevated: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --shadow-elevated-sm: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-glow-primary: 0 0 15px rgba(99, 102, 241, 0.2);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-elevated-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 
     --font-sans:
         'Nunito', 'Quicksand', 'PingFang SC', 'Microsoft YaHei', 'Inter', -apple-system,
@@ -235,125 +241,113 @@
     /* ===== 按钮组件 ===== */
 
     .btn-modern {
-        @apply rounded-element px-4 py-2 font-semibold transition-all duration-300;
-        @apply bg-linear-to-r from-primary-500 to-secondary-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-primary-600 hover:to-secondary-700 hover:shadow-elevated;
-        @apply active:translate-y-0 active:scale-95;
-        @apply disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:scale-100;
+        @apply rounded-element px-3.5 py-2 font-medium text-sm transition-all duration-200;
+        @apply bg-primary-600 hover:bg-primary-500 text-white shadow-xs hover:shadow-sm;
+        @apply active:scale-[0.98];
+        @apply disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100;
     }
 
     .btn-modern-enhanced {
-        @apply rounded-element font-semibold shadow-elevated-sm transition-all duration-300;
+        @apply rounded-element font-medium text-sm shadow-xs transition-all duration-200;
         @apply flex items-center justify-center;
-        @apply active:scale-95;
+        @apply active:scale-[0.98];
     }
 
     .btn-add {
-        @apply bg-linear-to-r from-primary-500 to-secondary-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-primary-600 hover:to-secondary-700 hover:shadow-elevated;
+        @apply bg-primary-600 hover:bg-primary-500 text-white shadow-xs hover:shadow-sm;
     }
 
     .btn-update {
-        @apply bg-linear-to-r from-primary-500 to-primary-700 text-white;
-        @apply hover:-translate-y-0.5 hover:from-primary-600 hover:to-primary-800 hover:shadow-elevated;
+        @apply bg-primary-600 hover:bg-primary-500 text-white shadow-xs hover:shadow-sm;
     }
 
     .btn-sort {
-        @apply bg-linear-to-r from-secondary-500 to-primary-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-secondary-600 hover:to-primary-700 hover:shadow-elevated;
+        @apply bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10;
     }
 
     .btn-sort.sorting {
-        @apply from-gray-500 to-gray-600;
+        @apply bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400;
     }
 
     .btn-import {
-        @apply bg-linear-to-r from-secondary-500 to-primary-500 text-white;
-        @apply hover:-translate-y-0.5 hover:from-secondary-600 hover:to-primary-600 hover:shadow-elevated;
+        @apply bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10;
     }
 
     .btn-primary {
-        @apply bg-linear-to-r from-primary-500 to-secondary-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-primary-600 hover:to-secondary-700 hover:shadow-elevated;
+        @apply bg-primary-600 hover:bg-primary-500 text-white shadow-xs hover:shadow-sm;
     }
 
     .btn-secondary {
-        @apply bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200;
-        @apply hover:bg-gray-200 hover:shadow-elevated-sm dark:hover:bg-white/20;
+        @apply bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 shadow-xs;
     }
 
     .btn-danger {
-        @apply bg-linear-to-r from-danger-500 to-danger-600 text-white;
-        @apply hover:-translate-y-0.5 hover:from-danger-600 hover:to-danger-700 hover:shadow-elevated;
+        @apply bg-danger-600 hover:bg-danger-500 text-white shadow-xs hover:shadow-sm;
     }
 
     .btn-cancel {
-        @apply bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200;
-        @apply hover:bg-gray-200 hover:shadow-elevated-sm dark:hover:bg-white/20;
+        @apply bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10;
     }
 
     /* ===== 表单组件 ===== */
 
     .form-input {
-        @apply w-full rounded-element px-4 py-3;
-        @apply bg-white/90 dark:bg-white/5 dark:backdrop-blur-md;
-        @apply border-2 border-gray-300 dark:border-white/10;
+        @apply w-full rounded-element px-3.5 py-2.5 text-sm;
+        @apply bg-white dark:bg-white/5;
+        @apply border border-gray-300 dark:border-white/10;
         @apply text-gray-900 dark:text-gray-100;
         @apply placeholder-gray-400 dark:placeholder-gray-500;
-        @apply focus:border-primary-500 focus:ring-0 focus:outline-none;
-        @apply transition-all duration-300;
+        @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+        @apply transition-all duration-200;
     }
 
     .input-modern {
-        @apply w-full rounded-element px-4 py-3;
-        @apply bg-white/90 dark:bg-white/5 dark:backdrop-blur-md;
+        @apply w-full rounded-element px-3.5 py-2.5 text-sm;
+        @apply bg-white dark:bg-white/5;
         @apply border border-gray-300 dark:border-white/10;
         @apply text-gray-900 dark:text-gray-100;
-        @apply placeholder-gray-500 dark:placeholder-gray-400;
-        @apply focus:border-primary-500 focus:ring-0 focus:outline-none;
-        @apply transition-all duration-300;
+        @apply placeholder-gray-400 dark:placeholder-gray-500;
+        @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+        @apply transition-all duration-200;
     }
 
     .input-modern-enhanced {
-        @apply w-full rounded-element px-4 py-3;
-        @apply bg-white/90 dark:bg-white/5 dark:backdrop-blur-md;
+        @apply w-full rounded-element px-3.5 py-2.5 text-sm;
+        @apply bg-white dark:bg-white/5;
         @apply border border-gray-300 dark:border-white/10;
         @apply text-gray-900 dark:text-gray-100;
-        @apply placeholder-gray-500 dark:placeholder-gray-400;
-        @apply focus:border-primary-500 focus:ring-0 focus:outline-none;
-        @apply transition-all duration-300;
-        @apply shadow-elevated-sm hover:shadow-elevated-sm focus:shadow-none;
+        @apply placeholder-gray-400 dark:placeholder-gray-500;
+        @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+        @apply transition-all duration-200;
     }
 
     .search-input-unified {
-        @apply w-full py-2.5 pr-4 pl-11;
-        @apply bg-white dark:bg-white/5 dark:backdrop-blur-md;
-        @apply border border-gray-300 dark:border-white/10;
+        @apply w-full py-2 pr-3.5 pl-9;
+        @apply bg-white dark:bg-white/5;
+        @apply border border-gray-200 dark:border-white/10;
         @apply rounded-element;
         @apply text-sm text-gray-900 dark:text-gray-100;
         @apply placeholder-gray-400 dark:placeholder-gray-500;
-        @apply focus:border-primary-500 focus:ring-0 focus:outline-none;
-        @apply transition-all duration-300;
-        @apply shadow-elevated-sm hover:shadow-elevated-sm focus:shadow-none;
+        @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+        @apply transition-all duration-200;
     }
 
     /* ===== 卡片组件 ===== */
 
     .card-glass {
-        @apply border border-gray-200/80 bg-white/20 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
-        @apply hover:bg-white/30 dark:hover:bg-white/10;
-        @apply transition-all duration-300;
+        @apply border border-gray-200/90 bg-white/85 backdrop-blur-xl shadow-xs;
+        @apply dark:border-white/10 dark:bg-gray-900/60 dark:backdrop-blur-xl;
+        @apply hover:border-gray-300 hover:shadow-card dark:hover:border-white/20 dark:hover:bg-gray-900/75;
+        @apply transition-all duration-200;
     }
 
     /* ===== 加载和图标 ===== */
 
     .icon-btn {
-        @apply rounded-element p-2.5 transition-all duration-300;
+        @apply rounded-element p-2.5 transition-colors duration-200;
         @apply text-gray-600 dark:text-gray-400;
-        @apply hover:bg-white/50 dark:hover:bg-white/10;
+        @apply hover:bg-black/5 dark:hover:bg-white/10;
         @apply hover:text-gray-900 dark:hover:text-gray-100;
-        @apply hover:-translate-y-0.5 hover:shadow-elevated;
-        @apply active:translate-y-0 active:scale-95;
     }
 
     /* ===== LoginView 特定样式 ===== */
@@ -444,14 +438,13 @@
     }
 
     .login-button:not(:disabled):hover {
-        @apply -translate-y-0.5 scale-[1.02];
         box-shadow:
-            0 20px 25px -5px rgba(99, 102, 241, 0.5),
-            0 8px 10px -6px rgba(99, 102, 241, 0.4);
+            0 14px 20px -4px rgba(99, 102, 241, 0.4),
+            0 6px 8px -4px rgba(99, 102, 241, 0.3);
     }
 
     .login-button:not(:disabled):active {
-        @apply translate-y-0 scale-[0.98];
+        @apply opacity-90;
     }
 
     /* 响应式 */
@@ -534,11 +527,7 @@
     }
 
     .page-title {
-        @apply mb-2 text-[2rem] font-extrabold tracking-tight;
-        background: linear-gradient(135deg, hsl(243, 75%, 59%) 0%, hsl(280, 72%, 54%) 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        @apply mb-1.5 text-2xl font-bold tracking-tight text-gray-900 dark:text-white;
     }
 
     .page-description {
@@ -563,19 +552,6 @@
     /* 渐变文字 */
     .gradient-text {
         @apply from-primary-600 to-secondary-600 bg-linear-to-r;
-        @apply bg-clip-text text-transparent;
-    }
-
-    .gradient-text-animated {
-        background: linear-gradient(
-            135deg,
-            hsl(280, 84%, 65%) 0%,
-            hsl(243, 75%, 59%) 33%,
-            hsl(189, 94%, 43%) 66%,
-            hsl(142, 71%, 45%) 100%
-        );
-        background-size: 200% 200%;
-        animation: gradientShift 3s ease infinite;
         @apply bg-clip-text text-transparent;
     }
 
@@ -678,18 +654,6 @@
 .scale-fade-leave-to {
     opacity: 0;
     transform: scale(0.95);
-}
-
-/* 弹跳淡入淡出 (Scale + Translate + Opacity + Bounce) - 用于更具动感的模态框 */
-.scale-fade-bounce-enter-active,
-.scale-fade-bounce-leave-active {
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.scale-fade-bounce-enter-from,
-.scale-fade-bounce-leave-to {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
 }
 
 /* Slide Fade - 标准 (向上淡出/向下淡入) */
@@ -803,11 +767,6 @@ html.dark body {
     50% {
         background-position: 100% 50%;
     }
-}
-
-/* ==================== 暗黑模式过渡 ==================== */
-* {
-    @apply transition-colors duration-300;
 }
 
 /* ==================== 浏览器原生样式覆盖 ==================== */

@@ -99,8 +99,6 @@ interface NavigationItem {
     id: string;
     label: string;
     icon: string;
-    gradient: string;
-    shadow: string;
     description: string;
     count?: number;
 }
@@ -114,8 +112,6 @@ const navigationItems = computed<NavigationItem[]>(() => [
         id: 'dashboard',
         label: t('layout.sidebar.menu.dashboard'),
         icon: 'dashboard',
-        gradient: 'from-warning-500 to-warning-600',
-        shadow: 'shadow-warning-500/30',
         description: t('layout.sidebar.menu.dashboardDesc')
     },
     {
@@ -123,8 +119,6 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: t('layout.sidebar.menu.subscriptions'),
         icon: 'subscription',
         count: props.subscriptionsCount,
-        gradient: 'from-primary-500 to-secondary-600',
-        shadow: 'shadow-primary-500/30',
         description: t('layout.sidebar.menu.subscriptionsDesc')
     },
     {
@@ -132,18 +126,13 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: t('layout.sidebar.menu.profiles'),
         icon: 'profile',
         count: props.profilesCount,
-        gradient: 'from-secondary-500 to-pink-600',
-        shadow: 'shadow-secondary-500/30',
         description: t('layout.sidebar.menu.profilesDesc')
     },
-
     {
         id: 'nodes',
         label: t('layout.sidebar.menu.nodes'),
         icon: 'node',
         count: props.manualNodesCount,
-        gradient: 'from-success-500 to-success-600',
-        shadow: 'shadow-success-500/30',
         description: t('layout.sidebar.menu.nodesDesc')
     }
 ]);
@@ -156,16 +145,12 @@ const utilityItems = computed(() => [
         id: 'help',
         label: t('layout.sidebar.help'),
         icon: 'help',
-        gradient: 'from-warning-500 to-warning-600',
-        shadow: 'shadow-warning-500/30',
         description: t('layout.sidebar.helpDesc')
     },
     {
         id: 'settings',
         label: t('layout.sidebar.settings'),
         icon: 'settings',
-        gradient: 'from-slate-500 to-gray-600',
-        shadow: 'shadow-slate-500/30',
         description: t('layout.sidebar.settingsDesc')
     }
 ]);
@@ -265,7 +250,7 @@ onUnmounted(() => {
 
     <!-- ==================== 移动端汉堡菜单按钮 ==================== -->
     <button
-        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-element border border-gray-300 bg-white/95 text-gray-800 shadow-elevated backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-card lg:hidden dark:border-white/10 dark:bg-black/80 dark:text-gray-200 dark:hover:bg-black/90"
+        class="fixed top-4 left-4 z-50 flex h-12 w-12 cursor-pointer items-center justify-center rounded-element border border-gray-300 bg-white/95 text-gray-800 shadow-elevated backdrop-blur-md transition-colors duration-200 hover:bg-white hover:shadow-card lg:hidden dark:border-white/10 dark:bg-black/80 dark:text-gray-200 dark:hover:bg-black/90"
         :aria-label="isMobileMenuOpen ? t('layout.sidebar.closeMenu') : t('layout.sidebar.openMenu')"
         @click="toggleMobileMenu"
     >
@@ -302,16 +287,16 @@ onUnmounted(() => {
         ]"
     >
         <!-- ==================== 侧边栏头部 ==================== -->
-        <div class="border-b border-black/5 p-6 dark:border-white/5">
+        <div class="border-b border-black/5 p-4 dark:border-white/5">
             <!-- Logo 区域 -->
-            <div class="mb-4 flex items-center gap-4">
+            <div class="mb-3 flex items-center gap-3">
                 <!-- Logo 图标 -->
                 <div
-                    class="from-primary-500 to-secondary-500 shadow-primary-500/40 flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-button bg-linear-to-br shadow-elevated"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element bg-primary-600 text-white shadow-xs"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-white"
+                        class="h-5 w-5 text-white"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -328,22 +313,22 @@ onUnmounted(() => {
                 <!-- Logo 文字（折叠时隐藏） -->
                 <transition name="fade">
                     <div v-if="!isCollapsed" class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5">
                             <h1
-                                class="gradient-text-animated text-xl leading-tight font-extrabold tracking-tight"
+                                class="text-base font-bold tracking-tight text-gray-900 dark:text-white"
                             >
                                 Sub-One
                             </h1>
                             <span
                                 v-if="buildId"
-                                class="rounded-md border border-primary-500/20 bg-primary-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary-600 dark:border-primary-400/20 dark:bg-primary-500/15 dark:text-primary-400"
+                                class="rounded border border-gray-200 bg-gray-50 px-1 py-0.2 font-mono text-[9px] font-medium text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400"
                                 :title="`Build: ${buildTime}`"
                             >
                                 #{{ buildId }}
                             </span>
                         </div>
-                        <p class="mt-0.5 text-xs font-semibold text-gray-600 dark:text-gray-400">
-                            Manager
+                        <p class="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                            Subscription Hub
                         </p>
                     </div>
                 </transition>
@@ -354,7 +339,7 @@ onUnmounted(() => {
                 <!-- 语言切换按钮 -->
                 <button
                     class="icon-btn"
-                    :title="locale === 'zh' ? 'Switch to English' : '切换到中文'"
+                    :title="locale === 'zh' ? t('layout.sidebar.switchToEn') : t('layout.sidebar.switchToZh')"
                     @click="toggleLanguage"
                 >
                     <svg
@@ -426,34 +411,35 @@ onUnmounted(() => {
                     {{ t('layout.sidebar.mainFeatures') }}
                 </p>
 
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-1.5">
                     <!-- 循环渲染导航项 -->
                     <button
                         v-for="item in navigationItems"
                         :key="item.id"
                         class="sidebar-nav-item group"
                         :class="[
-                            isCollapsed ? 'justify-center p-4' : 'p-3',
+                            isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
                             modelValue === item.id
-                                ? `bg-linear-to-br ${item.gradient} ${item.shadow} text-white`
-                                : 'hover:translate-x-1 lg:group-hover:translate-x-1 lg:group-hover:scale-105'
+                                ? 'bg-primary-500/10 dark:bg-primary-500/15 text-primary-600 dark:text-primary-400 font-medium'
+                                : 'text-gray-600 hover:bg-gray-100/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                         ]"
                         :title="isCollapsed ? item.label : ''"
                         @click="selectTab(item.id)"
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-element transition-all duration-200"
                             :class="[
-                                `bg-linear-to-br ${item.gradient}`,
-                                modelValue === item.id ? 'bg-white/20 shadow-inner' : ''
+                                modelValue === item.id
+                                    ? 'bg-primary-600 text-white shadow-xs'
+                                    : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700 dark:bg-white/5 dark:text-gray-400 dark:group-hover:bg-white/10 dark:group-hover:text-gray-200'
                             ]"
                         >
                             <!-- Dashboard 图标 -->
                             <svg
                                 v-if="item.icon === 'dashboard'"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5"
+                                class="h-4.5 w-4.5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -470,7 +456,7 @@ onUnmounted(() => {
                             <svg
                                 v-else-if="item.icon === 'subscription'"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5"
+                                class="h-4.5 w-4.5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -487,7 +473,7 @@ onUnmounted(() => {
                             <svg
                                 v-else-if="item.icon === 'profile'"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5"
+                                class="h-4.5 w-4.5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -504,7 +490,7 @@ onUnmounted(() => {
                             <svg
                                 v-else-if="item.icon === 'node'"
                                 xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5"
+                                class="h-4.5 w-4.5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -522,32 +508,31 @@ onUnmounted(() => {
                         <transition name="fade">
                             <div
                                 v-if="!isCollapsed"
-                                class="flex min-w-0 flex-1 items-center justify-between gap-3"
+                                class="flex min-w-0 flex-1 items-center justify-between gap-2"
                             >
-                                <div class="min-w-0 flex-1">
-                                    <span
-                                        class="block text-sm font-semibold transition-colors duration-300"
-                                        :class="
-                                            modelValue === item.id
-                                                ? 'text-white'
-                                                : 'text-gray-900 dark:text-gray-100'
-                                        "
-                                        >{{ item.label }}</span
-                                    >
-                                </div>
-
-                                <!-- 数量徽章（有数量时显示） -->
-                                <div
-                                    v-if="item.count && item.count > 0"
-                                    class="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-2 text-[0.6875rem] font-bold transition-all duration-300"
+                                <span
+                                    class="truncate text-sm font-medium transition-colors duration-200"
                                     :class="
                                         modelValue === item.id
-                                            ? 'bg-white/25 text-white'
-                                            : 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300'
+                                            ? 'text-primary-700 dark:text-primary-300 font-semibold'
+                                            : 'text-gray-700 dark:text-gray-300'
+                                    "
+                                >
+                                    {{ item.label }}
+                                </span>
+
+                                <!-- 数量徽章（有数量时显示） -->
+                                <span
+                                    v-if="item.count && item.count > 0"
+                                    class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[0.6875rem] font-semibold transition-all duration-200"
+                                    :class="
+                                        modelValue === item.id
+                                            ? 'bg-primary-600 text-white'
+                                            : 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400'
                                     "
                                 >
                                     {{ item.count }}
-                                </div>
+                                </span>
                             </div>
                         </transition>
                     </button>
@@ -563,25 +548,29 @@ onUnmounted(() => {
                     {{ t('layout.sidebar.others') }}
                 </p>
 
-                <div class="flex flex-col gap-2">
+                <div class="flex flex-col gap-1.5">
                     <!-- 循环渲染功能项 -->
                     <button
                         v-for="item in utilityItems"
                         :key="item.id"
                         class="sidebar-nav-item group"
                         :class="[
-                            isCollapsed ? 'justify-center p-4' : 'p-3',
+                            isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5',
                             modelValue === item.id
-                                ? `bg-linear-to-br ${item.gradient} ${item.shadow} text-white`
-                                : 'hover:translate-x-1 lg:group-hover:scale-105'
+                                ? 'bg-primary-500/10 dark:bg-primary-500/15 text-primary-600 dark:text-primary-400 font-medium'
+                                : 'text-gray-600 hover:bg-gray-100/70 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white'
                         ]"
                         :title="isCollapsed ? item.label : ''"
                         @click="selectTab(item.id)"
                     >
                         <!-- 图标 -->
                         <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element text-white shadow-elevated-sm transition-all duration-300"
-                            :class="`bg-linear-to-br ${item.gradient}`"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-element transition-all duration-200"
+                            :class="[
+                                modelValue === item.id
+                                    ? 'bg-primary-600 text-white shadow-xs'
+                                    : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700 dark:bg-white/5 dark:text-gray-400 dark:group-hover:bg-white/10 dark:group-hover:text-gray-200'
+                            ]"
                         >
                             <!-- Help 图标 -->
                             <svg
@@ -628,19 +617,18 @@ onUnmounted(() => {
                         <transition name="fade">
                             <div
                                 v-if="!isCollapsed"
-                                class="flex min-w-0 flex-1 items-center justify-between gap-3"
+                                class="flex min-w-0 flex-1 items-center justify-between gap-2"
                             >
-                                <div class="min-w-0 flex-1">
-                                    <span
-                                        class="block text-sm font-semibold transition-colors duration-300"
-                                        :class="
-                                            modelValue === item.id
-                                                ? 'text-white'
-                                                : 'text-gray-900 dark:text-gray-100'
-                                        "
-                                        >{{ item.label }}</span
-                                    >
-                                </div>
+                                <span
+                                    class="truncate text-sm font-medium transition-colors duration-200"
+                                    :class="
+                                        modelValue === item.id
+                                            ? 'text-primary-700 dark:text-primary-300 font-semibold'
+                                            : 'text-gray-700 dark:text-gray-300'
+                                    "
+                                >
+                                    {{ item.label }}
+                                </span>
                             </div>
                         </transition>
                     </button>
@@ -655,13 +643,13 @@ onUnmounted(() => {
         >
             <!-- 折叠按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-primary-500/10 px-3 py-3 text-sm font-semibold text-primary-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-500/20 dark:bg-primary-500/15 dark:text-primary-400"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-element border-none bg-gray-100 px-2.5 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-200/80 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
                 :title="isCollapsed ? t('layout.sidebar.expand') : t('layout.sidebar.collapse')"
                 @click="toggleCollapse"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5 transition-transform duration-300"
+                    class="h-4 w-4 transition-transform duration-300"
                     :class="{ 'rotate-180': isCollapsed }"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -679,13 +667,13 @@ onUnmounted(() => {
 
             <!-- 登出按钮 -->
             <button
-                class="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-element border-none bg-danger-500/10 px-3 py-3 text-sm font-semibold text-danger-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger-500/20 dark:bg-danger-500/15 dark:text-danger-400"
+                class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-element border-none bg-gray-100 px-2.5 py-2 text-xs font-medium text-gray-700 transition-colors duration-200 hover:bg-danger-50 hover:text-danger-600 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-danger-950/30 dark:hover:text-danger-400"
                 :title="isCollapsed ? t('layout.sidebar.logout') : ''"
                 @click="handleLogout"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
+                    class="h-4 w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

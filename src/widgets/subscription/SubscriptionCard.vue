@@ -44,35 +44,15 @@ const copyUrl = async () => {
     }
 };
 
-const showUrl = ref(false);
-const toggleUrlVisibility = () => {
-    showUrl.value = !showUrl.value;
-};
-
-/** 鼠标事件处理（支持拖拽排序） */
-const mouseDownTime = ref(0);
-const mouseDownPosition = ref({ x: 0, y: 0 });
-const hasDragged = ref(false);
-
-const handleMouseDown = (event: MouseEvent) => {
-    mouseDownTime.value = Date.now();
-    mouseDownPosition.value = { x: event.clientX, y: event.clientY };
-    hasDragged.value = false;
-
-    const handleMouseMove = (e: MouseEvent) => {
-        const deltaX = Math.abs(e.clientX - mouseDownPosition.value.x);
-        const deltaY = Math.abs(e.clientY - mouseDownPosition.value.y);
-        if (deltaX > 5 || deltaY > 5) hasDragged.value = true;
-    };
-
-    const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-};
+const subDomain = computed(() => {
+    try {
+        if (!props.sub.url) return '';
+        const parsed = new URL(props.sub.url);
+        return parsed.hostname;
+    } catch {
+        return props.sub.url;
+    }
+});
 
 /** 流量信息 */
 const trafficInfo = computed(() => {
@@ -130,14 +110,13 @@ const handleTestLatency = async () => {
 
 <template>
     <div
-        class="card-glass group relative flex h-full min-h-70 flex-col overflow-hidden rounded-card hover:scale-[1.02] sm:min-h-60"
+        class="card-glass group relative flex h-full min-h-60 flex-col overflow-hidden rounded-card transition-all duration-200"
         :class="{
             'opacity-50': !sub.enabled,
             'ring-2 ring-primary-500/50': sub.isNew,
             'ring-2 ring-primary-600 dark:ring-primary-400': isBatchMode && isSelected,
             'cursor-pointer': isBatchMode
         }"
-        @mousedown="handleMouseDown"
         @click="isBatchMode ? emit('toggleSelect') : null"
     >
         <div class="relative z-10 flex flex-1 flex-col p-5">
@@ -212,11 +191,13 @@ const handleTestLatency = async () => {
                 </div>
 
                 <div
-                    class="flex shrink-0 items-center gap-1 opacity-100 transition-all duration-300 lg:opacity-0 lg:group-hover:opacity-100"
+                    class="flex shrink-0 items-center gap-1 transition-opacity duration-200 lg:opacity-70 lg:group-hover:opacity-100"
                 >
                     <button
-                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-primary-500/10 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
+                        type="button"
+                        class="rounded-element p-2 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         :title="t('widgets.subscription.card.edit')"
+                        :aria-label="t('widgets.subscription.card.edit')"
                         @click.stop="emit('edit')"
                     >
                         <svg
@@ -235,8 +216,10 @@ const handleTestLatency = async () => {
                         </svg>
                     </button>
                     <button
-                        class="hover-lift rounded-element p-2.5 text-gray-500 transition-all duration-200 hover:bg-danger-500/10 hover:text-danger-500 dark:text-gray-300"
+                        type="button"
+                        class="rounded-element p-2 text-gray-400 transition-colors hover:bg-danger-50 hover:text-danger-500 dark:hover:bg-danger-900/30 dark:hover:text-danger-400"
                         :title="t('widgets.subscription.card.delete')"
+                        :aria-label="t('widgets.subscription.card.delete')"
                         @click.stop="emit('delete')"
                     >
                         <svg
@@ -257,91 +240,32 @@ const handleTestLatency = async () => {
                 </div>
             </div>
 
-            <!-- URL区域 -->
-            <div class="flex grow flex-col justify-start space-y-3 sm:space-y-4">
-                <div class="relative">
-                    <label :for="`sub-url-${sub.id}`" class="mb-2 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                        >{{ t('widgets.subscription.card.subUrl') }}</label
-                    >
-                    <input
-                        :id="`sub-url-${sub.id}`"
-                        name="subUrl"
-                        type="text"
-                        :value="showUrl ? sub.url : '••••••••••••••••••••••••••••••••••••••••'"
-                        readonly
-                        class="w-full rounded-element border border-gray-300 bg-gray-50/60 px-3 py-2 font-mono text-sm text-gray-500 transition-all duration-300 sm:px-4 sm:py-3 dark:border-white/10 dark:bg-black/60 dark:text-gray-400"
-                        :class="{ 'select-none': !showUrl }"
-                    />
-                    <div class="mt-2 flex items-center gap-2 sm:mt-3">
-                        <button
-                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-warning-500/20 hover:text-warning-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-warning-400"
-                            :title="showUrl ? t('widgets.subscription.card.hideUrlTitle') : t('widgets.subscription.card.showUrlTitle')"
-                            @click.stop="toggleUrlVisibility"
-                        >
-                            <svg
-                                v-if="showUrl"
-                                class="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                                />
-                            </svg>
-                            <svg
-                                v-else
-                                class="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                            </svg>
-                            {{ showUrl ? t('widgets.subscription.card.hideBtn') : t('widgets.subscription.card.showBtn') }}
-                        </button>
-                        <button
-                            v-if="showUrl"
-                            class="hover-lift flex items-center gap-1 rounded-element px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-yellow-500/20 hover:text-yellow-600 sm:gap-2 sm:px-4 sm:py-2 dark:text-gray-300 dark:hover:text-yellow-400"
-                            :title="t('widgets.subscription.card.copyUrlTitle')"
-                            @click.stop="copyUrl"
-                        >
-                            <svg
-                                class="h-3 w-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                />
-                            </svg>
-                            {{ t('widgets.subscription.card.copyBtn') }}
-                        </button>
+            <!-- 订阅域名与快速复制 -->
+            <div class="flex grow flex-col justify-start space-y-3">
+                <div class="flex items-center justify-between rounded-element border border-gray-200/80 bg-gray-50/70 p-2.5 text-xs dark:border-white/10 dark:bg-white/5">
+                    <div class="flex min-w-0 items-center gap-2 text-gray-600 dark:text-gray-300 font-mono">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <span class="truncate font-medium text-xs" :title="sub.url">{{ subDomain }}</span>
                     </div>
+                    <button
+                        type="button"
+                        class="shrink-0 ml-2 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-gray-200 transition-colors"
+                        :title="t('widgets.subscription.card.copyUrlTitle')"
+                        :aria-label="t('widgets.subscription.card.copyUrlTitle')"
+                        @click.stop="copyUrl"
+                    >
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- 流量信息 -->
                 <div
                     v-if="trafficInfo"
-                    class="mt-2 rounded-element border border-gray-300 bg-gray-50/80 p-3 backdrop-blur-sm dark:border-white/5 dark:bg-white/2"
+                    class="mt-2 rounded-element border border-gray-200/80 bg-gray-50/70 p-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
                 >
                     <div class="mb-2 flex items-end justify-between">
                         <span
@@ -396,7 +320,7 @@ const handleTestLatency = async () => {
 
             <!-- 底部控制 -->
             <div
-                class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-300 pt-3 dark:border-white/10"
+                class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-200 pt-3 dark:border-white/10"
                 @click.stop
             >
                 <div class="flex items-center gap-2 sm:gap-3">
@@ -420,6 +344,7 @@ const handleTestLatency = async () => {
 
                 <div class="ml-auto flex items-center gap-1 sm:gap-2">
                     <button
+                        type="button"
                         :disabled="isTestingLatency"
                         class="rounded-element p-2 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                         :class="{
@@ -431,6 +356,15 @@ const handleTestLatency = async () => {
                                 latencyResult && !latencyResult.available
                         }"
                         :title="
+                            isTestingLatency
+                                ? t('widgets.subscription.card.testing')
+                                : latencyResult
+                                  ? latencyResult.available
+                                      ? t('widgets.subscription.card.available')
+                                      : t('widgets.subscription.card.unavailable')
+                                  : t('widgets.subscription.card.testConn')
+                        "
+                        :aria-label="
                             isTestingLatency
                                 ? t('widgets.subscription.card.testing')
                                 : latencyResult
@@ -459,12 +393,13 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
+                        type="button"
                         class="group/btn flex items-center gap-1.5 rounded-element border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-800 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         @click.stop="emit('showNodes')"
                     >
                         <span
                             class="h-1.5 w-1.5 shrink-0 rounded-full"
-                            :class="(sub.nodeCount || 0) > 0 ? 'bg-success-500' : 'bg-gray-300'"
+                            :class="(sub.nodeCount || 0) > 0 ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-600'"
                         ></span>
                         <span class="whitespace-nowrap">{{ sub.nodeCount }} {{ t('widgets.subscription.card.nodes') }}</span>
                         <svg
@@ -484,9 +419,11 @@ const handleTestLatency = async () => {
                     </button>
 
                     <button
+                        type="button"
                         :disabled="sub.isUpdating"
                         class="rounded-element p-1.5 text-gray-600 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         :title="sub.isUpdating ? t('widgets.subscription.card.updating') : t('widgets.subscription.card.updateSub')"
+                        :aria-label="sub.isUpdating ? t('widgets.subscription.card.updating') : t('widgets.subscription.card.updateSub')"
                         @click.stop="emit('update')"
                     >
                         <svg

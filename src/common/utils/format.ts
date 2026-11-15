@@ -28,8 +28,8 @@ export const formatExpiry = (expireTimestamp?: number) => {
     const diffDays = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     let style = 'text-gray-500 dark:text-gray-400';
-    if (diffDays < 0) style = 'text-red-500 font-bold';
-    else if (diffDays <= 7) style = 'text-yellow-500 font-semibold';
+    if (diffDays < 0) style = 'text-danger-500 font-bold dark:text-danger-400';
+    else if (diffDays <= 7) style = 'text-warning-500 font-semibold dark:text-warning-400';
 
     return {
         date: expiryDate.toLocaleDateString(),
@@ -44,8 +44,8 @@ export const formatExpiry = (expireTimestamp?: number) => {
  * @returns CSS 类名字符串
  */
 export const getTrafficColorClass = (percentage: number): string => {
-    if (percentage >= 90) return 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30';
+    if (percentage >= 90) return 'bg-linear-to-r from-danger-500 to-danger-600';
     if (percentage >= 75)
-        return 'bg-gradient-to-r from-orange-500 to-orange-600 shadow-orange-500/30';
-    return 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-blue-500/30';
+        return 'bg-linear-to-r from-warning-500 to-warning-600';
+    return 'bg-linear-to-r from-primary-500 to-primary-600';
 };

@@ -17,28 +17,32 @@ const { t } = useI18n();
 <template>
     <div
         v-if="totalPages > 1"
-        class="mt-10 flex items-center justify-center gap-2 text-base font-medium sm:gap-4"
+        class="mt-8 flex items-center justify-center gap-2 text-sm sm:gap-3"
     >
         <button
+            type="button"
             :disabled="currentPage === 1"
-            class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            class="btn-modern-enhanced btn-secondary px-3 py-1.5 text-xs sm:text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            :aria-label="t('common.ui.pagination.prev')"
             @click="$emit('change-page', currentPage - 1)"
         >
-            &laquo;<span class="xs:inline ml-1 hidden">{{ t('common.ui.pagination.prev') }}</span>
+            &laquo;<span class="ml-1 hidden xs:inline">{{ t('common.ui.pagination.prev') }}</span>
         </button>
 
         <span
-            class="min-w-20 text-center text-xs font-medium whitespace-nowrap text-gray-700 sm:min-w-25 sm:text-sm dark:text-gray-300"
+            class="min-w-20 text-center text-xs font-medium whitespace-nowrap text-gray-600 sm:text-sm dark:text-gray-400"
         >
             {{ t('common.ui.pagination.page', { current: currentPage, total: totalPages }) }}
         </span>
 
         <button
+            type="button"
             :disabled="currentPage === totalPages"
-            class="hover-lift flex min-w-17.5 items-center justify-center rounded-element border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-100 disabled:opacity-50 sm:min-w-25 sm:rounded-button sm:px-6 sm:py-3 sm:text-base dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+            class="btn-modern-enhanced btn-secondary px-3 py-1.5 text-xs sm:text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            :aria-label="t('common.ui.pagination.next')"
             @click="$emit('change-page', currentPage + 1)"
         >
-            <span class="xs:inline mr-1 hidden">{{ t('common.ui.pagination.next') }}</span>&raquo;
+            <span class="mr-1 hidden xs:inline">{{ t('common.ui.pagination.next') }}</span>&raquo;
         </button>
     </div>
 </template>

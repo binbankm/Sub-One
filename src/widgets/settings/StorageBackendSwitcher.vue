@@ -413,10 +413,10 @@ onMounted(() => {
                 <p class="text-gray-700 dark:text-gray-300" v-html="t('widgets.settings.storage.switchConfirmText', { current: backendInfo?.current.toUpperCase(), target: targetBackend?.toUpperCase() })"></p>
 
                 <div
-                    class="rounded-element border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20"
+                    class="rounded-element border border-warning-200 bg-warning-50 p-4 dark:border-warning-800 dark:bg-warning-950/20"
                 >
                     <h4
-                        class="mb-2 flex items-center gap-2 text-sm font-bold text-yellow-800 dark:text-yellow-400"
+                        class="mb-2 flex items-center gap-2 text-sm font-bold text-warning-800 dark:text-warning-400"
                     >
                         <svg
                             class="h-4 w-4"
@@ -433,7 +433,7 @@ onMounted(() => {
                         {{ t('widgets.settings.storage.autoMigrate') }}
                     </h4>
                     <!-- eslint-disable-next-line vue/no-v-html -->
-                    <p class="text-xs leading-relaxed text-yellow-700 dark:text-yellow-300" v-html="t('widgets.settings.storage.autoMigrateHint')"></p>
+                    <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-300" v-html="t('widgets.settings.storage.autoMigrateHint')"></p>
                 </div>
 
                 <p class="text-sm text-gray-500 dark:text-gray-400">

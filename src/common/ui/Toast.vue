@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   ==================== Toast 提示组件 ====================
   
   功能说明：
@@ -17,9 +17,11 @@
 <script setup lang="ts">
 // ==================== 导入依赖 ====================
 import { useToastStore } from '@/stores/useNotificationStore';
+import { useI18n } from 'vue-i18n';
 
-// ==================== Store ====================
+// ==================== Store & i18n ====================
 const toastStore = useToastStore();
+const { t } = useI18n();
 
 // ==================== 样式配置 ====================
 
@@ -33,34 +35,42 @@ const getToastStyle = (type: string) => {
     switch (type) {
         case 'success':
             return {
-                bg: 'bg-white dark:bg-white/5',
-                border: 'border-l-4 border-success-500',
+                bg: 'bg-white dark:bg-gray-900/95 dark:backdrop-blur-md',
+                border: 'border-l-4 border-success-500 dark:border-l-success-500',
                 text: 'text-gray-800 dark:text-gray-100',
                 iconColor: 'text-success-500',
                 icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' // 勾选图标
             };
         case 'error':
             return {
-                bg: 'bg-white dark:bg-white/5',
-                border: 'border-l-4 border-danger-500',
+                bg: 'bg-white dark:bg-gray-900/95 dark:backdrop-blur-md',
+                border: 'border-l-4 border-danger-500 dark:border-l-danger-500',
                 text: 'text-gray-800 dark:text-gray-100',
                 iconColor: 'text-danger-500',
                 icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' // 错误图标
             };
+        case 'warning':
+            return {
+                bg: 'bg-white dark:bg-gray-900/95 dark:backdrop-blur-md',
+                border: 'border-l-4 border-warning-500 dark:border-l-warning-500',
+                text: 'text-gray-800 dark:text-gray-100',
+                iconColor: 'text-warning-500',
+                icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' // 警告图标
+            };
         case 'info':
             return {
-                bg: 'bg-white dark:bg-white/5',
-                border: 'border-l-4 border-info-500',
+                bg: 'bg-white dark:bg-gray-900/95 dark:backdrop-blur-md',
+                border: 'border-l-4 border-info-500 dark:border-l-info-500',
                 text: 'text-gray-800 dark:text-gray-100',
                 iconColor: 'text-info-500',
                 icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' // 信息图标
             };
         default:
             return {
-                bg: 'bg-white dark:bg-white/5',
-                border: 'border-l-4 border-gray-500',
+                bg: 'bg-white dark:bg-gray-900/95 dark:backdrop-blur-md',
+                border: 'border-l-4 border-primary-500 dark:border-l-primary-500',
                 text: 'text-gray-800 dark:text-gray-100',
-                iconColor: 'text-gray-500',
+                iconColor: 'text-primary-500',
                 icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' // 默认图标
             };
     }
@@ -68,68 +78,72 @@ const getToastStyle = (type: string) => {
 </script>
 
 <template>
-    <!-- Toast 容器 - 固定在页面顶部居中 -->
-    <div
-        class="pointer-events-none fixed top-5 left-1/2 z-100 flex w-full max-w-sm -translate-x-1/2 flex-col gap-3 px-4"
-    >
-        <!-- Toast 列表 - 带过渡动画 -->
-        <TransitionGroup name="toast-list">
-            <!-- 循环渲染每个 Toast -->
-            <div
-                v-for="toast in toastStore.toasts"
-                :key="toast.id"
-                class="pointer-events-auto flex w-full transform items-start gap-3 rounded-element border border-gray-300 p-4 shadow-elevated transition-all duration-300 hover:scale-[1.02] dark:border-white/10"
-                :class="[getToastStyle(toast.type).bg, getToastStyle(toast.type).border]"
-            >
-                <!-- 图标 -->
-                <div class="mt-0.5 shrink-0" :class="getToastStyle(toast.type).iconColor">
-                    <svg
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            :d="getToastStyle(toast.type).icon"
-                        />
-                    </svg>
-                </div>
-
-                <!-- 消息内容 -->
-                <div class="min-w-0 flex-1">
-                    <p
-                        class="text-sm leading-5 font-medium"
-                        :class="getToastStyle(toast.type).text"
-                    >
-                        {{ toast.message }}
-                    </p>
-                </div>
-
-                <!-- 关闭按钮 -->
-                <button
-                    class="-mt-1 -mr-1 shrink-0 rounded-element p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-white/10"
-                    @click="toastStore.removeToast(toast.id)"
+    <Teleport to="body">
+        <!-- Toast 容器 - 固定在页面顶部居中 -->
+        <div
+            class="pointer-events-none fixed top-5 left-1/2 z-100 flex w-full max-w-sm -translate-x-1/2 flex-col gap-3 px-4"
+        >
+            <!-- Toast 列表 - 带过渡动画 -->
+            <TransitionGroup name="toast-list">
+                <!-- 循环渲染每个 Toast -->
+                <div
+                    v-for="toast in toastStore.toasts"
+                    :key="toast.id"
+                    class="pointer-events-auto flex w-full items-start gap-3 rounded-element border border-gray-200/90 p-4 shadow-elevated transition-all duration-300 dark:border-white/10"
+                    :class="[getToastStyle(toast.type).bg, getToastStyle(toast.type).border]"
                 >
-                    <svg
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
+                    <!-- 图标 -->
+                    <div class="mt-0.5 shrink-0" :class="getToastStyle(toast.type).iconColor">
+                        <svg
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :d="getToastStyle(toast.type).icon"
+                            />
+                        </svg>
+                    </div>
+
+                    <!-- 消息内容 -->
+                    <div class="min-w-0 flex-1">
+                        <p
+                            class="text-sm leading-5 font-medium"
+                            :class="getToastStyle(toast.type).text"
+                        >
+                            {{ toast.message }}
+                        </p>
+                    </div>
+
+                    <!-- 关闭按钮 -->
+                    <button
+                        type="button"
+                        class="-mt-1 -mr-1 shrink-0 rounded-element p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-white/10"
+                        :aria-label="t('common.ui.modal.cancel')"
+                        @click="toastStore.removeToast(toast.id)"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
-            </div>
-        </TransitionGroup>
-    </div>
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+            </TransitionGroup>
+        </div>
+    </Teleport>
 </template>
 
 <style scoped>

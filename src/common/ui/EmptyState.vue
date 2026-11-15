@@ -14,18 +14,18 @@ defineSlots<{
 
 <template>
     <div
-        class="rounded-card border-2 border-dashed border-gray-300 py-20 text-center text-gray-500 lg:py-24 dark:border-white/10"
+        class="rounded-xl border border-dashed border-gray-200 py-16 text-center text-gray-500 dark:border-white/10"
     >
         <div
-            class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-card"
-            :class="bgGradientClass || 'bg-linear-to-br from-gray-500/20 to-gray-400/20'"
+            class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+            :class="bgGradientClass || 'bg-gray-100 dark:bg-white/5'"
         >
             <slot name="icon">
                 <!-- Default Icon if none provided -->
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12"
-                    :class="iconColorClass || 'text-gray-500'"
+                    class="h-8 w-8"
+                    :class="iconColorClass || 'text-gray-400'"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -39,8 +39,8 @@ defineSlots<{
                 </svg>
             </slot>
         </div>
-        <h3 class="gradient-text-enhanced mb-3 text-2xl font-bold lg:text-3xl">{{ title }}</h3>
-        <p class="text-base text-gray-500 lg:text-lg dark:text-gray-400">{{ description }}</p>
+        <h3 class="mb-2 text-lg font-bold text-gray-900 lg:text-xl dark:text-white">{{ title }}</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ description }}</p>
         <div class="mt-6">
             <slot name="action"></slot>
         </div>

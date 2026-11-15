@@ -108,23 +108,16 @@ const handleSave = async () => {
             // 同步到 Store，防止在此期间的其他操作覆盖配置
             dataStore.updateConfig(settings.value);
 
-            // 仅在非存储标签页（常规/高级设置）保存时刷新页面
-            if (activeTab.value !== 'storage') {
-                showToast(t('widgets.settings.modal.saveSuccessRefresh'), 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                // 如果是在存储页点确认，仅关闭弹窗
-                emit('update:show', false);
-            }
+            // 成功后关闭弹窗
+            emit('update:show', false);
+            isSaving.value = false;
         } else {
             throw new Error(result.message || t('widgets.settings.modal.saveFail'));
         }
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
         showToast(msg, 'error');
-        isSaving.value = false; // 只有失败时才需要重置保存状态
+        isSaving.value = false;
     }
 };
 
@@ -564,7 +557,7 @@ watch(
                                             v-model="settings.externalConverterUrl"
                                             name="externalConverterPreset"
                                             class="input-modern-enhanced w-1/3 min-w-37.5"
-                                            aria-label="外部转换API预设"
+                                            :aria-label="t('widgets.settings.modal.convert.apiUrl')"
                                         >
                                             <option
                                                 v-for="api in settings.externalConverterApis"

@@ -46,20 +46,20 @@ const { t } = useI18n();
 
 /** 支持的协议列表 */
 const protocols = [
-    { label: 'Shadowsocks', value: 'ss', icon: '🔒' },
-    { label: 'SSR', value: 'ssr', icon: '✈️' },
-    { label: 'VMess', value: 'vmess', icon: '🔷' },
-    { label: 'VLESS', value: 'vless', icon: '🚀' },
-    { label: 'Trojan', value: 'trojan', icon: '🛡️' },
-    { label: 'Hysteria2', value: 'hysteria2', icon: '☄️' },
-    { label: 'Hysteria', value: 'hysteria', icon: '🌩️' },
-    { label: 'Tuic', value: 'tuic', icon: '🧩' },
-    { label: 'AnyTLS', value: 'anytls', icon: '🎭' },
-    { label: 'Socks5', value: 'socks5', icon: '🔌' },
-    { label: 'HTTP', value: 'http', icon: '🌐' },
-    { label: 'WireGuard', value: 'wg|wireguard', icon: '🚇' },
-    { label: 'Snell', value: 'snell', icon: '🐌' },
-    { label: 'Reality', value: 'reality', icon: '🕶️' }
+    { label: 'Shadowsocks', value: 'ss' },
+    { label: 'SSR', value: 'ssr' },
+    { label: 'VMess', value: 'vmess' },
+    { label: 'VLESS', value: 'vless' },
+    { label: 'Trojan', value: 'trojan' },
+    { label: 'Hysteria2', value: 'hysteria2' },
+    { label: 'Hysteria', value: 'hysteria' },
+    { label: 'Tuic', value: 'tuic' },
+    { label: 'AnyTLS', value: 'anytls' },
+    { label: 'Socks5', value: 'socks5' },
+    { label: 'HTTP', value: 'http' },
+    { label: 'WireGuard', value: 'wg|wireguard' },
+    { label: 'Snell', value: 'snell' },
+    { label: 'Reality', value: 'reality' }
 ];
 
 /** 常用地区列表（支持多种别名） */
@@ -411,130 +411,124 @@ const confirmClear = () => {
 <template>
     <!-- 编辑器容器 -->
     <div
-        class="space-y-5 rounded-button border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-5 shadow-elevated dark:border-white/10 dark:from-black/50 dark:to-black/30"
+        class="space-y-4 rounded-xl border border-gray-200 bg-white p-4 shadow-xs dark:border-white/10 dark:bg-white/5"
     >
         <!-- 顶部：模式切换和统计 -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <!-- 模式切换按钮组 -->
             <div
-                class="flex rounded-element border border-gray-300 bg-white p-1.5 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                class="flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/5"
             >
                 <!-- 排除模式 (黑名单) -->
                 <button
-                    class="flex items-center gap-2 rounded-element px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium transition-all"
                     :class="
                         mode === 'exclude'
-                            ? 'scale-105 transform bg-linear-to-r from-danger-500 to-rose-600 text-white shadow-elevated-sm'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
+                            ? 'bg-danger-600 text-white shadow-2xs'
+                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                     "
                     @click="mode = 'exclude'"
                 >
-                    <span>🚫</span>
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                     <span>{{ t('widgets.subscription.filterEditor.excludeMode') }}</span>
-                    <span v-if="mode === 'exclude'" class="text-xs opacity-75">{{ t('widgets.subscription.filterEditor.blacklist') }}</span>
+                    <span v-if="mode === 'exclude'" class="text-[10px] opacity-80">({{ t('widgets.subscription.filterEditor.blacklist') }})</span>
                 </button>
                 <!-- 保留模式 (白名单) -->
                 <button
-                    class="flex items-center gap-2 rounded-element px-5 py-2 text-sm font-semibold transition-all duration-300"
+                    class="flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium transition-all"
                     :class="
                         mode === 'keep'
-                            ? 'scale-105 transform bg-linear-to-r from-success-500 to-success-600 text-white shadow-elevated-sm'
-                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10'
+                            ? 'bg-success-600 text-white shadow-2xs'
+                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                     "
                     @click="mode = 'keep'"
                 >
-                    <span>✅</span>
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>{{ t('widgets.subscription.filterEditor.keepMode') }}</span>
-                    <span v-if="mode === 'keep'" class="text-xs opacity-75">{{ t('widgets.subscription.filterEditor.whitelist') }}</span>
+                    <span v-if="mode === 'keep'" class="text-[10px] opacity-80">({{ t('widgets.subscription.filterEditor.whitelist') }})</span>
                 </button>
             </div>
 
             <!-- 统计和清空按钮 -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2.5">
                 <span
                     v-if="ruleCount > 0"
-                    class="rounded-full bg-primary-100 px-3 py-1.5 text-xs font-medium text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+                    class="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-300"
                 >
                     {{ t('widgets.subscription.filterEditor.rulesCount').replace('{count}', String(ruleCount)) }}
                 </span>
                 <button
-                    class="rounded-element px-3 py-1.5 text-xs font-medium text-gray-500 transition-all duration-200 hover:bg-danger-50 hover:text-danger-500 dark:text-gray-400 dark:hover:bg-danger-900/20 dark:hover:text-danger-400"
+                    class="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-danger-50 hover:text-danger-600 dark:text-gray-400 dark:hover:bg-danger-950/30 dark:hover:text-danger-400"
                     @click="clearAll"
                 >
-                    🗑️ {{ t('widgets.subscription.filterEditor.clear') }}
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <span>{{ t('widgets.subscription.filterEditor.clear') }}</span>
                 </button>
             </div>
         </div>
 
         <!-- 协议选择 -->
-        <div class="space-y-3">
+        <div class="space-y-2.5">
             <div class="flex items-center justify-between">
-                <div
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-primary-500"></span>
+                <div class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <span class="h-3 w-1 rounded-full bg-primary-500"></span>
                     {{ t('widgets.subscription.filterEditor.protocolType') }}
                 </div>
                 <span v-if="selectedProtocols.length > 0" class="text-xs text-gray-400">
                     {{ t('widgets.subscription.filterEditor.selected') }} {{ selectedProtocols.length }} {{ t('widgets.subscription.filterEditor.count') }}
                 </span>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1.5">
                 <button
                     v-for="p in protocols"
                     :key="p.value"
-                    class="group transform rounded-element border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="rounded-md border px-2.5 py-1 text-xs font-medium transition-all"
                     :class="
                         selectedProtocols.includes(p.value)
-                            ? 'border-primary-300 bg-linear-to-r from-primary-500 to-info-600 text-white shadow-elevated shadow-primary-500/50 dark:border-primary-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-primary-300 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-600'
+                            ? 'border-primary-500 bg-primary-600 text-white shadow-2xs dark:border-primary-500 dark:bg-primary-600'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
                     "
                     @click="toggleProtocol(p.value)"
                 >
-                    <span class="mr-1">{{ p.icon }}</span>
                     {{ p.label }}
                 </button>
             </div>
         </div>
 
         <!-- 地区选择 -->
-        <div class="space-y-3">
+        <div class="space-y-2.5">
             <div class="flex items-center justify-between">
-                <div
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-success-500"></span>
+                <div class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <span class="h-3 w-1 rounded-full bg-emerald-500"></span>
                     {{ t('widgets.subscription.filterEditor.commonRegions') }}
                 </div>
                 <span v-if="selectedRegions.length > 0" class="text-xs text-gray-400">
                     {{ t('widgets.subscription.filterEditor.selected') }} {{ selectedRegions.length }} {{ t('widgets.subscription.filterEditor.count') }}
                 </span>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1.5">
                 <button
                     v-for="r in regions"
                     :key="r.value"
-                    class="group transform rounded-element border-2 px-4 py-2 text-sm font-medium transition-all duration-300 hover:scale-105"
+                    class="flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-all"
                     :class="
                         selectedRegions.includes(r.value)
-                            ? 'border-success-300 bg-linear-to-r from-success-500 to-success-600 text-white shadow-elevated shadow-success-500/50 dark:border-success-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-success-300 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-success-600'
+                            ? 'border-emerald-500 bg-emerald-600 text-white shadow-2xs dark:border-emerald-500 dark:bg-emerald-600'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
                     "
                     @click="toggleRegion(r.value)"
                 >
-                    <span class="mr-1.5">{{ r.flag }}</span>
-                    {{ r.label }}
+                    <span>{{ r.flag }}</span>
+                    <span>{{ r.label }}</span>
                 </button>
             </div>
         </div>
 
         <!-- 关键词过滤 -->
-        <div class="space-y-3">
+        <div class="space-y-2.5">
             <div class="flex items-center justify-between">
-                <div
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
-                >
-                    <span class="h-5 w-1 rounded-full bg-warning-500"></span>
+                <div class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    <span class="h-3 w-1 rounded-full bg-amber-500"></span>
                     {{ t('widgets.subscription.filterEditor.keywordFilter') }}
                 </div>
                 <span v-if="customKeywords.length > 0" class="text-xs text-gray-400">
@@ -543,15 +537,15 @@ const confirmClear = () => {
             </div>
 
             <!-- 常用词快捷选择 -->
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1.5">
                 <button
                     v-for="k in commonKeywords"
                     :key="k.value"
-                    class="transform rounded-element border-2 border-dashed px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:scale-105"
+                    class="rounded-md border px-2 py-1 text-xs font-medium transition-all"
                     :class="
                         customKeywords.includes(k.value)
-                            ? 'border-warning-400 bg-warning-50 text-warning-700 shadow-elevated-sm dark:border-warning-600 dark:bg-warning-900/30 dark:text-warning-300'
-                            : 'border-gray-300 bg-white text-gray-600 hover:border-warning-300 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:border-warning-500'
+                            ? 'border-amber-400 bg-amber-50 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-300'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-white/10'
                     "
                     @click="toggleKeyword(k.value)"
                 >
@@ -567,50 +561,51 @@ const confirmClear = () => {
                     name="filterKeywordInput"
                     type="text"
                     :placeholder="t('widgets.subscription.filterEditor.keywordPlaceholder')"
-                    class="flex-1 rounded-element border-2 border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-warning-500 focus:ring-2 focus:ring-warning-500 focus:outline-none dark:border-white/10 dark:bg-white/5"
+                    class="flex-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-900 transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
                     @keyup.enter="addKeyword"
                 />
                 <button
-                    class="transform rounded-element bg-linear-to-r from-warning-500 to-warning-600 px-6 py-2.5 text-sm font-semibold text-white shadow-elevated transition-all duration-300 hover:scale-105 hover:from-warning-600 hover:to-warning-700 hover:shadow-card"
+                    class="inline-flex items-center gap-1 rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
                     @click="addKeyword"
                 >
-                    ➕ {{ t('widgets.subscription.filterEditor.addBtn') }}
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span>{{ t('widgets.subscription.filterEditor.addBtn') }}</span>
                 </button>
             </div>
 
             <!-- 已选关键词标签 -->
             <div
                 v-if="customKeywords.length > 0"
-                class="flex flex-wrap gap-2 rounded-element border border-gray-300 bg-white p-3 dark:border-white/10 dark:bg-white/5"
+                class="flex flex-wrap gap-1.5 rounded-lg border border-gray-200 bg-gray-50/50 p-2.5 dark:border-white/10 dark:bg-white/5"
             >
                 <span
                     v-for="k in customKeywords"
                     :key="k"
-                    class="group inline-flex items-center rounded-element border border-gray-300 bg-linear-to-r from-gray-100 to-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-danger-400 dark:border-white/10 dark:from-white/5 dark:to-white/10 dark:text-gray-200 dark:hover:border-danger-500"
+                    class="group inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                 >
                     <span>{{ k }}</span>
                     <button
-                        class="ml-2 text-lg leading-none font-bold text-gray-400 transition-colors hover:text-danger-500 dark:hover:text-danger-400"
+                        class="text-gray-400 hover:text-danger-500 dark:hover:text-danger-400 transition-colors"
                         @click="removeKeyword(k)"
                     >
-                        ×
+                        <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </span>
             </div>
         </div>
 
         <!-- 预览/手动编辑 -->
-        <div class="border-t-2 border-gray-300 pt-4 dark:border-white/10">
-            <div class="mb-3 flex items-center justify-between">
+        <div class="border-t border-gray-200 pt-3 dark:border-white/10">
+            <div class="mb-2 flex items-center justify-between">
                 <label
                     for="filterRuleTextarea"
-                    class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300"
+                    class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300"
                 >
-                    <span class="h-5 w-1 rounded-full bg-secondary-500"></span>
+                    <span class="h-3 w-1 rounded-full bg-primary-500"></span>
                     {{ isManualMode ? t('widgets.subscription.filterEditor.manualEdit') : t('widgets.subscription.filterEditor.rulePreview') }}
                 </label>
                 <button
-                    class="transform rounded-element bg-secondary-100 px-4 py-1.5 text-xs font-medium text-secondary-600 transition-all hover:scale-105 hover:bg-secondary-200 dark:bg-secondary-900/30 dark:text-secondary-400 dark:hover:bg-secondary-800/50"
+                    class="rounded-md border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
                     @click="isManualMode = !isManualMode"
                 >
                     {{ isManualMode ? t('widgets.subscription.filterEditor.visualMode') : t('widgets.subscription.filterEditor.manualMode') }}
@@ -621,19 +616,18 @@ const confirmClear = () => {
                 name="filterRuleTextarea"
                 :value="modelValue"
                 :readonly="!isManualMode"
-                rows="4"
+                rows="3"
                 :placeholder="placeholder || (isManualMode ? t('widgets.subscription.filterEditor.manualPlaceholder') : t('widgets.subscription.filterEditor.autoPlaceholder'))"
-                class="w-full rounded-element border-2 border-gray-300 bg-gray-900 px-4 py-3 font-mono text-sm text-success-400 transition-all focus:ring-2 focus:ring-secondary-500 focus:outline-none dark:border-white/10 dark:bg-black"
+                class="w-full rounded-md border border-gray-200 bg-gray-900 px-3 py-2 font-mono text-xs text-emerald-400 transition-all focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-black/60"
                 :class="{
-                    'cursor-not-allowed opacity-60': !isManualMode,
-                    'focus:border-secondary-500': isManualMode
+                    'cursor-not-allowed opacity-75': !isManualMode
                 }"
                 @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
             ></textarea>
 
             <p
                 v-if="!modelValue && !isManualMode"
-                class="mt-2 text-center text-xs text-gray-400 dark:text-gray-500"
+                class="mt-1.5 text-center text-xs text-gray-400 dark:text-gray-500"
             >
                 {{ t('widgets.subscription.filterEditor.hint') }}
             </p>

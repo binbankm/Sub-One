@@ -46,6 +46,8 @@ withDefaults(
         confirmText?: string;
         /** 取消按钮文字 */
         cancelText?: string;
+        /** 确认按钮样式类型 */
+        confirmType?: 'primary' | 'danger';
         /** 保存/加载中状态 */
         isSaving?: boolean;
     }>(),
@@ -55,6 +57,7 @@ withDefaults(
         confirmButtonTitle: undefined,
         confirmText: undefined,
         cancelText: undefined,
+        confirmType: 'primary',
         isSaving: false
     }
 );
@@ -125,7 +128,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                     <!-- 模态框容器 - 点击阻止冒泡，避免关闭 -->
                     <div
                         v-if="show"
-                        class="flex max-h-[85vh] w-full flex-col rounded-card border border-gray-300 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
+                        class="flex max-h-[85vh] w-full flex-col rounded-card border border-gray-200 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/80 dark:backdrop-blur-2xl"
                         :class="{
                             'max-w-sm': size === 'sm',
                             'max-w-2xl': size === '2xl',
@@ -155,11 +158,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
                         <!-- 按钮区域 -->
                         <div
-                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-300 p-6 pt-4 dark:border-white/10"
+                            class="flex shrink-0 justify-end space-x-3 border-t border-gray-200 p-6 pt-4 dark:border-white/10"
                         >
                             <!-- 取消按钮 -->
                             <button
-                                class="rounded-element bg-gray-100 px-6 py-2.5 text-sm font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-200 hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/20"
+                                class="btn-modern-enhanced btn-secondary px-5 py-2 text-sm font-medium"
                                 @click="emit('update:show', false)"
                             >
                                 {{ cancelText || t('common.ui.modal.cancel') }}
@@ -167,8 +170,13 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                             <!-- 确认按钮 -->
                             <button
                                 :disabled="confirmDisabled || isSaving"
-                                :title="confirmDisabled && confirmButtonTitle ? confirmButtonTitle : (confirmButtonTitle || confirmText || t('common.ui.modal.confirm'))"
-                                class="btn-modern flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
+                                :title="
+                                    confirmDisabled && confirmButtonTitle
+                                        ? confirmButtonTitle
+                                        : confirmButtonTitle || confirmText || t('common.ui.modal.confirm')
+                                "
+                                class="btn-modern-enhanced flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                                :class="confirmType === 'danger' ? 'btn-danger' : 'btn-primary'"
                                 @click="handleConfirm"
                             >
                                 <svg
@@ -178,8 +186,19 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                                     fill="none"
                                     viewBox="0 0 24 24"
                                 >
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
                                 </svg>
                                 <span>{{ confirmText || t('common.ui.modal.confirm') }}</span>
                             </button>

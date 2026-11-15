@@ -48,7 +48,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'shadowsocks':
             return {
                 text: 'SS',
-                icon: '🔒',
+                icon: '',
                 gradient: 'from-sky-400 to-blue-500',
                 bg: 'bg-sky-100 dark:bg-sky-900/30',
                 color: 'text-sky-600 dark:text-sky-400'
@@ -57,7 +57,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'shadowsocksr':
             return {
                 text: 'SSR',
-                icon: '✈️',
+                icon: '',
                 gradient: 'from-pink-400 to-rose-500',
                 bg: 'bg-pink-100 dark:bg-pink-900/30',
                 color: 'text-pink-600 dark:text-pink-400'
@@ -66,7 +66,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'v2ray':
             return {
                 text: 'VMess',
-                icon: '💎',
+                icon: '',
                 gradient: 'from-emerald-400 to-teal-500',
                 bg: 'bg-emerald-100 dark:bg-emerald-900/30',
                 color: 'text-emerald-600 dark:text-emerald-400'
@@ -74,7 +74,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'vless':
             return {
                 text: 'VLESS',
-                icon: '🚀',
+                icon: '',
                 gradient: 'from-blue-400 to-indigo-500',
                 bg: 'bg-blue-100 dark:bg-blue-900/30',
                 color: 'text-blue-600 dark:text-blue-400'
@@ -83,7 +83,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'hy2':
             return {
                 text: 'HY2',
-                icon: '🌩️',
+                icon: '',
                 gradient: 'from-purple-400 to-violet-500',
                 bg: 'bg-purple-100 dark:bg-purple-900/30',
                 color: 'text-purple-600 dark:text-purple-400'
@@ -92,7 +92,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'hy':
             return {
                 text: 'Hysteria',
-                icon: '⚡',
+                icon: '',
                 gradient: 'from-fuchsia-400 to-pink-500',
                 bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/30',
                 color: 'text-fuchsia-600 dark:text-fuchsia-400'
@@ -100,7 +100,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'tuic':
             return {
                 text: 'TUIC',
-                icon: '🛸',
+                icon: '',
                 gradient: 'from-cyan-400 to-blue-500',
                 bg: 'bg-cyan-100 dark:bg-cyan-900/30',
                 color: 'text-cyan-600 dark:text-cyan-400'
@@ -108,7 +108,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'trojan':
             return {
                 text: 'Trojan',
-                icon: '🐴',
+                icon: '',
                 gradient: 'from-amber-400 to-orange-500',
                 bg: 'bg-amber-100 dark:bg-amber-900/30',
                 color: 'text-amber-600 dark:text-amber-400'
@@ -116,7 +116,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'anytls':
             return {
                 text: 'AnyTLS',
-                icon: '🔓',
+                icon: '',
                 gradient: 'from-slate-400 to-gray-500',
                 bg: 'bg-slate-100 dark:bg-slate-900/30',
                 color: 'text-slate-600 dark:text-slate-400'
@@ -125,7 +125,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'socks':
             return {
                 text: 'SOCKS5',
-                icon: '🔌',
+                icon: '',
                 gradient: 'from-orange-400 to-red-500',
                 bg: 'bg-orange-100 dark:bg-orange-900/30',
                 color: 'text-orange-600 dark:text-orange-400'
@@ -134,7 +134,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'wg':
             return {
                 text: 'WireGuard',
-                icon: '🛡️',
+                icon: '',
                 gradient: 'from-red-700 to-rose-800',
                 bg: 'bg-red-100 dark:bg-red-900/30',
                 color: 'text-red-700 dark:text-red-300'
@@ -142,7 +142,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'snell':
             return {
                 text: 'Snell',
-                icon: '💡',
+                icon: '',
                 gradient: 'from-blue-600 to-indigo-700',
                 bg: 'bg-blue-100 dark:bg-blue-900/30',
                 color: 'text-blue-700 dark:text-blue-300'
@@ -150,7 +150,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'naive':
             return {
                 text: 'Naive',
-                icon: '😺',
+                icon: '',
                 gradient: 'from-emerald-600 to-green-700',
                 bg: 'bg-emerald-100 dark:bg-emerald-900/30',
                 color: 'text-emerald-700 dark:text-emerald-300'
@@ -159,7 +159,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         case 'https':
             return {
                 text: 'HTTP',
-                icon: '🌐',
+                icon: '',
                 gradient: 'from-gray-300 to-gray-500',
                 bg: 'bg-gray-100 dark:bg-gray-800',
                 color: 'text-gray-600 dark:text-gray-400'
@@ -167,7 +167,7 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
         default:
             return {
                 text: 'Unknown',
-                icon: '❓',
+                icon: '',
                 gradient: 'from-gray-400 to-slate-500',
                 bg: 'bg-gray-100 dark:bg-gray-800',
                 color: 'text-gray-600 dark:text-gray-400'

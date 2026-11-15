@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
@@ -39,16 +39,30 @@ const dataStore = useDataStore();
 const { profiles, subscriptions, manualNodes, config } = storeToRefs(dataStore);
 const { t } = useI18n();
 
+// Search state
+const searchQuery = ref('');
+
+const filteredProfiles = computed(() => {
+    if (!searchQuery.value.trim()) return profiles.value;
+    const q = searchQuery.value.toLowerCase().trim();
+    return profiles.value.filter(
+        (p: Profile) =>
+            (p.name && p.name.toLowerCase().includes(q)) ||
+            (p.customId && p.customId.toLowerCase().includes(q))
+    );
+});
+
 const {
     currentPage,
     totalPages,
     paginatedItems: paginatedProfiles,
     changePage,
     resetPage
-} = usePagination<Profile>(
-    computed(() => profiles.value),
-    9
-);
+} = usePagination<Profile>(filteredProfiles, 9);
+
+watch(searchQuery, () => {
+    resetPage();
+});
 
 // Profile Management Hooks
 const {
@@ -130,23 +144,60 @@ useTabActionTrigger(
 </script>
 
 <template>
-    <div class="w-full">
-        <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex-1"></div>
-            <div class="ml-auto flex flex-wrap items-center gap-2">
-                <div class="flex flex-wrap items-center gap-2">
-                    <button
-                        class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
-                        @click="handleAddProfile"
-                    >
-                        {{ t('views.profiles.addBtn') }}
-                    </button>
-                    <MoreMenu
-                        :items="profilesMoreMenuItems"
-                        width-class="w-36"
-                        @select="handleProfilesMoreMenuSelect"
+    <div class="w-full space-y-6">
+        <!-- 顶部工具栏：搜索与操作按钮 -->
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="relative w-full sm:w-64">
+                <input
+                    v-model="searchQuery"
+                    type="text"
+                    :placeholder="t('views.profiles.searchPlaceholder')"
+                    :aria-label="t('views.profiles.searchPlaceholder')"
+                    class="search-input-unified w-full text-sm"
+                />
+                <svg
+                    class="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
-                </div>
+                </svg>
+                <button
+                    v-if="searchQuery"
+                    type="button"
+                    class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    @click="searchQuery = ''"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    class="btn-modern-enhanced btn-add px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm"
+                    @click="handleAddProfile"
+                >
+                    {{ t('views.profiles.addBtn') }}
+                </button>
+                <MoreMenu
+                    :items="profilesMoreMenuItems"
+                    width-class="w-36"
+                    @select="handleProfilesMoreMenuSelect"
+                />
             </div>
         </div>
 
@@ -161,32 +212,77 @@ useTabActionTrigger(
             @cancel="handleToggleBatchDeleteMode"
         />
 
-        <div
-            v-if="profiles.length > 0"
-            class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8"
-        >
-            <ProfileCard
-                v-for="profile in paginatedProfiles"
-                :key="profile.id"
-                :profile="profile"
-                :all-subscriptions="subscriptions"
-                :is-batch-mode="isBatchDeleteMode"
-                :is-selected="isSelected(profile.id)"
-                @edit="handleEditProfile(profile.id)"
-                @delete="handleDeleteProfile(profile.id)"
-                @change="handleToggleProfile"
-                @copy-link="handleCopyLink(profile.id)"
-                @show-nodes="$emit('show-nodes', profile)"
-                @toggle-select="toggleSelection(profile.id)"
+        <!-- 订阅组网格区域 -->
+        <div v-if="profiles.length > 0">
+            <!-- 搜索无结果状态 -->
+            <div
+                v-if="filteredProfiles.length === 0"
+                class="card-glass flex flex-col items-center justify-center rounded-xl border border-gray-200 p-12 text-center dark:border-white/10"
+            >
+                <div
+                    class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10"
+                >
+                    <svg
+                        class="h-6 w-6 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                </div>
+                <h3 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">
+                    {{ t('views.profiles.noMatchingProfiles') }}
+                </h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ t('views.profiles.noMatchingHint') }}
+                </p>
+                <button
+                    type="button"
+                    class="btn-modern-enhanced btn-secondary mt-4 px-4 py-1.5 text-xs font-medium"
+                    @click="searchQuery = ''"
+                >
+                    {{ t('views.profiles.clearSearch') }}
+                </button>
+            </div>
+
+            <!-- 订阅组卡片网格 -->
+            <div
+                v-else
+                class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-6"
+            >
+                <ProfileCard
+                    v-for="profile in paginatedProfiles"
+                    :key="profile.id"
+                    :profile="profile"
+                    :all-subscriptions="subscriptions"
+                    :is-batch-mode="isBatchDeleteMode"
+                    :is-selected="isSelected(profile.id)"
+                    @edit="handleEditProfile(profile.id)"
+                    @delete="handleDeleteProfile(profile.id)"
+                    @change="handleToggleProfile"
+                    @copy-link="handleCopyLink(profile.id)"
+                    @show-nodes="$emit('show-nodes', profile)"
+                    @toggle-select="toggleSelection(profile.id)"
+                />
+            </div>
+
+            <Pagination
+                v-if="totalPages > 1"
+                :current-page="currentPage"
+                :total-pages="totalPages"
+                @change-page="changePage"
             />
         </div>
-        <Pagination
-            :current-page="currentPage"
-            :total-pages="totalPages"
-            @change-page="changePage"
-        />
+
+        <!-- 初始空状态 -->
         <EmptyState
-            v-if="profiles.length === 0"
+            v-else
             :title="t('views.profiles.emptyTitle')"
             :description="t('views.profiles.emptyDesc')"
             bg-gradient-class="bg-linear-to-br from-secondary-500/20 to-pink-500/20"

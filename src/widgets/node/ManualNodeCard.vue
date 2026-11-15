@@ -31,6 +31,7 @@ const emit = defineEmits<{
     (e: 'delete'): void;
     (e: 'edit'): void;
     (e: 'toggleSelect'): void;
+    (e: 'toggleEnable'): void;
 }>();
 
 const toastStore = useToastStore();
@@ -58,7 +59,7 @@ const handleCopy = async (url: string) => {
 <template>
     <!-- 卡片容器 -->
     <div
-        class="card-glass group relative flex h-full flex-col overflow-hidden rounded-card border border-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-card hover:shadow-primary-500/10 dark:border-white/10"
+        class="card-glass group relative flex h-full flex-col overflow-hidden rounded-card border border-gray-200 transition-all duration-300 hover:border-gray-300 hover:shadow-card dark:border-white/10 dark:hover:border-white/20"
         :class="{
             'opacity-60 grayscale filter': !node.enabled,
             'border-success-500/50 ring-2 ring-success-500 ring-offset-2 dark:ring-offset-black/80':
@@ -87,7 +88,7 @@ const handleCopy = async (url: string) => {
                                 type="checkbox"
                                 :checked="isSelected"
                                 class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-success-500 checked:bg-success-500 dark:border-white/10"
-                                aria-label="选择节点"
+                                :aria-label="t('widgets.node.manualCard.selectNode')"
                                 @change="emit('toggleSelect')"
                             />
                             <svg
@@ -109,33 +110,54 @@ const handleCopy = async (url: string) => {
 
                     <!-- 协议标签 (胶囊样式) -->
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-elevated-sm"
+                        class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase shadow-elevated-sm font-mono"
                         :class="[
                             protocolInfo.bg,
                             protocolInfo.color,
                             'bg-opacity-10 dark:bg-opacity-20 border-transparent'
                         ]"
                     >
-                        <span class="text-sm font-normal drop-shadow-elevated-sm filter">{{
-                            protocolInfo.icon
-                        }}</span>
                         <span>{{ protocolInfo.text }}</span>
                     </span>
                 </div>
 
-                <!-- 操作按钮 (悬浮显示) -->
+                <!-- 操作按钮 -->
                 <div
-                    class="flex items-center gap-1 transition-all duration-200"
-                    :class="
-                        isBatchMode
-                            ? 'opacity-100'
-                            : 'opacity-100 lg:translate-x-2 lg:opacity-0 lg:group-hover:translate-x-0 lg:group-hover:opacity-100'
-                    "
+                    class="flex items-center gap-1 transition-opacity duration-200"
+                    :class="isBatchMode ? 'opacity-100' : 'opacity-100 lg:opacity-70 lg:group-hover:opacity-100'"
                     @click.stop
                 >
                     <button
+                        type="button"
+                        class="rounded-element p-1.5 transition-colors"
+                        :class="
+                            node.enabled !== false
+                                ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/40'
+                                : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                        "
+                        :title="node.enabled !== false ? t('widgets.node.manualCard.disableNode') : t('widgets.node.manualCard.enableNode')"
+                        :aria-label="node.enabled !== false ? t('widgets.node.manualCard.disableNode') : t('widgets.node.manualCard.enableNode')"
+                        @click="emit('toggleEnable')"
+                    >
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.828a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 3v6"
+                            />
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
                         class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/40 dark:hover:text-primary-400"
                         :title="t('widgets.node.manualCard.edit')"
+                        :aria-label="t('widgets.node.manualCard.edit')"
                         @click="emit('edit')"
                     >
                         <svg
@@ -153,8 +175,10 @@ const handleCopy = async (url: string) => {
                         </svg>
                     </button>
                     <button
+                        type="button"
                         class="rounded-element p-1.5 text-gray-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/40 dark:hover:text-rose-400"
                         :title="t('widgets.node.manualCard.delete')"
+                        :aria-label="t('widgets.node.manualCard.delete')"
                         @click="emit('delete')"
                     >
                         <svg
@@ -185,7 +209,7 @@ const handleCopy = async (url: string) => {
             </div>
 
             <!-- 底部信息：地址 & 复制 -->
-            <div class="mt-auto border-t border-gray-300 pt-3 dark:border-white/10">
+            <div class="mt-auto border-t border-gray-200 pt-3 dark:border-white/10">
                 <div class="flex items-center justify-between gap-2 text-xs">
                     <!-- 服务器地址展示 (更简洁) -->
                     <div
@@ -213,8 +237,10 @@ const handleCopy = async (url: string) => {
                     <!-- 复制链接按钮 -->
                     <button
                         v-if="node.url"
+                        type="button"
                         class="flex items-center gap-1 rounded-element bg-gray-50 px-2 py-1 font-medium text-gray-500 transition-all hover:bg-primary-50 hover:text-primary-600 dark:bg-white/5 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
                         :title="t('widgets.node.manualCard.copyLink')"
+                        :aria-label="t('widgets.node.manualCard.copyLink')"
                         @click.stop="handleCopy(node.url)"
                     >
                         <span class="hidden sm:inline">{{ t('widgets.node.manualCard.copyBtn') }}</span>

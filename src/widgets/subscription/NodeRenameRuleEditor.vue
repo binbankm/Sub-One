@@ -71,7 +71,7 @@ const availableSources = computed(() => {
     if (props.subscriptionUrl) {
         list.push({
             id: 'current-sub',
-            label: `🎯 ${t('widgets.subscription.renameEditor.sourceCurrentSub')}`,
+            label: t('widgets.subscription.renameEditor.sourceCurrentSub'),
             url: props.subscriptionUrl
         });
     }
@@ -82,7 +82,7 @@ const availableSources = computed(() => {
             if (sub.url && sub.url !== props.subscriptionUrl) {
                 list.push({
                     id: `sub-${sub.id}`,
-                    label: `📡 ${sub.name || '未命名'} (${sub.nodeCount || 0} 节点)`,
+                    label: `${sub.name || t('widgets.subscription.card.unnamed')} (${sub.nodeCount || 0} ${t('widgets.subscription.card.nodes')})`,
                     url: sub.url
                 });
             }
@@ -93,7 +93,7 @@ const availableSources = computed(() => {
     if (dataStore.manualNodes && dataStore.manualNodes.length > 0) {
         list.push({
             id: 'manual',
-            label: `📝 ${t('widgets.subscription.renameEditor.sourceManual')} (${dataStore.manualNodes.length} 个)`,
+            label: `${t('widgets.subscription.renameEditor.sourceManual')} (${dataStore.manualNodes.length})`,
             isManual: true
         });
     }
@@ -101,7 +101,7 @@ const availableSources = computed(() => {
     // 4. 示例样本
     list.push({
         id: 'demo',
-        label: `💡 ${t('widgets.subscription.renameEditor.sourceDemo')}`,
+        label: t('widgets.subscription.renameEditor.sourceDemo'),
         isDemo: true
     });
 
@@ -175,11 +175,11 @@ const loadSourceNodes = async (force: boolean = false) => {
             nodeCache.value[targetUrl] = names;
             fetchedNodes.value = names;
         } else {
-            fetchError.value = '未从该订阅解析到有效节点';
+            fetchError.value = t('widgets.subscription.renameEditor.noValidNodes');
             fetchedNodes.value = defaultSampleNodes;
         }
     } catch (err: any) {
-        fetchError.value = err?.message || '网络请求失败';
+        fetchError.value = err?.message || t('common.api.networkError');
         if (fetchedNodes.value.length === 0) {
             fetchedNodes.value = defaultSampleNodes;
         }
@@ -353,7 +353,7 @@ const clearRules = () => {
 
 <template>
     <div
-        class="space-y-4 rounded-button border border-gray-300 bg-linear-to-br from-gray-50 to-gray-100 p-4 shadow-elevated dark:border-white/10 dark:from-black/50 dark:to-black/30"
+        class="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-xs dark:border-white/10 dark:bg-white/5"
     >
         <!-- 顶部操作栏与预设插入 -->
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -366,7 +366,7 @@ const clearRules = () => {
                     :key="idx"
                     type="button"
                     :title="preset.tooltip"
-                    class="rounded-element border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow-elevated-sm transition-all hover:border-primary-500 hover:text-primary-600 dark:border-white/10 dark:bg-white/10 dark:text-gray-200 dark:hover:border-primary-400 dark:hover:text-primary-400"
+                    class="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-700 shadow-2xs transition-colors hover:border-primary-500 hover:text-primary-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:border-primary-400 dark:hover:text-primary-400"
                     @click="insertPreset(preset.rule)"
                 >
                     + {{ preset.label }}
@@ -404,7 +404,7 @@ const clearRules = () => {
         <Transition name="slide-fade">
             <div
                 v-if="showHelp"
-                class="rounded-element border border-info-200 bg-info-50 p-3 text-xs text-info-800 dark:border-info-800/40 dark:bg-info-900/20 dark:text-info-300"
+                class="rounded-lg border border-info-200 bg-info-50/50 p-3 text-xs text-info-800 dark:border-info-800/40 dark:bg-info-950/20 dark:text-info-300"
             >
                 <p class="font-semibold mb-1">{{ t('widgets.subscription.renameEditor.syntaxTitle') }}</p>
                 <ul class="list-inside list-disc space-y-0.5 opacity-90">
@@ -412,7 +412,7 @@ const clearRules = () => {
                     <li>{{ t('widgets.subscription.renameEditor.syntax2') }}</li>
                     <li>{{ t('widgets.subscription.renameEditor.syntax3') }}</li>
                     <li>{{ t('widgets.subscription.renameEditor.syntax4') }}</li>
-                    <li>系统会自动压缩连续的多余空格；若节点名字被全量清空，将作为广告公告节点自动丢弃。</li>
+                    <li>{{ t('widgets.subscription.renameEditor.syntax5') }}</li>
                 </ul>
             </div>
         </Transition>
@@ -426,7 +426,7 @@ const clearRules = () => {
                 aria-label="节点重命名规则"
                 rows="4"
                 :placeholder="placeholder || t('widgets.subscription.renameEditor.defaultPlaceholder')"
-                class="w-full resize-y rounded-element border border-gray-300 bg-white p-3 font-mono text-xs text-gray-800 shadow-inner focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-100"
+                class="w-full resize-y rounded-md border border-gray-200 bg-white p-3 font-mono text-xs text-gray-800 shadow-inner focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-100"
             ></textarea>
         </div>
 
@@ -434,30 +434,31 @@ const clearRules = () => {
         <Transition name="slide-fade">
             <div
                 v-if="showTester"
-                class="rounded-element border border-primary-200 bg-primary-50/50 p-3.5 dark:border-primary-800/40 dark:bg-primary-950/20"
+                class="rounded-lg border border-primary-100 bg-primary-50/40 p-3 dark:border-primary-900/40 dark:bg-primary-950/20"
             >
-                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div class="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-primary-900 dark:text-primary-300">
-                            🧪 {{ t('widgets.subscription.renameEditor.testerTitle') }}
+                        <span class="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-gray-100">
+                            <svg class="h-3.5 w-3.5 text-primary-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.69 18.2A2 2 0 006.41 21h11.18a2 2 0 001.72-2.8L14 9.31V2"/></svg>
+                            {{ t('widgets.subscription.renameEditor.testerTitle') }}
                         </span>
                         <!-- 模式切换：抽样预览 / 自定义输入 -->
-                        <div class="flex rounded border border-primary-200 bg-white/70 p-0.5 text-[11px] dark:border-white/10 dark:bg-white/5">
+                        <div class="flex rounded-md border border-gray-200 bg-white p-0.5 text-[11px] dark:border-white/10 dark:bg-white/5">
                             <button
                                 type="button"
                                 class="rounded px-2 py-0.5 transition-all"
-                                :class="testMode === 'samples' ? 'bg-primary-600 text-white font-medium shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-primary-600'"
+                                :class="testMode === 'samples' ? 'bg-primary-600 text-white font-medium shadow-2xs' : 'text-gray-600 dark:text-gray-400 hover:text-primary-600'"
                                 @click="testMode = 'samples'"
                             >
-                                {{ isRealNodesActive ? '真实节点测试' : '节点抽样测试' }}
+                                {{ isRealNodesActive ? t('widgets.subscription.renameEditor.realNodesTest') : t('widgets.subscription.renameEditor.sampleTest') }}
                             </button>
                             <button
                                 type="button"
                                 class="rounded px-2 py-0.5 transition-all"
-                                :class="testMode === 'custom' ? 'bg-primary-600 text-white font-medium shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-primary-600'"
+                                :class="testMode === 'custom' ? 'bg-primary-600 text-white font-medium shadow-2xs' : 'text-gray-600 dark:text-gray-400 hover:text-primary-600'"
                                 @click="testMode = 'custom'"
                             >
-                                自定义单条输入
+                                {{ t('widgets.subscription.renameEditor.customSingleInput') }}
                             </button>
                         </div>
                     </div>
@@ -469,7 +470,7 @@ const clearRules = () => {
                 <!-- 模式 A：抽样节点列表实时预览 -->
                 <div v-if="testMode === 'samples'" class="space-y-2">
                     <!-- 真实节点来源选择与刷新工具条 -->
-                    <div class="flex flex-wrap items-center justify-between gap-2 rounded border border-primary-100 bg-white/70 p-2 text-xs backdrop-blur-xs dark:border-white/5 dark:bg-white/5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-white p-2 text-xs dark:border-white/5 dark:bg-white/5">
                         <div class="flex items-center gap-1.5 flex-1 min-w-50">
                             <label for="renameSourceSelect" class="text-[11px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                 {{ t('widgets.subscription.renameEditor.sourceSelect') }}:
@@ -495,15 +496,17 @@ const clearRules = () => {
                                 {{ t('widgets.subscription.renameEditor.realNodeCount', { count: fetchedNodes.length }) }}
                             </span>
                             <span v-if="fetchError" class="text-[10px] text-danger-500 font-medium">
-                                ⚠️ {{ fetchError }}
+                                {{ fetchError }}
                             </span>
                             <button
                                 type="button"
                                 :disabled="isFetching"
-                                class="inline-flex items-center gap-1 rounded bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-xs border border-gray-300 transition-all hover:border-primary-500 hover:text-primary-600 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
+                                class="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-2xs border border-gray-200 transition-all hover:border-primary-500 hover:text-primary-600 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-200"
                                 @click="loadSourceNodes(true)"
                             >
-                                <span :class="{ 'animate-spin': isFetching }">🔄</span>
+                                <svg class="h-3 w-3" :class="{ 'animate-spin': isFetching }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
                                 <span>{{ isFetching ? t('widgets.subscription.renameEditor.fetching') : t('widgets.subscription.renameEditor.fetchRealNodes') }}</span>
                             </button>
                         </div>
@@ -514,19 +517,19 @@ const clearRules = () => {
                         <div
                             v-for="(item, idx) in sampleTestResults"
                             :key="idx"
-                            class="rounded border border-gray-200/80 bg-white/90 p-2 text-xs transition-colors dark:border-white/5 dark:bg-white/5"
+                            class="rounded-md border border-gray-200 bg-white p-2 text-xs transition-colors dark:border-white/5 dark:bg-white/5"
                         >
                             <div class="flex items-center justify-between text-[11px] text-gray-400 dark:text-gray-500 mb-1">
                                 <span class="truncate max-w-[70%] font-mono" :title="item.original">{{ item.original }}</span>
-                                <span v-if="item.isDropped" class="rounded bg-danger-100 px-1.5 py-0.2 text-[10px] font-bold text-danger-600 dark:bg-danger-900/40 dark:text-danger-300">
-                                    🚫 已自动剔除 (广告/空名)
+                                <span v-if="item.isDropped" class="rounded px-1.5 py-0.5 text-[10px] font-medium text-danger-700 bg-danger-50 dark:bg-danger-950/40 dark:text-danger-300 border border-danger-200 dark:border-danger-800">
+                                    {{ t('widgets.subscription.renameEditor.droppedAd') }}
                                 </span>
-                                <span v-else-if="item.isChanged" class="rounded bg-success-100 px-1.5 py-0.2 text-[10px] font-bold text-success-600 dark:bg-success-900/40 dark:text-success-300">
-                                    ✨ 已重命名
+                                <span v-else-if="item.isChanged" class="rounded px-1.5 py-0.5 text-[10px] font-medium text-success-700 bg-success-50 dark:bg-success-950/40 dark:text-success-300 border border-success-200 dark:border-success-800">
+                                    {{ t('widgets.subscription.renameEditor.renamed') }}
                                 </span>
-                                <span v-else class="text-[10px] opacity-75">未匹配(保持原样)</span>
+                                <span v-else class="text-[10px] opacity-75">{{ t('widgets.subscription.renameEditor.unmatched') }}</span>
                             </div>
-                            <div v-if="!item.isDropped" class="font-mono font-bold text-xs" :class="item.isChanged ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">
+                            <div v-if="!item.isDropped" class="font-mono font-medium text-xs" :class="item.isChanged ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'">
                                 ↳ {{ item.modified }}
                             </div>
                         </div>
@@ -545,24 +548,24 @@ const clearRules = () => {
                             name="customTestInput"
                             type="text"
                             class="input-modern w-full font-mono text-xs py-1.5"
-                            placeholder="输入要测试的原节点名"
+                            :placeholder="t('widgets.subscription.renameEditor.customPlaceholder')"
                         />
                     </div>
-                    <div class="rounded-element bg-white/80 p-2.5 dark:bg-white/10">
+                    <div class="rounded-md border border-gray-200 bg-white p-2.5 dark:border-white/10 dark:bg-white/5">
                         <div class="flex items-center justify-between text-[11px] font-medium text-gray-500 dark:text-gray-400">
                             <span>{{ t('widgets.subscription.renameEditor.sampleOutput') }}:</span>
-                            <span v-if="customTestResult.isDropped" class="rounded bg-danger-100 px-1.5 py-0.2 text-[10px] font-bold text-danger-600 dark:bg-danger-900/40 dark:text-danger-300">
-                                🚫 节点全量清空 (将被自动丢弃)
+                            <span v-if="customTestResult.isDropped" class="rounded px-1.5 py-0.5 text-[10px] font-medium text-danger-700 bg-danger-50 dark:bg-danger-950/40 dark:text-danger-300 border border-danger-200 dark:border-danger-800">
+                                {{ t('widgets.subscription.renameEditor.droppedNotice') }}
                             </span>
-                            <span v-else-if="customTestInput && customTestResult.result !== customTestInput" class="text-success-600 dark:text-success-400 text-[10px]">
-                                ✨ {{ t('widgets.subscription.renameEditor.modified') }}
+                            <span v-else-if="customTestInput && customTestResult.result !== customTestInput" class="rounded px-1.5 py-0.5 text-[10px] font-medium text-success-700 bg-success-50 dark:bg-success-950/40 dark:text-success-300 border border-success-200 dark:border-success-800">
+                                {{ t('widgets.subscription.renameEditor.modified') }}
                             </span>
                         </div>
                         <div
-                            class="mt-1 font-mono text-xs font-bold break-all"
+                            class="mt-1 font-mono text-xs font-semibold break-all"
                             :class="customTestResult.isDropped ? 'text-danger-500' : (customTestResult.result !== customTestInput ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300')"
                         >
-                            {{ customTestResult.isDropped ? '(节点被完全删除，不输出到订阅)' : (customTestResult.result || t('widgets.subscription.renameEditor.noResult')) }}
+                            {{ customTestResult.isDropped ? t('widgets.subscription.renameEditor.completelyDropped') : (customTestResult.result || t('widgets.subscription.renameEditor.noResult')) }}
                         </div>
                     </div>
                 </div>

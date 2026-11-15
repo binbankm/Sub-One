@@ -97,15 +97,15 @@ onUnmounted(() => {
                 class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4"
                 @click="emit('update:show', false)"
             >
-                <Transition name="scale-fade-bounce">
+                <Transition name="scale-fade">
                     <div
                         v-if="show"
-                        class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-card border border-gray-300 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/80"
+                        class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-card border border-gray-200 bg-white text-left shadow-modal dark:border-white/10 dark:bg-black/80"
                         @click.stop
                     >
                         <!-- 标题 -->
                         <div class="shrink-0 p-6 pb-4">
-                            <h3 class="gradient-text text-xl font-bold">{{ t('widgets.node.detailsModal.title') }}</h3>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ t('widgets.node.detailsModal.title') }}</h3>
                         </div>
 
                         <!-- 内容 -->
@@ -164,7 +164,7 @@ onUnmounted(() => {
                                             type="text"
                                             :placeholder="t('widgets.node.detailsModal.searchPlaceholder')"
                                             class="search-input-unified w-full"
-                                            :aria-label="t('widgets.node.detailsModal.searchPlaceholder') || '搜索节点'"
+                                            :aria-label="t('widgets.node.detailsModal.searchPlaceholder')"
                                         />
                                         <svg
                                             class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -212,7 +212,7 @@ onUnmounted(() => {
 
                                         <button
                                             :disabled="selectedNodes.size === 0"
-                                            class="transform rounded-element bg-linear-to-r from-success-500 to-success-600 px-4 py-2 text-sm text-white shadow-elevated transition-all duration-300 hover:scale-105 hover:from-success-600 hover:to-success-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-50"
+                                            class="btn-modern-enhanced btn-primary px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                                             @click="copySelectedNodes"
                                         >
                                             {{ t('widgets.node.detailsModal.copySelected') }}
@@ -260,7 +260,7 @@ onUnmounted(() => {
                                                     selectedNodes.size < filteredNodes.length
                                                 "
                                                 class="h-4 w-4 rounded border-gray-300 text-primary-600"
-                                                aria-label="全选节点"
+                                                :aria-label="t('common.ui.batch.selectAll')"
                                                 @change="toggleSelectAll"
                                             />
                                             <span
@@ -315,7 +315,7 @@ onUnmounted(() => {
                                                                         selectedNodes.has(node.id)
                                                                     "
                                                                     class="peer h-5 w-5 cursor-pointer appearance-none rounded-element border-2 border-gray-300 transition-colors checked:border-primary-500 checked:bg-primary-500 dark:border-white/10"
-                                                                    aria-label="选择节点"
+                                                                    :aria-label="t('widgets.node.manualCard.selectNode')"
                                                                     @change="
                                                                         toggleNodeSelection(node.id)
                                                                     "
@@ -342,7 +342,7 @@ onUnmounted(() => {
                                                         >
                                                             <!-- 协议标签 -->
                                                             <span
-                                                                class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold tracking-wide uppercase shadow-elevated-sm"
+                                                                class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase shadow-elevated-sm font-mono"
                                                                 :class="[
                                                                     getProtocolInfo(node.protocol)
                                                                         .bg,
@@ -351,14 +351,6 @@ onUnmounted(() => {
                                                                     'bg-opacity-10 dark:bg-opacity-20 border-transparent'
                                                                 ]"
                                                             >
-                                                                <span
-                                                                    class="text-sm font-normal drop-shadow-elevated-sm filter"
-                                                                    >{{
-                                                                        getProtocolInfo(
-                                                                            node.protocol
-                                                                        ).icon
-                                                                    }}</span
-                                                                >
                                                                 <span>{{
                                                                     getProtocolInfo(node.protocol)
                                                                         .text

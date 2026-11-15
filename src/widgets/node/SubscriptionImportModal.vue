@@ -64,8 +64,8 @@ const vFocus = {
     >
         <template #title>
             <div class="flex flex-col gap-1">
-                <h3 class="gradient-text text-lg font-bold">{{ t('widgets.node.importModal.title') }}</h3>
-                <p class="text-xs font-normal text-gray-400">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('widgets.node.importModal.title') }}</h3>
+                <p class="text-xs font-normal text-gray-500 dark:text-gray-400">
                     {{ t('widgets.node.importModal.subtitle') }}
                 </p>
             </div>
@@ -132,7 +132,7 @@ const vFocus = {
                         type="file"
                         class="hidden"
                         accept=".yaml,.yml,.txt,.json,.conf"
-                        aria-label="导入文件"
+                        :aria-label="t('widgets.node.subscriptionImportModal.uploadTitle')"
                         @change="handleFileSelect"
                     />
 

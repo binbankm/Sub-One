@@ -46,19 +46,10 @@ const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
         <!-- ==================== 主要内容区域 ==================== -->
         <div class="relative z-10">
             <!-- 装饰性分割线 - 带中心点 -->
-            <div class="mb-4 flex items-center justify-center space-x-4">
-                <!-- 左侧渐变线 -->
-                <div
-                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-white/10"
-                ></div>
-                <!-- 中心装饰点 - 渐变色圆点 -->
-                <div
-                    class="h-2 w-2 rounded-full bg-linear-to-r from-primary-500 to-secondary-600"
-                ></div>
-                <!-- 右侧渐变线 -->
-                <div
-                    class="h-px w-8 bg-linear-to-r from-transparent via-gray-300 to-transparent dark:via-white/10"
-                ></div>
+            <div class="mb-4 flex items-center justify-center space-x-3">
+                <div class="h-px w-8 bg-gray-200 dark:bg-white/10"></div>
+                <div class="h-1.5 w-1.5 rounded-full bg-primary-500/70"></div>
+                <div class="h-px w-8 bg-gray-200 dark:bg-white/10"></div>
             </div>
 
             <!-- ==================== 版权信息 ==================== -->
@@ -70,7 +61,7 @@ const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
                 <a
                     href="https://github.com/binbankm/Sub-One"
                     target="_blank"
-                    class="gradient-text font-bold transition-opacity duration-300 hover:opacity-80"
+                    class="font-semibold text-gray-700 transition-colors hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
                 >
                     Sub-One Manager
                 </a>
@@ -104,27 +95,21 @@ const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
             <div
                 class="mt-3 flex items-center justify-center space-x-6 text-xs text-gray-400 dark:text-gray-500"
             >
-                <!-- 安全可靠标签 - 绿色脉冲指示灯 -->
-                <span class="flex items-center space-x-1">
-                    <div class="h-2 w-2 animate-pulse rounded-full bg-success-400"></div>
+                <!-- 安全可靠标签 -->
+                <span class="flex items-center space-x-1.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-success-500"></span>
                     <span>{{ t('layout.footer.secure') }}</span>
                 </span>
 
-                <!-- 高效管理标签 - 蓝色脉冲指示灯（延迟0.5s） -->
-                <span class="flex items-center space-x-1">
-                    <div
-                        class="h-2 w-2 animate-pulse rounded-full bg-info-400"
-                        style="animation-delay: 0.5s"
-                    ></div>
+                <!-- 高效管理标签 -->
+                <span class="flex items-center space-x-1.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-info-500"></span>
                     <span>{{ t('layout.footer.efficient') }}</span>
                 </span>
 
-                <!-- 隐私保护标签 - 紫色脉冲指示灯（延迟1s） -->
-                <span class="flex items-center space-x-1">
-                    <div
-                        class="h-2 w-2 animate-pulse rounded-full bg-secondary-400"
-                        style="animation-delay: 1s"
-                    ></div>
+                <!-- 隐私保护标签 -->
+                <span class="flex items-center space-x-1.5">
+                    <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
                     <span>{{ t('layout.footer.privacy') }}</span>
                 </span>
             </div>

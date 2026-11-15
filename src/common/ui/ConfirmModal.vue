@@ -73,9 +73,9 @@ const colorClasses = {
         iconBg: 'bg-danger-100 dark:bg-danger-900/30'
     },
     warning: {
-        title: 'text-yellow-500 dark:text-yellow-400',
-        icon: 'text-yellow-500 dark:text-yellow-400',
-        iconBg: 'bg-yellow-100 dark:bg-yellow-900/30'
+        title: 'text-warning-500 dark:text-warning-400',
+        icon: 'text-warning-500 dark:text-warning-400',
+        iconBg: 'bg-warning-100 dark:bg-warning-900/30'
     },
     info: {
         title: 'text-info-500 dark:text-info-400',
@@ -150,6 +150,7 @@ const handleCancel = () => {
         :show="props.show"
         :confirm-text="props.confirmText || t('common.ui.confirm.confirm')"
         :cancel-text="props.cancelText || t('common.ui.confirm.cancel')"
+        :confirm-type="props.type === 'danger' ? 'danger' : 'primary'"
         @update:show="handleCancel"
         @confirm="handleConfirm"
     >

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
@@ -36,7 +36,41 @@ const SubscriptionModal = defineAsyncComponent(() => import('@/widgets/subscript
 const dataStore = useDataStore();
 const { subscriptions } = storeToRefs(dataStore);
 const { t } = useI18n();
-const filteredSubscriptions = computed(() => subscriptions.value);
+
+const searchQuery = ref('');
+const activeFilter = ref<'all' | 'enabled' | 'disabled' | 'warning'>('all');
+
+const filteredSubscriptions = computed(() => {
+    let result = subscriptions.value;
+
+    if (searchQuery.value.trim()) {
+        const query = searchQuery.value.trim().toLowerCase();
+        result = result.filter(
+            (s) =>
+                s.name.toLowerCase().includes(query) ||
+                (s.url && s.url.toLowerCase().includes(query))
+        );
+    }
+
+    if (activeFilter.value === 'enabled') {
+        result = result.filter((s) => s.enabled);
+    } else if (activeFilter.value === 'disabled') {
+        result = result.filter((s) => !s.enabled);
+    } else if (activeFilter.value === 'warning') {
+        const nowSec = Math.floor(Date.now() / 1000);
+        result = result.filter((s) => {
+            if (!s.userInfo) return false;
+            const expire = s.userInfo.expire;
+            const isExpiring = expire && expire > 0 && Math.ceil((expire - nowSec) / 86400) <= 7;
+            const used = (s.userInfo.upload || 0) + (s.userInfo.download || 0);
+            const total = s.userInfo.total || 0;
+            const isHighTraffic = total > 0 && (used / total) >= 0.8;
+            return isExpiring || isHighTraffic;
+        });
+    }
+
+    return result;
+});
 
 // Hooks: Subscription Management
 const {
@@ -131,99 +165,128 @@ useTabActionTrigger(
 </script>
 
 <template>
-    <div class="w-full">
-        <div class="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex-1"></div>
-            <div class="ml-auto flex flex-wrap items-center gap-2">
-                <!-- 主要操作按钮 -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <button
-                        class="btn-modern-enhanced btn-add transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-5 sm:py-2.5 sm:text-sm"
-                        @click="handleAddSubscription"
+    <div class="w-full space-y-5">
+        <!-- 顶部操作与筛选栏 -->
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <!-- 搜索框与状态筛选 -->
+            <div class="flex flex-1 flex-wrap items-center gap-2 sm:gap-3">
+                <div class="relative w-full sm:w-60">
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        :placeholder="t('views.subscriptions.searchPlaceholder')"
+                        :aria-label="t('views.subscriptions.searchPlaceholder')"
+                        class="search-input-unified"
+                    />
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                     >
-                        {{ t('views.subscriptions.addBtn') }}
-                    </button>
-
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                     <button
-                        :disabled="isUpdatingAllSubs"
-                        class="btn-modern-enhanced btn-update flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
-                        @click="handleUpdateAllSubscriptions"
+                        v-if="searchQuery"
+                        type="button"
+                        class="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        :title="t('views.profiles.clearSearch')"
+                        :aria-label="t('views.profiles.clearSearch')"
+                        @click="searchQuery = ''"
                     >
-                        <svg
-                            v-if="isUpdatingAllSubs"
-                            class="h-4 w-4 animate-spin sm:h-5 sm:w-5"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                                fill="none"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span class="hidden sm:inline">{{
-                            isUpdatingAllSubs ? t('views.subscriptions.updating') : t('views.subscriptions.updateAllBtn')
-                        }}</span>
-                        <span class="sm:hidden">{{ t('views.subscriptions.updateShortBtn') }}</span>
-                    </button>
-
-                    <button
-                        v-if="isSortingSubs && hasUnsavedSortChanges"
-                        class="btn-modern-enhanced btn-primary flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
-                        @click="handleSortSave"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4 sm:h-5 sm:w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                            />
-                        </svg>
-                        <span class="hidden sm:inline">{{ t('views.subscriptions.saveSortBtn') }}</span>
-                    </button>
-                    <button
-                        :class="
-                            isSortingSubs
-                                ? 'btn-modern-enhanced btn-sort sorting flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                                : 'btn-modern-enhanced btn-sort flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm'
-                        "
-                        @click="handleToggleSort"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4 sm:h-5 sm:w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 8h16M4 16h16"
-                            />
-                        </svg>
-                        <span class="hidden sm:inline">{{
-                            isSortingSubs ? t('views.subscriptions.sorting') : t('views.subscriptions.manualSortBtn')
-                        }}</span>
-                        <span class="sm:hidden">{{ t('views.subscriptions.sortShortBtn') }}</span>
                     </button>
                 </div>
+
+                <!-- 状态筛选 Pills -->
+                <div class="flex items-center rounded-element bg-gray-100 p-0.5 dark:bg-white/5 text-xs font-medium">
+                    <button
+                        type="button"
+                        class="rounded px-2.5 py-1 transition-all"
+                        :class="activeFilter === 'all' ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'"
+                        @click="activeFilter = 'all'"
+                    >
+                        {{ t('views.subscriptions.filterAll', { count: subscriptions.length }) }}
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded px-2.5 py-1 transition-all"
+                        :class="activeFilter === 'enabled' ? 'bg-white dark:bg-white/10 text-primary-600 dark:text-primary-400 shadow-xs' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'"
+                        @click="activeFilter = 'enabled'"
+                    >
+                        {{ t('views.subscriptions.filterOnline', { count: subscriptions.filter(s => s.enabled).length }) }}
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded px-2.5 py-1 transition-all"
+                        :class="activeFilter === 'warning' ? 'bg-white dark:bg-white/10 text-amber-600 dark:text-amber-400 shadow-xs' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'"
+                        @click="activeFilter = 'warning'"
+                    >
+                        {{ t('views.subscriptions.filterWarning') }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- 操作按钮组 -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    class="btn-modern-enhanced btn-add px-3.5 py-2 font-medium"
+                    @click="handleAddSubscription"
+                >
+                    {{ t('views.subscriptions.addBtn') }}
+                </button>
+
+                <button
+                    :disabled="isUpdatingAllSubs"
+                    class="btn-modern-enhanced btn-secondary flex items-center gap-1.5 px-3 py-2 font-medium disabled:opacity-50"
+                    @click="handleUpdateAllSubscriptions"
+                >
+                    <svg
+                        v-if="isUpdatingAllSubs"
+                        class="h-4 w-4 animate-spin text-primary-600"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                            fill="none"
+                        ></circle>
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                    </svg>
+                    <span class="hidden sm:inline">{{
+                        isUpdatingAllSubs ? t('views.subscriptions.updating') : t('views.subscriptions.updateAllBtn')
+                    }}</span>
+                    <span class="sm:hidden">{{ t('views.subscriptions.updateShortBtn') }}</span>
+                </button>
+
+                <button
+                    v-if="isSortingSubs && hasUnsavedSortChanges"
+                    class="btn-modern-enhanced btn-primary px-3 py-2 font-medium"
+                    @click="handleSortSave"
+                >
+                    {{ t('views.subscriptions.saveSortBtn') }}
+                </button>
+
+                <button
+                    :class="[
+                        'btn-modern-enhanced btn-sort px-3 py-2 font-medium',
+                        isSortingSubs ? 'sorting' : ''
+                    ]"
+                    @click="handleToggleSort"
+                >
+                    {{ isSortingSubs ? t('views.subscriptions.sorting') : t('views.subscriptions.manualSortBtn') }}
+                </button>
 
                 <MoreMenu
                     :items="subsMoreMenuItems"

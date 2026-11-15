@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
 import { storeToRefs } from 'pinia';
@@ -18,13 +19,17 @@ defineEmits<{
     (e: 'add-node'): void;
     (e: 'add-profile'): void;
 }>();
+const router = useRouter();
+const navigateTo = (path: string) => {
+    router.push(path);
+};
 const { showToast } = useToastStore();
 const dataStore = useDataStore();
 const { activeSubscriptions, manualNodes, profiles, totalNodeCount, activeNodeCount } =
     storeToRefs(dataStore);
 
 // Computed for Display
-const { t, tm } = useI18n();
+const { t } = useI18n();
 const activeProfilesCount = computed(() => profiles.value.filter((p: Profile) => p.enabled).length);
 interface SoonestExpire {
     name: string;
@@ -108,44 +113,6 @@ const handleUpdateAll = async () => {
     }
 };
 
-const quotes = computed(() => tm('views.dashboard.quotes') as any[]);
-
-const currentQuoteIndex = ref(0);
-const currentQuote = computed(() => quotes.value[currentQuoteIndex.value] || quotes.value[0]);
-const isRefreshing = ref(false);
-
-/** 获取随机语录（避免重复） */
-const getRandomQuoteIndex = () => {
-    let newIndex;
-    do {
-        newIndex = Math.floor(Math.random() * quotes.value.length);
-    } while (newIndex === currentQuoteIndex.value && quotes.value.length > 1);
-    return newIndex;
-};
-
-/** 刷新语录 */
-const refreshQuote = () => {
-    isRefreshing.value = true;
-    setTimeout(() => {
-        currentQuoteIndex.value = getRandomQuoteIndex();
-        isRefreshing.value = false;
-    }, 300);
-};
-
-const quoteCategoryClass = computed(() => {
-    const cat = currentQuote.value.category;
-    if (['Inspirational', '励志'].includes(cat)) {
-        return 'border-yellow-400/30 bg-yellow-400/20 text-yellow-700 dark:text-yellow-300';
-    }
-    if (['Technical', '技术'].includes(cat)) {
-        return 'border-info-400/30 bg-info-400/20 text-info-700 dark:text-info-300';
-    }
-    if (['Humor', '幽默'].includes(cat)) {
-        return 'border-success-400/30 bg-success-400/20 text-success-700 dark:text-success-300';
-    }
-    return 'border-primary-400/30 bg-primary-400/20 text-primary-700 dark:text-primary-300';
-});
-
 const uiStore = useUIStore();
 interface CronLogItem {
     id: string;
@@ -182,116 +149,25 @@ const openSettingsModal = () => {
 };
 
 onMounted(() => {
-    currentQuoteIndex.value = getRandomQuoteIndex();
     loadDashboardCronLogs();
 });
 </script>
 
 <template>
     <div class="space-y-6">
-        <!-- 励志语录卡片 -->
+        <!-- 全局聚合流量与到期概览卡片 (置顶作为核心指标条) -->
         <div
-            class="card-glass group relative overflow-hidden rounded-card p-6 shadow-elevated transition-all duration-500 hover:shadow-card"
-        >
-            <div class="relative z-10">
-                <!-- 标题栏 -->
-                <div class="mb-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="flex h-9 w-9 items-center justify-center rounded-element border border-gray-300 bg-gray-100 backdrop-blur-md dark:border-white/10 dark:bg-white/10"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-secondary-600 dark:text-secondary-300"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                                />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-gray-800 dark:text-white">
-                                {{ t('views.dashboard.dailyQuote') }}
-                            </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('views.dashboard.dailyInspiration') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- 分类标签和刷新按钮 -->
-                    <div class="flex items-center gap-2">
-                        <span
-                            class="rounded-element border px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-all duration-300"
-                            :class="quoteCategoryClass"
-                        >
-                            {{ currentQuote.category }}
-                        </span>
-
-                        <button
-                            :disabled="isRefreshing"
-                            class="flex h-8 w-8 items-center justify-center rounded-element border border-gray-300 bg-white/30 text-gray-700 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/50 active:scale-95 disabled:opacity-50 dark:border-white/10 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20"
-                            :title="t('views.dashboard.nextQuote')"
-                            @click="refreshQuote"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="h-4 w-4 transition-transform duration-500"
-                                :class="{ 'rotate-180': isRefreshing }"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 语录内容 -->
-                <div :key="currentQuote.text" class="quote-content animate-fadeIn">
-                    <blockquote class="my-3">
-                        <p
-                            class="mb-2 text-center text-lg leading-relaxed font-semibold text-gray-800 md:text-xl dark:text-white"
-                        >
-                            "{{ currentQuote.text }}"
-                        </p>
-                        <footer class="flex items-center gap-2">
-                            <div class="h-px flex-1 bg-gray-300/30 dark:bg-white/10"></div>
-                            <cite
-                                class="text-xs font-medium text-gray-600 not-italic dark:text-gray-400"
-                            >
-                                {{ currentQuote.author }}
-                            </cite>
-                            <div class="h-px flex-1 bg-gray-300/30 dark:bg-white/10"></div>
-                        </footer>
-                    </blockquote>
-                </div>
-            </div>
-        </div>
-
-        <!-- 全局聚合流量与到期概览卡片 -->
-        <div
-            class="card-glass group relative overflow-hidden rounded-card p-5 shadow-elevated transition-all duration-300 hover:shadow-card"
+            class="card-glass group relative overflow-hidden rounded-card p-5 shadow-sm transition-all duration-200"
         >
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <!-- 左侧：全局流量汇总进度 -->
                 <div class="flex-1 space-y-2">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
-                                📊
+                            <span class="flex h-7 w-7 items-center justify-center rounded-element bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
                             </span>
                             <span class="text-sm font-bold text-gray-900 dark:text-white">
                                 {{ t('views.dashboard.trafficOverview') }}
@@ -312,7 +188,7 @@ onMounted(() => {
                     <!-- 进度条 -->
                     <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200/80 dark:bg-white/10">
                         <div
-                            class="h-full rounded-full transition-all duration-1000"
+                            class="h-full rounded-full transition-all duration-700"
                             :class="trafficSummary.colorClass"
                             :style="{ width: `${trafficSummary.percentage}%` }"
                         ></div>
@@ -331,10 +207,15 @@ onMounted(() => {
                 <!-- 右侧：到期提醒状态 -->
                 <div class="flex items-center gap-3 md:min-w-60">
                     <div
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-button text-lg"
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-element"
                         :class="trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? 'bg-danger-500/10 text-danger-500 dark:bg-danger-500/20' : 'bg-success-500/10 text-success-500 dark:bg-success-500/20'"
                     >
-                        {{ trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? '⚠️' : '🛡️' }}
+                        <svg v-if="trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
                     </div>
                     <div>
                         <div class="text-xs font-bold" :class="trafficSummary.soonestExpireSub && trafficSummary.soonestExpireSub.daysLeft <= 7 ? 'text-danger-600 dark:text-danger-400' : 'text-gray-800 dark:text-gray-200'">
@@ -351,7 +232,7 @@ onMounted(() => {
                             </template>
                         </div>
                         <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                            {{ activeSubscriptions.length }} 个活跃订阅源实时在线
+                            {{ t('views.dashboard.activeSubsOnline', { count: activeSubscriptions.length }) }}
                         </p>
                     </div>
                 </div>
@@ -400,43 +281,53 @@ onMounted(() => {
                         />
                     </div>
 
-                    <!-- 详细指标 -->
-                    <div class="grid w-full grid-cols-2 gap-4 sm:w-1/2">
+                    <!-- 详细指标 (可点击跳转对应页面) -->
+                    <div class="grid w-full grid-cols-2 gap-3 sm:w-1/2">
                         <div
-                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                            class="group cursor-pointer rounded-element border border-gray-200 bg-white/70 p-3.5 shadow-xs transition-all duration-200 hover:border-primary-500/50 hover:bg-white hover:shadow-sm dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            @click="navigateTo('/subscriptions')"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('views.dashboard.activeSubscriptions') }}
+                            <div class="mb-1 flex items-center justify-between text-xs text-gray-500 transition-colors group-hover:text-primary-600 dark:text-gray-400 dark:group-hover:text-primary-400">
+                                <span>{{ t('views.dashboard.activeSubscriptions') }}</span>
+                                <span class="opacity-0 transition-opacity group-hover:opacity-100">&rarr;</span>
                             </div>
                             <div class="text-xl font-bold text-gray-900 dark:text-white">
                                 {{ activeSubscriptions.length }}
                             </div>
                         </div>
                         <div
-                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                            class="group cursor-pointer rounded-element border border-gray-200 bg-white/70 p-3.5 shadow-xs transition-all duration-200 hover:border-success-500/50 hover:bg-white hover:shadow-sm dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            @click="navigateTo('/nodes')"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('views.dashboard.activeNodes') }}
+                            <div class="mb-1 flex items-center justify-between text-xs text-gray-500 transition-colors group-hover:text-success-600 dark:text-gray-400 dark:group-hover:text-success-400">
+                                <span>{{ t('views.dashboard.activeNodes') }}</span>
+                                <span class="opacity-0 transition-opacity group-hover:opacity-100">&rarr;</span>
                             </div>
-                            <div class="text-xl font-bold text-success-500">
+                            <div class="text-xl font-bold text-success-600 dark:text-success-400">
                                 {{ activeNodeCount }}
                             </div>
                         </div>
                         <div
-                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                            class="group cursor-pointer rounded-element border border-gray-200 bg-white/70 p-3.5 shadow-xs transition-all duration-200 hover:border-secondary-500/50 hover:bg-white hover:shadow-sm dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            @click="navigateTo('/profiles')"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">{{ t('views.dashboard.profiles') }}</div>
-                            <div class="text-xl font-bold text-secondary-500">
+                            <div class="mb-1 flex items-center justify-between text-xs text-gray-500 transition-colors group-hover:text-secondary-600 dark:text-gray-400 dark:group-hover:text-secondary-400">
+                                <span>{{ t('views.dashboard.profiles') }}</span>
+                                <span class="opacity-0 transition-opacity group-hover:opacity-100">&rarr;</span>
+                            </div>
+                            <div class="text-xl font-bold text-secondary-600 dark:text-secondary-400">
                                 {{ profiles.length }}
                             </div>
                         </div>
                         <div
-                            class="rounded-button border border-gray-300 bg-white/50 p-4 shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                            class="group cursor-pointer rounded-element border border-gray-200 bg-white/70 p-3.5 shadow-xs transition-all duration-200 hover:border-warning-500/50 hover:bg-white hover:shadow-sm dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            @click="navigateTo('/nodes')"
                         >
-                            <div class="mb-1 text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('views.dashboard.manualNodes') }}
+                            <div class="mb-1 flex items-center justify-between text-xs text-gray-500 transition-colors group-hover:text-warning-600 dark:text-gray-400 dark:group-hover:text-warning-400">
+                                <span>{{ t('views.dashboard.manualNodes') }}</span>
+                                <span class="opacity-0 transition-opacity group-hover:opacity-100">&rarr;</span>
                             </div>
-                            <div class="text-xl font-bold text-warning-500">
+                            <div class="text-xl font-bold text-warning-600 dark:text-warning-400">
                                 {{ manualNodes.length }}
                             </div>
                         </div>
@@ -456,7 +347,7 @@ onMounted(() => {
                     ></div>
                     <div class="relative z-10">
                         <div
-                            class="mb-4 flex h-12 w-12 items-center justify-center rounded-button bg-info-500/10 text-info-600 transition-transform duration-300 group-hover:scale-110 dark:bg-info-500/20 dark:text-info-400"
+                            class="mb-4 flex h-12 w-12 items-center justify-center rounded-button bg-info-500/10 text-info-600 transition-colors duration-200 dark:bg-info-500/20 dark:text-info-400"
                         >
                             <svg
                                 v-if="!isUpdatingAllSubs"
@@ -640,7 +531,7 @@ onMounted(() => {
 
             <!-- 快捷操作按钮 (3个) -->
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-card dark:hover:border-primary-500/40"
                 @click="$emit('add-subscription')"
             >
                 <div
@@ -672,7 +563,7 @@ onMounted(() => {
             </button>
 
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-card dark:hover:border-primary-500/40"
                 @click="$emit('add-node')"
             >
                 <div
@@ -704,7 +595,7 @@ onMounted(() => {
             </button>
 
             <button
-                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-elevated-sm dark:hover:border-primary-800"
+                class="card-glass group flex min-h-30 items-center gap-4 rounded-card p-6 shadow-elevated-sm transition-all duration-300 hover:border-primary-200 hover:shadow-card dark:hover:border-primary-500/40"
                 @click="$emit('add-profile')"
             >
                 <div
@@ -737,27 +628,3 @@ onMounted(() => {
         </div>
     </div>
 </template>
-
-<style scoped>
-/* 语录淡入动画 */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.5s ease-out;
-}
-
-.quote-content:hover {
-    transform: scale(1.01);
-    transition: transform 0.3s ease;
-}
-</style>

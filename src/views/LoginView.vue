@@ -41,10 +41,7 @@ const router = useRouter();
 
 // 优先使用 Store 中的状态
 const actualIsSetup = computed(() => {
-    // 只有当 props.isSetup 显式为 true 时才使用，否则使用 store 状态
-    const result = props.isSetup === true || sessionStore.sessionState === 'needsSetup';
-    console.log('[LoginView] actualIsSetup:', result, 'sessionState:', sessionStore.sessionState, 'props.isSetup:', props.isSetup);
-    return result;
+    return props.isSetup === true || sessionStore.sessionState === 'needsSetup';
 });
 const actualLoginFunc = computed(() =>
     props.login ?? (actualIsSetup.value ? sessionStore.initializeSystem : sessionStore.login)
@@ -137,22 +134,22 @@ const handleSubmit = async () => {
 
 <template>
     <!-- 登录页面容器 -->
-    <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-3 sm:p-6">
+    <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-4 sm:p-6">
         <!-- ==================== 登录卡片 ==================== -->
         <div
-            class="animate-scale-in relative isolate mx-auto w-full max-w-full rounded-button border border-white/30 bg-white p-4 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(255,255,255,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl transition-all duration-300 sm:max-w-105 sm:rounded-card sm:p-10 dark:border-white/10 dark:bg-black/80 dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05),inset_0_1px_0_rgba(255,255,255,0.1)]"
+            class="card-glass relative isolate mx-auto w-full max-w-sm rounded-2xl border border-gray-200 p-6 shadow-xl sm:p-8 dark:border-white/10"
         >
             <!-- Logo 区域 -->
-            <div class="animate-fade-in-down mb-4 text-center sm:mb-6">
+            <div class="mb-6 text-center">
                 <!-- Logo 图标容器 -->
-                <div class="mb-3 flex justify-center sm:mb-5">
+                <div class="mb-4 flex justify-center">
                     <div
-                        class="from-primary-500 to-secondary-500 shadow-glow-primary flex h-14 w-14 animate-bounce items-center justify-center rounded-button bg-linear-to-br sm:h-16 sm:w-16"
+                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white shadow-sm"
                     >
                         <!-- 闪电图标 SVG -->
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-7 w-7 text-white drop-shadow-elevated-sm sm:h-8 sm:w-8"
+                            class="h-6 w-6 text-white"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -167,16 +164,16 @@ const handleSubmit = async () => {
                     </div>
                 </div>
 
-                <!-- 标题 - 渐变动画文字 -->
+                <!-- 标题 -->
                 <h1
-                    class="mb-1 text-2xl font-extrabold tracking-tight text-gray-900 sm:mb-2 sm:text-3xl dark:text-gray-50"
+                    class="mb-1 text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl dark:text-white"
                 >
-                    <span class="gradient-text-animated">Sub-One</span> Manager
+                    <span class="text-primary-600 dark:text-primary-400">Sub-One</span> Manager
                 </h1>
 
                 <!-- 副标题 -->
                 <p
-                    class="text-xs font-medium tracking-wide text-gray-600 sm:text-sm dark:text-gray-400"
+                    class="text-xs font-medium tracking-wide text-gray-500 sm:text-sm dark:text-gray-400"
                 >
                     {{ actualIsSetup ? t('views.login.setupSubtitle') : t('views.login.subtitle') }}
                 </p>
@@ -300,7 +297,8 @@ const handleSubmit = async () => {
                         <button
                             type="button"
                             class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none sm:right-4 dark:hover:text-gray-200"
-                            :title="showPassword ? '隐藏密码' : '显示密码'"
+                            :title="showPassword ? t('views.login.hidePassword') : t('views.login.showPassword')"
+                            :aria-label="showPassword ? t('views.login.hidePassword') : t('views.login.showPassword')"
                             @click="showPassword = !showPassword"
                         >
                             <svg
@@ -409,7 +407,8 @@ const handleSubmit = async () => {
                         <button
                             type="button"
                             class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none sm:right-4 dark:hover:text-gray-200"
-                            :title="showConfirmPassword ? '隐藏密码' : '显示密码'"
+                            :title="showConfirmPassword ? t('views.login.hidePassword') : t('views.login.showPassword')"
+                            :aria-label="showConfirmPassword ? t('views.login.hidePassword') : t('views.login.showPassword')"
                             @click="showConfirmPassword = !showConfirmPassword"
                         >
                             <svg
@@ -455,7 +454,7 @@ const handleSubmit = async () => {
                 <!-- ==================== 提交按钮 ==================== -->
                 <button
                     type="submit"
-                    class="login-button hover:shadow-glow-primary py-3 text-sm hover:scale-[1.01] sm:py-3.5 sm:text-base"
+                    class="login-button py-3 text-sm sm:py-3.5 sm:text-base"
                     :disabled="isLoading"
                 >
                     <!-- 正常状态 - 显示登录图标和文字 -->

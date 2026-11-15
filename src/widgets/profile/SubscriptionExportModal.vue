@@ -108,130 +108,132 @@ const handleCopy = async (option: (typeof exportOptions)[0]) => {
 </script>
 
 <template>
-    <Transition name="fade">
-        <div
-            v-if="show"
-            class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4 sm:p-6"
-            @click.self="emit('update:show', false)"
-        >
-            <!-- Backdrop -->
+    <Teleport to="body">
+        <Transition name="fade">
             <div
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
-                @click="emit('update:show', false)"
-            ></div>
-
-            <!-- Modal Card -->
-            <div
-                class="relative flex max-h-[85vh] w-full max-w-sm origin-center scale-100 transform flex-col overflow-hidden rounded-card border border-gray-300 bg-white text-left shadow-modal transition-all dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
+                v-if="show"
+                class="fixed inset-0 z-99 flex items-center justify-center bg-black/60 p-4 sm:p-6"
+                @click.self="emit('update:show', false)"
             >
-                <!-- Header -->
+                <!-- Modal Card -->
                 <div
-                    class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-white/10 dark:bg-white/5"
+                    class="relative flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-card border border-gray-300 bg-white text-left shadow-modal transition-all dark:border-white/10 dark:bg-black/60 dark:backdrop-blur-2xl"
                 >
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('widgets.profile.exportModal.title') }}</h3>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {{ profile.name }}
-                        </p>
-                    </div>
-                    <button
-                        class="rounded-element p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
-                        @click="close"
-                    >
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- List View -->
-                <div class="scrollbar-thin overflow-y-auto p-2">
-                    <div class="px-4 py-2">
-                        <div
-                            class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
-                        >
-                            <!-- eslint-disable-next-line vue/no-v-html -->
-                            <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400" v-html="t('widgets.profile.exportModal.tokenHint')"></p>
-                        </div>
-                    </div>
-
+                    <!-- Header -->
                     <div
-                        v-for="option in exportOptions"
-                        :key="option.name"
-                        class="group mx-2 mb-1 flex cursor-default items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 dark:hover:border-white/10 dark:hover:bg-white/5"
+                        class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5 dark:border-white/10 dark:bg-white/5"
                     >
-                        <!-- Left: Icon & Name -->
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-element bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-primary-600 group-hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-white/10 dark:group-hover:text-primary-400"
-                            >
-                                <svg
-                                    class="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('widgets.profile.exportModal.title') }}</h3>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {{ profile.name }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="rounded-element p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
+                            :aria-label="t('widgets.profile.exportModal.cancel')"
+                            @click="close"
+                        >
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
                                     stroke-width="2"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        :d="option.icon"
-                                    />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span
-                                    class="text-sm font-bold text-gray-700 transition-colors group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white"
-                                    >{{ option.name }}</span
-                                >
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- List View -->
+                    <div class="scrollbar-thin overflow-y-auto p-2">
+                        <div class="px-4 py-2">
+                            <div
+                                class="mb-2 rounded-element border border-warning-100 bg-warning-50 px-3 py-2 dark:border-warning-900/30 dark:bg-warning-900/20"
+                            >
+                                <!-- eslint-disable-next-line vue/no-v-html -->
+                                <p class="text-xs leading-relaxed text-warning-700 dark:text-warning-400" v-html="t('widgets.profile.exportModal.tokenHint')"></p>
                             </div>
                         </div>
 
-                        <!-- Right: Actions -->
-                        <div class="flex items-center gap-1">
-                            <!-- Copy Button -->
-                            <button
-                                class="rounded-element p-2.5 text-gray-400 transition-all hover:bg-primary-50 hover:text-primary-600 active:scale-95 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
-                                :title="t('widgets.profile.exportModal.copyLink')"
-                                @click="handleCopy(option)"
-                            >
-                                <svg
-                                    class="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    stroke-width="2"
+                        <div
+                            v-for="option in exportOptions"
+                            :key="option.name"
+                            class="group mx-2 mb-1 flex cursor-pointer items-center justify-between rounded-element border border-transparent px-4 py-3 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50 active:bg-gray-100 dark:hover:border-white/10 dark:hover:bg-white/5 dark:active:bg-white/10"
+                            :title="t('widgets.profile.exportModal.copyLink')"
+                            @click="handleCopy(option)"
+                        >
+                            <!-- Left: Icon & Name -->
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="flex h-10 w-10 items-center justify-center rounded-element bg-gray-50 text-gray-500 ring-1 ring-gray-900/5 transition-all duration-200 group-hover:bg-white group-hover:text-primary-600 group-hover:shadow-elevated-sm dark:bg-white/10 dark:text-gray-400 dark:ring-white/5 dark:group-hover:bg-white/10 dark:group-hover:text-primary-400"
                                 >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                    />
-                                </svg>
-                            </button>
+                                    <svg
+                                        class="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            :d="option.icon"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-sm font-bold text-gray-700 transition-colors group-hover:text-gray-900 dark:text-gray-200 dark:group-hover:text-white"
+                                        >{{ option.name }}</span
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Right: Actions -->
+                            <div class="flex items-center gap-1">
+                                <!-- Copy Button -->
+                                <button
+                                    type="button"
+                                    class="rounded-element p-2.5 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 dark:hover:bg-primary-900/30 dark:hover:text-primary-400"
+                                    :title="t('widgets.profile.exportModal.copyLink')"
+                                    :aria-label="t('widgets.profile.exportModal.copyLink')"
+                                    @click.stop="handleCopy(option)"
+                                >
+                                    <svg
+                                        class="h-5 w-5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Footer -->
-                <div
-                    class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-white/10 dark:bg-black/40"
-                >
-                    <button
-                        class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        @click="emit('update:show', false)"
+                    <!-- Footer -->
+                    <div
+                        class="border-t border-gray-100 bg-gray-50 p-4 text-center dark:border-white/10 dark:bg-black/40"
                     >
-                        {{ t('widgets.profile.exportModal.cancel') }}
-                    </button>
+                        <button
+                            class="text-sm font-medium text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                            @click="emit('update:show', false)"
+                        >
+                            {{ t('widgets.profile.exportModal.cancel') }}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </Transition>
+        </Transition>
+    </Teleport>
 </template>
 
 <style scoped>

@@ -28,19 +28,19 @@ const { t } = useI18n();
 const styleMap = {
     primary: {
         wrapper:
-            'border-primary-200 from-primary-50 to-secondary-50 dark:border-primary-800 dark:from-primary-900/20 dark:to-secondary-900/20',
+            'border-primary-200 bg-linear-to-r from-primary-50/80 to-secondary-50/80 dark:border-primary-800/50 dark:from-primary-950/20 dark:to-secondary-950/20',
         text: 'text-primary-700 dark:text-primary-300',
         badge: 'bg-primary-600'
     },
     secondary: {
         wrapper:
-            'border-secondary-200 from-secondary-50 to-pink-50 dark:border-secondary-800 dark:from-secondary-900/20 dark:to-pink-900/20',
+            'border-secondary-200 bg-linear-to-r from-secondary-50/80 to-pink-50/80 dark:border-secondary-800/50 dark:from-secondary-950/20 dark:to-pink-950/20',
         text: 'text-secondary-700 dark:text-secondary-300',
         badge: 'bg-secondary-600'
     },
     emerald: {
         wrapper:
-            'border-success-200 from-success-50 to-success-50 dark:border-success-800 dark:from-success-900/20 dark:to-success-900/20',
+            'border-success-200 bg-linear-to-r from-success-50/80 to-success-50/80 dark:border-success-800/50 dark:from-success-950/20 dark:to-success-950/20',
         text: 'text-success-700 dark:text-success-300',
         badge: 'bg-success-600'
     }
@@ -53,7 +53,7 @@ const accentStyles = computed(() => styleMap[props.accent]);
     <Transition name="slide-fade">
         <div
             v-if="visible"
-            class="mb-6 rounded-button border-2 bg-linear-to-r p-4 shadow-elevated"
+            class="mb-6 rounded-xl border p-3.5 shadow-sm"
             :class="accentStyles.wrapper"
         >
             <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
@@ -86,26 +86,26 @@ const accentStyles = computed(() => styleMap[props.accent]);
 
                 <div class="flex flex-wrap items-center gap-2">
                     <button
-                        class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        class="btn-modern-enhanced btn-secondary px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('select-all')"
                     >
                         {{ t('common.ui.batch.selectAll') }}
                     </button>
                     <button
-                        class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        class="btn-modern-enhanced btn-secondary px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('invert-selection')"
                     >
                         {{ t('common.ui.batch.invertSelection') }}
                     </button>
                     <button
-                        class="btn-modern-enhanced btn-secondary transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        class="btn-modern-enhanced btn-secondary px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('deselect-all')"
                     >
                         {{ t('common.ui.batch.clearSelection') }}
                     </button>
                     <button
                         :disabled="selectedCount === 0"
-                        class="btn-modern-enhanced btn-danger flex transform items-center gap-1 px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
+                        class="btn-modern-enhanced btn-danger flex items-center gap-1 px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('delete-selected')"
                     >
                         <svg
@@ -123,7 +123,7 @@ const accentStyles = computed(() => styleMap[props.accent]);
                         {{ deleteLabel || t('common.ui.batch.deleteSelected') }} ({{ selectedCount }})
                     </button>
                     <button
-                        class="btn-modern-enhanced btn-cancel transform px-3 py-1.5 text-xs font-semibold transition-all duration-300 hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
+                        class="btn-modern-enhanced btn-cancel px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm"
                         @click="emit('cancel')"
                     >
                         {{ t('common.ui.batch.cancel') }}

@@ -95,7 +95,7 @@ const features = [
         title: t('widgets.settings.help.features.convert_title'),
         desc: t('widgets.settings.help.features.convert_desc'),
         icon: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
-        color: 'from-warning-500 to-danger-600'
+        color: 'from-warning-500 to-warning-600'
     }
 ];
 </script>
@@ -110,11 +110,11 @@ const features = [
         <template #title>
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-10 w-10 items-center justify-center rounded-element bg-linear-to-br from-primary-500 to-secondary-600 shadow-elevated"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg border border-primary-200/80 bg-primary-50 text-primary-600 dark:border-primary-500/20 dark:bg-primary-500/10 dark:text-primary-400"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-white"
+                        class="h-5 w-5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -171,12 +171,12 @@ const features = [
                             <!-- 步骤 1 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-info-50 text-xl font-bold text-info-600 ring-4 ring-white transition-all duration-300 group-hover:bg-info-600 group-hover:text-white group-hover:shadow-elevated dark:bg-info-900/30 dark:text-info-400 dark:ring-black/50 dark:group-hover:bg-info-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-info-50 text-xl font-bold text-info-600 ring-4 ring-white transition-all duration-300 group-hover:bg-info-600 group-hover:text-white group-hover:shadow-elevated dark:bg-info-900/30 dark:text-info-400 dark:ring-gray-900/80 dark:group-hover:bg-info-500 dark:group-hover:text-white"
                                 >
                                     1
                                 </div>
                                 <div
-                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-info-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                                    class="flex-1 rounded-button border border-gray-200 bg-gray-50/70 p-5 shadow-xs transition-all duration-200 hover:border-gray-300 hover:bg-white hover:shadow-card dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/8"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
@@ -191,12 +191,12 @@ const features = [
                             <!-- 步骤 2 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-secondary-50 text-xl font-bold text-secondary-600 ring-4 ring-white transition-all duration-300 group-hover:bg-secondary-600 group-hover:text-white group-hover:shadow-elevated dark:bg-secondary-900/30 dark:text-secondary-400 dark:ring-black/50 dark:group-hover:bg-secondary-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-secondary-50 text-xl font-bold text-secondary-600 ring-4 ring-white transition-all duration-300 group-hover:bg-secondary-600 group-hover:text-white group-hover:shadow-elevated dark:bg-secondary-900/30 dark:text-secondary-400 dark:ring-gray-900/80 dark:group-hover:bg-secondary-500 dark:group-hover:text-white"
                                 >
                                     2
                                 </div>
                                 <div
-                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-secondary-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                                    class="flex-1 rounded-button border border-gray-200 bg-gray-50/70 p-5 shadow-xs transition-all duration-200 hover:border-gray-300 hover:bg-white hover:shadow-card dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/8"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
@@ -211,12 +211,12 @@ const features = [
                             <!-- 步骤 3 -->
                             <div class="group relative flex gap-6">
                                 <div
-                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-success-50 text-xl font-bold text-success-600 ring-4 ring-white transition-all duration-300 group-hover:bg-success-600 group-hover:text-white group-hover:shadow-elevated dark:bg-success-900/30 dark:text-success-400 dark:ring-black/50 dark:group-hover:bg-success-500 dark:group-hover:text-white"
+                                    class="flex h-14 w-14 shrink-0 items-center justify-center rounded-button bg-success-50 text-xl font-bold text-success-600 ring-4 ring-white transition-all duration-300 group-hover:bg-success-600 group-hover:text-white group-hover:shadow-elevated dark:bg-success-900/30 dark:text-success-400 dark:ring-gray-900/80 dark:group-hover:bg-success-500 dark:group-hover:text-white"
                                 >
                                     3
                                 </div>
                                 <div
-                                    class="flex-1 rounded-button border border-gray-300 bg-white p-5 shadow-elevated-sm transition-all duration-300 hover:border-success-200 hover:shadow-elevated-sm dark:border-white/10 dark:bg-white/5"
+                                    class="flex-1 rounded-button border border-gray-200 bg-gray-50/70 p-5 shadow-xs transition-all duration-200 hover:border-gray-300 hover:bg-white hover:shadow-card dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/8"
                                 >
                                     <h4
                                         class="mb-2 text-lg font-bold text-gray-900 dark:text-white"
@@ -236,11 +236,11 @@ const features = [
                             <div
                                 v-for="(feat, idx) in features"
                                 :key="idx"
-                                class="shadow-modern hover-lift group relative overflow-hidden rounded-button border border-gray-300 bg-white p-6 transition-all duration-300 dark:border-white/10 dark:bg-white/5"
+                                class="group relative overflow-hidden rounded-button border border-gray-200 bg-gray-50/70 p-6 shadow-xs transition-all duration-200 hover:border-gray-300 hover:bg-white hover:shadow-card dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/8"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-button bg-linear-to-br text-white shadow-elevated-sm transition-transform duration-300 group-hover:scale-110"
+                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-button bg-linear-to-br text-white shadow-elevated-sm"
                                         :class="feat.color"
                                     >
                                         <svg
@@ -280,19 +280,19 @@ const features = [
                             <div
                                 v-for="(item, index) in faqs"
                                 :key="index"
-                                class="overflow-hidden rounded-button border border-gray-300 bg-white transition-all duration-300 dark:border-white/10 dark:bg-white/5"
+                                class="overflow-hidden rounded-button border border-gray-200 bg-gray-50/70 shadow-xs transition-all duration-200 hover:border-gray-300 dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20"
                                 :class="{
-                                    'shadow-elevated-sm ring-1 ring-primary-500/50 dark:ring-primary-400/50':
+                                    'shadow-card ring-1 ring-primary-500/50 dark:ring-primary-400/50':
                                         activeFaqIndex === index
                                 }"
                             >
                                 <button
-                                    class="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/10"
+                                    class="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-white dark:hover:bg-white/10"
                                     @click="toggleFaq(index)"
                                 >
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="flex h-8 w-8 items-center justify-center rounded-element bg-gray-300 text-gray-500 transition-colors dark:bg-white/10 dark:text-gray-400"
+                                            class="flex h-8 w-8 items-center justify-center rounded-element bg-gray-100 text-gray-500 transition-colors dark:bg-white/10 dark:text-gray-400"
                                             :class="{
                                                 'bg-primary-100! text-primary-600! dark:bg-primary-900/30! dark:text-primary-400!':
                                                     activeFaqIndex === index
@@ -313,8 +313,8 @@ const features = [
                                             </svg>
                                         </div>
                                         <span class="font-bold text-gray-800 dark:text-gray-200">{{
-                                            item.q
-                                        }}</span>
+                                             item.q
+                                         }}</span>
                                     </div>
                                     <svg
                                         class="h-5 w-5 text-gray-400 transition-transform duration-300"
@@ -333,7 +333,7 @@ const features = [
                                 </button>
                                 <div
                                     v-show="activeFaqIndex === index"
-                                    class="border-t border-gray-100 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5"
+                                    class="border-t border-gray-200/80 bg-white p-5 dark:border-white/10 dark:bg-white/2"
                                 >
                                     <p class="text-sm leading-7 text-gray-600 dark:text-gray-300">
                                         {{ item.a }}

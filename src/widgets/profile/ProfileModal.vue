@@ -210,7 +210,7 @@ const { t } = useI18n();
                                 type="text"
                                 :placeholder="t('widgets.profile.modal.searchSubPlaceholder')"
                                 class="search-input-unified"
-                                :aria-label="t('widgets.profile.modal.searchSubPlaceholder') || '搜索订阅'"
+                                :aria-label="t('widgets.profile.modal.searchSubPlaceholder')"
                             />
                             <svg
                                 class="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -320,7 +320,7 @@ const { t } = useI18n();
                                 type="text"
                                 :placeholder="t('widgets.profile.modal.searchNodePlaceholder')"
                                 class="search-input-unified"
-                                :aria-label="t('widgets.profile.modal.searchNodePlaceholder') || '搜索节点'"
+                                :aria-label="t('widgets.profile.modal.searchNodePlaceholder')"
                             />
                             <svg
                                 class="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-gray-400"
