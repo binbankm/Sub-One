@@ -59,6 +59,7 @@ const protocols = [
     { label: 'HTTP', value: 'http' },
     { label: 'WireGuard', value: 'wireguard' },
     { label: 'Snell', value: 'snell' },
+    { label: 'NaiveProxy', value: 'naive' },
     { label: 'Reality', value: 'reality' }
 ];
 

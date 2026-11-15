@@ -2,6 +2,7 @@
  * Sub-One Sing-box Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
+import { normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -32,6 +33,7 @@ export class SingboxConverter extends BaseConverter {
                 tuic: 'tuic',
                 wireguard: 'wireguard',
                 ssh: 'ssh',
+                snell: 'snell',
                 anytls: 'anytls',
                 naive: 'http',
                 direct: 'direct',
@@ -138,7 +140,7 @@ export class SingboxConverter extends BaseConverter {
                     outbound.security = node.cipher || 'auto';
                     outbound.alter_id = node.alterId || 0;
                     if (isPresent(node, 'aead')) outbound.authenticated_length = node.aead;
-                    if (node.tls) this.appendTLS(outbound, node);
+                    if (node.tls || node['reality-opts']) this.appendTLS(outbound, node);
                     this.appendTransport(outbound, node);
                     break;
                 case 'vless':
@@ -177,11 +179,29 @@ export class SingboxConverter extends BaseConverter {
                     break;
                 case 'hysteria2':
                     outbound.password = node.password;
-                    if (node.obfs)
-                        outbound.obfs = {
-                            type: 'salamander',
-                            password: node['obfs-password'] || node.obfs
-                        };
+                    {
+                        const hy2ObfsPass =
+                            node['obfs-password'] ||
+                            (node.obfs && node.obfs !== 'salamander' ? node.obfs : undefined);
+                        if (hy2ObfsPass || node.obfs === 'salamander') {
+                            outbound.obfs = {
+                                type: 'salamander',
+                                password: hy2ObfsPass || ''
+                            };
+                        }
+                    }
+                    if (node.up || node['up-mbps']) {
+                        outbound.up_mbps =
+                            typeof node['up-mbps'] === 'number'
+                                ? node['up-mbps']
+                                : parseInt(String(node.up || '0').match(/\d+/)?.[0] || '0', 10);
+                    }
+                    if (node.down || node['down-mbps']) {
+                        outbound.down_mbps =
+                            typeof node['down-mbps'] === 'number'
+                                ? node['down-mbps']
+                                : parseInt(String(node.down || '0').match(/\d+/)?.[0] || '0', 10);
+                    }
                     // 端口跳跃
                     if (node.ports) {
                         outbound.server_ports = String(node.ports)
@@ -201,14 +221,17 @@ export class SingboxConverter extends BaseConverter {
                     break;
                 case 'tuic':
                     outbound.uuid = node.uuid;
-                    outbound.password = node.password;
+                    outbound.password = node.password || node.token;
                     if (node['congestion-controller'] && node['congestion-controller'] !== 'cubic')
                         outbound.congestion_control = node['congestion-controller'];
                     if (node['udp-relay-mode'] && node['udp-relay-mode'] !== 'native')
                         outbound.udp_relay_mode = node['udp-relay-mode'];
                     if (node['reduce-rtt']) outbound.zero_rtt_handshake = true;
-                    if (node['heartbeat-interval'])
-                        outbound.heartbeat = `${node['heartbeat-interval']}ms`;
+                    if (node['heartbeat-interval']) {
+                        const hi = String(node['heartbeat-interval']);
+                        outbound.heartbeat = /^\d+$/.test(hi) ? `${hi}ms` : hi;
+                    }
+                    if (node['udp-over-stream']) outbound.udp_over_stream = true;
                     this.appendTLS(outbound, node);
                     break;
                 case 'wireguard': {
@@ -222,14 +245,11 @@ export class SingboxConverter extends BaseConverter {
                     outbound.local_address = localAddr;
                     outbound.private_key = node['private-key'] || node.privateKey;
                     // reserved 字段处理
-                    if (typeof node.reserved === 'string') {
-                        outbound.reserved = node.reserved;
-                    } else if (Array.isArray(node.reserved)) {
-                        outbound.reserved = [...node.reserved];
-                    }
+                    const res = normalizeReserved(node.reserved);
+                    if (res) outbound.reserved = res;
                     // mtu
                     if (node.mtu) outbound.mtu = node.mtu;
-                    // 多 peers 结构
+                    // 多 peers 结构 vs 单 peer 结构
                     const wgPeers = node.peers;
                     if (wgPeers && wgPeers.length > 0) {
                         outbound.peers = wgPeers.map((p: any) => {
@@ -244,25 +264,49 @@ export class SingboxConverter extends BaseConverter {
                                     ),
                                     10
                                 ),
-                                public_key: p['public-key'],
+                                public_key: p['public-key'] || p.publicKey,
                                 allowed_ips: p['allowed-ips'] ||
                                     p.allowed_ips || ['0.0.0.0/0', '::/0']
                             };
-                            if (typeof p.reserved === 'string') {
-                                peer.reserved = [p.reserved];
-                            } else if (Array.isArray(p.reserved)) {
-                                peer.reserved = [...p.reserved];
-                            }
-                            if (p['pre-shared-key']) peer.pre_shared_key = p['pre-shared-key'];
+                            const pRes = normalizeReserved(p.reserved);
+                            if (pRes) peer.reserved = pRes;
+                            if (p['pre-shared-key'] || p['preshared-key'])
+                                peer.pre_shared_key = p['pre-shared-key'] || p['preshared-key'];
                             return peer;
                         });
+                        delete outbound.server;
+                        delete outbound.server_port;
                     } else {
-                        // 单 peer 简化结构
-                        outbound.peer_public_key = node['public-key'] || node.publicKey;
-                        if (node['pre-shared-key'] || node['preshared-key'])
-                            outbound.pre_shared_key =
-                                node['pre-shared-key'] || node['preshared-key'];
+                        // 单 peer 结构
+                        const firstPeer = wgPeers && wgPeers.length === 1 ? wgPeers[0] : null;
+                        if (!outbound.server && firstPeer) {
+                            outbound.server = firstPeer.server || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[0] : undefined);
+                        }
+                        if (!outbound.server_port && firstPeer) {
+                            outbound.server_port = parseInt(
+                                String(firstPeer.port || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[1] : 51820)),
+                                10
+                            );
+                        }
+                        outbound.peer_public_key =
+                            node['public-key'] || node.publicKey || firstPeer?.['public-key'] || (firstPeer as any)?.publicKey;
+                        const psk =
+                            node['pre-shared-key'] || node['preshared-key'] || firstPeer?.['pre-shared-key'] || (firstPeer as any)?.['preshared-key'];
+                        if (psk) outbound.pre_shared_key = psk;
+                        if (!outbound.reserved && firstPeer?.reserved) {
+                            const pRes = normalizeReserved(firstPeer.reserved);
+                            if (pRes) outbound.reserved = pRes;
+                        }
                     }
+                    break;
+                }
+                case 'snell': {
+                    outbound.psk = node.password;
+                    outbound.version = node.version || 4;
+                    const obfsMode = node['obfs-opts']?.mode || node.obfs;
+                    const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
+                    if (obfsMode) outbound.obfs_mode = obfsMode;
+                    if (obfsHost) outbound.obfs_host = obfsHost;
                     break;
                 }
                 case 'anytls':
@@ -349,7 +393,20 @@ export class SingboxConverter extends BaseConverter {
         if (!node.network || node.network === 'tcp') return;
 
         const transport: any = { type: node.network };
-        if (node.network === 'ws') {
+        if (
+            node.network === 'httpupgrade' ||
+            ((node as any).httpupgrade && node['xhttp-opts']?.mode !== 'stream-one')
+        ) {
+            transport.type = 'httpupgrade';
+            const opts = (node['httpupgrade-opts'] || node['ws-opts'] || {}) as any;
+            transport.path = opts.path || node['ws-path'] || '/';
+            const host = opts.host || opts.headers?.Host || node['ws-headers']?.Host;
+            if (host) transport.host = host;
+            const headers = { ...opts.headers };
+            delete headers.Host;
+            delete headers.host;
+            if (Object.keys(headers).length > 0) transport.headers = headers;
+        } else if (node.network === 'ws') {
             transport.path = node['ws-path'] || node['ws-opts']?.path || '/';
             transport.headers = node['ws-headers'] || node['ws-opts']?.headers || {};
             if (node['ws-opts']?.['max-early-data']) {
@@ -374,6 +431,14 @@ export class SingboxConverter extends BaseConverter {
                 if (xopts.host) transport.host = xopts.host;
                 if (xopts.headers) transport.headers = xopts.headers;
             }
+        } else if (node.network === 'kcp') {
+            transport.type = 'mkcp';
+            const kopts = node['kcp-opts'] || {};
+            if (kopts['header-type'] || node.headerType) {
+                transport.header = { type: kopts['header-type'] || node.headerType || 'none' };
+            }
+        } else if (node.network === 'quic') {
+            transport.type = 'quic';
         }
 
         outbound.transport = transport;

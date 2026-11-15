@@ -66,13 +66,16 @@ export function detectFormat(content: string): ContentFormat {
     // 特征：通常每行包含 = 和 , 且不是 Clash
     if (isPlatformFormat(trimmed)) {
         if (
-            /^.*=\s*(ss|shadowsocks|ssr|shadowsocksr|vmess|vless|trojan|http|https|snell|tuic|hysteria2|hy2|wireguard|wg),/i.test(
+            /^.*=\s*(ss|shadowsocks|ssr|shadowsocksr|vmess|vless|trojan|http|https|snell|tuic|tuic-v5|hysteria|hysteria2|hy|hy2|wireguard|wg|anytls),/i.test(
                 trimmed
             )
         ) {
-            return 'surge'; // or loon, they are similar enough to be distinguished later if needed
+            if (trimmed.includes('peers=') || trimmed.includes('interface-ip=')) {
+                return 'loon';
+            }
+            return 'surge';
         }
-        if (/^(shadowsocks|ss|vmess|vless|trojan|http|socks5)\s*=/i.test(trimmed)) {
+        if (/^(shadowsocks|ss|vmess|vless|trojan|http|socks5|anytls)\s*=/i.test(trimmed)) {
             return 'qx';
         }
     }
@@ -80,7 +83,7 @@ export function detectFormat(content: string): ContentFormat {
     // 6. URI 列表检测
     // 逻辑：包含常见协议头
     if (
-        /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy2|tuic|wg|wireguard|socks|http|https|snell|anytls|naive|naive\+https|naive\+http):\/\//im.test(
+        /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy|hy2|tuic|wg|wireguard|socks|socks5|http|https|snell|anytls|naive|naive\+https|naive\+http):\/\//im.test(
             trimmed
         )
     ) {

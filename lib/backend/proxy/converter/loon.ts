@@ -2,6 +2,7 @@
  * Sub-One Loon Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
+import { normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { Result, isPresent } from './utils';
 
@@ -253,48 +254,69 @@ export class LoonConverter extends BaseConverter {
     }
 
     private wireguard(proxy: ProxyNode): string {
-        const result = new Result(proxy);
-        result.append(`${proxy.name}=wireguard`);
-        result.appendIfPresent(`,interface-ip=${proxy.ip}`, 'ip');
-        result.appendIfPresent(`,interface-ipv6=${proxy.ipv6}`, 'ipv6');
+        const p = { ...proxy };
+        if (Array.isArray(p.peers) && p.peers.length > 0) {
+            const peer = p.peers[0];
+            if (peer.endpoint) {
+                const [server, port] = peer.endpoint.split(':');
+                p.server = server;
+                p.port = parseInt(port || '51820', 10);
+            } else {
+                if (peer.server) p.server = peer.server;
+                if (peer.port) p.port = parseInt(String(peer.port), 10);
+            }
+            if ((peer as any).ip) p.ip = (peer as any).ip;
+            if ((peer as any).ipv6) p.ipv6 = (peer as any).ipv6;
+            if (peer['public-key']) p['public-key'] = peer['public-key'];
+            if (peer['pre-shared-key']) p['pre-shared-key'] = peer['pre-shared-key'];
+            if (peer['allowed-ips']) p['allowed-ips'] = peer['allowed-ips'];
+            if (peer.reserved) p.reserved = peer.reserved;
+        }
+
+        const result = new Result(p);
+        result.append(`${p.name}=wireguard`);
+        result.appendIfPresent(`,interface-ip=${p.ip}`, 'ip');
+        result.appendIfPresent(`,interface-ipv6=${p.ipv6}`, 'ipv6');
         result.appendIfPresent(
-            `,private-key="${proxy['private-key'] || proxy.privateKey}"`,
+            `,private-key="${p['private-key'] || p.privateKey}"`,
             'private-key'
         );
-        result.appendIfPresent(`,mtu=${proxy.mtu}`, 'mtu');
+        result.appendIfPresent(`,mtu=${p.mtu}`, 'mtu');
         // DNS: 区分 IPv4 (dns=) 和 IPv6 (dnsv6=)
-        if (proxy.dns) {
+        if (p.dns) {
             let dns: string | undefined;
             let dnsv6: string | undefined;
-            if (Array.isArray(proxy.dns)) {
+            if (Array.isArray(p.dns)) {
                 const isIPv4 = (ip: string) => /^\d+\.\d+\.\d+\.\d+$/.test(ip);
                 const isIPv6 = (ip: string) => /^[\da-fA-F:]+$/.test(ip) && ip.includes(':');
-                dnsv6 = proxy.dns.find(isIPv6);
-                dns = proxy.dns.find(isIPv4);
-                if (!dns) dns = proxy.dns.find((i: string) => !isIPv4(i) && !isIPv6(i));
+                dnsv6 = p.dns.find(isIPv6);
+                dns = p.dns.find(isIPv4);
+                if (!dns) dns = p.dns.find((i: string) => !isIPv4(i) && !isIPv6(i));
             } else {
-                dns = String(proxy.dns);
+                dns = String(p.dns);
             }
             if (dns) result.append(`,dns=${dns}`);
             if (dnsv6) result.append(`,dnsv6=${dnsv6}`);
         }
         result.appendIfPresent(
-            `,keepalive=${proxy.keepalive || proxy['persistent-keepalive']}`,
+            `,keepalive=${p.keepalive || p['persistent-keepalive']}`,
             'keepalive'
         );
 
-        const publicKey = proxy['public-key'] || proxy.publicKey;
-        const allowedIps = proxy['allowed-ips'] || '0.0.0.0/0, ::/0';
-        const reserved = proxy.reserved
-            ? `,reserved=[${Array.isArray(proxy.reserved) ? proxy.reserved.join(',') : proxy.reserved}]`
+        const publicKey = p['public-key'] || p.publicKey;
+        const rawAllowed = p['allowed-ips'];
+        const allowedIps = Array.isArray(rawAllowed) ? rawAllowed.join(', ') : rawAllowed || '0.0.0.0/0, ::/0';
+        const resNums = normalizeReserved(p.reserved);
+        const reserved = resNums
+            ? `,reserved=[${resNums.join(',')}]`
             : '';
         const psk =
-            proxy['pre-shared-key'] || proxy['preshared-key']
-                ? `,preshared-key="${proxy['pre-shared-key'] || proxy['preshared-key']}"`
+            p['pre-shared-key'] || p['preshared-key']
+                ? `,preshared-key="${p['pre-shared-key'] || p['preshared-key']}"`
                 : '';
 
         result.append(
-            `,peers=[{public-key="${publicKey}",allowed-ips="${allowedIps}",endpoint=${proxy.server}:${proxy.port}${reserved}${psk}}]`
+            `,peers=[{public-key="${publicKey}",allowed-ips="${allowedIps}",endpoint=${p.server}:${p.port}${reserved}${psk}}]`
         );
 
         return result.toString();
@@ -305,7 +327,8 @@ export class LoonConverter extends BaseConverter {
         result.append(`${proxy.name}=hysteria,${proxy.server},${proxy.port},${proxy.auth || ''}`);
         result.appendIfPresent(`,up=${proxy.up}`, 'up');
         result.appendIfPresent(`,down=${proxy.down}`, 'down');
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,sni=${sni}`);
         if (proxy.obfs) result.append(`,obfs=${proxy.obfs}`);
         result.appendIfPresent(
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
@@ -319,13 +342,30 @@ export class LoonConverter extends BaseConverter {
         const result = new Result(proxy);
         result.append(`${proxy.name}=Hysteria2,${proxy.server},${proxy.port}`);
         result.appendIfPresent(`,"${proxy.password}"`, 'password');
-        result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,tls-name=${sni}`);
         result.appendIfPresent(
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
-        if (proxy.obfs === 'salamander' && proxy['obfs-password']) {
-            result.append(`,salamander-password=${proxy['obfs-password']}`);
+        result.appendIfPresent(
+            `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
+            'tls-fingerprint'
+        );
+        const down = proxy['down-mbps'] || proxy.down;
+        if (down) {
+            const downVal = String(down).match(/\d+/)?.[0] || '0';
+            result.append(`,download-bandwidth=${downVal}`);
+        }
+        const obfsPassword =
+            proxy['obfs-password'] ||
+            (proxy.obfs && proxy.obfs !== 'salamander' && proxy.obfs !== 'gecko' ? proxy.obfs : undefined);
+        if (obfsPassword || proxy.obfs === 'salamander') {
+            if (obfsPassword) result.append(`,salamander-password=${obfsPassword}`);
+        }
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn="${alpn}"`);
         }
         this.appendCommon(result, proxy);
         return result.toString();
@@ -333,17 +373,25 @@ export class LoonConverter extends BaseConverter {
 
     private tuic(proxy: ProxyNode): string {
         const result = new Result(proxy);
+        const pass = proxy.password || proxy.token || '';
         result.append(
-            `${proxy.name}=tuic,${proxy.server},${proxy.port},"${proxy.uuid}","${proxy.password}"`
+            `${proxy.name}=tuic,${proxy.server},${proxy.port},"${proxy.uuid || ''}","${pass}"`
         );
         result.appendIfPresent(
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,sni=${sni}`);
         if (proxy.alpn) {
             const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
             if (alpn) result.append(`,alpn=${alpn}`);
+        }
+        if (proxy['congestion-controller']) {
+            result.append(`,congestion-controller=${proxy['congestion-controller']}`);
+        }
+        if (proxy['udp-relay-mode']) {
+            result.append(`,udp-relay-mode=${proxy['udp-relay-mode']}`);
         }
         this.appendCommon(result, proxy);
         return result.toString();
@@ -354,6 +402,10 @@ export class LoonConverter extends BaseConverter {
         result.append(
             `${proxy.name}=snell,${proxy.server},${proxy.port},psk="${proxy.password}",version=${proxy.version || 4}`
         );
+        const obfs = proxy['obfs-opts']?.mode || proxy.obfs;
+        const obfsHost = proxy['obfs-opts']?.host || proxy['obfs-host'];
+        if (obfs) result.append(`,obfs=${obfs}`);
+        if (obfsHost) result.append(`,obfs-host=${obfsHost}`);
         return result.toString();
     }
 

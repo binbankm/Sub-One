@@ -5,7 +5,7 @@
  * 包含对 WireGuard 复杂格式的支持
  */
 import type { ProxyNode, ProxyType } from '../types';
-import { parsePort, randomId } from '../utils';
+import { normalizeReserved, parsePort, randomId } from '../utils';
 
 /**
  * 解析 Loon 代理行
@@ -124,6 +124,9 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
     const ip = getParam('interface-ip');
     const ipv6 = getParam('interface-ipv6');
     const mtu = getParam('mtu');
+    const keepalive = getParam('keepalive');
+    const dns = getParam('dns');
+    const dnsv6 = getParam('dnsv6');
 
     // 提取 peers 列表 (通常 Loon 只支持一个 peer 在这种简易模式下)
     const peersMatch = content.match(/peers\s*=\s*\[\s*\{\s*(.*?)\s*\}\s*\]/i);
@@ -131,7 +134,7 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
 
     const peerContent = peersMatch[1];
     const getPeerParam = (p: string) => {
-        const m = peerContent.match(new RegExp(`(?:,|^)\\s*${p}\\s*=\\s*([^,]+)`, 'i'));
+        const m = peerContent.match(new RegExp(`(?:,|^)\\s*${p}\\s*=\\s*(\\[[^\\]]*\\]|"[^"]*"|[^,]+)`, 'i'));
         return m ? m[1].trim().replace(/^"(.*)"$/, '$1') : undefined;
     };
 
@@ -139,6 +142,7 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
     const publicKey = getPeerParam('public-key');
     const psk = getPeerParam('preshared-key');
     const reservedStr = getPeerParam('reserved');
+    const allowedIpsStr = getPeerParam('allowed-ips');
 
     if (!endpoint) return null;
 
@@ -157,28 +161,35 @@ function parseLoonWireGuard(name: string, content: string): ProxyNode | null {
         ip,
         ipv6,
         mtu: mtu ? parseInt(mtu, 10) : undefined,
+        keepalive: keepalive ? parseInt(keepalive, 10) : undefined,
+        'persistent-keepalive': keepalive ? parseInt(keepalive, 10) : undefined,
         udp: true
     };
 
+    if (dns || dnsv6) {
+        const dnsList: string[] = [];
+        if (dns) dnsList.push(dns);
+        if (dnsv6) dnsList.push(dnsv6);
+        proxy.dns = dnsList.length === 1 ? dnsList[0] : dnsList;
+    }
+
+    if (allowedIpsStr) {
+        proxy['allowed-ips'] = allowedIpsStr.split(',').map((s) => s.trim().replace(/^"(.*)"$/, '$1')).filter(Boolean);
+    }
+
     if (reservedStr) {
-        try {
-            const reserved = JSON.parse(reservedStr.replace(/=/g, ':')); // 兼容 Loon 伪 JSON
-            if (Array.isArray(reserved)) proxy.reserved = reserved;
-        } catch {
-            // 尝试正则解析 [1, 2, 3]
-            const m = reservedStr.match(/\[(.*?)\]/);
-            if (m) {
-                proxy.reserved = m[1].split(',').map((n) => parseInt(n.trim(), 10));
-            }
-        }
+        proxy.reserved = normalizeReserved(reservedStr);
     }
 
     // 构造标准的 peers 数组
     proxy.peers = [
         {
+            server,
+            port,
             endpoint,
             'public-key': publicKey,
             'pre-shared-key': psk,
+            'allowed-ips': proxy['allowed-ips'] || ['0.0.0.0/0', '::/0'],
             reserved: proxy.reserved as number[]
         }
     ];
@@ -211,9 +222,18 @@ function smartSplit(str: string): string[] {
 
 function mapLoonParams(proxy: Partial<ProxyNode>, params: Record<string, string>) {
     if (params.password) proxy.password = params.password;
+    if (params.psk) proxy.password = params.psk;
+    if (params.version) proxy.version = parseInt(params.version, 10);
     if (params.username) proxy.username = params.username;
     if (params.encrypt || params['encrypt-method'])
         proxy.cipher = params.encrypt || params['encrypt-method'];
+    if (params['salamander-password']) {
+        proxy.obfs = 'salamander';
+        proxy['obfs-password'] = params['salamander-password'];
+    }
+    if (params.alpn) {
+        proxy.alpn = params.alpn.split(',').map((s) => s.trim().replace(/^"(.*)"$/, '$1'));
+    }
 
     proxy.tls =
         params.tls === 'true' ||
@@ -265,6 +285,16 @@ function mapLoonParams(proxy: Partial<ProxyNode>, params: Record<string, string>
         proxy['ws-opts'] = {
             path: params['path'] || '/',
             headers: params['host'] ? { Host: params['host'] } : {}
+        };
+    }
+
+    // Snell 协议特有参数
+    if (params.obfs) proxy.obfs = params.obfs;
+    if (params['obfs-host']) proxy['obfs-host'] = params['obfs-host'];
+    if (proxy.type === 'snell' && (proxy.obfs || proxy['obfs-host'])) {
+        proxy['obfs-opts'] = {
+            mode: proxy.obfs,
+            host: proxy['obfs-host']
         };
     }
 }

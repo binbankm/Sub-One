@@ -100,7 +100,8 @@ export function extractNodeName(url: string): string {
             case 'tuic':
             case 'socks5':
             case 'anytls':
-            case 'snell': {
+            case 'snell':
+            case 'naive': {
                 // 格式通常为：protocol://user@host:port?params#name
                 // 或者 protocol://host:port#name (无认证)
 

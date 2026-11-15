@@ -4,6 +4,7 @@
 import yaml from 'js-yaml';
 
 import type { ConvertOptions, ProxyNode } from '../types';
+import { normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -65,6 +66,7 @@ export class ClashConverter extends BaseConverter {
                   'vless',
                   'socks5',
                   'http',
+                  'https',
                   'snell',
                   'trojan',
                   'wireguard',
@@ -80,6 +82,7 @@ export class ClashConverter extends BaseConverter {
                   'vless',
                   'socks5',
                   'http',
+                  'https',
                   'snell',
                   'trojan',
                   'wireguard',
@@ -133,6 +136,38 @@ export class ClashConverter extends BaseConverter {
         try {
             const node: any = JSON.parse(JSON.stringify(proxy));
 
+            if (node.type === 'https') {
+                node.type = 'http';
+                node.tls = true;
+            }
+
+            if (node['reality-opts']) {
+                node['reality-opts'] = {
+                    'public-key': node['reality-opts']['public-key'],
+                    'short-id': node['reality-opts']['short-id'],
+                    'spider-x':
+                        node['reality-opts']['spider-x'] ||
+                        node['reality-opts']['_spider-x'] ||
+                        ''
+                };
+            }
+
+            if (node.network === 'splithttp') {
+                node.network = 'xhttp';
+            }
+            if (node['xhttp-opts']) {
+                const xopts: any = {};
+                const rawOpts = node['xhttp-opts'] as Record<string, any>;
+                if (rawOpts.mode) xopts.mode = rawOpts.mode;
+                if (rawOpts.path) xopts.path = rawOpts.path;
+                if (rawOpts.host) xopts.host = rawOpts.host;
+                if (rawOpts.headers) xopts.headers = rawOpts.headers;
+                if (rawOpts['download-settings']) xopts['download-settings'] = rawOpts['download-settings'];
+                if (Object.keys(xopts).length > 0) {
+                    node['xhttp-opts'] = xopts;
+                }
+            }
+
             if (node.type === 'vmess') {
                 if (isPresent(node, 'aead')) {
                     if (node.aead) node.alterId = 0;
@@ -165,35 +200,63 @@ export class ClashConverter extends BaseConverter {
                 }
             } else if (node.type === 'vless') {
                 node.cipher = 'none'; // VLESS always none in Clash Meta
-                if (node['reality-opts']) {
-                    node['reality-opts'] = {
-                        'public-key': node['reality-opts']['public-key'],
-                        'short-id': node['reality-opts']['short-id'],
-                        'spider-x': node['reality-opts']['_spider-x'] || ''
-                    };
-                }
                 if (node['ech-opts'] && node['ech-opts']['config-list']) {
                     node['ech-opts'] = {
                         'config-list': node['ech-opts']['config-list']
                     };
-                }
-                if (node['xhttp-opts']) {
-                    const xopts: any = {};
-                    const rawOpts = node['xhttp-opts'] as Record<string, any>;
-                    if (rawOpts.mode) xopts.mode = rawOpts.mode;
-                    if (rawOpts.path) xopts.path = rawOpts.path;
-                    if (rawOpts.host) xopts.host = rawOpts.host;
-                    if (rawOpts.headers) xopts.headers = rawOpts.headers;
-                    if (rawOpts['download-settings']) xopts['download-settings'] = rawOpts['download-settings'];
-                    if (Object.keys(xopts).length > 0) {
-                        node['xhttp-opts'] = xopts;
-                    }
                 }
             } else if (node.type === 'wireguard') {
                 node.keepalive = node.keepalive ?? node['persistent-keepalive'];
                 node['persistent-keepalive'] = node.keepalive;
                 node['preshared-key'] = node['preshared-key'] ?? node['pre-shared-key'];
                 node['pre-shared-key'] = node['preshared-key'];
+                node.udp = true;
+                if (node.reserved !== undefined) {
+                    node.reserved = normalizeReserved(node.reserved);
+                }
+                if (node.mtu) {
+                    node.mtu = parseInt(String(node.mtu), 10);
+                }
+                if (Array.isArray(node.peers) && node.peers.length > 0) {
+                    const firstPeer = node.peers[0];
+                    if (!node.server) {
+                        node.server = firstPeer.server || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[0] : undefined);
+                    }
+                    if (!node.port) {
+                        node.port = parseInt(String(firstPeer.port || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[1] : 51820)), 10);
+                    }
+                    if (!node['public-key'] && firstPeer['public-key']) {
+                        node['public-key'] = firstPeer['public-key'];
+                    }
+                    if (!node['pre-shared-key'] && firstPeer['pre-shared-key']) {
+                        node['pre-shared-key'] = firstPeer['pre-shared-key'];
+                    }
+                    if (!node.reserved && firstPeer.reserved) {
+                        node.reserved = normalizeReserved(firstPeer.reserved);
+                    }
+                    node.peers = node.peers.map((peer: any) => {
+                        const p = { ...peer };
+                        if (p.reserved !== undefined) {
+                            p.reserved = normalizeReserved(p.reserved);
+                        }
+                        return p;
+                    });
+                }
+            } else if (node.type === 'snell') {
+                if (node.password && !node.psk) {
+                    node.psk = node.password;
+                    delete node.password;
+                }
+                const obfsMode = node['obfs-opts']?.mode || node.obfs;
+                const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
+                if (obfsMode || obfsHost) {
+                    node['obfs-opts'] = {
+                        mode: obfsMode || 'http',
+                        ...(obfsHost ? { host: obfsHost } : {})
+                    };
+                    delete node.obfs;
+                    delete node['obfs-host'];
+                }
             } else if (node.type === 'hysteria') {
                 if (node.auth && !node['auth-str']) node['auth-str'] = node.auth;
                 if (!isPresent(node, 'sni') && node.peer) node.sni = node.peer;
@@ -366,6 +429,7 @@ export class ClashConverter extends BaseConverter {
             const priorityFields = [
                 // 认证信息
                 'password',
+                'psk',
                 'uuid',
                 'username',
                 // 加密
@@ -409,6 +473,8 @@ export class ClashConverter extends BaseConverter {
                 'down',
                 'up-mbps',
                 'down-mbps',
+                'ports',
+                'hop-interval',
                 'plugin',
                 'plugin-opts',
                 'recv-window',
@@ -419,8 +485,18 @@ export class ClashConverter extends BaseConverter {
                 'token',
                 'congestion-controller',
                 'udp-relay-mode',
+                'udp-over-stream',
                 'reduce-rtt',
+                'heartbeat-interval',
+                'request-timeout',
+                'disable-sni',
                 'max-udp-relay-packet-size',
+                'max-open-streams',
+                // AnyTLS
+                'idle-session-check-interval',
+                'idle-session-timeout',
+                'min-idle-session',
+                'max-stream-count',
                 // WireGuard
                 'private-key',
                 'public-key',
@@ -429,6 +505,8 @@ export class ClashConverter extends BaseConverter {
                 'mtu',
                 'ip',
                 'ipv6',
+                'allowed-ips',
+                'remote-dns-resolve',
                 'peers',
                 'keepalive',
                 'persistent-keepalive',

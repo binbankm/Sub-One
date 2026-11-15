@@ -125,13 +125,44 @@ export function parseClashNode(p: any): ProxyNode | null {
             if (p['reality-opts']) {
                 node['reality-opts'] = {
                     'public-key': p['reality-opts']['public-key'],
-                    'short-id': p['reality-opts']['short-id']
+                    'short-id': p['reality-opts']['short-id'],
+                    'spider-x': p['reality-opts']['spider-x'] || p['reality-opts']['_spider-x'] || ''
                 };
+            }
+            if (p['xhttp-opts']) {
+                node['xhttp-opts'] = p['xhttp-opts'];
             }
             break;
 
         case 'trojan':
             node.password = p.password;
+            if (p['reality-opts']) {
+                node['reality-opts'] = {
+                    'public-key': p['reality-opts']['public-key'],
+                    'short-id': p['reality-opts']['short-id'],
+                    'spider-x': p['reality-opts']['spider-x'] || p['reality-opts']['_spider-x'] || ''
+                };
+            }
+            break;
+
+        case 'hysteria':
+            node.auth = p.auth || p['auth-str'];
+            node.up = p.up;
+            node.down = p.down;
+            node.ports = p.ports;
+            node['hop-interval'] = p['hop-interval'];
+            if (p.obfs) node.obfs = p.obfs;
+            break;
+
+        case 'snell':
+            node.password = p.psk || p.password;
+            node.version = p.version;
+            if (p['obfs-opts']) {
+                node['obfs-opts'] = p['obfs-opts'];
+                node.obfs = p['obfs-opts'].mode;
+            } else if (p.obfs) {
+                node.obfs = p.obfs;
+            }
             break;
 
         case 'anytls':
@@ -172,7 +203,7 @@ export function parseClashNode(p: any): ProxyNode | null {
             node['heartbeat-interval'] = p['heartbeat-interval'];
             break;
 
-        case 'wireguard':
+        case 'wireguard': {
             node['private-key'] = p['private-key'];
             node['public-key'] = p['public-key'];
             node['pre-shared-key'] = p['pre-shared-key'] || p['preshared-key'];
@@ -180,11 +211,22 @@ export function parseClashNode(p: any): ProxyNode | null {
             node.ipv6 = p.ipv6;
             node.mtu = p.mtu;
             node.reserved = p.reserved;
+            const ka = p['persistent-keepalive'] ?? p.keepalive;
+            if (ka !== undefined) {
+                node.keepalive = ka;
+                const kaNum = typeof ka === 'number' ? ka : parseInt(String(ka).trim(), 10);
+                if (Number.isInteger(kaNum)) {
+                    node['persistent-keepalive'] = kaNum;
+                }
+            }
+            node['allowed-ips'] = p['allowed-ips'];
+            node.dns = p['remote-dns-resolve'] || p.dns;
             node.udp = true;
             if (Array.isArray(p.peers) && p.peers.length > 0) {
                 node.peers = p.peers;
             }
             break;
+        }
 
         case 'socks5':
         case 'http':

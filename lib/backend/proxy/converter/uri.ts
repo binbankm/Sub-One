@@ -4,6 +4,7 @@
 import { Base64 } from 'js-base64';
 
 import type { ConvertOptions, ProxyNode } from '../types';
+import { normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 
 export class URIConverter extends BaseConverter {
@@ -47,6 +48,8 @@ export class URIConverter extends BaseConverter {
                     return this.http(p);
                 case 'anytls':
                     return this.anytls(p);
+                case 'snell':
+                    return this.snell(p);
                 case 'naive':
                     return this.naive(p);
                 default:
@@ -137,6 +140,11 @@ export class URIConverter extends BaseConverter {
             config.type = 'http';
             config.path = opts.path?.[0] || '/';
             config.host = opts.headers?.Host?.[0] || '';
+        } else if (node.network === 'xhttp' || node.network === 'splithttp') {
+            config.net = 'xhttp';
+            const opts = (node['xhttp-opts'] || {}) as any;
+            config.path = opts.path || '/';
+            config.host = opts.host || '';
         }
 
         return `vmess://${Base64.encode(JSON.stringify(config), true)}`;
@@ -186,10 +194,11 @@ export class URIConverter extends BaseConverter {
 
     private hysteria2(node: ProxyNode): string {
         const params = new URLSearchParams();
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
-        if (node.obfs) {
-            params.set('obfs', node.obfs);
+        if (node.obfs || node['obfs-password']) {
+            params.set('obfs', node.obfs || 'salamander');
             if (node['obfs-password']) params.set('obfs-password', node['obfs-password']);
         }
         if (node['skip-cert-verify']) params.set('insecure', '1');
@@ -199,6 +208,8 @@ export class URIConverter extends BaseConverter {
         if (node['hop-interval']) params.set('hop-interval', String(node['hop-interval']));
         if (node.keepalive) params.set('keepalive', String(node.keepalive));
         if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
+        if (node.up || node['up-mbps']) params.set('up', String(node['up-mbps'] || node.up));
+        if (node.down || node['down-mbps']) params.set('down', String(node['down-mbps'] || node.down));
 
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
@@ -209,7 +220,8 @@ export class URIConverter extends BaseConverter {
 
     private tuic(node: ProxyNode): string {
         const params = new URLSearchParams();
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
         if (node['skip-cert-verify']) params.set('allow_insecure', '1');
         if (node.tfo) params.set('fast_open', '1');
@@ -229,28 +241,38 @@ export class URIConverter extends BaseConverter {
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `tuic://${node.uuid || ''}:${node.password || ''}@${node.server}:${node.port}${queryString}${hash}`;
+        const auth =
+            !node.uuid && node.token
+                ? encodeURIComponent(node.token)
+                : `${node.uuid || ''}:${node.password || ''}`;
+        return `tuic://${auth}@${node.server}:${node.port}${queryString}${hash}`;
     }
 
     private wireguard(node: ProxyNode): string {
         const params = new URLSearchParams();
-        params.set('publickey', node['public-key'] || node.publicKey || '');
+        const peer = Array.isArray(node.peers) && node.peers.length > 0 ? node.peers[0] : undefined;
+        const pubKey = node['public-key'] || node.publicKey || peer?.['public-key'] || '';
+        if (pubKey) params.set('publickey', pubKey);
         // 地址带 CIDR 后缀，同时支持 IPv4 + IPv6
         const addresses: string[] = [];
         if (node.ip) addresses.push(`${node.ip}/32`);
         if (node.ipv6) addresses.push(`${node.ipv6}/128`);
         if (addresses.length) params.set('address', addresses.join(','));
         if (node.mtu) params.set('mtu', String(node.mtu));
-        const psk = node['pre-shared-key'] || node['preshared-key'];
+        const psk =
+            node['pre-shared-key'] || node['preshared-key'] || peer?.['pre-shared-key'];
         if (psk) params.set('presharedkey', psk);
-        if (node.reserved) {
-            const res = Array.isArray(node.reserved) ? node.reserved.join(',') : node.reserved;
-            params.set('reserved', String(res));
+        const resNums = normalizeReserved(node.reserved ?? peer?.reserved);
+        if (resNums) {
+            params.set('reserved', resNums.join(','));
         }
-        if (node['persistent-keepalive'])
-            params.set('keepalive', String(node['persistent-keepalive']));
-        if (node['allowed-ips'] && node['allowed-ips'].length > 0) {
-            params.set('allowed', node['allowed-ips'].join(','));
+        const keepalive =
+            node['persistent-keepalive'] || node.keepalive;
+        if (keepalive)
+            params.set('keepalive', String(keepalive));
+        const rawAllowed = node['allowed-ips'] || peer?.['allowed-ips'];
+        if (rawAllowed && rawAllowed.length > 0) {
+            params.set('allowed', Array.isArray(rawAllowed) ? rawAllowed.join(',') : rawAllowed);
         }
         if (node.dns) {
             const dnsStr = Array.isArray(node.dns) ? node.dns.join(',') : node.dns;
@@ -260,7 +282,11 @@ export class URIConverter extends BaseConverter {
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `wireguard://${encodeURIComponent(node['private-key'] || node.privateKey || '')}@${node.server}:${node.port}${queryString}${hash}`;
+        const server =
+            node.server || peer?.server || (peer?.endpoint ? peer.endpoint.split(':')[0] : '');
+        const port =
+            node.port || peer?.port || (peer?.endpoint ? parseInt(peer.endpoint.split(':')[1], 10) : 51820);
+        return `wireguard://${encodeURIComponent(node['private-key'] || node.privateKey || '')}@${server}:${port}${queryString}${hash}`;
     }
 
     private socks5(node: ProxyNode): string {
@@ -286,7 +312,8 @@ export class URIConverter extends BaseConverter {
 
     private anytls(node: ProxyNode): string {
         const params = new URLSearchParams();
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
         if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn[0] : node.alpn);
         if (node['skip-cert-verify']) params.set('insecure', '1');
@@ -299,6 +326,12 @@ export class URIConverter extends BaseConverter {
             params.set('min-idle-session', String(node['min-idle-session']));
         if (node['max-stream-count'] !== undefined)
             params.set('max-stream-count', String(node['max-stream-count']));
+        if (node['reality-opts']) {
+            if (node['reality-opts']['public-key']) params.set('pbk', node['reality-opts']['public-key']);
+            if (node['reality-opts']['short-id']) params.set('sid', node['reality-opts']['short-id']);
+        }
+        if (node['tls-fingerprint']) params.set('pinsha256', node['tls-fingerprint']);
+        if (node['tls-pubkey-sha256']) params.set('tls-pubkey-sha256', node['tls-pubkey-sha256']);
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
@@ -318,10 +351,28 @@ export class URIConverter extends BaseConverter {
         return `${scheme}://${auth}${node.server}:${node.port}${queryString}${hash}`;
     }
 
+    private snell(node: ProxyNode): string {
+        const params = new URLSearchParams();
+        params.set('version', String(node.version || 4));
+        const obfs = node['obfs-opts']?.mode || node.obfs;
+        const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
+        if (obfs) params.set('obfs', obfs);
+        if (obfsHost) params.set('host', obfsHost);
+        if (node.tfo) params.set('tfo', '1');
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
+        let queryString = params.toString();
+        if (queryString) queryString = '?' + queryString;
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `snell://${encodeURIComponent(node.password || '')}@${node.server}:${node.port}${queryString}${hash}`;
+    }
+
     private appendTransportParams(params: URLSearchParams, node: ProxyNode) {
         if (!node.network) return;
 
-        const networkType = (node as any).httpupgrade ? 'httpupgrade' : node.network;
+        const networkType =
+            (node as any).httpupgrade && node['xhttp-opts']?.mode !== 'stream-one'
+                ? 'httpupgrade'
+                : node.network;
         params.set('type', networkType);
         const opts = (node[`${node.network}-opts`] || {}) as any;
         if (opts) {
@@ -372,9 +423,10 @@ export class URIConverter extends BaseConverter {
     }
 
     private appendTLSParams(params: URLSearchParams, node: ProxyNode) {
-        if (!node.tls) return;
+        if (!node.tls && !node['reality-opts']) return;
         params.set('security', node['reality-opts'] ? 'reality' : 'tls');
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
         if (node.alpn)
             params.set('alpn', Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn);
@@ -382,8 +434,10 @@ export class URIConverter extends BaseConverter {
             const r = node['reality-opts'];
             if (r['public-key']) params.set('pbk', r['public-key']);
             if (r['short-id']) params.set('sid', r['short-id']);
-            if (r['_spider-x']) params.set('spx', r['_spider-x']);
+            const spx = r['spider-x'] || r['_spider-x'];
+            if (spx) params.set('spx', spx);
         }
+        if (node.flow) params.set('flow', node.flow);
         if (node['ech-opts']) {
             const ech = node['ech-opts'];
             if (ech['config-list'] && ech['config-list'].length > 0) {

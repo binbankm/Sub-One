@@ -53,6 +53,36 @@ export function parseSurge(line: string): ProxyNode | null {
             } as ProxyNode;
         }
 
+        if (rawType === 'wireguard') {
+            const server = parts.length >= 2 && !parts[1].includes('=') ? parts[1] : '127.0.0.1';
+            const port = parts.length >= 3 && !parts[2].includes('=') ? parsePort(parts[2]) : 51820;
+            const proxy: Partial<ProxyNode> = {
+                id: randomId(),
+                name,
+                type: 'wireguard',
+                server,
+                port,
+                ports: portHopping,
+                udp: true
+            };
+            const params: Record<string, string> = {};
+            for (let i = 1; i < parts.length; i++) {
+                const part = parts[i];
+                if (part.includes('=')) {
+                    const [key, ...valParts] = part.split('=');
+                    params[key.trim().toLowerCase()] = valParts
+                        .join('=')
+                        .trim()
+                        .replace(/^"(.*)"$/, '$1');
+                }
+            }
+            if (params['section-name']) {
+                proxy._sectionName = params['section-name'];
+            }
+            mapSurgeParams(proxy, params);
+            return proxy as ProxyNode;
+        }
+
         if (parts.length < 3) return null;
 
         const server = parts[1];
@@ -150,12 +180,35 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
     if (params.udp) proxy.udp = params.udp === 'true';
 
     // 传输层
-    if (params.obfs === 'ws' || params.obfs === 'wss') {
+    if (params.ws === 'true' || params.obfs === 'ws' || params.obfs === 'wss') {
         proxy.network = 'ws';
+        let headers: Record<string, string> = {};
+        if (params['ws-headers']) {
+            for (const item of params['ws-headers'].split('|')) {
+                const cIdx = item.indexOf(':');
+                if (cIdx > 0) {
+                    const hk = item.substring(0, cIdx).trim();
+                    const hv = item.substring(cIdx + 1).trim().replace(/^"(.*)"$/, '$1');
+                    headers[hk] = hv;
+                }
+            }
+        } else if (params['obfs-host']) {
+            headers = { Host: params['obfs-host'] };
+        }
         proxy['ws-opts'] = {
-            path: params['obfs-path'] || '/',
-            headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
+            path: params['ws-path'] || params['obfs-path'] || '/',
+            headers
         };
+        if (params.obfs === 'wss') proxy.tls = true;
+        if (proxy.type === 'ss') {
+            proxy.plugin = 'v2ray-plugin';
+            proxy['plugin-opts'] = {
+                mode: 'websocket',
+                host: headers.Host || proxy.sni,
+                path: proxy['ws-opts'].path,
+                tls: proxy.tls
+            };
+        }
     } else if (params.obfs === 'http') {
         proxy.network = 'http';
         proxy['http-opts'] = {
@@ -174,7 +227,7 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
             proxy.uuid = params.username;
             break;
         case 'tuic':
-            proxy.uuid = params.username;
+            proxy.uuid = params.uuid || params.username;
             if (params['congestion-controller'])
                 proxy['congestion-controller'] = params['congestion-controller'];
             if (params['udp-relay-mode']) proxy['udp-relay-mode'] = params['udp-relay-mode'];
@@ -183,10 +236,26 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
         case 'hysteria2':
             // password 已由通用逻辑处理
             if (params.up) proxy.up = params.up;
-            if (params.down) proxy.down = params.down;
+            if (params.down || params['download-bandwidth'])
+                proxy.down = params['download-bandwidth'] || params.down;
+            if (params['salamander-password']) {
+                proxy.obfs = 'salamander';
+                proxy['obfs-password'] = params['salamander-password'];
+            } else if (params['gecko-password']) {
+                proxy.obfs = 'gecko';
+                proxy['obfs-password'] = params['gecko-password'];
+            }
             break;
         case 'snell':
             if (params.version) proxy.version = parseInt(params.version, 10);
+            if (params.obfs) proxy.obfs = params.obfs;
+            if (params['obfs-host']) proxy['obfs-host'] = params['obfs-host'];
+            if (proxy.obfs || proxy['obfs-host']) {
+                proxy['obfs-opts'] = {
+                    mode: proxy.obfs,
+                    host: proxy['obfs-host']
+                };
+            }
             break;
         case 'anytls':
             // AnyTLS session 相关参数

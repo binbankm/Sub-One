@@ -159,16 +159,35 @@ function matchRule(node: ProxyNode, rule: string): boolean {
         const rawProtos = rule.replace('proto:', '').toLowerCase().split(',');
         const protos = rawProtos.flatMap((p) => p.split('|').map((s) => s.trim()));
         return protos.some((p) => {
+            const nodeType = node.type.toLowerCase();
             if (p === 'reality') {
                 return !!node['reality-opts'];
             }
             if (p === 'wireguard' || p === 'wg') {
-                return node.type.toLowerCase() === 'wireguard' || node.type.toLowerCase() === 'wg';
+                return nodeType === 'wireguard' || nodeType === 'wg';
             }
             if (p === 'hysteria2' || p === 'hy2') {
-                return node.type.toLowerCase() === 'hysteria2' || node.type.toLowerCase() === 'hy2';
+                return nodeType === 'hysteria2' || nodeType === 'hy2';
             }
-            return node.type.toLowerCase() === p;
+            if (p === 'hysteria' || p === 'hy' || p === 'hy1') {
+                return nodeType === 'hysteria' || nodeType === 'hy';
+            }
+            if (p === 'ss' || p === 'shadowsocks') {
+                return nodeType === 'ss' || nodeType === 'shadowsocks';
+            }
+            if (p === 'ssr' || p === 'shadowsocksr') {
+                return nodeType === 'ssr' || nodeType === 'shadowsocksr';
+            }
+            if (p === 'socks5' || p === 'socks') {
+                return nodeType === 'socks5' || nodeType === 'socks';
+            }
+            if (p === 'http' || p === 'https') {
+                return nodeType === 'http' || nodeType === 'https';
+            }
+            if (p === 'naive' || p === 'naiveproxy') {
+                return nodeType === 'naive';
+            }
+            return nodeType === p;
         });
     }
     try {

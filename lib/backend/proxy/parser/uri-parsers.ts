@@ -7,7 +7,7 @@
 import { Base64 } from 'js-base64';
 
 import type { ProxyNode } from '../types';
-import { isIPv4, isIPv6, isPresent, parsePort, parseSpeed, randomId } from '../utils';
+import { isIPv4, isIPv6, isPresent, normalizeReserved, parsePort, parseSpeed, randomId } from '../utils';
 
 /**
  * 解析 URL 查询参数（正确处理值中含 = 的情况）
@@ -395,6 +395,20 @@ export function parseTrojan(uri: string): ProxyNode | null {
                 proxy['grpc-opts'] = {
                     'service-name': String(params.serviceName || params.path || '')
                 };
+            } else if (proxy.network === 'httpupgrade') {
+                proxy.network = 'ws';
+                proxy.httpupgrade = true;
+                proxy['httpupgrade-opts'] = {
+                    path: params.path ? decodeURIComponent(params.path as string) : '/',
+                    host: params.host ? decodeURIComponent(params.host as string) : ''
+                };
+            } else if (proxy.network === 'xhttp' || proxy.network === 'splithttp') {
+                proxy.network = 'xhttp';
+                proxy['xhttp-opts'] = {
+                    mode: params.mode || 'auto',
+                    path: params.path ? decodeURIComponent(params.path as string) : '/',
+                    host: params.host ? decodeURIComponent(params.host as string) : ''
+                };
             } else if (proxy.network && ['ws', 'h2'].includes(proxy.network)) {
                 proxy[`${proxy.network}-opts`] = {
                     path: params.path ? decodeURIComponent(params.path as string) : '/',
@@ -407,13 +421,23 @@ export function parseTrojan(uri: string): ProxyNode | null {
             proxy.udp = /TRUE|1/i.test(params.udp);
         }
 
+        if (params.flow) {
+            proxy.flow = params.flow;
+        }
+
         // Reality support
         if (params.security === 'reality' || params.pbk) {
             const opts: Record<string, string> = {};
-            if (params.pbk) opts['public-key'] = params.pbk;
-            if (params.sid) opts['short-id'] = params.sid;
+            if (params.pbk || params.publicKey) opts['public-key'] = params.pbk || params.publicKey;
+            if (params.sid || params.shortId) opts['short-id'] = params.sid || params.shortId;
+            const spx = params.spx || params['spider-x'] || params.spiderx;
+            if (spx) {
+                opts['spider-x'] = spx;
+                opts['_spider-x'] = spx;
+            }
             if (Object.keys(opts).length > 0) {
                 proxy['reality-opts'] = opts as any;
+                proxy.tls = true;
             }
         }
 
@@ -602,7 +626,7 @@ export function parseVMess(uri: string): ProxyNode | null {
             server,
             port,
             name: params.ps || params.remarks || params.remark || `VMess ${server}:${port}`,
-            cipher: ['auto', 'aes-128-gcm', 'chacha20-poly1305', 'none'].includes(params.scy)
+            cipher: ['auto', 'aes-128-gcm', 'chacha20-poly1305', 'none', 'zero'].includes(params.scy)
                 ? params.scy
                 : 'auto',
             uuid: params.id,
@@ -634,8 +658,16 @@ export function parseVMess(uri: string): ProxyNode | null {
         } else if (params.net === 'httpupgrade') {
             proxy.network = 'ws';
             httpupgrade = true;
+            proxy.httpupgrade = true;
         } else if (params.net === 'h2') {
             proxy.network = 'h2';
+        } else if (params.net === 'xhttp' || params.net === 'splithttp') {
+            proxy.network = 'xhttp';
+            proxy['xhttp-opts'] = {
+                mode: params.mode || 'auto',
+                path: params.path || '/',
+                host: params.host || ''
+            };
         }
 
         if (proxy.network) {
@@ -674,6 +706,14 @@ export function parseVMess(uri: string): ProxyNode | null {
                         [`_${proxy.network}-host`]: transportHost,
                         [`_${proxy.network}-path`]: transportPath
                     } as any;
+                } else if (proxy.network === 'xhttp') {
+                    const opts: any = proxy['xhttp-opts'] || {};
+                    if (transportPath) opts.path = transportPath;
+                    if (transportHost) {
+                        opts.host = transportHost;
+                        opts.headers = { Host: transportHost };
+                    }
+                    proxy['xhttp-opts'] = opts;
                 } else {
                     const opts: any = {
                         path: transportPath,
@@ -833,7 +873,11 @@ export function parseVLESS(uri: string): ProxyNode | null {
             // Existing reality logic...
             if (params.pbk || params.publicKey) opts['public-key'] = params.pbk || params.publicKey;
             if (params.sid || params.shortId) opts['short-id'] = params.sid || params.shortId;
-            if (params.spx) opts['_spider-x'] = params.spx;
+            const spx = params.spx || params['spider-x'] || params.spiderx;
+            if (spx) {
+                opts['spider-x'] = spx;
+                opts['_spider-x'] = spx;
+            }
 
             // Extra fields
             if (params.extra) proxy._extra = params.extra;
@@ -874,6 +918,7 @@ export function parseVLESS(uri: string): ProxyNode | null {
         } else if (netType === 'httpupgrade') {
             proxy.network = 'ws';
             httpupgrade = true;
+            proxy.httpupgrade = true;
         } else if (netType === 'websocket') {
             proxy.network = 'ws';
         }
@@ -902,6 +947,9 @@ export function parseVLESS(uri: string): ProxyNode | null {
 
             if (host) {
                 opts.headers = { Host: host };
+                if (proxy.network === 'xhttp') {
+                    opts.host = host;
+                }
             }
 
             if (params.serviceName) {
@@ -956,7 +1004,8 @@ export function parseVLESS(uri: string): ProxyNode | null {
             }
 
             if (Object.keys(opts).length > 0) {
-                proxy[`${proxy.network}-opts`] = opts;
+                const existing = proxy[`${proxy.network}-opts`] || {};
+                proxy[`${proxy.network}-opts`] = { ...existing, ...opts };
             }
         }
 
@@ -972,10 +1021,10 @@ export function parseVLESS(uri: string): ProxyNode | null {
 // ============================================================================
 
 export function parseHysteria(uri: string): ProxyNode | null {
-    if (!uri.toLowerCase().startsWith('hysteria://')) return null;
+    if (!/^(hysteria|hy):\/\//i.test(uri)) return null;
 
     try {
-        const line = uri.split(/hysteria:\/\//i)[1];
+        const line = uri.split(/^(hysteria|hy):\/\//i)[2];
         const parsed = /^(?:(.*?)@)?(.*?):(\d+)\/?(?:\?([^#]*))?(?:#(.*))?$/.exec(line);
 
         if (!parsed) return null;
@@ -1063,6 +1112,8 @@ export function parseSnell(uri: string): ProxyNode | null {
                 host: proxy['obfs-host']
             };
         }
+        if (params.tfo) proxy.tfo = /(true)|1/i.test(params.tfo);
+        if (params.udp) proxy.udp = /(true)|1/i.test(params.udp);
 
         return proxy as ProxyNode;
     } catch (e) {
@@ -1140,6 +1191,16 @@ export function parseAnyTLS(uri: string): ProxyNode | null {
             if (!isNaN(v)) proxy['max-stream-count'] = v;
         }
 
+        if (params.pbk || params.publicKey || params['public-key']) {
+            proxy['reality-opts'] = {
+                'public-key': params.pbk || params.publicKey || params['public-key'],
+                'short-id': params.sid || params.shortId || params['short-id']
+            };
+        }
+        if (params['tls-pubkey-sha256']) proxy['tls-pubkey-sha256'] = params['tls-pubkey-sha256'];
+        if (params['tls-cert-sha256'] || params.pinsha256 || params.pinSHA256)
+            proxy['tls-fingerprint'] = params['tls-cert-sha256'] || params.pinsha256 || params.pinSHA256;
+
         return proxy as ProxyNode;
     } catch (e) {
         console.error('[parseAnyTLS] Error:', e);
@@ -1205,18 +1266,25 @@ export function parseHysteria2(uri: string): ProxyNode | null {
             if (eqIdx < 0) continue;
             const key = addon.substring(0, eqIdx);
             const value = decodeURIComponent(addon.substring(eqIdx + 1));
-            const normalizedKey = key.replace(/_/g, '-');
+            const normalizedKey = key.replace(/_/g, '-').toLowerCase();
 
-            if (normalizedKey === 'insecure') {
+            if (['insecure', 'allowinsecure', 'allow-insecure'].includes(normalizedKey)) {
                 proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
             } else if (normalizedKey === 'alpn') {
                 proxy.alpn = value ? value.split(',') : undefined;
             } else if (normalizedKey === 'obfs') {
                 proxy.obfs = value || 'salamander';
-            } else if (normalizedKey === 'obfs-password') {
+            } else if (['obfs-password', 'obfsparam', 'obfs_password'].includes(normalizedKey)) {
                 proxy['obfs-password'] = value;
+                if (!proxy.obfs) proxy.obfs = 'salamander';
             } else if (normalizedKey === 'mport' || normalizedKey === 'ports') {
                 proxy.ports = value;
+            } else if (['pinsha256', 'tls-fingerprint', 'cert-fingerprint'].includes(normalizedKey)) {
+                proxy['tls-fingerprint'] = value;
+            } else if (['hop-interval', 'hop_interval'].includes(normalizedKey)) {
+                proxy['hop-interval'] = value;
+            } else if (['fastopen', 'fast-open', 'tfo'].includes(normalizedKey)) {
+                proxy.tfo = /(TRUE)|1/i.test(value);
             } else if (normalizedKey === 'sni') {
                 proxy.sni = value;
             } else if (normalizedKey === 'udp') {
@@ -1258,8 +1326,17 @@ export function parseTUIC(uri: string): ProxyNode | null {
         } catch {
             authDecoded = auth;
         }
-        const [uuid, ...passwordParts] = authDecoded.split(':');
-        const password = passwordParts.join(':');
+        let uuid = '';
+        let password = '';
+        let token: string | undefined;
+
+        if (authDecoded.includes(':')) {
+            const [u, ...pParts] = authDecoded.split(':');
+            uuid = u;
+            password = pParts.join(':');
+        } else {
+            token = authDecoded;
+        }
 
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
@@ -1268,6 +1345,7 @@ export function parseTUIC(uri: string): ProxyNode | null {
             port,
             uuid,
             password,
+            token,
             name: name ? decodeURIComponent(name) : `TUIC ${server}:${port}`
         };
 
@@ -1277,18 +1355,35 @@ export function parseTUIC(uri: string): ProxyNode | null {
             if (eqIdx < 0) continue;
             const key = addon.substring(0, eqIdx);
             const value = decodeURIComponent(addon.substring(eqIdx + 1));
-            const normalizedKey = key.replace(/_/g, '-');
+            const normalizedKey = key.replace(/_/g, '-').toLowerCase();
 
             if (['allow-insecure', 'insecure'].includes(normalizedKey)) {
                 proxy['skip-cert-verify'] = /(TRUE)|1/i.test(value);
             } else if (normalizedKey === 'alpn') {
                 proxy.alpn = value ? value.split(',') : undefined;
-            } else if (normalizedKey === 'fast-open') {
+            } else if (['fast-open', 'fastopen'].includes(normalizedKey)) {
                 proxy.tfo = true;
             } else if (['disable-sni', 'reduce-rtt'].includes(normalizedKey)) {
                 proxy[normalizedKey] = /(TRUE)|1/i.test(value);
-            } else if (normalizedKey === 'congestion-control') {
+            } else if (['congestion-controller', 'congestion-control'].includes(normalizedKey)) {
                 proxy['congestion-controller'] = value;
+            } else if (normalizedKey === 'udp-relay-mode') {
+                proxy['udp-relay-mode'] = value;
+            } else if (normalizedKey === 'udp-over-stream') {
+                proxy['udp-over-stream'] = /(TRUE)|1/i.test(value);
+            } else if (normalizedKey === 'heartbeat-interval') {
+                const hb = parseInt(value, 10);
+                if (Number.isInteger(hb)) proxy['heartbeat-interval'] = hb;
+            } else if (normalizedKey === 'max-udp-relay-packet-size') {
+                const sz = parseInt(value, 10);
+                if (Number.isInteger(sz)) proxy['max-udp-relay-packet-size'] = sz;
+            } else if (normalizedKey === 'max-open-streams') {
+                const st = parseInt(value, 10);
+                if (Number.isInteger(st)) proxy['max-open-streams'] = st;
+            } else if (normalizedKey === 'sni') {
+                proxy.sni = value;
+            } else if (normalizedKey === 'token') {
+                proxy.token = value;
             } else if (normalizedKey === 'udp') {
                 proxy.udp = /(TRUE)|1/i.test(value);
             } else if (!Object.keys(proxy).includes(normalizedKey)) {
@@ -1335,15 +1430,12 @@ export function parseWireGuard(uri: string): ProxyNode | null {
             if (eqIdx < 0) continue;
             const key = addon.substring(0, eqIdx);
             const value = decodeURIComponent(addon.substring(eqIdx + 1));
-            const normalizedKey = key.replace(/_/g, '-');
+            const normalizedKey = key.replace(/_/g, '-').toLowerCase();
 
             if (normalizedKey === 'reserved') {
-                const parsed = value
-                    .split(',')
-                    .map((i) => parseInt(i.trim(), 10))
-                    .filter((i) => Number.isInteger(i));
-                if (parsed.length === 3) {
-                    proxy.reserved = parsed;
+                const res = normalizeReserved(value);
+                if (res) {
+                    proxy.reserved = res;
                 }
             } else if (['address', 'ip'].includes(normalizedKey)) {
                 value.split(',').forEach((i) => {
@@ -1363,13 +1455,25 @@ export function parseWireGuard(uri: string): ProxyNode | null {
                 if (Number.isInteger(parsedMtu)) {
                     proxy.mtu = parsedMtu;
                 }
-            } else if (normalizedKey === 'public-key' || normalizedKey === 'publickey') {
+            } else if (['public-key', 'publickey'].includes(normalizedKey)) {
                 proxy['public-key'] = value;
             } else if (
-                normalizedKey === 'pre-shared-key' ||
-                normalizedKey === 'preshared-key'
+                ['pre-shared-key', 'preshared-key', 'presharedkey', 'psk'].includes(
+                    normalizedKey
+                )
             ) {
                 proxy['pre-shared-key'] = value;
+                proxy['preshared-key'] = value;
+            } else if (['allowed-ips', 'allowed_ips', 'allowed', 'allowedips'].includes(normalizedKey)) {
+                proxy['allowed-ips'] = value.split(',').map((s) => s.trim()).filter(Boolean);
+            } else if (['keepalive', 'persistent-keepalive'].includes(normalizedKey)) {
+                proxy.keepalive = value;
+                const ka = parseInt(value.trim(), 10);
+                if (Number.isInteger(ka)) {
+                    proxy['persistent-keepalive'] = ka;
+                }
+            } else if (normalizedKey === 'dns') {
+                proxy.dns = value.includes(',') ? value.split(',').map((s) => s.trim()).filter(Boolean) : value.trim();
             } else if (!Object.keys(proxy).includes(normalizedKey)) {
                 proxy[normalizedKey] = value;
             }
@@ -1379,9 +1483,12 @@ export function parseWireGuard(uri: string): ProxyNode | null {
         if (proxy['public-key'] && !proxy.peers) {
             proxy.peers = [
                 {
+                    server,
+                    port,
                     endpoint: `${server}:${port}`,
                     'public-key': proxy['public-key'],
                     'pre-shared-key': proxy['pre-shared-key'],
+                    'allowed-ips': proxy['allowed-ips'] || ['0.0.0.0/0', '::/0'],
                     reserved: proxy.reserved as number[]
                 }
             ];
@@ -1470,6 +1577,7 @@ export const URI_PARSERS = {
     vless: parseVLESS,
     trojan: parseTrojan,
     hysteria: parseHysteria,
+    hy: parseHysteria,
     hysteria2: parseHysteria2,
     hy2: parseHysteria2,
     tuic: parseTUIC,

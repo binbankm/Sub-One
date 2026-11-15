@@ -43,9 +43,11 @@ export class QuantumultXConverter extends BaseConverter {
                     result = this.socks5(proxy);
                     break;
                 default:
-                    throw new Error(`[QXConverter] Unsupported proxy type: ${proxy.type}`);
+                    console.warn(`[QXConverter] Unsupported proxy type: ${proxy.type}`);
+                    return '';
             }
 
+            if (!result) return '';
             result += `,tag=${proxy.name}`;
 
             return result;
@@ -187,7 +189,7 @@ export class QuantumultXConverter extends BaseConverter {
         result.append(`http=${proxy.server}:${proxy.port}`);
         result.appendIfPresent(`,username=${proxy.username}`, 'username');
         result.appendIfPresent(`,password=${proxy.password}`, 'password');
-        if (proxy.tls) result.append(`,over-tls=true`);
+        if (proxy.tls || proxy.type === 'https') result.append(`,over-tls=true`);
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -218,7 +220,8 @@ export class QuantumultXConverter extends BaseConverter {
 
         // AnyTLS 强制 TLS
         result.append(`,over-tls=true`);
-        result.appendIfPresent(`,tls-host=${proxy.sni}`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,tls-host=${sni}`);
         result.appendIfPresent(
             `,tls-verification=${!proxy['skip-cert-verify']}`,
             'skip-cert-verify'
@@ -239,8 +242,9 @@ export class QuantumultXConverter extends BaseConverter {
     }
 
     private appendTLS(result: Result, proxy: ProxyNode) {
-        if (!proxy.tls) return;
-        result.appendIfPresent(`,tls-host=${proxy.sni}`, 'sni');
+        if (!proxy.tls && proxy.type !== 'https' && !proxy['reality-opts']) return;
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,tls-host=${sni}`);
         result.appendIfPresent(
             `,tls-verification=${!proxy['skip-cert-verify']}`,
             'skip-cert-verify'
@@ -250,7 +254,10 @@ export class QuantumultXConverter extends BaseConverter {
             `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
             'tls-pubkey-sha256'
         );
-        if (proxy.alpn) result.append(`,tls-alpn=${proxy.alpn.join(',')}`);
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            result.append(`,tls-alpn=${alpn}`);
+        }
         if (proxy['tls-no-session-ticket']) result.append(`,tls-no-session-ticket=true`);
         if (proxy['tls-no-session-reuse']) result.append(`,tls-no-session-reuse=true`);
     }

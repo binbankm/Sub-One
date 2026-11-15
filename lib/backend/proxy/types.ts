@@ -42,7 +42,8 @@ export type NetworkType =
     | 'kcp' // KCP
     | 'quic' // QUIC
     | 'xhttp' // XHTTP/SplitHTTP (Xray-core)
-    | 'splithttp'; // SplitHTTP 别名
+    | 'splithttp' // SplitHTTP 别名
+    | 'httpupgrade'; // HTTPUpgrade
 
 // ============================================================================
 // 平台类型
@@ -344,7 +345,7 @@ export interface ProxyNode {
     'test-timeout'?: number; // 测速超时
     'underlying-proxy'?: string; // 底层代理
     'dialer-proxy'?: string; // 拨号代理 (Clash Meta)
-    keepalive?: number; // Keepalive
+    keepalive?: string | number; // Keepalive
     'persistent-keepalive'?: number; // 持久 Keepalive (WireGuard)
 
     // === 元数据 (下划线开头的内部字段) ===

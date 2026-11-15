@@ -90,8 +90,12 @@ const protocolFilters = computed(() => {
         vless: 0,
         trojan: 0,
         hysteria2: 0,
+        hysteria: 0,
+        tuic: 0,
         wireguard: 0,
         anytls: 0,
+        snell: 0,
+        naive: 0,
         other: 0
     };
 
@@ -102,8 +106,12 @@ const protocolFilters = computed(() => {
         else if (p === 'vless') counts.vless++;
         else if (p === 'trojan') counts.trojan++;
         else if (p === 'hysteria2' || p === 'hy2') counts.hysteria2++;
+        else if (p === 'hysteria' || p === 'hy') counts.hysteria++;
+        else if (p === 'tuic') counts.tuic++;
         else if (p === 'wireguard' || p === 'wg') counts.wireguard++;
         else if (p === 'anytls') counts.anytls++;
+        else if (p === 'snell') counts.snell++;
+        else if (p === 'naive') counts.naive++;
         else counts.other++;
     }
 
@@ -114,8 +122,12 @@ const protocolFilters = computed(() => {
         { id: 'vless', label: 'VLESS', count: counts.vless },
         { id: 'trojan', label: 'Trojan', count: counts.trojan },
         { id: 'hysteria2', label: 'HY2', count: counts.hysteria2 },
+        { id: 'hysteria', label: 'HY', count: counts.hysteria },
+        { id: 'tuic', label: 'TUIC', count: counts.tuic },
         { id: 'wireguard', label: 'WG', count: counts.wireguard },
         { id: 'anytls', label: 'AnyTLS', count: counts.anytls },
+        { id: 'snell', label: 'Snell', count: counts.snell },
+        { id: 'naive', label: 'Naive', count: counts.naive },
         { id: 'other', label: t('views.nodes.filterOther'), count: counts.other }
     ].filter((item) => item.id === 'all' || item.count > 0);
 });
@@ -131,8 +143,12 @@ const displayNodes = computed(() => {
             if (selectedProtocol.value === 'vless') return p === 'vless';
             if (selectedProtocol.value === 'trojan') return p === 'trojan';
             if (selectedProtocol.value === 'hysteria2') return p === 'hysteria2' || p === 'hy2';
+            if (selectedProtocol.value === 'hysteria') return p === 'hysteria' || p === 'hy';
+            if (selectedProtocol.value === 'tuic') return p === 'tuic';
             if (selectedProtocol.value === 'wireguard') return p === 'wireguard' || p === 'wg';
             if (selectedProtocol.value === 'anytls') return p === 'anytls';
+            if (selectedProtocol.value === 'snell') return p === 'snell';
+            if (selectedProtocol.value === 'naive') return p === 'naive';
             if (selectedProtocol.value === 'other') {
                 return ![
                     'ss',
@@ -143,9 +159,14 @@ const displayNodes = computed(() => {
                     'trojan',
                     'hysteria2',
                     'hy2',
+                    'hysteria',
+                    'hy',
+                    'tuic',
                     'wireguard',
                     'wg',
-                    'anytls'
+                    'anytls',
+                    'snell',
+                    'naive'
                 ].includes(p);
             }
             return p === selectedProtocol.value;

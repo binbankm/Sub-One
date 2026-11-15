@@ -39,7 +39,8 @@ export const NETWORK_TYPES = [
     'kcp', // mKCP
     'quic', // QUIC
     'xhttp', // XHTTP/SplitHTTP (Xray-core)
-    'splithttp' // SplitHTTP 别名
+    'splithttp', // SplitHTTP 别名
+    'httpupgrade' // HTTPUpgrade
 ] as const;
 
 // ============================================================================
@@ -341,16 +342,20 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'ssh',
         'socks5',
         'http',
-        'anytls'
+        'snell',
+        'anytls',
+        'naive'
     ],
 
     Surge: [
         'ss',
         'vmess',
+        'vless',
         'trojan',
         'hysteria2',
         'tuic',
         'wireguard',
+        'ssh',
         'socks5',
         'http',
         'snell',
@@ -379,8 +384,7 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'vmess',
         'vless',
         'trojan',
-        'hysteria2',
-        'wireguard',
+        'anytls',
         'socks5',
         'http'
     ],
@@ -394,9 +398,12 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'hysteria',
         'hysteria2',
         'tuic',
+        'wireguard',
+        'snell',
         'socks5',
         'http',
-        'anytls'
+        'anytls',
+        'naive'
     ]
 };
 

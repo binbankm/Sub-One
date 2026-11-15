@@ -2,6 +2,7 @@
  * Sub-One Surge Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
+import { normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { Result, isPresent } from './utils';
 
@@ -96,6 +97,15 @@ export class SurgeConverter extends BaseConverter {
                 if (version) result.append(`,shadow-tls-version=${version}`);
                 result.appendIfPresent(`,udp-port=${proxy['udp-port']}`, 'udp-port');
             }
+        } else if (proxy.plugin === 'v2ray-plugin') {
+            const opts = (proxy['plugin-opts'] || {}) as any;
+            result.append(`,ws=true`);
+            if (opts.path) result.append(`,ws-path=${opts.path}`);
+            if (opts.host) result.append(`,ws-headers=Host:"${opts.host}"`);
+            if (opts.tls) {
+                result.append(`,tls=true`);
+                if (opts.host) result.append(`,sni=${opts.host}`);
+            }
         }
 
         this.appendCommon(result, proxy);
@@ -174,15 +184,27 @@ export class SurgeConverter extends BaseConverter {
         const type = !proxy.token || proxy.token.length === 0 ? 'tuic-v5' : 'tuic';
         result.append(`${proxy.name}=${type},${proxy.server},${proxy.port}`);
         result.appendIfPresent(`,uuid=${proxy.uuid}`, 'uuid');
-        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
-        result.appendIfPresent(`,token=${proxy.token}`, 'token');
+        const pass = proxy.password || proxy.token;
+        if (pass) {
+            result.append(`,password="${pass}"`);
+        }
         if (proxy.alpn) {
             result.append(`,alpn=${Array.isArray(proxy.alpn) ? proxy.alpn[0] : proxy.alpn}`);
         }
         if (proxy.ports) {
             result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
         }
-        this.appendTLS(result, proxy);
+        if (proxy['hop-interval']) {
+            result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
+        }
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,sni=${sni}`);
+        if (proxy['skip-cert-verify']) {
+            result.append(`,skip-cert-verify=${proxy['skip-cert-verify']}`);
+        }
+        if (proxy['tls-fingerprint']) {
+            result.append(`,server-cert-fingerprint-sha256=${proxy['tls-fingerprint']}`);
+        }
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -204,13 +226,26 @@ export class SurgeConverter extends BaseConverter {
         if (proxy.ports) {
             result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
         }
-        if (proxy.down) {
-            const down = String(proxy.down).match(/\d+/)?.[0] || '0';
+        if (proxy['hop-interval']) {
+            result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
+        }
+        const downVal = proxy['down-mbps'] || proxy.down;
+        if (downVal) {
+            const down = String(downVal).match(/\d+/)?.[0] || '0';
             result.append(`,download-bandwidth=${down}`);
+        }
+        const obfsPassword =
+            proxy['obfs-password'] ||
+            (proxy.obfs && proxy.obfs !== 'salamander' && proxy.obfs !== 'gecko' ? proxy.obfs : undefined);
+        if (proxy.obfs === 'gecko') {
+            if (obfsPassword) result.append(`,gecko-password="${obfsPassword}"`);
+        } else if (obfsPassword || proxy.obfs === 'salamander') {
+            if (obfsPassword) result.append(`,salamander-password="${obfsPassword}"`);
         }
         // Hysteria2 强制 TLS，直接追加 TLS 参数，不依赖 proxy.tls
         result.appendIfPresent(`,tls-fingerprint=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
-        result.appendIfPresent(`,sni="${proxy.sni}"`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,sni="${sni}"`);
         result.appendIfPresent(
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
@@ -227,19 +262,22 @@ export class SurgeConverter extends BaseConverter {
                 const [server, port] = peer.endpoint.split(':');
                 p.server = server;
                 p.port = parseInt(port || '51820', 10);
+            } else {
+                if (peer.server) p.server = peer.server;
+                if (peer.port) p.port = parseInt(String(peer.port), 10);
             }
             if ((peer as any).ip) p.ip = (peer as any).ip;
             if ((peer as any).ipv6) p.ipv6 = (peer as any).ipv6;
-            p['public-key'] = peer['public-key'];
-            p['preshared-key'] = peer['pre-shared-key'];
-            p['allowed-ips'] = peer['allowed-ips'];
-            p.reserved = peer.reserved;
+            p['public-key'] = p['public-key'] || peer['public-key'];
+            p['preshared-key'] = p['preshared-key'] || peer['pre-shared-key'];
+            p['allowed-ips'] = p['allowed-ips'] || peer['allowed-ips'];
+            p.reserved = p.reserved || peer.reserved;
         }
 
         const result = new Result(p);
         const sectionName = p.name;
         result.append(
-            `# > WireGuard Proxy ${p.name}\n# ${p.name}=wireguard,section-name=${sectionName}`
+            `# > WireGuard Proxy ${p.name}\n${p.name}=wireguard,section-name=${sectionName}`
         );
         this.appendCommon(result, p);
 
@@ -260,7 +298,8 @@ export class SurgeConverter extends BaseConverter {
         const allowedIps = Array.isArray(p['allowed-ips'])
             ? p['allowed-ips'].join(',')
             : p['allowed-ips'];
-        const reserved = Array.isArray(p.reserved) ? p.reserved.join('/') : p.reserved;
+        const resNums = normalizeReserved(p.reserved);
+        const reserved = resNums ? resNums.join('/') : (typeof p.reserved === 'string' ? p.reserved : '');
         const presharedKey = p['preshared-key'] || p['pre-shared-key'];
 
         const peerParts = [
@@ -312,11 +351,15 @@ export class SurgeConverter extends BaseConverter {
         );
 
         // TLS verification
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
+        const sni = proxy.sni || proxy.servername;
+        if (sni) result.append(`,sni=${sni}`);
         result.appendIfPresent(
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
+        if (proxy.alpn) {
+            result.append(`,alpn=${Array.isArray(proxy.alpn) ? proxy.alpn[0] : proxy.alpn}`);
+        }
 
         // session params
         if (

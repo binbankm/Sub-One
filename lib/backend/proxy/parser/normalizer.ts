@@ -5,7 +5,7 @@
  * 确保节点属性格式统一、填充默认值、校验基本合法性
  */
 import type { NetworkType, ProxyNode } from '../types';
-import { isNotEmpty, isValidPort, parsePort, randomId } from '../utils';
+import { isNotEmpty, isValidPort, normalizeReserved, parsePort, randomId } from '../utils';
 
 /**
  * 标准化节点对象
@@ -79,10 +79,11 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     // 11. 标准化 Reality 选项
     if (proxy['reality-opts']) {
         const r = proxy['reality-opts'] as Record<string, any>;
-        // 统一 _spider-x 和 spider-x
-        if (r['spider-x'] && !r['_spider-x']) {
-            r['_spider-x'] = r['spider-x'];
-            delete r['spider-x'];
+        // 统一 _spider-x 和 spider-x，双向同步保留
+        const spx = r['spider-x'] || r['_spider-x'];
+        if (spx) {
+            r['spider-x'] = spx;
+            r['_spider-x'] = spx;
         }
         // 如果 reality-opts 为空则删除
         if (Object.keys(r).filter(k => r[k] != null && r[k] !== '').length === 0) {
@@ -99,9 +100,26 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     }
 
     // 13. 标准化 xhttp 选项 (标准化 splithttp -> xhttp)
+    if (proxy.network === 'splithttp') {
+        proxy.network = 'xhttp';
+    }
     if ((proxy as any)['xhttp-opts']) {
         if (!proxy.network || proxy.network === 'tcp') {
             proxy.network = 'xhttp' as any;
+        }
+    }
+
+    // 14. 标准化 WireGuard reserved 字段
+    if (proxy.type === 'wireguard') {
+        if (proxy.reserved !== undefined) {
+            proxy.reserved = normalizeReserved(proxy.reserved);
+        }
+        if (Array.isArray(proxy.peers)) {
+            for (const peer of proxy.peers) {
+                if (peer.reserved !== undefined) {
+                    peer.reserved = normalizeReserved(peer.reserved);
+                }
+            }
         }
     }
 
@@ -112,6 +130,10 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
  * 传输层选项标准化
  */
 function normalizeNetwork(proxy: ProxyNode) {
+    if (proxy.network === 'splithttp') {
+        proxy.network = 'xhttp';
+    }
+
     // 处理旧式的 ws-path / ws-headers
     if (proxy.network === 'ws') {
         if (!proxy['ws-opts']) {
@@ -126,7 +148,7 @@ function normalizeNetwork(proxy: ProxyNode) {
     }
 
     // 格式化所有传输路径 (以 / 开头)
-    const networks: NetworkType[] = ['ws', 'h2', 'http'];
+    const networks: NetworkType[] = ['ws', 'h2', 'http', 'httpupgrade', 'xhttp'];
     for (const net of networks) {
         const optsKey = `${net}-opts` as keyof ProxyNode;
         const opts = proxy[optsKey] as any;

@@ -35,6 +35,54 @@ export function isIP(ip: string): boolean {
 }
 
 // ============================================================================
+// WireGuard 工具函数
+// ============================================================================
+
+/**
+ * 标准化 WireGuard reserved 字段
+ * 支持:
+ * - 数组: [1, 2, 3] -> [1, 2, 3]
+ * - 字符串: "[1, 2, 3]", "1,2,3", "1/2/3" -> [1, 2, 3]
+ * - Base64 编码 (例如 "AQID" -> [1, 2, 3])
+ */
+export function normalizeReserved(value: any): number[] | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    if (Array.isArray(value)) {
+        const nums = value
+            .map((n) => (typeof n === 'number' ? n : parseInt(String(n).trim(), 10)))
+            .filter((n) => Number.isInteger(n) && n >= 0);
+        return nums.length > 0 ? nums : undefined;
+    }
+    if (typeof value === 'string') {
+        const cleaned = value.replace(/[[\]\s]/g, '').trim();
+        if (!cleaned) return undefined;
+
+        if (cleaned.includes(',') || cleaned.includes('/')) {
+            const parts = cleaned.split(/[,/]/);
+            const nums = parts
+                .map((n) => (/^\d+$/.test(n) ? parseInt(n, 10) : NaN))
+                .filter((n) => Number.isInteger(n) && n >= 0);
+            if (nums.length === parts.length && nums.length > 0) {
+                return nums;
+            }
+        } else if (/^\d+$/.test(cleaned)) {
+            const n = parseInt(cleaned, 10);
+            if (n >= 0) return [n];
+        } else {
+            try {
+                const buf = Buffer.from(cleaned, 'base64');
+                if (buf.length > 0 && buf.length <= 8) {
+                    return Array.from(buf);
+                }
+            } catch {
+                // ignore
+            }
+        }
+    }
+    return undefined;
+}
+
+// ============================================================================
 // UUID 验证
 // ============================================================================
 

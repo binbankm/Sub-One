@@ -42,7 +42,8 @@ export function parseQX(line: string): ProxyNode | null {
             vless: 'vless',
             trojan: 'trojan',
             http: 'http',
-            socks5: 'socks5'
+            socks5: 'socks5',
+            anytls: 'anytls'
         };
         proxy.type = typeMap[rawType] || (rawType as ProxyType);
 
@@ -131,7 +132,14 @@ function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) 
             path: params['obfs-uri'] || '/',
             headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
         };
-    } else if (obfsType === 'tls') {
+    } else if (obfsType === 'h2' || obfsType === 'h2-tls') {
+        proxy.network = 'h2';
+        if (obfsType === 'h2-tls') proxy.tls = true;
+        proxy['h2-opts'] = {
+            path: params['obfs-uri'] || '/',
+            host: params['obfs-host'] ? [params['obfs-host']] : undefined
+        };
+    } else if (obfsType === 'tls' || obfsType === 'over-tls') {
         proxy.tls = true;
         if (proxy.type === 'ss') {
             proxy.plugin = 'obfs';
