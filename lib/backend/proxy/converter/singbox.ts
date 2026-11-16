@@ -2,7 +2,7 @@
  * Sub-One Sing-box Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
-import { normalizeReserved } from '../utils';
+import { getWireGuardAddressWithCIDR, normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -22,6 +22,8 @@ export class SingboxConverter extends BaseConverter {
         try {
             const typeMap: Record<string, string> = {
                 ss: 'shadowsocks',
+                ssr: 'shadowsocksr',
+                shadowsocksr: 'shadowsocksr',
                 socks5: 'socks',
                 http: 'http',
                 https: 'http',
@@ -53,10 +55,22 @@ export class SingboxConverter extends BaseConverter {
                 server_port: node.port
             };
 
+            if (node.type === 'direct' || node.type === 'reject') {
+                delete outbound.server;
+                delete outbound.server_port;
+            }
+
             switch (node.type) {
                 case 'ss':
                     outbound.method = node.cipher;
                     outbound.password = node.password;
+                    if (node.uot) outbound.udp_over_tcp = true;
+                    if (node['udp-over-tcp']) {
+                        outbound.udp_over_tcp = {
+                            enabled: true,
+                            version: (!node['udp-over-tcp-version'] || node['udp-over-tcp-version'] === 1) ? 1 : 2
+                        };
+                    }
                     if (node.plugin === 'obfs') {
                         outbound.plugin = 'obfs';
                         outbound.plugin_opts = `mode=${node['plugin-opts']?.mode || 'http'}${node['plugin-opts']?.host ? ';host=' + node['plugin-opts'].host : ''}`;
@@ -91,11 +105,27 @@ export class SingboxConverter extends BaseConverter {
                         (outbound as any).__extra = stOutbound;
                     }
                     break;
+                case 'ssr':
+                    outbound.method = node.cipher;
+                    outbound.password = node.password;
+                    if (node.protocol) outbound.protocol = node.protocol;
+                    const ssrProtoParam = node['protocol-param'] || node.protocol_param;
+                    if (ssrProtoParam) outbound.protocol_param = ssrProtoParam;
+                    if (node.obfs) outbound.obfs = node.obfs;
+                    const ssrObfsParam = node['obfs-param'] || node.obfs_param;
+                    if (ssrObfsParam) outbound.obfs_param = ssrObfsParam;
+                    break;
                 case 'ssh':
                     if (node.username) outbound.user = node.username;
                     if (node.password) outbound.password = node.password;
-                    if (node['private-key'] || node.privateKey)
-                        outbound.private_key_path = node['private-key'] || node.privateKey;
+                    const sshPrivateKey = node['private-key'] || node.privateKey;
+                    if (sshPrivateKey) {
+                        if (sshPrivateKey.includes('PRIVATE KEY')) {
+                            outbound.private_key = sshPrivateKey;
+                        } else {
+                            outbound.private_key_path = sshPrivateKey;
+                        }
+                    }
                     if (node['private-key-passphrase'])
                         outbound.private_key_passphrase = node['private-key-passphrase'];
                     if (node['server-fingerprint']) {
@@ -105,10 +135,6 @@ export class SingboxConverter extends BaseConverter {
                     if (node['host-key']) outbound.host_key = node['host-key'];
                     if (node['host-key-algorithms'])
                         outbound.host_key_algorithms = node['host-key-algorithms'];
-                    delete outbound.server;
-                    delete outbound.server_port;
-                    outbound.server = node.server;
-                    outbound.server_port = node.port;
                     break;
                 case 'naive':
                     outbound.username = node.username;
@@ -140,6 +166,10 @@ export class SingboxConverter extends BaseConverter {
                     outbound.security = node.cipher || 'auto';
                     outbound.alter_id = node.alterId || 0;
                     if (isPresent(node, 'aead')) outbound.authenticated_length = node.aead;
+                    if (node['authenticated-length'] != null)
+                        outbound.authenticated_length = !!node['authenticated-length'];
+                    if (node['global-padding'] != null)
+                        outbound.global_padding = !!node['global-padding'];
                     if (node['packet-encoding'] != null) {
                         const pe = String(node['packet-encoding']).trim().toLowerCase();
                         if (['xudp', 'packetaddr', ''].includes(pe)) {
@@ -187,10 +217,32 @@ export class SingboxConverter extends BaseConverter {
                     if (node.type === 'https' || node.tls) this.appendTLS(outbound, node);
                     break;
                 case 'hysteria':
-                    outbound.auth_str = node['auth-str'] || node.auth;
-                    outbound.up_mbps = node.up;
-                    outbound.down_mbps = node.down;
-                    if (node.obfs) outbound.obfs = { type: 'salamander', password: node.obfs };
+                    outbound.auth_str = node['auth-str'] || node.auth_str || node.auth;
+                    if (node.up || node['up-mbps']) {
+                        outbound.up_mbps =
+                            typeof node['up-mbps'] === 'number'
+                                ? node['up-mbps']
+                                : parseInt(String(node.up || '0').match(/\d+/)?.[0] || '0', 10);
+                    }
+                    if (node.down || node['down-mbps']) {
+                        outbound.down_mbps =
+                            typeof node['down-mbps'] === 'number'
+                                ? node['down-mbps']
+                                : parseInt(String(node.down || '0').match(/\d+/)?.[0] || '0', 10);
+                    }
+                    if (node.obfs) outbound.obfs = node.obfs;
+                    if (node.ports || node['server-ports']) {
+                        outbound.server_ports = String(node.ports || node['server-ports'])
+                            .split(/\s*,\s*/)
+                            .map((p) => {
+                                const range = p.replace(/\s*-\s*/g, ':');
+                                return range.includes(':') ? range : `${range}:${range}`;
+                            });
+                    }
+                    if (node['hop-interval']) {
+                        const hi = String(node['hop-interval']);
+                        outbound.hop_interval = /^\d+$/.test(hi) ? `${hi}s` : hi;
+                    }
                     if (node['recv-window-conn']) outbound.recv_window_conn = node['recv-window-conn'];
                     if (node['recv-window']) outbound.recv_window = node['recv-window'];
                     if (node['fast-open']) outbound.udp_fragment = true;
@@ -198,12 +250,21 @@ export class SingboxConverter extends BaseConverter {
                     this.appendTLS(outbound, node);
                     break;
                 case 'hysteria2':
-                    outbound.password = node.password;
+                    outbound.password = node.password || node.auth;
                     {
                         const hy2ObfsPass =
                             node['obfs-password'] ||
-                            (node.obfs && node.obfs !== 'salamander' ? node.obfs : undefined);
-                        if (hy2ObfsPass || node.obfs === 'salamander') {
+                            (node.obfs && node.obfs !== 'salamander' && node.obfs !== 'gecko' ? node.obfs : undefined);
+                        if (['salamander', 'gecko'].includes(node.obfs || '')) {
+                            outbound.obfs = {
+                                type: node.obfs,
+                                password: hy2ObfsPass || ''
+                            };
+                            if (node.obfs === 'gecko') {
+                                if (node['obfs-min-packet-size']) outbound.obfs.min_packet_size = node['obfs-min-packet-size'];
+                                if (node['obfs-max-packet-size']) outbound.obfs.max_packet_size = Math.min(node['obfs-max-packet-size'], 2048);
+                            }
+                        } else if (hy2ObfsPass || node.obfs === 'salamander') {
                             outbound.obfs = {
                                 type: 'salamander',
                                 password: hy2ObfsPass || ''
@@ -223,8 +284,8 @@ export class SingboxConverter extends BaseConverter {
                                 : parseInt(String(node.down || '0').match(/\d+/)?.[0] || '0', 10);
                     }
                     // 端口跳跃
-                    if (node.ports) {
-                        outbound.server_ports = String(node.ports)
+                    if (node.ports || node['server-ports']) {
+                        outbound.server_ports = String(node.ports || node['server-ports'])
                             .split(/\s*,\s*/)
                             .map((p) => {
                                 const range = p.replace(/\s*-\s*/g, ':');
@@ -235,6 +296,8 @@ export class SingboxConverter extends BaseConverter {
                         const hi = String(node['hop-interval']);
                         outbound.hop_interval = /^\d+$/.test(hi) ? `${hi}s` : hi;
                     }
+                    if (node['bbr-profile']) outbound.bbr_profile = node['bbr-profile'];
+                    if (node['disable-chrome-parrot']) outbound.disable_chrome_parrot = true;
                     if (node['fast-open']) outbound.udp_fragment = true;
                     if (node['disable-mtu-discovery']) outbound.disable_mtu_discovery = true;
                     this.appendTLS(outbound, node);
@@ -242,13 +305,16 @@ export class SingboxConverter extends BaseConverter {
                 case 'tuic':
                     outbound.uuid = node.uuid;
                     outbound.password = node.password || node.token;
-                    if (node['congestion-controller'] && node['congestion-controller'] !== 'cubic')
-                        outbound.congestion_control = node['congestion-controller'];
-                    if (node['udp-relay-mode'] && node['udp-relay-mode'] !== 'native')
-                        outbound.udp_relay_mode = node['udp-relay-mode'];
-                    if (node['reduce-rtt']) outbound.zero_rtt_handshake = true;
-                    if (node['heartbeat-interval']) {
-                        const hi = String(node['heartbeat-interval']);
+                    const congestion = node['congestion-controller'] || node.congestion_control;
+                    if (congestion && congestion !== 'cubic')
+                        outbound.congestion_control = congestion;
+                    const relayMode = node['udp-relay-mode'] || node.udp_relay_mode;
+                    if (relayMode && relayMode !== 'native')
+                        outbound.udp_relay_mode = relayMode;
+                    if (node['reduce-rtt'] || node.zero_rtt_handshake) outbound.zero_rtt_handshake = true;
+                    const hb = node['heartbeat-interval'] || node.heartbeat;
+                    if (hb) {
+                        const hi = String(hb);
                         outbound.heartbeat = /^\d+$/.test(hi) ? `${hi}ms` : hi;
                     }
                     if (node['udp-over-stream']) outbound.udp_over_stream = true;
@@ -256,12 +322,10 @@ export class SingboxConverter extends BaseConverter {
                     break;
                 case 'wireguard': {
                     const localAddr: string[] = [];
-                    if (node.ip) {
-                        localAddr.push(/\//.test(node.ip) ? node.ip : `${node.ip}/32`);
-                    }
-                    if (node.ipv6) {
-                        localAddr.push(/\//.test(node.ipv6) ? node.ipv6 : `${node.ipv6}/128`);
-                    }
+                    const ipWithCidr = getWireGuardAddressWithCIDR(node, 'ipv4');
+                    if (ipWithCidr) localAddr.push(ipWithCidr);
+                    const ipv6WithCidr = getWireGuardAddressWithCIDR(node, 'ipv6');
+                    if (ipv6WithCidr) localAddr.push(ipv6WithCidr);
                     outbound.local_address = localAddr;
                     outbound.private_key = node['private-key'] || node.privateKey;
                     // reserved 字段处理
@@ -311,26 +375,37 @@ export class SingboxConverter extends BaseConverter {
                         outbound.peer_public_key =
                             node['public-key'] || node.publicKey || firstPeer?.['public-key'] || (firstPeer as any)?.publicKey;
                         const psk =
-                            node['pre-shared-key'] || node['preshared-key'] || firstPeer?.['pre-shared-key'] || (firstPeer as any)?.['preshared-key'];
+                            node['pre-shared-key'] || node['preshared-key'] || node.preshared_key || firstPeer?.['pre-shared-key'] || (firstPeer as any)?.['preshared-key'];
                         if (psk) outbound.pre_shared_key = psk;
                         if (!outbound.reserved && firstPeer?.reserved) {
                             const pRes = normalizeReserved(firstPeer.reserved);
                             if (pRes) outbound.reserved = pRes;
                         }
                     }
+                    if (node.system) outbound.system = true;
                     break;
                 }
                 case 'snell': {
-                    outbound.psk = node.password;
+                    outbound.psk = node.psk || node.password;
                     outbound.version = node.version || 4;
-                    const obfsMode = node['obfs-opts']?.mode || node.obfs;
-                    const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
-                    if (obfsMode) outbound.obfs_mode = obfsMode;
-                    if (obfsHost) outbound.obfs_host = obfsHost;
+                    if (node.userkey || node._userkey) outbound.userkey = node.userkey || node._userkey;
+                    if (outbound.version === 6) {
+                        if (node.mode) outbound.mode = node.mode;
+                        if (node['quic-proxy-mode'] != null) outbound.quic_proxy_mode = !!node['quic-proxy-mode'];
+                    } else {
+                        const obfsMode = node['obfs-opts']?.mode || node.obfs;
+                        const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
+                        if (obfsMode && obfsMode !== 'shadow-tls') outbound.obfs_mode = obfsMode;
+                        if (obfsHost && obfsMode !== 'shadow-tls') outbound.obfs_host = obfsHost;
+                    }
+                    if (node.reuse && (outbound.version == null || outbound.version >= 4)) outbound.reuse = true;
                     break;
                 }
                 case 'anytls':
                     outbound.password = node.password;
+                    if (node['client-metadata']) outbound.client_metadata = String(node['client-metadata']);
+                    if (node['disable-reuse'] != null) outbound.disable_reuse = !!node['disable-reuse'];
+                    if (node.reuse === false) outbound.disable_reuse = true;
                     // session 相关参数
                     if (/^\d+$/.test(String(node['idle-session-check-interval'])))
                         outbound.idle_session_check_interval = `${node['idle-session-check-interval']}s`;
@@ -405,6 +480,22 @@ export class SingboxConverter extends BaseConverter {
         if (node['tls-fingerprint']) {
             tls.certificate_public_key_sha256 = node['tls-fingerprint'];
         }
+
+        const sha256Fingerprint = node['server-cert-fingerprint-sha256'] || node['tls-fingerprint'] || node.fingerprint;
+        if (sha256Fingerprint && !node.ca && !node['ca-str'] && !node.ca_str) {
+            const hex = String(sha256Fingerprint).trim().replace(/:/g, '');
+            if (/^[0-9a-f]{64}$/i.test(hex)) {
+                tls.certificate_sha256 = [Buffer.from(hex, 'hex').toString('base64')];
+            }
+        }
+        if (node['tls-pubkey-sha256']) {
+            tls.certificate_public_key_sha256 = node['tls-pubkey-sha256'];
+        }
+
+        if (node.ca) tls.certificate_path = String(node.ca);
+        if (node.ca_str) tls.certificate = [String(node.ca_str)];
+        if (node['ca-str']) tls.certificate = [String(node['ca-str'])];
+        if (node['disable-sni']) tls.disable_sni = true;
 
         outbound.tls = tls;
     }

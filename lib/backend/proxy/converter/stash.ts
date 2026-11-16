@@ -131,9 +131,19 @@ export class StashConverter extends ClashConverter {
             delete node.sni;
         }
 
-        // Stash doesn't support dialer-proxy/underlying-proxy in standard node definition
-        delete node['dialer-proxy'];
-        delete node['underlying-proxy'];
+        if (node.type === 'tuic') {
+            if (!node.token && !node.version) node.version = 5;
+            if (!node.alpn) node.alpn = ['h3'];
+        }
+
+        if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'juicity', 'anytls', 'naive'].includes(node.type)) {
+            delete node.tls;
+        }
+
+        if (node['underlying-proxy']) {
+            node['dialer-proxy'] = node['underlying-proxy'];
+            delete node['underlying-proxy'];
+        }
 
         return node;
     }

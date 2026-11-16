@@ -75,38 +75,56 @@ export class LoonConverter extends BaseConverter {
 
     private convertSingle(proxy: ProxyNode, _opts: ConvertOptions): string {
         try {
+            let result = '';
             switch (proxy.type) {
                 case 'ss':
-                    return this.ss(proxy);
+                    result = this.ss(proxy);
+                    break;
                 case 'ssr':
-                    return this.ssr(proxy);
+                    result = this.ssr(proxy);
+                    break;
                 case 'trojan':
-                    return this.trojan(proxy);
+                    result = this.trojan(proxy);
+                    break;
                 case 'vmess':
-                    return this.vmess(proxy);
+                    result = this.vmess(proxy);
+                    break;
                 case 'vless':
-                    return this.vless(proxy);
+                    result = this.vless(proxy);
+                    break;
                 case 'http':
                 case 'https':
-                    return this.http(proxy);
+                    result = this.http(proxy);
+                    break;
                 case 'socks5':
-                    return this.socks5(proxy);
+                    result = this.socks5(proxy);
+                    break;
                 case 'wireguard':
-                    return this.wireguard(proxy);
+                    result = this.wireguard(proxy);
+                    break;
                 case 'snell':
-                    return this.snell(proxy);
+                    result = this.snell(proxy);
+                    break;
                 case 'tuic':
-                    return this.tuic(proxy);
+                    result = this.tuic(proxy);
+                    break;
                 case 'hysteria':
-                    return this.hysteria(proxy);
+                    result = this.hysteria(proxy);
+                    break;
                 case 'hysteria2':
-                    return this.hysteria2(proxy);
+                    result = this.hysteria2(proxy);
+                    break;
                 case 'anytls':
-                    return this.anytls(proxy);
+                    result = this.anytls(proxy);
+                    break;
                 default:
                     console.warn(`[LoonConverter] Unsupported proxy type: ${proxy.type}`);
                     return '';
             }
+            if (result && Array.isArray(proxy['server-dns']) && proxy['server-dns'].length > 0) {
+                result += `,server-dns="${proxy['server-dns'].join(',')}"`;
+            }
+            return result;
         } catch (e) {
             console.error(`[LoonConverter] Failed to produce Loon config for ${proxy.name}:`, e);
             return '';
@@ -135,6 +153,10 @@ export class LoonConverter extends BaseConverter {
                 if (version) result.append(`,shadow-tls-version=${version}`);
                 result.appendIfPresent(`,udp-port=${proxy['udp-port']}`, 'udp-port');
             }
+        }
+
+        if ((proxy['udp-over-tcp'] || proxy.uot) && proxy.plugin !== 'obfs' && proxy['udp-over-tcp-version'] !== 1) {
+            result.append(`,udp-over-tcp=true`);
         }
 
         this.appendCommon(result, proxy);
@@ -175,7 +197,8 @@ export class LoonConverter extends BaseConverter {
         if (isReality) {
             appendReality(result, proxy);
         } else {
-            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            const sni = proxy.sni || proxy.servername;
+            if (sni) result.append(`,tls-name=${sni}`);
             result.appendIfPresent(
                 `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
                 'tls-fingerprint'
@@ -374,7 +397,15 @@ export class LoonConverter extends BaseConverter {
     private hysteria2(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(`${proxy.name}=Hysteria2,${proxy.server},${proxy.port}`);
-        result.appendIfPresent(`,"${proxy.password}"`, 'password');
+        const pass = proxy.password || proxy.auth;
+        if (pass) result.append(`,"${pass}"`);
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports && `${ports}`.trim().length > 0) {
+            result.append(`,server-ports="${ports}"`);
+        }
+        if (isPresent(proxy, 'hop-interval') && `${proxy['hop-interval']}`.trim().length > 0) {
+            result.append(`,hop-interval=${proxy['hop-interval']}`);
+        }
         const sni = proxy.sni || proxy.servername;
         if (sni) result.append(`,tls-name=${sni}`);
         result.appendIfPresent(
@@ -432,13 +463,16 @@ export class LoonConverter extends BaseConverter {
 
     private snell(proxy: ProxyNode): string {
         const result = new Result(proxy);
+        const psk = proxy.psk || proxy.password;
         result.append(
-            `${proxy.name}=snell,${proxy.server},${proxy.port},psk="${proxy.password}",version=${proxy.version || 4}`
+            `${proxy.name}=snell,${proxy.server},${proxy.port},psk="${psk}",version=${proxy.version || 4}`
         );
         const obfs = proxy['obfs-opts']?.mode || proxy.obfs;
         const obfsHost = proxy['obfs-opts']?.host || proxy['obfs-host'];
         if (obfs) result.append(`,obfs=${obfs}`);
         if (obfsHost) result.append(`,obfs-host=${obfsHost}`);
+        if (proxy.reuse !== undefined) result.append(`,reuse=${proxy.reuse}`);
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
@@ -463,7 +497,8 @@ export class LoonConverter extends BaseConverter {
         if (isReality) {
             appendReality(result, proxy);
         } else {
-            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            const sni = proxy.sni || proxy.servername;
+            if (sni) result.append(`,tls-name=${sni}`);
             result.appendIfPresent(
                 `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
                 'tls-fingerprint'

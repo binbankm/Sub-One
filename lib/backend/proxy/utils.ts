@@ -82,6 +82,54 @@ export function normalizeReserved(value: any): number[] | undefined {
     return undefined;
 }
 
+/**
+ * 解析 WireGuard CIDR
+ */
+function parseWireGuardCIDR(cidr: any, max: number): number | undefined {
+    if (cidr == null) return undefined;
+    const normalized = `${cidr}`.trim();
+    if (!/^\d+$/.test(normalized)) return undefined;
+    const parsed = parseInt(normalized, 10);
+    if (parsed < 0 || parsed > max) return undefined;
+    return parsed;
+}
+
+/**
+ * 解析 WireGuard 接口地址
+ */
+function parseWireGuardInterfaceAddress(value: any, family: 'ipv4' | 'ipv6') {
+    if (value == null) return null;
+    const raw = `${value}`.trim();
+    if (!raw) return null;
+    const [, hostRaw = raw, cidrRaw] = /^(.*?)(?:\/(\d+))?$/.exec(raw) || [];
+    const host = `${hostRaw}`.trim().replace(/^\[/, '').replace(/\]$/, '');
+    const isIPv4Family = family === 'ipv4';
+    const isValid = isIPv4Family ? isIPv4(host) : isIPv6(host);
+    if (!isValid) return null;
+    const max = isIPv4Family ? 32 : 128;
+    return {
+        address: host,
+        cidr: parseWireGuardCIDR(cidrRaw, max)
+    };
+}
+
+/**
+ * 获取规范带 CIDR 的 WireGuard 接口地址 (例如 10.0.0.1/32 或 fd00::1/128)
+ */
+export function getWireGuardAddressWithCIDR(
+    proxy: any = {},
+    family: 'ipv4' | 'ipv6' = 'ipv4'
+): string | undefined {
+    const config =
+        family === 'ipv6'
+            ? { addressKey: 'ipv6', cidrKey: 'ipv6-cidr', defaultCIDR: 128 }
+            : { addressKey: 'ip', cidrKey: 'ip-cidr', defaultCIDR: 32 };
+    const parsed = parseWireGuardInterfaceAddress(proxy[config.addressKey], family);
+    if (!parsed) return undefined;
+    const normalizedCIDR = parseWireGuardCIDR(proxy[config.cidrKey], config.defaultCIDR);
+    return `${parsed.address}/${normalizedCIDR ?? parsed.cidr ?? config.defaultCIDR}`;
+}
+
 // ============================================================================
 // UUID 验证
 // ============================================================================

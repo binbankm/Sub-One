@@ -69,6 +69,14 @@ export class QuantumultXConverter extends BaseConverter {
             }
 
             if (!result) return '';
+            if (proxy['reality-opts']) {
+                if (proxy['reality-opts']['public-key']) {
+                    result += `,reality-base64-pubkey=${proxy['reality-opts']['public-key']}`;
+                }
+                if (proxy['reality-opts']['short-id']) {
+                    result += `,reality-hex-shortid=${proxy['reality-opts']['short-id']}`;
+                }
+            }
             result += `,tag=${proxy.name}`;
 
             return result;
@@ -112,6 +120,7 @@ export class QuantumultXConverter extends BaseConverter {
         result.appendIfPresent(`,obfs=${proxy.obfs || 'plain'}`, 'obfs');
         result.appendIfPresent(`,obfs-param=${proxy['obfs-param']}`, 'obfs-param');
         this.appendCommon(result, proxy);
+        this.appendUOT(result, proxy);
         return result.toString();
     }
 
@@ -195,11 +204,6 @@ export class QuantumultXConverter extends BaseConverter {
             );
 
         this.appendTLS(result, proxy);
-        if (proxy['reality-opts']) {
-            const r = proxy['reality-opts'];
-            if (r['public-key']) result.append(`,reality-base64-pubkey=${r['public-key']}`);
-            if (r['short-id']) result.append(`,reality-hex-shortid=${r['short-id']}`);
-        }
         if (proxy.flow) result.append(`,vless-flow=${proxy.flow}`);
         this.appendCommon(result, proxy);
         return result.toString();
@@ -251,10 +255,11 @@ export class QuantumultXConverter extends BaseConverter {
         if (!proxy.tls && proxy.type !== 'https' && !proxy['reality-opts']) return;
         const sni = proxy.sni || proxy.servername;
         if (sni) result.append(`,tls-host=${sni}`);
-        result.appendIfPresent(
-            `,tls-verification=${!proxy['skip-cert-verify']}`,
-            'skip-cert-verify'
-        );
+        if (proxy['name-cert-verify']) {
+            result.append(`,tls-verification=${proxy['name-cert-verify']}`);
+        } else if (proxy['skip-cert-verify'] !== undefined) {
+            result.append(`,tls-verification=${!proxy['skip-cert-verify']}`);
+        }
         result.appendIfPresent(`,tls-cert-sha256=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
         result.appendIfPresent(
             `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
@@ -277,8 +282,10 @@ export class QuantumultXConverter extends BaseConverter {
     }
 
     private appendUOT(result: Result, proxy: ProxyNode) {
-        if (proxy['udp-over-tcp']) {
-            const ver = proxy['udp-over-tcp-version'] || 1;
+        if (proxy._ssr_python_uot) {
+            result.append(`,udp-over-tcp=true`);
+        } else if (proxy['udp-over-tcp'] || proxy.uot) {
+            const ver = proxy['udp-over-tcp-version'] === 2 ? 2 : 1;
             result.append(`,udp-over-tcp=sp.v${ver}`);
         }
     }

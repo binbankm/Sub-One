@@ -96,7 +96,7 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
             r['spider-x'] = spx;
             r['_spider-x'] = spx;
         }
-        // Loon profile 触发 support-x25519mlkem768 规范 (Sub-Store 兼容)
+        // Loon profile 触发 support-x25519mlkem768 规范 
         if (
             r['public-key'] &&
             r['support-x25519mlkem768'] === undefined &&

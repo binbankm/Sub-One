@@ -33,6 +33,10 @@ export class SurfboardConverter extends BaseConverter {
                     return this.socks5(p);
                 case 'snell':
                     return this.snell(p);
+                case 'tuic':
+                    return this.tuic(p);
+                case 'hysteria2':
+                    return this.hysteria2(p);
                 case 'wireguard':
                     return this.wireguard(p);
                 case 'anytls':
@@ -131,7 +135,7 @@ export class SurfboardConverter extends BaseConverter {
     }
 
     private snell(proxy: ProxyNode): string {
-        if ((proxy.version ?? 0) > 3) {
+        if (proxy.version != null && ![1, 2, 3, 4, 5].includes(Number(proxy.version))) {
             throw new Error(
                 `[SurfboardConverter] Surfboard does not support Snell version ${proxy.version}`
             );
@@ -139,36 +143,116 @@ export class SurfboardConverter extends BaseConverter {
         const result = new Result(proxy);
         result.append(`${proxy.name}=snell,${proxy.server},${proxy.port}`);
         result.appendIfPresent(`,version=${proxy.version}`, 'version');
-        result.appendIfPresent(`,psk=${proxy.password}`, 'password');
+        const psk = proxy.psk || proxy.password;
+        if (psk) {
+            result.append(`,psk="${psk}"`);
+        }
         if (proxy['obfs-opts']?.mode) {
             result.append(`,obfs=${proxy['obfs-opts'].mode}`);
             result.appendIfPresent(`,obfs-host=${proxy['obfs-opts'].host}`, 'obfs-opts.host');
+            result.appendIfPresent(`,obfs-uri=${proxy['obfs-opts'].path}`, 'obfs-opts.path');
         }
         result.appendIfPresent(`,tfo=${proxy.tfo}`, 'tfo');
         if ((proxy.version ?? 0) >= 3) {
             result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         }
+        result.appendIfPresent(`,reuse=${proxy.reuse}`, 'reuse');
+        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
+        return result.toString();
+    }
+
+    private tuic(proxy: ProxyNode): string {
+        if (proxy.token && proxy.token.length > 0) {
+            throw new Error(`[SurfboardConverter] Surfboard does not support TUIC v4`);
+        }
+        const result = new Result(proxy);
+        result.append(`${proxy.name}=tuic-v5,${proxy.server},${proxy.port}`);
+        result.appendIfPresent(`,uuid=${proxy.uuid}`, 'uuid');
+        if (proxy.password) {
+            result.append(`,password="${proxy.password}"`);
+        }
+        if (proxy.alpn) {
+            const alpnStr = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            result.append(`,alpn="${alpnStr}"`);
+        }
+        if (proxy.ports) {
+            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
+        }
+        if (proxy['hop-interval']) {
+            result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
+        }
+        this.appendTlsProxyParams(result, proxy);
+        result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        return result.toString();
+    }
+
+    private hysteria2(proxy: ProxyNode): string {
+        if (
+            (proxy.obfs && proxy.obfs !== 'salamander') ||
+            (proxy['obfs-password'] && proxy.obfs !== 'salamander')
+        ) {
+            throw new Error(`[SurfboardConverter] Surfboard Hysteria2 only supports salamander obfs`);
+        }
+
+        const result = new Result(proxy);
+        result.append(`${proxy.name}=hysteria2,${proxy.server},${proxy.port}`);
+        if (proxy.password) {
+            result.append(`,password="${proxy.password}"`);
+        }
+        if (proxy.ports) {
+            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
+        }
+        if (proxy['hop-interval']) {
+            result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
+        }
+        if (proxy['obfs-password']) {
+            result.append(`,salamander-password="${proxy['obfs-password']}"`);
+        }
+
+        this.appendTlsProxyParams(result, proxy);
+
+        const downVal = proxy['download-bandwidth'] || proxy['down-mbps'] || proxy.down;
+        if (downVal) {
+            const match = String(downVal).match(/\d+/);
+            result.append(`,download-bandwidth=${match ? match[0] : 0}`);
+        }
+
+        result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
         return result.toString();
     }
 
     private wireguard(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(`${proxy.name}=wireguard`);
-        result.appendIfPresent(`,section-name=${proxy.name}`, 'name');
+        const sectionName = proxy['section-name'] || proxy._sectionName || proxy.name;
+        result.append(`,section-name=${sectionName}`);
+        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
         return result.toString();
+    }
+
+    private appendTlsProxyParams(result: Result, proxy: ProxyNode, enabled = true) {
+        if (!enabled) return;
+        const fingerprint = proxy['tls-fingerprint'] || proxy['client-fingerprint'];
+        if (fingerprint) {
+            result.append(`,server-cert-fingerprint-sha256=${fingerprint}`);
+        }
+        if (proxy.sni) {
+            result.append(`,sni="${proxy.sni}"`);
+        }
+        result.appendIfPresent(
+            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
+            'skip-cert-verify'
+        );
     }
 
     private anytls(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(`${proxy.name}=anytls,${proxy.server},${proxy.port}`);
-        result.appendIfPresent(`,password=${proxy.password}`, 'password');
+        result.appendIfPresent(`,password="${proxy.password}"`, 'password');
 
         // TLS verification
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(
-            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
-            'skip-cert-verify'
-        );
+        this.appendTlsProxyParams(result, proxy);
 
         // TFO
         result.appendIfPresent(`,tfo=${proxy.tfo}`, 'tfo');
@@ -178,6 +262,8 @@ export class SurfboardConverter extends BaseConverter {
 
         // reuse
         result.appendIfPresent(`,reuse=${proxy['reuse']}`, 'reuse');
+
+        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
 
         return result.toString();
     }

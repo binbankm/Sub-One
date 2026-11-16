@@ -4,6 +4,7 @@
 import yaml from 'js-yaml';
 
 import type { ConvertOptions, ProxyNode } from '../types';
+import { getWireGuardAddressWithCIDR } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -57,24 +58,68 @@ export class ShadowrocketConverter extends BaseConverter {
                     node['reality-opts'] = realityOpts;
                 }
             } else if (node.type === 'tuic' || node.type === 'hysteria2') {
+                if (node.type === 'hysteria2') {
+                    if (node.auth && !node.password) node.password = node.auth;
+                    if (node['server-ports'] && !node.ports) node.ports = node['server-ports'];
+                }
+                if (node.type === 'tuic') {
+                    if (!node.token && !node.version) node.version = 5;
+                }
                 if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
                 if (node.tfo && !node['fast-open']) node['fast-open'] = node.tfo;
                 if (node.sni && !node.servername) node.servername = node.sni;
             } else if (node.type === 'hysteria') {
                 if (node.auth && !node['auth-str']) node['auth-str'] = node.auth;
+                if (node['server-ports'] && !node.ports) node.ports = node['server-ports'];
                 if (node.sni && !node.servername) node.servername = node.sni;
             } else if (node.type === 'wireguard') {
                 node.keepalive = node.keepalive ?? node['persistent-keepalive'];
                 node['persistent-keepalive'] = node.keepalive;
                 node['preshared-key'] = node['preshared-key'] ?? node['pre-shared-key'];
                 node['pre-shared-key'] = node['preshared-key'];
+                const ipv4 = getWireGuardAddressWithCIDR(proxy, 'ipv4');
+                const ipv6 = getWireGuardAddressWithCIDR(proxy, 'ipv6');
+                if (ipv4) node.ip = ipv4;
+                if (ipv6) node.ipv6 = ipv6;
+            } else if (node.type === 'snell') {
+                if (node.password && !node.psk) node.psk = node.password;
+                if (node.psk && !node.password) node.password = node.psk;
+                if (node.version != null && node.version < 3) {
+                    delete node.udp;
+                }
+                if (node.plugin === 'shadow-tls' && node['plugin-opts']) {
+                    node['obfs-opts'] = {
+                        mode: 'shadow-tls',
+                        host: node['plugin-opts'].host,
+                        password: node['plugin-opts'].password,
+                        version: node['plugin-opts'].version
+                    };
+                    if (node['plugin-opts'].alpn) {
+                        node['obfs-opts'].alpn = node['plugin-opts'].alpn;
+                    }
+                    delete node.plugin;
+                    delete node['plugin-opts'];
+                }
             } else if (node.type === 'anytls') {
                 // AnyTLS 天然启用 TLS，不需要显式输出 tls 字段
                 delete node.tls;
+                if (node.reuse != null && !node.reuse) {
+                    node['disable-reuse'] = true;
+                    delete node.reuse;
+                }
                 if (node.sni && !node.servername) {
                     node.servername = node.sni;
                     delete node.sni;
                 }
+            }
+
+            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls'].includes(node.type)) {
+                delete node.tls;
+            }
+
+            if (node['underlying-proxy']) {
+                node['dialer-proxy'] = node['underlying-proxy'];
+                delete node['underlying-proxy'];
             }
 
             if (!node['client-fingerprint'] && ['vmess', 'vless', 'trojan'].includes(node.type)) {

@@ -24,7 +24,11 @@ export const PROXY_PROTOCOLS = [
     'https',
     'snell',
     'anytls',
-    'naive'
+    'naive',
+    'ssh',
+    'external',
+    'direct',
+    'reject'
 ] as const;
 
 /**
@@ -58,6 +62,9 @@ export const PLATFORMS = [
     'Loon',
     'QuantumultX',
     'Shadowrocket',
+    'Stash',
+    'Surfboard',
+    'Egern',
     'URI',
     'JSON'
 ] as const;
@@ -94,6 +101,15 @@ export const PLATFORM_ALIASES: Record<string, string> = {
     shadowrocket: 'Shadowrocket',
     rocket: 'Shadowrocket',
 
+    // Stash
+    stash: 'Stash',
+
+    // Surfboard
+    surfboard: 'Surfboard',
+
+    // Egern
+    egern: 'Egern',
+
     // URI/Base64
     uri: 'URI',
     base64: 'URI',
@@ -120,10 +136,25 @@ export const SS_CIPHERS = [
     'aes-128-gcm',
     'aes-192-gcm',
     'aes-256-gcm',
+    'aes-128-ccm',
+    'aes-192-ccm',
+    'aes-256-ccm',
+    'aes-128-gcm-siv',
+    'aes-256-gcm-siv',
     'chacha20-ietf-poly1305',
     'xchacha20-ietf-poly1305',
+    'chacha8-ietf-poly1305',
+    'xchacha8-ietf-poly1305',
+    'lea-128-gcm',
+    'lea-192-gcm',
+    'lea-256-gcm',
+    'rabbit128-poly1305',
+    'aegis-128l',
+    'aegis-256',
+    'aez-384',
+    'deoxys-ii-256-128',
 
-    // Stream (不安全，不推荐)
+    // Stream
     'aes-128-cfb',
     'aes-192-cfb',
     'aes-256-cfb',
@@ -131,7 +162,9 @@ export const SS_CIPHERS = [
     'aes-192-ctr',
     'aes-256-ctr',
     'rc4-md5',
+    'chacha20',
     'chacha20-ietf',
+    'xchacha20',
     'none',
     'plain'
 ] as const;
@@ -308,9 +341,12 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'wireguard',
         'socks5',
         'http',
+        'https',
         'snell',
         'anytls',
-        'naive'
+        'naive',
+        'direct',
+        'reject'
     ],
 
     ClashMeta: [
@@ -325,13 +361,19 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'wireguard',
         'socks5',
         'http',
+        'https',
         'snell',
         'anytls',
-        'naive'
+        'naive',
+        'ssh',
+        'direct',
+        'reject'
     ],
 
     Singbox: [
         'ss',
+        'ssr',
+        'shadowsocksr',
         'vmess',
         'vless',
         'trojan',
@@ -342,9 +384,12 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'ssh',
         'socks5',
         'http',
+        'https',
         'snell',
         'anytls',
-        'naive'
+        'naive',
+        'direct',
+        'reject'
     ],
 
     Surge: [
@@ -358,8 +403,12 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'ssh',
         'socks5',
         'http',
+        'https',
         'snell',
-        'anytls'
+        'anytls',
+        'external',
+        'direct',
+        'reject'
     ],
 
     Loon: [
@@ -374,8 +423,11 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'wireguard',
         'socks5',
         'http',
+        'https',
         'snell',
-        'anytls'
+        'anytls',
+        'direct',
+        'reject'
     ],
 
     QuantumultX: [
@@ -386,7 +438,10 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'trojan',
         'anytls',
         'socks5',
-        'http'
+        'http',
+        'https',
+        'direct',
+        'reject'
     ],
 
     Shadowrocket: [
@@ -402,6 +457,83 @@ export const PLATFORM_PROTOCOL_SUPPORT: Record<string, string[]> = {
         'snell',
         'socks5',
         'http',
+        'https',
+        'anytls',
+        'naive',
+        'ssh',
+        'direct',
+        'reject'
+    ],
+
+    Stash: [
+        'ss',
+        'ssr',
+        'vmess',
+        'vless',
+        'trojan',
+        'hysteria',
+        'hysteria2',
+        'tuic',
+        'wireguard',
+        'socks5',
+        'http',
+        'https',
+        'snell',
+        'anytls',
+        'ssh',
+        'direct',
+        'reject'
+    ],
+
+    Surfboard: [
+        'ss',
+        'vmess',
+        'trojan',
+        'socks5',
+        'http',
+        'https',
+        'snell',
+        'tuic',
+        'hysteria2',
+        'wireguard',
+        'anytls',
+        'direct',
+        'reject'
+    ],
+
+    Egern: [
+        'ss',
+        'ssr',
+        'vmess',
+        'vless',
+        'trojan',
+        'http',
+        'https',
+        'socks5',
+        'hysteria2',
+        'tuic',
+        'wireguard',
+        'snell',
+        'anytls',
+        'ssh',
+        'direct',
+        'reject'
+    ],
+
+    URI: [
+        'ss',
+        'ssr',
+        'vmess',
+        'vless',
+        'trojan',
+        'hysteria',
+        'hysteria2',
+        'tuic',
+        'wireguard',
+        'socks5',
+        'http',
+        'https',
+        'snell',
         'anytls',
         'naive'
     ]

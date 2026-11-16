@@ -238,7 +238,6 @@ export interface ProxyNode {
     'packet-addr'?: boolean;
     xudp?: boolean;
     _loon_tls_profile?: string; // Loon TLS profile 兼容
-    'block-quic'?: string; // on | off
     'hop-interval-max'?: number; // 端口跳跃区间上限 (Mihomo)
 
     // === ECH (Encrypted Client Hello) 选项 ===
@@ -250,6 +249,9 @@ export interface ProxyNode {
     _mode?: string; // VLESS Reality mode (URI round-trip)
     _pqv?: string; // VLESS pre-shared quantum version (URI round-trip)
     _h2?: boolean; // VLESS H2 标记 (URI round-trip)
+    _pcs?: string; // VLESS/Trojan pcs (URI round-trip)
+    _vcn?: string | string[]; // VLESS/Trojan vcn (URI round-trip)
+    _finalmask?: any; // VLESS finalmask
     _extra_unsupported?: Record<string, any>; // VLESS xhttp 不支持字段
 
     // === UDP/TCP 选项 ===
@@ -261,36 +263,63 @@ export interface ProxyNode {
     ports?: string | number; // 端口跳跃 (Port Hopping)
     'udp-over-tcp'?: boolean; // UDP Over TCP
     'udp-over-tcp-version'?: number;
+    uot?: boolean; // UDP Over TCP 别名
 
     // === VMess 特有 ===
     aead?: boolean; // VMess AEAD
     'vmess-aead'?: boolean; // 别名
+    'global-padding'?: boolean; // VMess global-padding
+    'authenticated-length'?: boolean; // VMess authenticated-length
 
     // === VLESS 特有 ===
     flow?: string; // VLESS flow (xtls-rprx-*)
     encryption?: string; // VLESS encryption
 
+    // === ShadowsocksR 特有 ===
+    'protocol-param'?: string; // ShadowsocksR protocol-param
+    protocol_param?: string; // ShadowsocksR protocol_param 别名
+    'obfs-param'?: string; // ShadowsocksR obfs-param
+    obfs_param?: string; // ShadowsocksR obfs_param 别名
+
     // === Hysteria/Hysteria2 特有 ===
     auth?: string; // Hysteria auth
     'auth-str'?: string; // Hysteria2 auth
+    auth_str?: string; // Hysteria auth 别名
     obfs?: string; // 混淆类型
     'obfs-password'?: string; // 混淆密码
+    'obfs-min-packet-size'?: number; // Gecko obfs 最小包大小
+    'obfs-max-packet-size'?: number; // Gecko obfs 最大包大小
+    'bbr-profile'?: string; // Hysteria2 BBR profile
+    'disable-chrome-parrot'?: boolean; // Hysteria2 disable chrome parrot
     protocol?: string; // 协议类型
     up?: string | number; // 上传速度
     down?: string | number; // 下载速度
+    upmbps?: number; // 上传速度 (mbps)
+    downmbps?: number; // 下载速度 (mbps)
     'up-mbps'?: number; // 上传速度 (Mbps)
     'down-mbps'?: number; // 下载速度 (Mbps)
+    'up-speed'?: number; // Stash 上传速度
+    'down-speed'?: number; // Stash 下载速度
+    'download-bandwidth'?: number | string; // 下载带宽 (Surge/Loon)
+    'server-ports'?: string; // Loon 端口跳跃
     'recv-window'?: number; // 接收窗口
     'recv-window-conn'?: number; // 连接接收窗口
     'disable-mtu-discovery'?: boolean; // 禁用MTU发现
     'hop-interval'?: string | number; // 端口跳跃间隔 (Hysteria2)
-    'heartbeat-interval'?: number; // 心跳间隔 (TUIC)
+    'heartbeat-interval'?: string | number; // 心跳间隔 (TUIC)
+    heartbeat?: string | number; // 心跳间隔别名
+    ca?: string; // CA 证书路径
+    ca_str?: string; // CA 证书内容
+    'ca-str'?: string; // CA 证书内容别名
 
     // === TUIC 特有 ===
     token?: string; // TUIC token
     'congestion-controller'?: string; // 拥塞控制
+    congestion_control?: string; // 拥塞控制别名
     'udp-relay-mode'?: string; // UDP中继模式
+    udp_relay_mode?: string; // UDP中继模式别名
     'reduce-rtt'?: boolean; // 减少RTT
+    zero_rtt_handshake?: boolean; // 0-RTT 握手别名
     'disable-sni'?: boolean; // 禁用 SNI (TUIC)
     'udp-over-stream'?: boolean; // UDP over Stream (TUIC)
     'request-timeout'?: number; // 请求超时
@@ -305,10 +334,21 @@ export interface ProxyNode {
     'pre-shared-key'?: string; // 预共享密钥
     'preshared-key'?: string; // 别名
     preSharedKey?: string; // 别名 (兼容旧版)
+    ip?: string; // IPv4 地址
+    'ip-cidr'?: number | string; // IPv4 CIDR 前缀长度
+    'ipv6-cidr'?: number | string; // IPv6 CIDR 前缀长度
+    'self-ip'?: string; // Surge WireGuard self-ip
+    'self-ip-v6'?: string; // Surge WireGuard self-ip-v6
+    'section-name'?: string; // Surge WireGuard section-name
+    _sectionName?: string; // 内部 section-name 兼容
+    'client-id'?: string; // Surge WireGuard client-id (reserved)
+    'remote-dns-resolve'?: boolean; // Mihomo WireGuard 远端 DNS 解析
     reserved?: string | number[]; // 保留字段
     mtu?: number; // MTU
     dns?: string | string[]; // DNS 服务器 (WireGuard)
-    'allowed-ips'?: string[]; // 允许的 IP 段 (WireGuard top-level)
+    dnsv6?: string; // IPv6 DNS 服务器
+    'dns-server'?: string | string[]; // Surge WireGuard dns-server
+    'allowed-ips'?: string | string[]; // 允许的 IP 段 (WireGuard top-level)
     ipv6?: string; // IPv6地址
     peers?: Array<{
         // WireGuard peers
@@ -317,9 +357,11 @@ export interface ProxyNode {
         endpoint?: string;
         'public-key'?: string;
         'pre-shared-key'?: string;
-        'allowed-ips'?: string[];
-        allowed_ips?: string[];
+        'allowed-ips'?: string | string[];
+        allowed_ips?: string | string[];
         reserved?: string | number[];
+        ip?: string;
+        ipv6?: string;
     }>;
 
     // === AnyTLS 特有 ===
@@ -328,17 +370,54 @@ export interface ProxyNode {
     'min-idle-session'?: number; // 最小空闲会话数
     'max-stream-count'?: number; // 最大流数量
     'tls-pubkey-sha256'?: string; // TLS 公钥 SHA256
+    reuse?: boolean; // AnyTLS 会话复用
+    'disable-reuse'?: boolean; // AnyTLS 禁用会话复用
+    'client-metadata'?: string; // AnyTLS 客户端元数据
 
     // === Snell 特有 ===
     version?: number; // Snell 版本
+    psk?: string; // Snell PSK
+    mode?: string; // Snell v6 握手模式 (default, unshaped, unsafe-raw)
+    'quic-proxy-mode'?: boolean; // Snell v6 QUIC proxy mode
+    userkey?: string; // Snell userkey
+    _userkey?: string;
     'obfs-opts'?: {
         mode?: string;
         host?: string;
+        path?: string;
+        version?: number;
+        password?: string;
     };
 
     // === Shadowsocks 插件 ===
     plugin?: string; // 插件名称
     'plugin-opts'?: Record<string, any>; // 插件选项
+    'shadow-tls-opts'?: {
+        host?: string;
+        password?: string;
+        version?: number;
+        alpn?: string[] | string;
+    };
+    'shadow-tls-password'?: string;
+    'shadow-tls-sni'?: string;
+    'shadow-tls-version'?: number;
+    'udp-port'?: number;
+
+    // === SSH 特有 ===
+    user?: string; // SSH 用户名
+    'private-key-path'?: string; // SSH 私钥路径
+    'private-key-passphrase'?: string; // SSH 私钥密码
+    'server-fingerprint'?: string; // SSH 服务器指纹
+    'host-key'?: string[]; // SSH host-key
+    'host-key-algorithms'?: string[]; // SSH host-key-algorithms
+    'idle-timeout'?: number; // SSH 空闲超时 (Surge)
+    host_keys?: string[]; // SSH host_keys 别名
+
+    // === Naive 特有 ===
+    insecure?: boolean; // Naive 跳过证书校验
+    'extra-headers'?: Record<string, string>; // Naive 额外请求头
+    quic?: boolean; // Naive QUIC
+    'quic-congestion-control'?: string; // Naive QUIC 拥塞控制
 
     // === 平台特定选项 ===
     interface?: string; // 出站接口
@@ -346,6 +425,26 @@ export interface ProxyNode {
     'ip-version'?: string; // IP版本 (dual/ipv4/ipv6/ipv4-prefer/ipv6-prefer)
     'client-fingerprint'?: string; // 客户端指纹
     'tls-fingerprint'?: string; // TLS 指纹 (用于 Hysteria2 pinSHA256)
+    'tls-alpn'?: string; // QX TLS ALPN 十六进制编码
+    'tls-no-session-ticket'?: boolean; // QX TLS 禁用 session ticket
+    'tls-no-session-reuse'?: boolean; // QX TLS 禁用 session reuse
+    'name-cert-verify'?: string; // 证书校验名称
+    'server-cert-fingerprint'?: string; // 证书指纹
+    'server-cert-fingerprint-sha256'?: string; // 证书 SHA256 指纹
+    'server-dns'?: string[]; // Loon server-dns
+    'block-quic'?: string | boolean | number; // 阻止 QUIC
+    block_quic?: boolean; // Egern block_quic 别名
+    'benchmark-url'?: string; // Stash benchmark-url
+    'benchmark-timeout'?: number; // Stash benchmark-timeout
+    _ssr_python_uot?: boolean; // QX Python UOT
+    system?: boolean; // Singbox WireGuard system 模式
+    local_address?: string | string[]; // WireGuard local_address
+    'local-address'?: string | string[]; // WireGuard local-address
+    local_ipv4?: string; // Egern WireGuard local_ipv4
+    local_ipv6?: string; // Egern WireGuard local_ipv6
+    peer_public_key?: string; // Egern WireGuard peer_public_key
+    preshared_key?: string; // Egern WireGuard preshared_key
+    dns_servers?: string | string[]; // Egern WireGuard dns_servers
 
     // === 内部工具 / 扩展字段 ===
     exec?: string; // Surge External exec

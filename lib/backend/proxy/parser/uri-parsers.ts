@@ -233,6 +233,14 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
                         password: pluginOpts.password,
                         version: pluginOpts.version ? parseInt(pluginOpts.version, 10) : undefined
                     };
+                } else if (pluginName === 'restls' || pluginName === 'restls-plugin') {
+                    proxy.plugin = 'restls';
+                    proxy['plugin-opts'] = {
+                        host: pluginOpts.host,
+                        password: pluginOpts.password,
+                        'version-hint': pluginOpts['version-hint'] || pluginOpts.versionHint,
+                        'restls-script': pluginOpts['restls-script'] || pluginOpts.restlsScript
+                    };
                 }
             }
         }
@@ -758,7 +766,7 @@ export function parseVMess(uri: string): ProxyNode | null {
         proxy['client-fingerprint'] = params.fp;
         proxy.alpn = params.alpn ? params.alpn.split(',') : undefined;
 
-        // Packet encoding (Sub-Store parity: defaults to 'xudp')
+        // Packet encoding  defaults to 'xudp'
         const rawPe = params.packetEncoding ?? params.packet_encoding ?? params['packet-encoding'];
         if (rawPe !== undefined) {
             const pe = String(rawPe).trim().toLowerCase();
@@ -930,7 +938,7 @@ export function parseVLESS(uri: string): ProxyNode | null {
         if (params.pcs) proxy._pcs = params.pcs;
         if (/(TRUE)|1/i.test(params.h2)) proxy._h2 = true;
 
-        // Packet encoding (Sub-Store parity: defaults to 'xudp')
+        // Packet encoding  parity: defaults to 'xudp'
         const rawPe = params.packetEncoding ?? params.packet_encoding ?? params['packet-encoding'];
         if (rawPe !== undefined) {
             const pe = String(rawPe).trim().toLowerCase();
@@ -1176,6 +1184,7 @@ export function parseSnell(uri: string): ProxyNode | null {
             server,
             port,
             password,
+            psk: password,
             name: name ? decodeURIComponent(name) : `Snell ${server}:${port}`
         };
 
@@ -1184,9 +1193,15 @@ export function parseSnell(uri: string): ProxyNode | null {
         if (params.version) {
             proxy.version = parseInt(params.version, 10);
         }
-        const obfsMode = params.obfs || params['obfs-mode'] || params.mode;
-        if (obfsMode) {
-            proxy.obfs = obfsMode;
+        if (params.mode) {
+            if (proxy.version === 6) {
+                proxy.mode = params.mode;
+            } else {
+                proxy.obfs = params.mode;
+            }
+        }
+        if (params.obfs || params['obfs-mode']) {
+            proxy.obfs = params.obfs || params['obfs-mode'];
         }
         if (params.host || params['obfs-host']) {
             proxy['obfs-host'] = params.host || params['obfs-host'];
@@ -1197,6 +1212,7 @@ export function parseSnell(uri: string): ProxyNode | null {
                 host: proxy['obfs-host']
             };
         }
+        if (params.reuse) proxy.reuse = /(true)|1/i.test(params.reuse);
         if (params.tfo) proxy.tfo = /(true)|1/i.test(params.tfo);
         if (params.udp) proxy.udp = /(true)|1/i.test(params.udp);
 
@@ -1529,15 +1545,23 @@ export function parseWireGuard(uri: string): ProxyNode | null {
                 }
             } else if (['address', 'ip'].includes(normalizedKey)) {
                 value.split(',').forEach((i) => {
-                    const ip = i
-                        .trim()
+                    const raw = i.trim();
+                    const ip = raw
                         .replace(/\/\d+$/, '')
                         .replace(/^\[/, '')
                         .replace(/\]$/, '');
                     if (isIPv4(ip)) {
                         proxy.ip = ip;
+                        if (raw.includes('/')) {
+                            const cidr = parseInt(raw.split('/')[1], 10);
+                            if (Number.isInteger(cidr)) proxy['ip-cidr'] = cidr;
+                        }
                     } else if (isIPv6(ip)) {
                         proxy.ipv6 = ip;
+                        if (raw.includes('/')) {
+                            const cidr = parseInt(raw.split('/')[1], 10);
+                            if (Number.isInteger(cidr)) proxy['ipv6-cidr'] = cidr;
+                        }
                     }
                 });
             } else if (normalizedKey === 'mtu') {

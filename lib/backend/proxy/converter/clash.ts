@@ -4,7 +4,7 @@
 import yaml from 'js-yaml';
 
 import type { ConvertOptions, ProxyNode } from '../types';
-import { normalizeReserved } from '../utils';
+import { getWireGuardAddressWithCIDR, normalizeReserved } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -111,10 +111,27 @@ export class ClashConverter extends BaseConverter {
             ];
             const metaCiphers = [
                 ...standardCiphers,
+                'aes-128-ccm',
+                'aes-192-ccm',
+                'aes-256-ccm',
+                'aes-128-gcm-siv',
+                'aes-256-gcm-siv',
+                'chacha20',
+                'chacha8-ietf-poly1305',
+                'xchacha8-ietf-poly1305',
                 '2022-blake3-aes-128-gcm',
                 '2022-blake3-aes-256-gcm',
                 '2022-blake3-chacha20-poly1305',
-                'none'
+                'lea-128-gcm',
+                'lea-192-gcm',
+                'lea-256-gcm',
+                'rabbit128-poly1305',
+                'aegis-128l',
+                'aegis-256',
+                'aez-384',
+                'deoxys-ii-256-128',
+                'none',
+                'plain'
             ];
 
             if (this.isMeta) {
@@ -195,6 +212,13 @@ export class ClashConverter extends BaseConverter {
                     delete node['shadow-tls-sni'];
                     delete node['shadow-tls-version'];
                 }
+                if (node.uot || node['udp-over-tcp']) {
+                    node['udp-over-tcp'] = true;
+                    if (node['udp-over-tcp-version'] === 1 || node['udp-over-tcp-version'] === 2) {
+                        node['udp-over-tcp-version'] = node['udp-over-tcp-version'];
+                    }
+                    delete node.uot;
+                }
                 if (isPresent(node, 'plugin-opts.mux') && node['plugin-opts']?.mux !== undefined) {
                     const v = String(node['plugin-opts'].mux).toLowerCase();
                     if (v === 'true' || v === '1') node['plugin-opts'].mux = true;
@@ -213,6 +237,10 @@ export class ClashConverter extends BaseConverter {
                 node['preshared-key'] = node['preshared-key'] ?? node['pre-shared-key'];
                 node['pre-shared-key'] = node['preshared-key'];
                 node.udp = true;
+                const ipWithCidr = getWireGuardAddressWithCIDR(node, 'ipv4');
+                if (ipWithCidr) node.ip = ipWithCidr;
+                const ipv6WithCidr = getWireGuardAddressWithCIDR(node, 'ipv6');
+                if (ipv6WithCidr) node.ipv6 = ipv6WithCidr;
                 if (node.reserved !== undefined) {
                     node.reserved = normalizeReserved(node.reserved);
                 }
@@ -249,30 +277,75 @@ export class ClashConverter extends BaseConverter {
                     node.psk = node.password;
                     delete node.password;
                 }
-                const obfsMode = node['obfs-opts']?.mode || node.obfs;
-                const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
-                if (obfsMode || obfsHost) {
-                    node['obfs-opts'] = {
-                        mode: obfsMode || 'http',
-                        ...(obfsHost ? { host: obfsHost } : {})
-                    };
-                    delete node.obfs;
-                    delete node['obfs-host'];
+                const version = Number(node.version ?? 1);
+                if (node.version != null && Number.isInteger(version)) {
+                    node.version = version;
                 }
+                if (version < 3) delete node.udp;
+                if (version < 6) delete node.mode;
+
+                if (node.plugin === 'shadow-tls' && node['plugin-opts']) {
+                    node['obfs-opts'] = {
+                        mode: 'shadow-tls',
+                        host: node['plugin-opts'].host,
+                        password: node['plugin-opts'].password,
+                        version: node['plugin-opts'].version,
+                        alpn: node['plugin-opts'].alpn
+                    };
+                    delete node.plugin;
+                    delete node['plugin-opts'];
+                } else {
+                    const obfsMode = node['obfs-opts']?.mode || node.obfs;
+                    const obfsHost = node['obfs-opts']?.host || node['obfs-host'];
+                    if (obfsMode || obfsHost) {
+                        node['obfs-opts'] = {
+                            mode: obfsMode || 'http',
+                            ...(obfsHost ? { host: obfsHost } : {})
+                        };
+                        delete node.obfs;
+                        delete node['obfs-host'];
+                    }
+                }
+            } else if (node.type === 'ssr') {
+                if (node.protocol_param && !node['protocol-param']) node['protocol-param'] = node.protocol_param;
+                if (node.obfs_param && !node['obfs-param']) node['obfs-param'] = node.obfs_param;
             } else if (node.type === 'hysteria') {
                 if (node.auth && !node['auth-str']) node['auth-str'] = node.auth;
+                if (node.auth_str && !node['auth-str']) node['auth-str'] = node.auth_str;
                 if (!isPresent(node, 'sni') && node.peer) node.sni = node.peer;
+                if (node.ca_str && !node['ca-str']) node['ca-str'] = node.ca_str;
+                if (node['server-ports'] && !node.ports) node.ports = node['server-ports'];
             } else if (node.type === 'tuic' || node.type === 'hysteria2') {
+                if (node.type === 'hysteria2') {
+                    if (node.auth && !node.password) node.password = node.auth;
+                    if (node['server-ports'] && !node.ports) node.ports = node['server-ports'];
+                    if (node['download-bandwidth'] && !node['down-mbps'] && !node.down) {
+                        node['down-mbps'] = node['download-bandwidth'];
+                    }
+                }
+                if (node.type === 'tuic') {
+                    if (node.congestion_control && !node['congestion-controller']) {
+                        node['congestion-controller'] = node.congestion_control;
+                    }
+                    if (node.udp_relay_mode && !node['udp-relay-mode']) {
+                        node['udp-relay-mode'] = node.udp_relay_mode;
+                    }
+                    if (node.zero_rtt_handshake && !node['reduce-rtt']) {
+                        node['reduce-rtt'] = true;
+                    }
+                    if (node.heartbeat && !node['heartbeat-interval']) {
+                        node['heartbeat-interval'] = node.heartbeat;
+                    }
+                    if (
+                        (!node.token || node.token.length === 0) &&
+                        !isPresent(node, 'version')
+                    ) {
+                        node.version = 5;
+                    }
+                }
                 if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
                 if (node.tfo && !node['fast-open']) node['fast-open'] = node.tfo;
-                // TUIC v5: 无 token 时自动补 version=5
-                if (
-                    node.type === 'tuic' &&
-                    (!node.token || node.token.length === 0) &&
-                    !isPresent(node, 'version')
-                ) {
-                    node.version = 5;
-                }
+                if (node.ca_str && !node['ca-str']) node['ca-str'] = node.ca_str;
             } else if (node.type === 'anytls') {
                 // AnyTLS 天然启用 TLS，不需要显式输出 tls 字段
                 delete node.tls;
@@ -280,6 +353,10 @@ export class ClashConverter extends BaseConverter {
                 if (node.sni && !node.servername) {
                     node.servername = node.sni;
                     delete node.sni;
+                }
+                if (node.reuse === false || node['disable-reuse']) {
+                    node['disable-reuse'] = true;
+                    delete node.reuse;
                 }
             }
 
@@ -434,13 +511,25 @@ export class ClashConverter extends BaseConverter {
                 'psk',
                 'uuid',
                 'username',
+                'user',
                 // 加密
                 'cipher',
                 'alterId',
+                'protocol',
+                'protocol-param',
+                'obfs-param',
+                'private-key-path',
+                'private-key-passphrase',
+                'host-key',
+                'host-key-algorithms',
+                'server-fingerprint',
                 // TLS
                 'tls',
                 'servername',
                 'alpn',
+                'fingerprint',
+                'ca',
+                'ca-str',
                 'skip-cert-verify',
                 'client-fingerprint',
                 // 传输层
@@ -474,6 +563,8 @@ export class ClashConverter extends BaseConverter {
                 'obfs',
                 'obfs-password',
                 'obfs-opts',
+                'bbr-profile',
+                'disable-chrome-parrot',
                 'up',
                 'down',
                 'up-mbps',
@@ -502,6 +593,7 @@ export class ClashConverter extends BaseConverter {
                 'idle-session-timeout',
                 'min-idle-session',
                 'max-stream-count',
+                'disable-reuse',
                 // WireGuard
                 'private-key',
                 'public-key',
@@ -520,6 +612,8 @@ export class ClashConverter extends BaseConverter {
                 // UDP/TCP
                 'udp',
                 'udp-relay',
+                'udp-over-tcp',
+                'udp-over-tcp-version',
                 'tfo',
                 'mptcp',
                 // 其他

@@ -88,5 +88,7 @@ export {
     LoonConverter,
     QuantumultXConverter,
     ShadowrocketConverter,
+    StashConverter,
+    SurfboardConverter,
     EgernConverter
 };
