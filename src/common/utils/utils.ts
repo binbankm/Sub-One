@@ -44,9 +44,12 @@ export function extractNodeName(url: string): string {
     // 处理空输入
     if (!url) return '';
 
+    // 若输入包含多行，单节点名称提取仅针对首行处理，避免多行混淆
+    const firstLine = url.split(/[\r\n]+/)[0]?.trim() || '';
+    if (!firstLine) return '';
+
     // 去除首尾空白
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) return '';
+    const trimmedUrl = firstLine;
 
     // ==================== 第一步：检查 URL Fragment ====================
     // URL fragment 是 # 后面的部分，通常包含节点的自定义名称
@@ -246,14 +249,17 @@ export function extractHostAndPort(url: string): { host: string; port: string } 
     // 处理空输入
     if (!url) return { host: '', port: '' };
 
+    const firstLine = url.split(/[\r\n]+/)[0]?.trim() || '';
+    if (!firstLine) return { host: '', port: '' };
+
     try {
-        const protocolEndIndex = url.indexOf('://');
+        const protocolEndIndex = firstLine.indexOf('://');
         if (protocolEndIndex === -1) throw new Error(i18n.global.t('common.api.formatError'));
 
-        const protocol = url.substring(0, protocolEndIndex).toLowerCase();
-        const fragmentStartIndex = url.indexOf('#');
-        const mainPartEndIndex = fragmentStartIndex === -1 ? url.length : fragmentStartIndex;
-        let mainPart = url.substring(protocolEndIndex + 3, mainPartEndIndex);
+        const protocol = firstLine.substring(0, protocolEndIndex).toLowerCase();
+        const fragmentStartIndex = firstLine.indexOf('#');
+        const mainPartEndIndex = fragmentStartIndex === -1 ? firstLine.length : fragmentStartIndex;
+        let mainPart = firstLine.substring(protocolEndIndex + 3, mainPartEndIndex);
 
         // ==================== VMess 专用处理 ====================
         if (protocol === 'vmess') {

@@ -14,6 +14,7 @@ import type { Node, ProxyType, Subscription } from '@/common/types';
 import { HTTP_REGEX, NODE_PROTOCOL_REGEX } from '@/common/utils/constants';
 import { getProtocol } from '@/common/utils/protocols';
 import { extractHostAndPort, extractNodeName, generateUUID } from '@/common/utils/utils';
+import { Base64 } from 'js-base64';
 
 // ==================== 接口定义 ====================
 
@@ -81,11 +82,23 @@ export function createNode(url: string, name?: string): Node {
     const { host, port } = extractHostAndPort(url);
     const protocol = getProtocol(url);
 
+    const hasFragment = url.includes('#');
+    let nodeName = '';
+    if (hasFragment) {
+        nodeName = extractNodeName(url);
+    }
+    if (!nodeName && name) {
+        nodeName = name;
+    }
+    if (!nodeName) {
+        nodeName = extractNodeName(url) || i18n.global.t('entities.subscription.tg.unnamed');
+    }
+
     return {
         // 生成唯一标识符（优先使用包装后的兼容函数）
         id: generateUUID(),
-        // 设置节点名称（优先使用传入的名称，否则从 URL 提取，最后使用默认值）
-        name: name || extractNodeName(url) || i18n.global.t('entities.subscription.tg.unnamed'),
+        // 设置节点名称
+        name: nodeName,
         // 保存节点 URL
         url: url,
         // 节点类型
@@ -106,25 +119,13 @@ export function createNode(url: string, name?: string): Node {
  *
  * 说明：
  * - 自动识别文本中的订阅链接和节点链接
+ * - 自动识别并解码 Base64 格式的订阅内容
  * - 订阅链接：以 http:// 或 https:// 开头
- * - 节点链接：以特定协议开头（如 vmess://, ss://, trojan:// 等）
- * - 支持多行文本，自动过滤空行
+ * - 节点链接：以特定协议开头（如 vmess://, ss://, trojan://, vless:// 等）
+ * - 支持多行文本，支持单行空格隔开的多个 URI，自动过滤空行
  *
- * @param {string} importText - 要解析的文本内容（可包含多行）
+ * @param {string} importText - 要解析的文本内容（可包含多行或 Base64）
  * @returns {ImportResult} 包含订阅列表和节点列表的对象
- *
- * @example
- * ```typescript
- * const text = `
- *   https://example.com/sub1
- *   vmess://xxxxx#香港节点
- *   https://example.com/sub2
- *   trojan://xxxxx#美国节点
- * `;
- * const result = parseImportText(text);
- * // result.subs: 2个订阅
- * // result.nodes: 2个节点
- * ```
  */
 export function parseImportText(importText: string): ImportResult {
     // 初始化结果数组
@@ -136,9 +137,30 @@ export function parseImportText(importText: string): ImportResult {
         return { subs: newSubs, nodes: newNodes };
     }
 
-    // 按换行符分割文本为行数组
-    // 注：这里使用简单的 split() 方法，对于大多数场景性能足够
-    const lines = importText.split('\n');
+    let rawText = importText.trim();
+
+    // 检查输入是否为 Base64 编码（机场常见订阅输出）
+    if (!HTTP_REGEX.test(rawText) && !NODE_PROTOCOL_REGEX.test(rawText)) {
+        try {
+            const sanitized = rawText.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+            if (sanitized.length >= 16 && /^[A-Za-z0-9+/=]+$/.test(sanitized)) {
+                const decoded = Base64.decode(sanitized);
+                if (
+                    decoded &&
+                    (NODE_PROTOCOL_REGEX.test(decoded) ||
+                        HTTP_REGEX.test(decoded) ||
+                        decoded.includes('://'))
+                ) {
+                    rawText = decoded;
+                }
+            }
+        } catch {
+            // Base64 解码失败则按原文处理
+        }
+    }
+
+    // 按换行符分割文本为行数组（兼容 CRLF 和 LF）
+    const lines = rawText.split(/[\r\n]+/);
 
     // 遍历每一行进行解析
     for (let i = 0; i < lines.length; i++) {
@@ -147,6 +169,19 @@ export function parseImportText(importText: string): ImportResult {
 
         // 跳过空行
         if (!line) continue;
+
+        // 检查一行中是否包含多个空格隔开的节点 URI
+        if (!HTTP_REGEX.test(line) && NODE_PROTOCOL_REGEX.test(line)) {
+            const matches = line.match(
+                /(?:ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5|snell|wireguard|wg|naive|naive\+https|naive\+http):\/\/[^\s]+/gi
+            );
+            if (matches && matches.length > 1) {
+                for (const uri of matches) {
+                    newNodes.push(createNode(uri.trim()));
+                }
+                continue;
+            }
+        }
 
         // 判断是订阅链接还是节点链接
         if (HTTP_REGEX.test(line)) {

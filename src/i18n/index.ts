@@ -9,7 +9,7 @@ const messages = {
 };
 
 // Retrieve saved locale from localStorage, or default to zh
-const savedLocale = localStorage.getItem('locale') || 'zh';
+const savedLocale = (typeof localStorage !== 'undefined' ? localStorage.getItem('locale') : null) || 'zh';
 
 // Create i18n instance with options
 const i18n = createI18n({

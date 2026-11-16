@@ -10,14 +10,14 @@
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import Modal from '@/common/ui/BaseModal.vue';
 
 // ==================== Props 和 Emit ====================
 
-defineProps<{
+const props = defineProps<{
     /** 显示状态 */
     show: boolean;
 }>();
@@ -34,6 +34,15 @@ const { t } = useI18n();
 /** 导入文本 */
 const importText = ref('');
 
+watch(
+    () => props.show,
+    (val) => {
+        if (!val) {
+            importText.value = '';
+        }
+    }
+);
+
 // ==================== 事件处理 ====================
 
 /**
@@ -41,14 +50,21 @@ const importText = ref('');
  * 触发导入事件并清空输入
  */
 const handleConfirm = () => {
-    emit('import', importText.value);
+    const trimmed = importText.value.trim();
+    if (!trimmed) return;
+    emit('import', trimmed);
     emit('update:show', false);
     importText.value = '';
 };
 </script>
 
 <template>
-    <Modal :show="show" @update:show="emit('update:show', $event)" @confirm="handleConfirm">
+    <Modal
+        :show="show"
+        :confirm-disabled="!importText.trim()"
+        @update:show="emit('update:show', $event)"
+        @confirm="handleConfirm"
+    >
         <template #title>
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ t('common.ui.bulk.title') }}</h3>
         </template>

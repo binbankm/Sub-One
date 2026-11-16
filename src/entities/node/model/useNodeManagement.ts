@@ -61,6 +61,32 @@ export function useNodeManagement() {
         }
 
         if (isNewNode.value) {
+            const { subs, nodes } = parseImportText(nodeToSave.url);
+            if (nodes.length > 1) {
+                if (subs.length > 0) {
+                    await dataStore.addSubscriptionsFromBulk(subs);
+                }
+                await dataStore.addNodesFromBulk(nodes);
+                toastStore.showToast(
+                    i18n.global.t('entities.node.management.importSuccess')
+                        .replace('{subs}', String(subs.length))
+                        .replace('{nodes}', String(nodes.length)),
+                    'success'
+                );
+                onSuccess();
+                showNodeModal.value = false;
+                return;
+            } else if (nodes.length === 1) {
+                const singleNode = { ...nodes[0] };
+                if (nodeToSave.name && nodeToSave.name.trim()) {
+                    singleNode.name = nodeToSave.name.trim();
+                }
+                await dataStore.addNode(singleNode);
+                onSuccess();
+                showNodeModal.value = false;
+                return;
+            }
+
             await dataStore.addNode(nodeToSave);
             onSuccess();
         } else {
@@ -94,6 +120,11 @@ export function useNodeManagement() {
 
     const handleBulkImport = async (importText: string, onSuccess: () => void) => {
         const { subs, nodes } = parseImportText(importText);
+        if (subs.length === 0 && nodes.length === 0) {
+            toastStore.showToast(i18n.global.t('entities.node.import.emptyContent'), 'warning');
+            return;
+        }
+
         if (subs.length > 0) await dataStore.addSubscriptionsFromBulk(subs);
         if (nodes.length > 0) {
             await dataStore.addNodesFromBulk(nodes);

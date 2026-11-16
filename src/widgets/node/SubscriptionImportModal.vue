@@ -18,11 +18,17 @@ import { useSubscriptionImport } from '@/entities/node/model/useSubscriptionImpo
 import type { Node } from '@/common/types/index';
 import Modal from '@/common/ui/BaseModal.vue';
 
-const props = defineProps<{
-    show: boolean;
-    addNodesFromBulk: (nodes: Node[]) => void;
-    onImportSuccess?: () => Promise<void>;
-}>();
+const props = withDefaults(
+    defineProps<{
+        show: boolean;
+        addNodesFromBulk: (nodes: Node[]) => void | Promise<void>;
+        onImportSuccess?: () => Promise<void>;
+        initialMode?: 'url' | 'text';
+    }>(),
+    {
+        initialMode: 'url'
+    }
+);
 
 const emit = defineEmits<{
     (e: 'update:show', value: boolean): void;

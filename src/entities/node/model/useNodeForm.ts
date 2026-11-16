@@ -49,7 +49,10 @@ export function useNodeForm(
             return false;
         }
 
-        if (!url.includes('://')) {
+        const hasProtocol = url.includes('://');
+        const isBase64 = !hasProtocol && /^[A-Za-z0-9+/=_\-\s]+$/.test(url) && url.length >= 16;
+
+        if (!hasProtocol && !isBase64) {
             urlError.value = i18n.global.t('entities.node.form.urlInvalid');
             return false;
         }
@@ -67,7 +70,8 @@ export function useNodeForm(
         const url = localNode.value.url?.trim();
 
         if (url && !localNode.value.name && !hasAutoExtractedName.value) {
-            const extractedName = extractNodeName(url);
+            const firstLine = url.split(/[\r\n]+/)[0]?.trim() || '';
+            const extractedName = extractNodeName(firstLine);
             if (extractedName && extractedName !== i18n.global.t('entities.node.fetching.unnamedNode')) {
                 localNode.value.name = extractedName;
                 hasAutoExtractedName.value = true;
@@ -92,13 +96,15 @@ export function useNodeForm(
             localNode.value.name = localNode.value.name.trim();
         }
 
-        if (!localNode.value.name && localNode.value.url) {
-            localNode.value.name = extractNodeName(localNode.value.url);
+        const firstLine = localNode.value.url?.split(/[\r\n]+/)[0]?.trim() || '';
+
+        if (!localNode.value.name && firstLine) {
+            localNode.value.name = extractNodeName(firstLine);
         }
 
-        if (localNode.value.url) {
-            const { host, port } = extractHostAndPort(localNode.value.url);
-            const type = getProtocol(localNode.value.url);
+        if (firstLine) {
+            const { host, port } = extractHostAndPort(firstLine);
+            const type = getProtocol(firstLine);
 
             localNode.value.server = host;
             localNode.value.port = parseInt(port) || 0;

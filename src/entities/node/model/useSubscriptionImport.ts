@@ -9,14 +9,15 @@ import i18n from '@/i18n';
 export function useSubscriptionImport(
     props: {
         show: boolean;
-        addNodesFromBulk: (nodes: Node[]) => void;
+        addNodesFromBulk: (nodes: Node[]) => void | Promise<void>;
         onImportSuccess?: () => Promise<void>;
+        initialMode?: 'url' | 'text';
     },
     emit: any
 ) {
     const toastStore = useToastStore();
 
-    const mode = ref<'url' | 'text'>('url');
+    const mode = ref<'url' | 'text'>(props.initialMode || 'url');
     const subscriptionUrl = ref('');
     const textContent = ref('');
     const isLoading = ref(false);
@@ -31,8 +32,10 @@ export function useSubscriptionImport(
                 textContent.value = '';
                 errorMessage.value = '';
                 isLoading.value = false;
-                mode.value = 'url';
+                mode.value = props.initialMode || 'url';
                 isDragging.value = false;
+            } else {
+                mode.value = props.initialMode || 'url';
             }
         }
     );
@@ -84,7 +87,7 @@ export function useSubscriptionImport(
     const _processParseResponse = async (data: any, methodMsg: string) => {
         const newNodes = handleNodeMapping(data.nodes || []);
         if (newNodes.length > 0) {
-            props.addNodesFromBulk(newNodes);
+            await props.addNodesFromBulk(newNodes);
             if (props.onImportSuccess) {
                 await props.onImportSuccess();
             }
@@ -102,12 +105,39 @@ export function useSubscriptionImport(
         errorMessage.value = '';
 
         if (mode.value === 'url') {
-            if (!subscriptionUrl.value.trim()) {
+            const rawUrl = subscriptionUrl.value.trim();
+            if (!rawUrl) {
                 errorMessage.value = i18n.global.t('entities.node.import.emptyUrl');
                 return;
             }
+
+            // 检查用户是否在 URL 框中粘贴了节点 URI 列表或 Base64
+            const { nodes } = parseImportText(rawUrl);
+            if (nodes.length > 0) {
+                isLoading.value = true;
+                try {
+                    await props.addNodesFromBulk(nodes);
+                    if (props.onImportSuccess) {
+                        await props.onImportSuccess();
+                    }
+                    toastStore.showToast(
+                        i18n.global.t('entities.node.import.importSuccess').replace('{count}', String(nodes.length)),
+                        'success'
+                    );
+                    emit('update:show', false);
+                    return;
+                } catch (error: unknown) {
+                    console.error('Import failed:', error);
+                    const msg = error instanceof Error ? error.message : String(error);
+                    errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg').replace('{msg}', msg);
+                    return;
+                } finally {
+                    isLoading.value = false;
+                }
+            }
+
             try {
-                new URL(subscriptionUrl.value);
+                new URL(rawUrl);
             } catch {
                 errorMessage.value = i18n.global.t('entities.node.import.invalidUrl');
                 return;
@@ -119,7 +149,7 @@ export function useSubscriptionImport(
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        url: subscriptionUrl.value.trim(),
+                        url: rawUrl,
                         returnNodes: true
                     })
                 });
@@ -148,7 +178,7 @@ export function useSubscriptionImport(
                 const { subs, nodes } = parseImportText(textContent.value);
 
                 if (nodes.length > 0) {
-                    props.addNodesFromBulk(nodes);
+                    await props.addNodesFromBulk(nodes);
                     if (props.onImportSuccess) {
                         await props.onImportSuccess();
                     }

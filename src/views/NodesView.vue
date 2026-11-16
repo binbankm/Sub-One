@@ -188,6 +188,7 @@ watch(selectedProtocol, () => {
 });
 
 const nodesMoreMenuItems = computed(() => [
+    { key: 'bulk-import', label: t('common.ui.bulk.title') },
     { key: 'auto-sort', label: t('views.nodes.menus.autoSort') },
     { key: 'deduplicate', label: t('views.nodes.menus.deduplicate') },
     { key: 'batch-delete', label: t('views.nodes.menus.batchDelete') },
@@ -240,6 +241,9 @@ const deleteSelected = async () => {
 };
 
 const handleNodesMoreMenuSelect = async (key: string) => {
+    if (key === 'bulk-import') {
+        showBulkImportModal.value = true;
+    }
     if (key === 'auto-sort') {
         await handleAutoSort();
     }
@@ -804,6 +808,7 @@ useTabActionTrigger(
             v-model:show="showSubscriptionImportModal"
             :add-nodes-from-bulk="dataStore.addNodesFromBulk"
             :on-import-success="handleSubscriptionImportSuccess"
+            initial-mode="text"
         />
     </div>
 </template>
