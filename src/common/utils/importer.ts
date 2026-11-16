@@ -173,7 +173,7 @@ export function parseImportText(importText: string): ImportResult {
         // 检查一行中是否包含多个空格隔开的节点 URI
         if (!HTTP_REGEX.test(line) && NODE_PROTOCOL_REGEX.test(line)) {
             const matches = line.match(
-                /(?:ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5|snell|wireguard|wg|naive|naive\+https|naive\+http):\/\/[^\s]+/gi
+                /(?:ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5?|socks|snell|wireguard|wg|naive|naive\+https|naive\+http|ssh|mieru|juicity):\/\/[^\s]+/gi
             );
             if (matches && matches.length > 1) {
                 for (const uri of matches) {
@@ -183,8 +183,14 @@ export function parseImportText(importText: string): ImportResult {
             }
         }
 
-        // 判断是订阅链接还是节点链接
-        if (HTTP_REGEX.test(line)) {
+        // 检查是否为 HTTP/HTTPS 代理节点（包含 user:pass@ 或者端口且包含 # 节点备注）
+        const isHttpProxyNode =
+            HTTP_REGEX.test(line) &&
+            ((line.includes('@') && /:\d+/.test(line)) || (line.includes('#') && /:\d+/.test(line)));
+
+        if (isHttpProxyNode) {
+            newNodes.push(createNode(line));
+        } else if (HTTP_REGEX.test(line)) {
             // HTTP/HTTPS 开头的是订阅链接
             newSubs.push(createSubscription(line));
         } else if (NODE_PROTOCOL_REGEX.test(line)) {

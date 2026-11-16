@@ -1680,6 +1680,101 @@ export function parseNaive(uri: string): ProxyNode | null {
     }
 }
 
+/**
+ * 解析 SSH URI
+ * 格式: ssh://[user[:password]@]server[:port][?key=val][#name]
+ */
+export function parseSSH(uri: string): ProxyNode | null {
+    try {
+        const line = uri.trim();
+        const parsed = /^ssh:\/\/(?:([^:@]+)(?::([^@]*))?@)?([^:/?#]+)(?::(\d+))?\/?(?:\?([^#]*))?(?:#(.*))?$/i.exec(line);
+        if (!parsed) return null;
+        const [, user, password, server, portStr, query = '', name] = parsed;
+        const port = portStr ? parsePort(portStr) : 22;
+        const proxy: ProxyNode = {
+            id: randomId(),
+            type: 'ssh',
+            name: name ? decodeURIComponent(name) : `${server}:${port}`,
+            server,
+            port,
+            user: user ? decodeURIComponent(user) : undefined,
+            password: password ? decodeURIComponent(password) : undefined
+        };
+        if (query) {
+            const params = parseQueryParams(query);
+            if (params.user && !proxy.user) proxy.user = decodeURIComponent(params.user);
+            if (params.password && !proxy.password) proxy.password = decodeURIComponent(params.password);
+            if (params['private-key'] || params.privateKey) proxy['private-key'] = decodeURIComponent(params['private-key'] || params.privateKey);
+        }
+        return proxy;
+    } catch (e) {
+        console.error('[parseSSH] Error:', e);
+        return null;
+    }
+}
+
+/**
+ * 解析 Mieru URI
+ * 格式: mieru://[user[:password]@]server[:port][?key=val][#name]
+ */
+export function parseMieru(uri: string): ProxyNode | null {
+    try {
+        const line = uri.trim();
+        const parsed = /^mieru:\/\/(?:([^:@]+)(?::([^@]*))?@)?([^:/?#]+)(?::(\d+))?\/?(?:\?([^#]*))?(?:#(.*))?$/i.exec(line);
+        if (!parsed) return null;
+        const [, user, password, server, portStr, query = '', name] = parsed;
+        const port = portStr ? parsePort(portStr) : 443;
+        const proxy: ProxyNode = {
+            id: randomId(),
+            type: 'mieru' as any,
+            name: name ? decodeURIComponent(name) : `${server}:${port}`,
+            server,
+            port,
+            username: user ? decodeURIComponent(user) : undefined,
+            password: password ? decodeURIComponent(password) : undefined
+        };
+        if (query) {
+            const params = parseQueryParams(query);
+            if (params.username && !proxy.username) proxy.username = decodeURIComponent(params.username);
+        }
+        return proxy;
+    } catch (e) {
+        console.error('[parseMieru] Error:', e);
+        return null;
+    }
+}
+
+/**
+ * 解析 Juicity URI
+ * 格式: juicity://[uuid[:password]@]server[:port][?key=val][#name]
+ */
+export function parseJuicity(uri: string): ProxyNode | null {
+    try {
+        const line = uri.trim();
+        const parsed = /^juicity:\/\/(?:([^:@]+)(?::([^@]*))?@)?([^:/?#]+)(?::(\d+))?\/?(?:\?([^#]*))?(?:#(.*))?$/i.exec(line);
+        if (!parsed) return null;
+        const [, user, password, server, portStr, query = '', name] = parsed;
+        const port = portStr ? parsePort(portStr) : 443;
+        const proxy: ProxyNode = {
+            id: randomId(),
+            type: 'juicity' as any,
+            name: name ? decodeURIComponent(name) : `${server}:${port}`,
+            server,
+            port,
+            uuid: user ? decodeURIComponent(user) : undefined,
+            password: password ? decodeURIComponent(password) : undefined
+        };
+        if (query) {
+            const params = parseQueryParams(query);
+            if (params.sni) proxy.sni = params.sni;
+        }
+        return proxy;
+    } catch (e) {
+        console.error('[parseJuicity] Error:', e);
+        return null;
+    }
+}
+
 // ============================================================================
 // 导出所有解析器
 // ============================================================================
@@ -1705,7 +1800,10 @@ export const URI_PARSERS = {
     socks5: parseSOCKS5,
     socks: parseSOCKS5,
     http: parseHTTP,
-    https: parseHTTP
+    https: parseHTTP,
+    ssh: parseSSH,
+    mieru: parseMieru,
+    juicity: parseJuicity
 };
 
 /**

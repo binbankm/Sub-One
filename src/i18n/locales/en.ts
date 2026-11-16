@@ -538,7 +538,7 @@ export default {
                 "nameHint": "If left empty, the system will auto-extract the name from the link",
                 "urlLabel": "Node Link",
                 "urlPlaceholder": "vmess://..., vless://... (supports single or multi-line batch import)",
-                "urlHint": "Supports single or multi-line links: VMess, VLESS, Trojan, SS/SSR, Hysteria, TUIC, AnyTLS, etc.",
+                "urlHint": "Supports single or multi-line links: SS/SSR, VMess, VLESS, Trojan, HY/HY2, TUIC, WireGuard, Snell, Naive, AnyTLS, Socks5, HTTP, SSH, etc.",
                 "lineCount": "{count} lines entered",
                 "pasteTitle": "Support Single & Batch Import",
                 "pasteDesc": "Paste single or multiple node links, or mixed subscription links; system will auto-parse and import them"

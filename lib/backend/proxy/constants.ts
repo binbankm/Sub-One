@@ -26,6 +26,8 @@ export const PROXY_PROTOCOLS = [
     'anytls',
     'naive',
     'ssh',
+    'mieru',
+    'juicity',
     'external',
     'direct',
     'reject'

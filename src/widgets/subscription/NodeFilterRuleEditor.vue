@@ -60,6 +60,7 @@ const protocols = [
     { label: 'WireGuard', value: 'wireguard' },
     { label: 'Snell', value: 'snell' },
     { label: 'NaiveProxy', value: 'naive' },
+    { label: 'SSH', value: 'ssh' },
     { label: 'Reality', value: 'reality' }
 ];
 

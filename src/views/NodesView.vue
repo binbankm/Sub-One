@@ -83,6 +83,7 @@ const protocolFilters = computed(() => {
     const counts: Record<string, number> = {
         all: manualNodes.value?.length || 0,
         ss: 0,
+        ssr: 0,
         vmess: 0,
         vless: 0,
         trojan: 0,
@@ -93,12 +94,18 @@ const protocolFilters = computed(() => {
         anytls: 0,
         snell: 0,
         naive: 0,
+        socks5: 0,
+        http: 0,
+        ssh: 0,
+        mieru: 0,
+        juicity: 0,
         other: 0
     };
 
     for (const node of manualNodes.value || []) {
         const p = (node.type || getProtocol(node.url)).toLowerCase();
         if (p === 'ss' || p === 'shadowsocks') counts.ss++;
+        else if (p === 'ssr' || p === 'shadowsocksr') counts.ssr++;
         else if (p === 'vmess' || p === 'v2ray') counts.vmess++;
         else if (p === 'vless') counts.vless++;
         else if (p === 'trojan') counts.trojan++;
@@ -108,13 +115,19 @@ const protocolFilters = computed(() => {
         else if (p === 'wireguard' || p === 'wg') counts.wireguard++;
         else if (p === 'anytls') counts.anytls++;
         else if (p === 'snell') counts.snell++;
-        else if (p === 'naive') counts.naive++;
+        else if (p === 'naive' || p === 'naiveproxy') counts.naive++;
+        else if (p === 'socks5' || p === 'socks') counts.socks5++;
+        else if (p === 'http' || p === 'https') counts.http++;
+        else if (p === 'ssh') counts.ssh++;
+        else if (p === 'mieru') counts.mieru++;
+        else if (p === 'juicity') counts.juicity++;
         else counts.other++;
     }
 
     return [
         { id: 'all', label: t('views.nodes.filterAll'), count: counts.all },
         { id: 'ss', label: 'SS', count: counts.ss },
+        { id: 'ssr', label: 'SSR', count: counts.ssr },
         { id: 'vmess', label: 'VMess', count: counts.vmess },
         { id: 'vless', label: 'VLESS', count: counts.vless },
         { id: 'trojan', label: 'Trojan', count: counts.trojan },
@@ -125,6 +138,11 @@ const protocolFilters = computed(() => {
         { id: 'anytls', label: 'AnyTLS', count: counts.anytls },
         { id: 'snell', label: 'Snell', count: counts.snell },
         { id: 'naive', label: 'Naive', count: counts.naive },
+        { id: 'socks5', label: 'SOCKS5', count: counts.socks5 },
+        { id: 'http', label: 'HTTP', count: counts.http },
+        { id: 'ssh', label: 'SSH', count: counts.ssh },
+        { id: 'mieru', label: 'Mieru', count: counts.mieru },
+        { id: 'juicity', label: 'Juicity', count: counts.juicity },
         { id: 'other', label: t('views.nodes.filterOther'), count: counts.other }
     ].filter((item) => item.id === 'all' || item.count > 0);
 });
@@ -136,6 +154,7 @@ const displayNodes = computed(() => {
         list = list.filter((node: Node) => {
             const p = (node.type || getProtocol(node.url)).toLowerCase();
             if (selectedProtocol.value === 'ss') return p === 'ss' || p === 'shadowsocks';
+            if (selectedProtocol.value === 'ssr') return p === 'ssr' || p === 'shadowsocksr';
             if (selectedProtocol.value === 'vmess') return p === 'vmess' || p === 'v2ray';
             if (selectedProtocol.value === 'vless') return p === 'vless';
             if (selectedProtocol.value === 'trojan') return p === 'trojan';
@@ -145,11 +164,18 @@ const displayNodes = computed(() => {
             if (selectedProtocol.value === 'wireguard') return p === 'wireguard' || p === 'wg';
             if (selectedProtocol.value === 'anytls') return p === 'anytls';
             if (selectedProtocol.value === 'snell') return p === 'snell';
-            if (selectedProtocol.value === 'naive') return p === 'naive';
+            if (selectedProtocol.value === 'naive') return p === 'naive' || p === 'naiveproxy';
+            if (selectedProtocol.value === 'socks5') return p === 'socks5' || p === 'socks';
+            if (selectedProtocol.value === 'http') return p === 'http' || p === 'https';
+            if (selectedProtocol.value === 'ssh') return p === 'ssh';
+            if (selectedProtocol.value === 'mieru') return p === 'mieru';
+            if (selectedProtocol.value === 'juicity') return p === 'juicity';
             if (selectedProtocol.value === 'other') {
                 return ![
                     'ss',
                     'shadowsocks',
+                    'ssr',
+                    'shadowsocksr',
                     'vmess',
                     'v2ray',
                     'vless',
@@ -163,7 +189,15 @@ const displayNodes = computed(() => {
                     'wg',
                     'anytls',
                     'snell',
-                    'naive'
+                    'naive',
+                    'naiveproxy',
+                    'socks5',
+                    'socks',
+                    'http',
+                    'https',
+                    'ssh',
+                    'mieru',
+                    'juicity'
                 ].includes(p);
             }
             return p === selectedProtocol.value;

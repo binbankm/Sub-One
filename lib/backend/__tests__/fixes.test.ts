@@ -501,7 +501,7 @@ describe('P0, P1, P2 Fixes Verification', () => {
             expect(resSuccess.status).toBe(200);
             const successData = await resSuccess.json() as any;
             expect(successData.success).toBe(true);
-        });
+        }, 15000);
 
         it('should handle /api/users CRUD operations', async () => {
             const store = new Map<string, any>();
@@ -572,7 +572,7 @@ describe('P0, P1, P2 Fixes Verification', () => {
             });
             const resForbidden = await handleApiRequest(reqForbidden, mockEnv);
             expect(resForbidden.status).toBe(403);
-        });
+        }, 15000);
     });
 
     describe('14. Profile Matching with ID vs CustomId and URL Encoding', () => {

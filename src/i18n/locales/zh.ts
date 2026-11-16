@@ -538,7 +538,7 @@ export default {
                 "nameHint": "如留空，系统将自动从节点链接中提取名称",
                 "urlLabel": "节点链接",
                 "urlPlaceholder": "vmess://...、vless://... 等节点链接（支持单条或多行批量导入）",
-                "urlHint": "支持单条或多行批量链接，支持 VMess、VLESS、Trojan、SS/SSR、Hysteria、TUIC、AnyTLS 等协议",
+                "urlHint": "支持单条或多行批量链接，支持 SS/SSR、VMess、VLESS、Trojan、HY/HY2、TUIC、WireGuard、Snell、Naive、AnyTLS、Socks5、HTTP、SSH 等协议",
                 "lineCount": "已输入 {count} 行",
                 "pasteTitle": "支持单条与批量导入",
                 "pasteDesc": "可直接粘贴单条或多行节点链接、混合订阅链接，系统将自动解析并批量导入"

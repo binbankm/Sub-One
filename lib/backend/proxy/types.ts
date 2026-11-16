@@ -25,6 +25,8 @@ export type ProxyType =
     | 'anytls' // AnyTLS
     | 'naive' // NaiveProxy
     | 'ssh' // SSH
+    | 'mieru' // Mieru
+    | 'juicity' // Juicity
     | 'external' // Surge External
     | 'direct' // Direct
     | 'reject'; // Reject

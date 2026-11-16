@@ -18,9 +18,12 @@ export const getProtocol = (url?: string): string => {
         if (lowerUrl.startsWith('vless://')) return 'vless';
         if (lowerUrl.startsWith('trojan://')) return 'trojan';
         if (lowerUrl.startsWith('wireguard://') || lowerUrl.startsWith('wg://')) return 'wireguard';
-        if (lowerUrl.startsWith('socks5://')) return 'socks5';
+        if (lowerUrl.startsWith('socks5://') || lowerUrl.startsWith('socks://')) return 'socks5';
         if (lowerUrl.startsWith('snell://')) return 'snell';
         if (lowerUrl.startsWith('naive') || lowerUrl.startsWith('naive+')) return 'naive';
+        if (lowerUrl.startsWith('ssh://')) return 'ssh';
+        if (lowerUrl.startsWith('mieru://')) return 'mieru';
+        if (lowerUrl.startsWith('juicity://')) return 'juicity';
         if (lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) return 'http';
     } catch {
         return 'unknown';
@@ -160,9 +163,33 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
             return {
                 text: 'HTTP',
                 icon: '',
-                gradient: 'from-gray-300 to-gray-500',
-                bg: 'bg-gray-100 dark:bg-gray-800',
-                color: 'text-gray-600 dark:text-gray-400'
+                gradient: 'from-cyan-500 to-blue-600',
+                bg: 'bg-cyan-100 dark:bg-cyan-900/30',
+                color: 'text-cyan-700 dark:text-cyan-300'
+            };
+        case 'ssh':
+            return {
+                text: 'SSH',
+                icon: '',
+                gradient: 'from-stone-500 to-zinc-600',
+                bg: 'bg-stone-100 dark:bg-stone-900/30',
+                color: 'text-stone-700 dark:text-stone-300'
+            };
+        case 'mieru':
+            return {
+                text: 'Mieru',
+                icon: '',
+                gradient: 'from-yellow-400 to-amber-500',
+                bg: 'bg-amber-100 dark:bg-amber-900/30',
+                color: 'text-amber-700 dark:text-amber-300'
+            };
+        case 'juicity':
+            return {
+                text: 'Juicity',
+                icon: '',
+                gradient: 'from-lime-400 to-green-500',
+                bg: 'bg-lime-100 dark:bg-lime-900/30',
+                color: 'text-lime-700 dark:text-lime-300'
             };
         default:
             return {
