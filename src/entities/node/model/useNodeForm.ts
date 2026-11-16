@@ -16,10 +16,24 @@ export function useNodeForm(
     const urlError = ref('');
     const hasAutoExtractedName = ref(false);
 
+    const lineCount = computed(() => {
+        const text = localNode.value?.url?.trim() || '';
+        if (!text) return 0;
+        return text.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean).length;
+    });
+
+    const isMultiLine = computed(() => props.isNew && lineCount.value > 1);
+
     const modalTitle = computed(() => (props.isNew ? i18n.global.t('entities.node.form.newManualNode') : i18n.global.t('entities.node.form.editManualNode')));
-    const saveButtonText = computed(() => (props.isNew ? i18n.global.t('entities.node.form.add') : i18n.global.t('entities.node.form.save')));
+    const saveButtonText = computed(() => {
+        if (!props.isNew) return i18n.global.t('entities.node.form.save');
+        if (isMultiLine.value) {
+            return i18n.global.t('entities.node.form.batchImportBtn', { count: lineCount.value });
+        }
+        return i18n.global.t('entities.node.form.add');
+    });
     const canSave = computed(() => {
-        return localNode.value?.url && !urlError.value;
+        return !!localNode.value?.url && !urlError.value;
     });
 
     watch(
@@ -70,11 +84,13 @@ export function useNodeForm(
         const url = localNode.value.url?.trim();
 
         if (url && !localNode.value.name && !hasAutoExtractedName.value) {
-            const firstLine = url.split(/[\r\n]+/)[0]?.trim() || '';
-            const extractedName = extractNodeName(firstLine);
-            if (extractedName && extractedName !== i18n.global.t('entities.node.fetching.unnamedNode')) {
-                localNode.value.name = extractedName;
-                hasAutoExtractedName.value = true;
+            const lines = url.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+            if (lines.length === 1) {
+                const extractedName = extractNodeName(lines[0]);
+                if (extractedName && extractedName !== i18n.global.t('entities.node.fetching.unnamedNode')) {
+                    localNode.value.name = extractedName;
+                    hasAutoExtractedName.value = true;
+                }
             }
         }
     };
@@ -96,19 +112,23 @@ export function useNodeForm(
             localNode.value.name = localNode.value.name.trim();
         }
 
-        const firstLine = localNode.value.url?.split(/[\r\n]+/)[0]?.trim() || '';
+        const lines = localNode.value.url?.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean) || [];
+        const isMultiple = lines.length > 1;
 
-        if (!localNode.value.name && firstLine) {
-            localNode.value.name = extractNodeName(firstLine);
-        }
+        if (!isMultiple) {
+            const firstLine = lines[0] || '';
+            if (!localNode.value.name && firstLine) {
+                localNode.value.name = extractNodeName(firstLine);
+            }
 
-        if (firstLine) {
-            const { host, port } = extractHostAndPort(firstLine);
-            const type = getProtocol(firstLine);
+            if (firstLine) {
+                const { host, port } = extractHostAndPort(firstLine);
+                const type = getProtocol(firstLine);
 
-            localNode.value.server = host;
-            localNode.value.port = parseInt(port) || 0;
-            localNode.value.type = type as any;
+                localNode.value.server = host;
+                localNode.value.port = parseInt(port) || 0;
+                localNode.value.type = type as any;
+            }
         }
 
         emit('save', localNode.value);
@@ -121,6 +141,8 @@ export function useNodeForm(
     return {
         localNode,
         urlError,
+        lineCount,
+        isMultiLine,
         modalTitle,
         saveButtonText,
         canSave,

@@ -544,7 +544,7 @@ export class URIConverter extends BaseConverter {
             if (xopts.host) params.set('host', Array.isArray(xopts.host) ? xopts.host[0] : xopts.host);
         }
 
-        // 3. packetEncoding (Sub-Store parity: emit packetEncoding and omit udp=1 when packetEncoding is resolved)
+        // 3. packetEncoding ( parity: emit packetEncoding and omit udp=1 when packetEncoding is resolved)
         let canonicalPacketEncoding: string | undefined;
         if (node['packet-encoding'] != null) {
             canonicalPacketEncoding = `${node['packet-encoding']}`.trim().toLowerCase();

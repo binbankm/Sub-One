@@ -62,11 +62,18 @@ export function useNodeManagement() {
 
         if (isNewNode.value) {
             const { subs, nodes } = parseImportText(nodeToSave.url);
-            if (nodes.length > 1) {
+            if (subs.length === 0 && nodes.length === 0) {
+                toastStore.showToast(i18n.global.t('entities.node.import.emptyContent'), 'warning');
+                return;
+            }
+
+            if (nodes.length > 1 || subs.length > 0) {
                 if (subs.length > 0) {
                     await dataStore.addSubscriptionsFromBulk(subs, true);
                 }
-                await dataStore.addNodesFromBulk(nodes, true);
+                if (nodes.length > 0) {
+                    await dataStore.addNodesFromBulk(nodes, true);
+                }
                 toastStore.showToast(
                     i18n.global.t('entities.node.management.importSuccess', {
                         subs: subs.length,

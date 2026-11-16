@@ -113,6 +113,8 @@ export default {
                 "editManualNode": "Edit Manual Node",
                 "add": "Add",
                 "save": "Save",
+                "batchImportBtn": "Batch Import ({count})",
+                "batchDetected": "Detected {count} links, will auto-import in batch upon save",
                 "urlEmpty": "Node URL cannot be empty",
                 "urlInvalid": "Invalid node URL format"
             },
@@ -395,7 +397,7 @@ export default {
             "filterAll": "All",
             "filterOther": "Other",
             "addBtn": "Add",
-            "importBtn": "Import Nodes",
+            "importBtn": "Import Subscription",
             "saveSortBtn": "Save Order",
             "sorting": "Sorting...",
             "manualSortBtn": "Manual Sort",
@@ -535,10 +537,11 @@ export default {
                 "namePlaceholder": "Auto-extract if left empty",
                 "nameHint": "If left empty, the system will auto-extract the name from the link",
                 "urlLabel": "Node Link",
-                "urlPlaceholder": "vmess://... or ss://... share links",
-                "urlHint": "Supports VMess, VLESS, Trojan, SS/SSR, Hysteria, TUIC, Socks5, WireGuard, Snell etc.",
-                "pasteTitle": "Paste Node Link",
-                "pasteDesc": "Copy the node link from another app or website and paste it above"
+                "urlPlaceholder": "vmess://..., vless://... (supports single or multi-line batch import)",
+                "urlHint": "Supports single or multi-line links: VMess, VLESS, Trojan, SS/SSR, Hysteria, TUIC, AnyTLS, etc.",
+                "lineCount": "{count} lines entered",
+                "pasteTitle": "Support Single & Batch Import",
+                "pasteDesc": "Paste single or multiple node links, or mixed subscription links; system will auto-parse and import them"
             },
             "detailsModal": {
                 "title": "Node Details",

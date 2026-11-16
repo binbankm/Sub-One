@@ -30,6 +30,8 @@ const emit = defineEmits<{
 const {
     localNode,
     urlError,
+    lineCount,
+    isMultiLine,
     modalTitle,
     saveButtonText,
     canSave,
@@ -59,8 +61,8 @@ const { t } = useI18n();
 
         <template #body>
             <div v-if="localNode" class="space-y-4">
-                <!-- 节点名称 -->
-                <div>
+                <!-- 节点名称 (多行批量导入时隐藏，单节点时显示) -->
+                <div v-if="!isMultiLine">
                     <label
                         for="node-name"
                         class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -82,22 +84,38 @@ const { t } = useI18n();
                     </p>
                 </div>
 
+                <!-- 批量导入模式提示条 -->
+                <div
+                    v-else
+                    class="flex items-center gap-2 rounded-element border border-primary-200 bg-primary-50 px-3.5 py-2.5 text-xs text-primary-700 dark:border-primary-800/40 dark:bg-primary-950/30 dark:text-primary-300"
+                >
+                    <svg class="h-4 w-4 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ t('entities.node.form.batchDetected', { count: lineCount }) }}</span>
+                </div>
+
                 <!-- 节点链接 -->
                 <div>
-                    <label
-                        for="node-url"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                        {{ t('widgets.node.modal.urlLabel') }}
-                        <span class="text-danger-500">*</span>
-                    </label>
+                    <div class="mb-2 flex items-center justify-between">
+                        <label
+                            for="node-url"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            {{ t('widgets.node.modal.urlLabel') }}
+                            <span class="text-danger-500">*</span>
+                        </label>
+                        <span v-if="lineCount > 1" class="text-xs font-medium text-primary-600 dark:text-primary-400">
+                            {{ t('widgets.node.modal.lineCount', { count: lineCount }) }}
+                        </span>
+                    </div>
                     <textarea
                         id="node-url"
                         v-model="localNode.url"
                         name="nodeUrl"
-                        rows="4"
+                        :rows="isMultiLine ? 7 : 4"
                         :placeholder="t('widgets.node.modal.urlPlaceholder')"
-                        class="input-modern w-full resize-none font-mono text-sm"
+                        class="input-modern w-full resize-y font-mono text-xs leading-relaxed"
                         :class="{ 'border-danger-500 dark:border-danger-500': urlError }"
                         @input="handleUrlInput"
                         @blur="handleUrlBlur"

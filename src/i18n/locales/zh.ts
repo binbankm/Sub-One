@@ -113,6 +113,8 @@ export default {
                 "editManualNode": "编辑手动节点",
                 "add": "添加",
                 "save": "保存",
+                "batchImportBtn": "批量导入 ({count})",
+                "batchDetected": "检测到 {count} 条链接，保存后将自动批量导入",
                 "urlEmpty": "节点链接不能为空",
                 "urlInvalid": "无效的节点链接格式"
             },
@@ -393,7 +395,7 @@ export default {
         "nodes": {
             "searchPlaceholder": "搜索节点...",
             "addBtn": "新增",
-            "importBtn": "导入节点",
+            "importBtn": "导入订阅",
             "saveSortBtn": "保存排序",
             "sorting": "排序中",
             "manualSortBtn": "手动排序",
@@ -535,10 +537,11 @@ export default {
                 "namePlaceholder": "留空时自动从链接提取",
                 "nameHint": "如留空，系统将自动从节点链接中提取名称",
                 "urlLabel": "节点链接",
-                "urlPlaceholder": "vmess://... 或 ss://... 等节点分享链接",
-                "urlHint": "支持 VMess、VLESS、Trojan、SS/SSR、Hysteria、TUIC、Socks5、WireGuard、Snell 等协议",
-                "pasteTitle": "粘贴节点分享链接",
-                "pasteDesc": "从其他应用或网站复制节点分享链接，粘贴到上方输入框即可"
+                "urlPlaceholder": "vmess://...、vless://... 等节点链接（支持单条或多行批量导入）",
+                "urlHint": "支持单条或多行批量链接，支持 VMess、VLESS、Trojan、SS/SSR、Hysteria、TUIC、AnyTLS 等协议",
+                "lineCount": "已输入 {count} 行",
+                "pasteTitle": "支持单条与批量导入",
+                "pasteDesc": "可直接粘贴单条或多行节点链接、混合订阅链接，系统将自动解析并批量导入"
             },
             "detailsModal": {
                 "title": "节点详情",

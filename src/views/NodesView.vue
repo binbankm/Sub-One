@@ -33,7 +33,6 @@ const emit = defineEmits<{
 
 // Async Components
 const NodeModal = defineAsyncComponent(() => import('@/widgets/node/NodeModal.vue'));
-const BulkImportModal = defineAsyncComponent(() => import('@/common/ui/BulkImportModal.vue'));
 const SubscriptionImportModal = defineAsyncComponent(
     () => import('@/widgets/node/SubscriptionImportModal.vue')
 );
@@ -62,7 +61,6 @@ const {
     isNewNode,
     editingNode,
     showNodeModal,
-    showBulkImportModal,
     showSubscriptionImportModal,
     showDeleteNodesModal,
     showDeleteSingleNodeModal,
@@ -73,7 +71,6 @@ const {
     handleConfirmDeleteSingleNode,
     handleDeleteAllNodes,
     handleBatchDelete,
-    handleBulkImport,
     handleDeduplicate,
     handleAutoSort,
     handleToggleSort,
@@ -188,7 +185,6 @@ watch(selectedProtocol, () => {
 });
 
 const nodesMoreMenuItems = computed(() => [
-    { key: 'bulk-import', label: t('common.ui.bulk.title') },
     { key: 'auto-sort', label: t('views.nodes.menus.autoSort') },
     { key: 'deduplicate', label: t('views.nodes.menus.deduplicate') },
     { key: 'batch-delete', label: t('views.nodes.menus.batchDelete') },
@@ -223,10 +219,6 @@ const handleSaveNodeWrapper = async (updatedNode?: Node) => {
     handleSaveNode(updatedNode, () => resetPage());
 };
 
-const handleBulkImportWrapper = async (importText: string) => {
-    handleBulkImport(importText, () => resetPage());
-};
-
 const handleToggleBatchDeleteMode = () => {
     toggleBatchDeleteMode();
 };
@@ -241,9 +233,6 @@ const deleteSelected = async () => {
 };
 
 const handleNodesMoreMenuSelect = async (key: string) => {
-    if (key === 'bulk-import') {
-        showBulkImportModal.value = true;
-    }
     if (key === 'auto-sort') {
         await handleAutoSort();
     }
@@ -778,8 +767,6 @@ useTabActionTrigger(
         </EmptyState>
 
         <!-- Modals -->
-        <BulkImportModal v-model:show="showBulkImportModal" @import="handleBulkImportWrapper" />
-
         <ConfirmModal
             v-model:show="showDeleteNodesModal"
             :title="t('views.nodes.clearAllModal.title')"
@@ -808,7 +795,7 @@ useTabActionTrigger(
             v-model:show="showSubscriptionImportModal"
             :add-nodes-from-bulk="dataStore.addNodesFromBulk"
             :on-import-success="handleSubscriptionImportSuccess"
-            initial-mode="text"
+            initial-mode="url"
         />
     </div>
 </template>
