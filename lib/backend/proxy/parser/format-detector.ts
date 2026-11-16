@@ -70,7 +70,14 @@ export function detectFormat(content: string): ContentFormat {
                 trimmed
             )
         ) {
-            if (trimmed.includes('peers=') || trimmed.includes('interface-ip=')) {
+            if (
+                trimmed.includes('peers=') ||
+                trimmed.includes('interface-ip=') ||
+                trimmed.includes('tls-profile=') ||
+                trimmed.includes('over-tls=') ||
+                trimmed.includes('transport=') ||
+                trimmed.includes('tls-name=')
+            ) {
                 return 'loon';
             }
             return 'surge';

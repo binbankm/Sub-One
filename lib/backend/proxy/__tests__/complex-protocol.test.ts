@@ -195,10 +195,11 @@ describe('VLESS+Reality+httpupgrade Conversion', () => {
         expect(result).toContain('max-early-data: 2048');
     });
 
-    it('Surge: should return empty (VLESS not supported)', async () => {
+    it('Surge: should output VLESS with Reality', async () => {
         const nodes = parseNode();
         const result = await convert([nodes], 'surge');
-        expect(result).toBe('');
+        expect(result).toContain('vless,1.2.3.4,443');
+        expect(result).toContain('reality-public-key=abc123def456');
     });
 
     it('Loon: should output correct VLESS with Reality', async () => {

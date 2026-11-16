@@ -140,6 +140,16 @@ export class SingboxConverter extends BaseConverter {
                     outbound.security = node.cipher || 'auto';
                     outbound.alter_id = node.alterId || 0;
                     if (isPresent(node, 'aead')) outbound.authenticated_length = node.aead;
+                    if (node['packet-encoding'] != null) {
+                        const pe = String(node['packet-encoding']).trim().toLowerCase();
+                        if (['xudp', 'packetaddr', ''].includes(pe)) {
+                            outbound.packet_encoding = pe;
+                        }
+                    } else if (node.xudp) {
+                        outbound.packet_encoding = 'xudp';
+                    } else if (node['packet-addr']) {
+                        outbound.packet_encoding = 'packetaddr';
+                    }
                     if (node.tls || node['reality-opts']) this.appendTLS(outbound, node);
                     this.appendTransport(outbound, node);
                     break;
@@ -150,7 +160,17 @@ export class SingboxConverter extends BaseConverter {
                         );
                     }
                     outbound.uuid = node.uuid;
-                    outbound.flow = node.flow || '';
+                    if (node.flow) outbound.flow = node.flow;
+                    if (node['packet-encoding'] != null) {
+                        const pe = String(node['packet-encoding']).trim().toLowerCase();
+                        if (['xudp', 'packetaddr', ''].includes(pe)) {
+                            outbound.packet_encoding = pe;
+                        }
+                    } else if (node.xudp) {
+                        outbound.packet_encoding = 'xudp';
+                    } else if (node['packet-addr']) {
+                        outbound.packet_encoding = 'packetaddr';
+                    }
                     if (node.tls || node['reality-opts']) this.appendTLS(outbound, node);
                     this.appendTransport(outbound, node);
                     break;
@@ -260,7 +280,7 @@ export class SingboxConverter extends BaseConverter {
                                 server_port: parseInt(
                                     String(
                                         p.port ||
-                                            (p.endpoint ? p.endpoint.split(':')[1] : node.port)
+                                        (p.endpoint ? p.endpoint.split(':')[1] : node.port)
                                     ),
                                     10
                                 ),

@@ -76,6 +76,17 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
         }
     }
 
+    // 标准化 packet-encoding (VMess & VLESS)
+    if (['vmess', 'vless'].includes(proxy.type)) {
+        if (proxy['packet-encoding'] == null) {
+            if (proxy.xudp) {
+                proxy['packet-encoding'] = 'xudp';
+            } else if (proxy['packet-addr']) {
+                proxy['packet-encoding'] = 'packetaddr';
+            }
+        }
+    }
+
     // 11. 标准化 Reality 选项
     if (proxy['reality-opts']) {
         const r = proxy['reality-opts'] as Record<string, any>;
@@ -85,9 +96,35 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
             r['spider-x'] = spx;
             r['_spider-x'] = spx;
         }
+        // Loon profile 触发 support-x25519mlkem768 规范 (Sub-Store 兼容)
+        if (
+            r['public-key'] &&
+            r['support-x25519mlkem768'] === undefined &&
+            ['safari-ios-26', 'chrome147'].includes(
+                `${proxy._loon_tls_profile || ''}`.trim()
+            )
+        ) {
+            r['support-x25519mlkem768'] = true;
+        }
         // 如果 reality-opts 为空则删除
         if (Object.keys(r).filter(k => r[k] != null && r[k] !== '').length === 0) {
             delete proxy['reality-opts'];
+        }
+    }
+
+    // 处理 hop-interval 区间写法 (例如 "10-30")
+    if (proxy['hop-interval'] != null) {
+        const hopIntervalStr = String(proxy['hop-interval']).trim();
+        const rangeMatch = hopIntervalStr.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (rangeMatch) {
+            const min = parseInt(rangeMatch[1], 10);
+            const max = parseInt(rangeMatch[2], 10);
+            if (min > 0 && min <= max) {
+                proxy['hop-interval'] = min;
+                proxy['hop-interval-max'] = max;
+            } else {
+                delete proxy['hop-interval'];
+            }
         }
     }
 

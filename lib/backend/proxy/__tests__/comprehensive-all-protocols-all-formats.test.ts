@@ -511,9 +511,10 @@ describe('4. VLESS — 完整参数解析与转换', () => {
         const eg = await convert([node], 'egern');
         expect(eg).toContain('vless');
 
-        // Surge: VLESS 不支持
+        // Surge: VLESS
         const surge = await convert([node], 'surge');
-        expect(surge).toBe('');
+        expect(surge).toContain('vless,1.2.3.4,443');
+        expect(surge).toContain('reality-public-key=pk123');
     });
 });
 

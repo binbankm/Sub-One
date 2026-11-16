@@ -1,9 +1,30 @@
 /**
  * Sub-One Quantumult X Converter
  */
+import { Buffer } from 'buffer';
 import type { ConvertOptions, ProxyNode } from '../types';
 import { BaseConverter } from './base';
 import { Result } from './utils';
+
+function encodeQxAlpn(alpn: string | string[]): string | undefined {
+    const protocols = (Array.isArray(alpn) ? alpn : `${alpn}`.split(','))
+        .map((p) => `${p}`.trim())
+        .filter(Boolean);
+
+    if (protocols.length === 1 && /^[0-9a-fA-F]{4,}$/.test(protocols[0]) && protocols[0].length % 2 === 0) {
+        return protocols[0];
+    }
+
+    return (
+        protocols
+            .map((protocol) => {
+                const bytes = Buffer.from(protocol, 'utf8');
+                if (bytes.length > 255) return '';
+                return `${bytes.length.toString(16).padStart(2, '0')}${bytes.toString('hex')}`;
+            })
+            .join('') || undefined
+    );
+}
 
 export class QuantumultXConverter extends BaseConverter {
     name = 'Quantumult X';
@@ -122,7 +143,7 @@ export class QuantumultXConverter extends BaseConverter {
             result.append(`,obfs=${proxy.tls ? 'wss' : 'ws'}`);
         } else if (proxy.network === 'http') {
             result.append(`,obfs=http`);
-        } else if (proxy.tls) {
+        } else if (proxy.tls || proxy['reality-opts']) {
             result.append(`,obfs=over-tls`);
         }
 
@@ -156,7 +177,7 @@ export class QuantumultXConverter extends BaseConverter {
             result.append(`,obfs=${proxy.tls ? 'h2-tls' : 'h2'}`);
         } else if (proxy.network === 'http') {
             result.append(`,obfs=http`);
-        } else if (proxy.tls) {
+        } else if (proxy.tls || proxy['reality-opts']) {
             result.append(`,obfs=over-tls`);
         }
 
@@ -220,23 +241,8 @@ export class QuantumultXConverter extends BaseConverter {
 
         // AnyTLS 强制 TLS
         result.append(`,over-tls=true`);
-        const sni = proxy.sni || proxy.servername;
-        if (sni) result.append(`,tls-host=${sni}`);
-        result.appendIfPresent(
-            `,tls-verification=${!proxy['skip-cert-verify']}`,
-            'skip-cert-verify'
-        );
-        result.appendIfPresent(`,tls-cert-sha256=${proxy['tls-fingerprint']}`, 'tls-fingerprint');
-        result.appendIfPresent(`,tls-alpn=${proxy.alpn}`, 'alpn');
-        if (proxy['tls-no-session-ticket']) result.append(`,tls-no-session-ticket=true`);
-        if (proxy['tls-no-session-reuse']) result.append(`,tls-no-session-reuse=true`);
-
-        // TFO / UDP
-        if (proxy.tfo) result.append(`,fast-open=true`);
-        if (proxy.udp) result.append(`,udp-relay=true`);
-
-        // test-url
-        result.appendIfPresent(`,server_check_url=${proxy['test-url']}`, 'test-url');
+        this.appendTLS(result, proxy);
+        this.appendCommon(result, proxy);
 
         return result.toString();
     }
@@ -254,9 +260,11 @@ export class QuantumultXConverter extends BaseConverter {
             `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
             'tls-pubkey-sha256'
         );
-        if (proxy.alpn) {
-            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
-            result.append(`,tls-alpn=${alpn}`);
+        if (proxy['tls-alpn']) {
+            result.append(`,tls-alpn=${proxy['tls-alpn']}`);
+        } else if (proxy.alpn) {
+            const encoded = encodeQxAlpn(proxy.alpn);
+            if (encoded) result.append(`,tls-alpn=${encoded}`);
         }
         if (proxy['tls-no-session-ticket']) result.append(`,tls-no-session-ticket=true`);
         if (proxy['tls-no-session-reuse']) result.append(`,tls-no-session-reuse=true`);

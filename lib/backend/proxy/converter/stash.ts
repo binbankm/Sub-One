@@ -126,6 +126,11 @@ export class StashConverter extends ClashConverter {
             node['client-fingerprint'] = 'chrome';
         }
 
+        if (node.type === 'vless' && node.sni) {
+            if (!node.servername) node.servername = node.sni;
+            delete node.sni;
+        }
+
         // Stash doesn't support dialer-proxy/underlying-proxy in standard node definition
         delete node['dialer-proxy'];
         delete node['underlying-proxy'];

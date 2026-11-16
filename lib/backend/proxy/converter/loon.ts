@@ -16,14 +16,53 @@ const ipVersions: Record<string, string> = {
 
 function appendReality(result: Result, proxy: ProxyNode) {
     result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-    result.appendIfPresent(
-        `,public-key="${proxy['reality-opts']!['public-key']}"`,
-        'reality-opts.public-key'
-    );
-    result.appendIfPresent(
-        `,short-id=${proxy['reality-opts']!['short-id']}`,
-        'reality-opts.short-id'
-    );
+    if (proxy['reality-opts']) {
+        result.appendIfPresent(
+            `,public-key="${proxy['reality-opts']['public-key']}"`,
+            'reality-opts.public-key'
+        );
+        result.appendIfPresent(
+            `,short-id=${proxy['reality-opts']['short-id']}`,
+            'reality-opts.short-id'
+        );
+    }
+}
+
+function getLoonTlsProfile(proxy: ProxyNode): string | undefined {
+    const tlsProfile = `${proxy._loon_tls_profile || ''}`.trim();
+    if (
+        [
+            'global',
+            'default',
+            'safari-ios18',
+            'safari-ios-26',
+            'chrome',
+            'chrome147'
+        ].includes(tlsProfile)
+    ) {
+        return tlsProfile;
+    }
+
+    const fingerprint = `${proxy['client-fingerprint'] || ''}`.trim().toLowerCase();
+    if (proxy['reality-opts']?.['support-x25519mlkem768']) {
+        return ['safari', 'ios'].includes(fingerprint)
+            ? 'safari-ios-26'
+            : 'chrome147';
+    }
+
+    switch (fingerprint) {
+        case 'chrome':
+            return 'chrome';
+        case 'safari':
+        case 'ios':
+            return 'safari-ios18';
+    }
+    return undefined;
+}
+
+function appendTlsProfile(result: Result, proxy: ProxyNode) {
+    const tlsProfile = getLoonTlsProfile(proxy);
+    if (tlsProfile) result.append(`,tls-profile=${tlsProfile}`);
 }
 
 export class LoonConverter extends BaseConverter {
@@ -214,14 +253,8 @@ export class LoonConverter extends BaseConverter {
                 'tls-fingerprint'
             );
         }
-        // TLS profile (client-fingerprint → Loon tls-profile)
-        if (proxy['client-fingerprint']) {
-            const fpMap: Record<string, string> = {
-                'chrome': 'chrome', 'ios': 'ios26', 'ios18': 'ios18'
-            };
-            const profile = fpMap[proxy['client-fingerprint']];
-            if (profile) result.append(`,tls-profile=${profile}`);
-        }
+        // TLS profile
+        appendTlsProfile(result, proxy);
         // ALPN
         if (proxy.alpn) {
             const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;

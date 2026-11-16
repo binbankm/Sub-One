@@ -60,34 +60,34 @@ export class ClashConverter extends BaseConverter {
 
         const supportedTypes = this.isMeta
             ? [
-                  'ss',
-                  'ssr',
-                  'vmess',
-                  'vless',
-                  'socks5',
-                  'http',
-                  'https',
-                  'snell',
-                  'trojan',
-                  'wireguard',
-                  'hysteria',
-                  'hysteria2',
-                  'tuic',
-                  'anytls'
-              ]
+                'ss',
+                'ssr',
+                'vmess',
+                'vless',
+                'socks5',
+                'http',
+                'https',
+                'snell',
+                'trojan',
+                'wireguard',
+                'hysteria',
+                'hysteria2',
+                'tuic',
+                'anytls'
+            ]
             : [
-                  'ss',
-                  'ssr',
-                  'vmess',
-                  'vless',
-                  'socks5',
-                  'http',
-                  'https',
-                  'snell',
-                  'trojan',
-                  'wireguard',
-                  'anytls'
-              ];
+                'ss',
+                'ssr',
+                'vmess',
+                'vless',
+                'socks5',
+                'http',
+                'https',
+                'snell',
+                'trojan',
+                'wireguard',
+                'anytls'
+            ];
 
         if (!supportedTypes.includes(proxy.type)) return false;
 
@@ -142,14 +142,16 @@ export class ClashConverter extends BaseConverter {
             }
 
             if (node['reality-opts']) {
-                node['reality-opts'] = {
-                    'public-key': node['reality-opts']['public-key'],
-                    'short-id': node['reality-opts']['short-id'],
-                    'spider-x':
-                        node['reality-opts']['spider-x'] ||
-                        node['reality-opts']['_spider-x'] ||
-                        ''
-                };
+                const r = node['reality-opts'];
+                const realityOpts: Record<string, any> = {};
+                if (r['public-key']) realityOpts['public-key'] = r['public-key'];
+                if (r['short-id']) realityOpts['short-id'] = r['short-id'];
+                const spx = r['spider-x'] || r['_spider-x'];
+                if (spx) realityOpts['spider-x'] = spx;
+                if (r['support-x25519mlkem768'] !== undefined) {
+                    realityOpts['support-x25519mlkem768'] = Boolean(r['support-x25519mlkem768']);
+                }
+                node['reality-opts'] = realityOpts;
             }
 
             if (node.network === 'splithttp') {
@@ -444,6 +446,9 @@ export class ClashConverter extends BaseConverter {
                 // 传输层
                 'network',
                 'flow',
+                'packet-encoding',
+                'packet-addr',
+                'xudp',
                 // Reality
                 'reality-opts',
                 // ECH (ClashMeta)

@@ -138,14 +138,11 @@ export class EgernConverter extends BaseConverter {
             name: proxy.name,
             server: proxy.server,
             port: proxy.port,
-            uuid: proxy.uuid,
+            user_id: proxy.uuid,
             tfo: getTfo(proxy),
             udp_relay: getUdpRelay(proxy),
             flow: proxy.flow || undefined,
             transport,
-            sni: getSni(proxy),
-            skip_tls_verify: proxy['skip-cert-verify'],
-            reality: getReality(proxy),
         };
 
         appendShadowTls(result, proxy);
@@ -167,9 +164,6 @@ export class EgernConverter extends BaseConverter {
             tfo: getTfo(proxy),
             udp_relay: getUdpRelay(proxy),
             transport,
-            sni: getSni(proxy),
-            skip_tls_verify: proxy['skip-cert-verify'],
-            reality: getReality(proxy),
         };
 
         appendShadowTls(result, proxy);
@@ -478,13 +472,17 @@ function buildTransport(proxy: ProxyNode): Record<string, any> | undefined {
         };
     }
 
-    if (network === 'tcp' && proxy.tls) {
-        return {
-            tls: {
-                sni: getSni(proxy),
-                skip_tls_verify: proxy['skip-cert-verify'],
-            },
-        };
+    if (network === 'tcp') {
+        const isTls = proxy.tls || !!proxy['reality-opts'];
+        if (isTls) {
+            return {
+                tls: {
+                    sni: getSni(proxy),
+                    skip_tls_verify: proxy['skip-cert-verify'],
+                    reality: getReality(proxy),
+                },
+            };
+        }
     }
 
     return undefined;

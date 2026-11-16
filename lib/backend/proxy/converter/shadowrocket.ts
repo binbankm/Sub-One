@@ -45,11 +45,16 @@ export class ShadowrocketConverter extends BaseConverter {
                 node.cipher = 'none';
                 // Reality 支持 (Shadowrocket)
                 if (node['reality-opts']) {
-                    node['reality-opts'] = {
-                        'public-key': node['reality-opts']['public-key'],
-                        'short-id': node['reality-opts']['short-id'],
-                        'spider-x': node['reality-opts']['_spider-x'] || ''
-                    };
+                    const r = node['reality-opts'];
+                    const realityOpts: Record<string, any> = {};
+                    if (r['public-key']) realityOpts['public-key'] = r['public-key'];
+                    if (r['short-id']) realityOpts['short-id'] = r['short-id'];
+                    const spx = r['spider-x'] || r['_spider-x'];
+                    if (spx) realityOpts['spider-x'] = spx;
+                    if (r['support-x25519mlkem768'] !== undefined) {
+                        realityOpts['support-x25519mlkem768'] = Boolean(r['support-x25519mlkem768']);
+                    }
+                    node['reality-opts'] = realityOpts;
                 }
             } else if (node.type === 'tuic' || node.type === 'hysteria2') {
                 if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
@@ -87,8 +92,9 @@ export class ShadowrocketConverter extends BaseConverter {
             }
 
             // Move SNI to servername for Clash YAML compatibility used by Shadowrocket
-            if (node.sni && !node.servername) {
-                node.servername = node.sni;
+            if (node.sni) {
+                if (!node.servername) node.servername = node.sni;
+                delete node.sni;
             }
 
             if (node.network === 'ws') {

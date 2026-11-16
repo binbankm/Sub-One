@@ -279,6 +279,25 @@ export function parseShadowsocks(uri: string): ProxyNode | null {
             } catch { /* 忽略解析失败 */ }
         }
 
+        if (params.security === 'reality' || params.pbk) {
+            const opts: Record<string, any> = {};
+            if (params.pbk || params.publicKey) opts['public-key'] = params.pbk || params.publicKey;
+            if (params.sid || params.shortId) opts['short-id'] = params.sid || params.shortId;
+            const spx = params.spx || params['spider-x'] || params.spiderx;
+            if (spx) {
+                opts['spider-x'] = spx;
+                opts['_spider-x'] = spx;
+            }
+            const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
+            if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                opts['support-x25519mlkem768'] = true;
+            }
+            if (Object.keys(opts).length > 0) {
+                proxy['reality-opts'] = opts as any;
+                proxy.tls = true;
+            }
+        }
+
         proxy.name = name ? decodeURIComponent(name) : `SS ${proxy.server}:${proxy.port}`;
 
         return proxy as ProxyNode;
@@ -427,13 +446,17 @@ export function parseTrojan(uri: string): ProxyNode | null {
 
         // Reality support
         if (params.security === 'reality' || params.pbk) {
-            const opts: Record<string, string> = {};
+            const opts: Record<string, any> = {};
             if (params.pbk || params.publicKey) opts['public-key'] = params.pbk || params.publicKey;
             if (params.sid || params.shortId) opts['short-id'] = params.sid || params.shortId;
             const spx = params.spx || params['spider-x'] || params.spiderx;
             if (spx) {
                 opts['spider-x'] = spx;
                 opts['_spider-x'] = spx;
+            }
+            const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
+            if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                opts['support-x25519mlkem768'] = true;
             }
             if (Object.keys(opts).length > 0) {
                 proxy['reality-opts'] = opts as any;
@@ -735,6 +758,45 @@ export function parseVMess(uri: string): ProxyNode | null {
         proxy['client-fingerprint'] = params.fp;
         proxy.alpn = params.alpn ? params.alpn.split(',') : undefined;
 
+        // Packet encoding (Sub-Store parity: defaults to 'xudp')
+        const rawPe = params.packetEncoding ?? params.packet_encoding ?? params['packet-encoding'];
+        if (rawPe !== undefined) {
+            const pe = String(rawPe).trim().toLowerCase();
+            if (pe === 'none' || pe === '') {
+                proxy['packet-encoding'] = '';
+            } else if (pe === 'packet' || pe === 'packetaddr') {
+                proxy['packet-encoding'] = 'packetaddr';
+            } else {
+                proxy['packet-encoding'] = 'xudp';
+            }
+        } else if (params['packet-addr'] || params.packetaddr) {
+            proxy['packet-encoding'] = 'packetaddr';
+        } else if (params.xudp === '0' || params.xudp === 'false') {
+            proxy['packet-encoding'] = '';
+        } else {
+            proxy['packet-encoding'] = 'xudp';
+        }
+
+        // Reality support
+        if (params.security === 'reality' || params.pbk) {
+            const opts: Record<string, any> = {};
+            if (params.pbk || params.publicKey) opts['public-key'] = params.pbk || params.publicKey;
+            if (params.sid || params.shortId) opts['short-id'] = params.sid || params.shortId;
+            const spx = params.spx || params['spider-x'] || params.spiderx;
+            if (spx) {
+                opts['spider-x'] = spx;
+                opts['_spider-x'] = spx;
+            }
+            const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
+            if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                opts['support-x25519mlkem768'] = true;
+            }
+            if (Object.keys(opts).length > 0) {
+                proxy['reality-opts'] = opts as any;
+                proxy.tls = true;
+            }
+        }
+
         return proxy as ProxyNode;
     } catch (e) {
         console.error('[parseVMess] Error:', e);
@@ -868,6 +930,25 @@ export function parseVLESS(uri: string): ProxyNode | null {
         if (params.pcs) proxy._pcs = params.pcs;
         if (/(TRUE)|1/i.test(params.h2)) proxy._h2 = true;
 
+        // Packet encoding (Sub-Store parity: defaults to 'xudp')
+        const rawPe = params.packetEncoding ?? params.packet_encoding ?? params['packet-encoding'];
+        if (rawPe !== undefined) {
+            const pe = String(rawPe).trim().toLowerCase();
+            if (pe === 'none' || pe === '') {
+                proxy['packet-encoding'] = '';
+            } else if (pe === 'packet' || pe === 'packetaddr') {
+                proxy['packet-encoding'] = 'packetaddr';
+            } else {
+                proxy['packet-encoding'] = 'xudp';
+            }
+        } else if (params['packet-addr'] || params.packetaddr) {
+            proxy['packet-encoding'] = 'packetaddr';
+        } else if (params.xudp === '0' || params.xudp === 'false') {
+            proxy['packet-encoding'] = '';
+        } else {
+            proxy['packet-encoding'] = 'xudp';
+        }
+
         if (params.reality === 'reality' || params.security === 'reality' || params.pbk) {
             const opts: any = {};
             // Existing reality logic...
@@ -877,6 +958,10 @@ export function parseVLESS(uri: string): ProxyNode | null {
             if (spx) {
                 opts['spider-x'] = spx;
                 opts['_spider-x'] = spx;
+            }
+            const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
+            if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                opts['support-x25519mlkem768'] = true;
             }
 
             // Extra fields
@@ -1192,10 +1277,15 @@ export function parseAnyTLS(uri: string): ProxyNode | null {
         }
 
         if (params.pbk || params.publicKey || params['public-key']) {
-            proxy['reality-opts'] = {
+            const opts: Record<string, any> = {
                 'public-key': params.pbk || params.publicKey || params['public-key'],
                 'short-id': params.sid || params.shortId || params['short-id']
             };
+            const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
+            if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                opts['support-x25519mlkem768'] = true;
+            }
+            proxy['reality-opts'] = opts as any;
         }
         if (params['tls-pubkey-sha256']) proxy['tls-pubkey-sha256'] = params['tls-pubkey-sha256'];
         if (params['tls-cert-sha256'] || params.pinsha256 || params.pinSHA256)

@@ -197,6 +197,9 @@ export interface ProxyNode {
     // === gRPC 选项 ===
     'grpc-opts'?: {
         'service-name'?: string;
+        'grpc-service-name'?: string;
+        '_grpc-type'?: string;
+        '_grpc-authority'?: string;
     };
     'grpc-service-name'?: string; // 兼容简化写法
 
@@ -227,7 +230,16 @@ export interface ProxyNode {
         'short-id'?: string;
         'spider-x'?: string;
         '_spider-x'?: string; // 兼容
+        'support-x25519mlkem768'?: boolean;
     };
+
+    // === Packet Encoding (VLESS / VMess) ===
+    'packet-encoding'?: string; // xudp | packetaddr | ''
+    'packet-addr'?: boolean;
+    xudp?: boolean;
+    _loon_tls_profile?: string; // Loon TLS profile 兼容
+    'block-quic'?: string; // on | off
+    'hop-interval-max'?: number; // 端口跳跃区间上限 (Mihomo)
 
     // === ECH (Encrypted Client Hello) 选项 ===
     'ech-opts'?: EchOptions;

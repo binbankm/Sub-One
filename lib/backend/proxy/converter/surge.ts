@@ -36,7 +36,7 @@ export class SurgeConverter extends BaseConverter {
                 case 'vmess':
                     return this.vmess(p);
                 case 'vless':
-                    return this.vless();
+                    return this.vless(p, opts);
                 case 'http':
                 case 'https':
                     return this.http(p);
@@ -136,8 +136,53 @@ export class SurgeConverter extends BaseConverter {
         return result.toString();
     }
 
-    private vless(): string {
-        throw new Error('[SurgeConverter] Surge does not support VLESS proxy type');
+    private vless(proxy: ProxyNode, _opts?: ConvertOptions): string {
+        const result = new Result(proxy);
+        result.append(`${proxy.name}=vless,${proxy.server},${proxy.port}`);
+        result.appendIfPresent(`,username=${proxy.uuid}`, 'uuid');
+
+        const ip_version = ipVersions[proxy['ip-version'] || ''] || proxy['ip-version'];
+        result.appendIfPresent(`,ip-version=${ip_version}`, 'ip-version');
+
+        const network = proxy.network || 'tcp';
+        const reality = proxy['reality-opts'];
+
+        if (network === 'ws') {
+            this.appendTransport(result, proxy);
+        } else if (network === 'grpc') {
+            result.append(',grpc=true');
+            const grpc = proxy['grpc-opts'] as any;
+            if (grpc?.['service-name'] || grpc?.['grpc-service-name']) {
+                result.append(`,grpc-service-name=${grpc['service-name'] || grpc['grpc-service-name']}`);
+            }
+        } else if (network === 'xhttp') {
+            result.append(',xhttp=true');
+            const xhttp = proxy['xhttp-opts'] as any;
+            if (xhttp?.path) result.append(`,xhttp-path=${xhttp.path}`);
+            if (xhttp?.host) result.append(`,xhttp-host=${xhttp.host}`);
+            if (xhttp?.mode) result.append(`,xhttp-mode=${xhttp.mode}`);
+        }
+
+        if (proxy.flow) result.append(`,flow=${proxy.flow}`);
+        if (proxy.encryption) result.append(`,encryption=${proxy.encryption}`);
+
+        if (reality) {
+            result.append(`,reality-public-key=${reality['public-key']}`);
+            if (reality['short-id']) {
+                result.append(`,reality-short-id=${reality['short-id']}`);
+            }
+            result.appendIfPresent(`,sni="${proxy.sni}"`, 'sni');
+            if (proxy.alpn) {
+                const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(';') : proxy.alpn;
+                result.append(`,alpn="${alpn}"`);
+            }
+        } else {
+            result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
+            this.appendTLS(result, proxy);
+        }
+
+        this.appendCommon(result, proxy);
+        return result.toString();
     }
 
     private http(proxy: ProxyNode): string {

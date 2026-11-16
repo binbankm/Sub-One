@@ -248,6 +248,47 @@ function mapLoonParams(proxy: Partial<ProxyNode>, params: Record<string, string>
     if (params.udp) proxy.udp = params.udp === 'true';
     if (params['fast-open']) proxy.tfo = params['fast-open'] === 'true';
 
+    // Reality 参数解析
+    if (params['public-key'] || params.pbk) {
+        if (!proxy['reality-opts']) proxy['reality-opts'] = {};
+        proxy['reality-opts']['public-key'] = (params['public-key'] || params.pbk).replace(/^"(.*)"$/, '$1');
+        if (params['short-id'] || params.sid) {
+            proxy['reality-opts']['short-id'] = (params['short-id'] || params.sid).replace(/^"(.*)"$/, '$1');
+        }
+        if (params['spider-x'] || params.spx) {
+            const spx = (params['spider-x'] || params.spx).replace(/^"(.*)"$/, '$1');
+            proxy['reality-opts']['spider-x'] = spx;
+            proxy['reality-opts']['_spider-x'] = spx;
+        }
+        proxy.tls = true;
+    }
+
+    // TLS Profile
+    if (params['tls-profile']) {
+        const tp = params['tls-profile'].trim();
+        proxy._loon_tls_profile = tp;
+        if (['chrome', 'chrome147'].includes(tp)) {
+            proxy['client-fingerprint'] = 'chrome';
+        } else if (['safari-ios18', 'safari-ios-26'].includes(tp)) {
+            proxy['client-fingerprint'] = 'safari';
+        }
+        if (['chrome147', 'safari-ios-26'].includes(tp)) {
+            if (proxy['reality-opts']) {
+                proxy['reality-opts']['support-x25519mlkem768'] = true;
+            }
+        }
+    }
+
+    // Flow
+    if (params.flow || params['vless-flow']) {
+        proxy.flow = params.flow || params['vless-flow'];
+    }
+
+    // Packet Encoding
+    if (params['packet-encoding'] || params.packetencoding) {
+        proxy['packet-encoding'] = params['packet-encoding'] || params.packetencoding;
+    }
+
     // VMess alterId 命名参数
     if (params.alterid !== undefined) proxy.alterId = parseInt(params.alterid, 10);
     else if (params['alter-id'] !== undefined) proxy.alterId = parseInt(params['alter-id'], 10);

@@ -18,7 +18,7 @@ export class URIConverter extends BaseConverter {
     public convertSingle(node: ProxyNode): string {
         try {
             const p = { ...node };
-            if (p.server && p.server.includes(':')) {
+            if (p.server && p.server.includes(':') && !p.server.startsWith('[')) {
                 p.server = `[${p.server}]`;
             }
 
@@ -156,7 +156,8 @@ export class URIConverter extends BaseConverter {
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `vless://${node.uuid}@${node.server}:${node.port}${queryString}${hash}`;
+        const server = node.server.includes(':') && !node.server.startsWith('[') ? `[${node.server}]` : node.server;
+        return `vless://${node.uuid}@${server}:${node.port}${queryString}${hash}`;
     }
 
     private trojan(node: ProxyNode): string {
@@ -436,6 +437,9 @@ export class URIConverter extends BaseConverter {
             if (r['short-id']) params.set('sid', r['short-id']);
             const spx = r['spider-x'] || r['_spider-x'];
             if (spx) params.set('spx', spx);
+            if (r['support-x25519mlkem768']) {
+                params.set('support-x25519mlkem768', 'true');
+            }
         }
         if (node.flow) params.set('flow', node.flow);
         if (node['ech-opts']) {
@@ -462,6 +466,24 @@ export class URIConverter extends BaseConverter {
         params.set('encryption', node.encryption || 'none');
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
         if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
+
+        let canonicalPacketEncoding: string | undefined;
+        if (node['packet-encoding'] != null) {
+            canonicalPacketEncoding = `${node['packet-encoding']}`.trim().toLowerCase();
+        } else if (node.xudp) {
+            canonicalPacketEncoding = 'xudp';
+        } else if (node['packet-addr']) {
+            canonicalPacketEncoding = 'packetaddr';
+        } else if (node.udp === true) {
+            canonicalPacketEncoding = '';
+        }
+        if (canonicalPacketEncoding === '') {
+            params.set('packetEncoding', 'none');
+        } else if (canonicalPacketEncoding === 'packetaddr') {
+            params.set('packetEncoding', 'packet');
+        } else if (canonicalPacketEncoding === 'xudp') {
+            params.set('packetEncoding', 'xudp');
+        }
 
         if (node._extra) {
             const extra = typeof node._extra === 'string' ? node._extra : JSON.stringify(node._extra);

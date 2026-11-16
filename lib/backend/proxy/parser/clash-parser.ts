@@ -115,6 +115,15 @@ export function parseClashNode(p: any): ProxyNode | null {
             node.uuid = p.uuid || p.id;
             node.alterId = p.alterId || p.aid || 0;
             node.cipher = p.cipher || 'auto';
+            if (p['packet-encoding'] != null) node['packet-encoding'] = String(p['packet-encoding']);
+            if (p.xudp) {
+                node.xudp = true;
+                if (!node['packet-encoding']) node['packet-encoding'] = 'xudp';
+            }
+            if (p['packet-addr']) {
+                node['packet-addr'] = true;
+                if (!node['packet-encoding']) node['packet-encoding'] = 'packetaddr';
+            }
             break;
 
         case 'vless':
@@ -123,11 +132,26 @@ export function parseClashNode(p: any): ProxyNode | null {
             if (p['tls-pubkey-sha256']) node['tls-pubkey-sha256'] = p['tls-pubkey-sha256'];
             // Reality 处理
             if (p['reality-opts']) {
-                node['reality-opts'] = {
-                    'public-key': p['reality-opts']['public-key'],
-                    'short-id': p['reality-opts']['short-id'],
-                    'spider-x': p['reality-opts']['spider-x'] || p['reality-opts']['_spider-x'] || ''
-                };
+                const r = p['reality-opts'];
+                const realityOpts: Record<string, any> = {};
+                if (r['public-key']) realityOpts['public-key'] = r['public-key'];
+                if (r['short-id']) realityOpts['short-id'] = r['short-id'];
+                const spx = r['spider-x'] || r['_spider-x'];
+                if (spx) realityOpts['spider-x'] = spx;
+                const mlkem = r['support-x25519mlkem768'] ?? r.support_x25519mlkem768 ?? p['support-x25519mlkem768'];
+                if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                    realityOpts['support-x25519mlkem768'] = true;
+                }
+                node['reality-opts'] = realityOpts;
+            }
+            if (p['packet-encoding'] != null) node['packet-encoding'] = String(p['packet-encoding']);
+            if (p.xudp) {
+                node.xudp = true;
+                if (!node['packet-encoding']) node['packet-encoding'] = 'xudp';
+            }
+            if (p['packet-addr']) {
+                node['packet-addr'] = true;
+                if (!node['packet-encoding']) node['packet-encoding'] = 'packetaddr';
             }
             if (p['xhttp-opts']) {
                 node['xhttp-opts'] = p['xhttp-opts'];
@@ -137,11 +161,17 @@ export function parseClashNode(p: any): ProxyNode | null {
         case 'trojan':
             node.password = p.password;
             if (p['reality-opts']) {
-                node['reality-opts'] = {
-                    'public-key': p['reality-opts']['public-key'],
-                    'short-id': p['reality-opts']['short-id'],
-                    'spider-x': p['reality-opts']['spider-x'] || p['reality-opts']['_spider-x'] || ''
-                };
+                const r = p['reality-opts'];
+                const realityOpts: Record<string, any> = {};
+                if (r['public-key']) realityOpts['public-key'] = r['public-key'];
+                if (r['short-id']) realityOpts['short-id'] = r['short-id'];
+                const spx = r['spider-x'] || r['_spider-x'];
+                if (spx) realityOpts['spider-x'] = spx;
+                const mlkem = r['support-x25519mlkem768'] ?? r.support_x25519mlkem768 ?? p['support-x25519mlkem768'];
+                if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
+                    realityOpts['support-x25519mlkem768'] = true;
+                }
+                node['reality-opts'] = realityOpts;
             }
             break;
 
