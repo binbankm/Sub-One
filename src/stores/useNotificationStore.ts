@@ -43,12 +43,32 @@ export const useNotificationStore = defineStore('notification', () => {
     /** Toast 提示列表 */
     const toasts = ref<Toast[]>([]);
 
+    /** 最近展示消息的时间戳记录，用于短时间内防抖去重 */
+    const recentMessages = new Map<string, number>();
+
     /**
      * 显示 Toast 提示
      */
     function showToast(message: string, type: ToastType = 'info', duration = 3000) {
+        if (!message || !message.trim()) return;
+        const cleanMsg = message.trim();
+
+        // 1. 去重检查：当前已在列表中展示的相同消息直接忽略
+        const existingToast = toasts.value.find((t) => t.message === cleanMsg && t.type === type);
+        if (existingToast) {
+            return;
+        }
+
+        // 2. 时间防抖：同一消息 1.2 秒内不重复弹出
+        const now = Date.now();
+        const lastShown = recentMessages.get(cleanMsg);
+        if (lastShown && now - lastShown < 1200) {
+            return;
+        }
+        recentMessages.set(cleanMsg, now);
+
         const id = Date.now() + Math.random().toString(36).substr(2, 9);
-        const toast: Toast = { id, message, type };
+        const toast: Toast = { id, message: cleanMsg, type };
         toasts.value.push(toast);
 
         if (duration > 0) {

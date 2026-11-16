@@ -44,10 +44,10 @@ export function useSubscriptions(
         await saveData(i18n.global.t('entities.subscription.actions.clear'));
     }
 
-    async function addSubscriptionsFromBulk(newSubs: Subscription[]) {
+    async function addSubscriptionsFromBulk(newSubs: Subscription[], silent: boolean = true) {
         if (newSubs.length === 0) return;
         subscriptions.value.push(...newSubs);
-        await saveData(i18n.global.t('entities.subscription.actions.batchImport'));
+        await saveData(i18n.global.t('entities.subscription.actions.batchImport'), !silent);
     }
 
     async function updateSubscriptionNodes(id: string): Promise<boolean> {
@@ -122,7 +122,7 @@ export function useSubscriptions(
                 if (successCount > 0) {
                     const message = 
                         i18n.global.t('entities.subscription.tg.batchUpdateSuccess') +
-                        i18n.global.t('entities.subscription.management.batchUpdated').replace('{count}', String(successCount)) + '\n' +
+                        i18n.global.t('entities.subscription.management.batchUpdated', { count: successCount }) + '\n' +
                         i18n.global.t('entities.subscription.tg.batchUpdateSynced');
                     api.sendNotification(message).catch((err) => {
                         console.error(`${i18n.global.t('entities.subscription.actions.tgFail')}`, err);

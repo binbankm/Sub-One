@@ -64,13 +64,14 @@ export function useNodeManagement() {
             const { subs, nodes } = parseImportText(nodeToSave.url);
             if (nodes.length > 1) {
                 if (subs.length > 0) {
-                    await dataStore.addSubscriptionsFromBulk(subs);
+                    await dataStore.addSubscriptionsFromBulk(subs, true);
                 }
-                await dataStore.addNodesFromBulk(nodes);
+                await dataStore.addNodesFromBulk(nodes, true);
                 toastStore.showToast(
-                    i18n.global.t('entities.node.management.importSuccess')
-                        .replace('{subs}', String(subs.length))
-                        .replace('{nodes}', String(nodes.length)),
+                    i18n.global.t('entities.node.management.importSuccess', {
+                        subs: subs.length,
+                        nodes: nodes.length
+                    }),
                     'success'
                 );
                 onSuccess();
@@ -125,14 +126,17 @@ export function useNodeManagement() {
             return;
         }
 
-        if (subs.length > 0) await dataStore.addSubscriptionsFromBulk(subs);
+        if (subs.length > 0) await dataStore.addSubscriptionsFromBulk(subs, true);
         if (nodes.length > 0) {
-            await dataStore.addNodesFromBulk(nodes);
+            await dataStore.addNodesFromBulk(nodes, true);
             onSuccess();
         }
 
         toastStore.showToast(
-            i18n.global.t('entities.node.management.importSuccess').replace('{subs}', String(subs.length)).replace('{nodes}', String(nodes.length)),
+            i18n.global.t('entities.node.management.importSuccess', {
+                subs: subs.length,
+                nodes: nodes.length
+            }),
             'success'
         );
         showBulkImportModal.value = false;

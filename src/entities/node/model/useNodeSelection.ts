@@ -39,7 +39,7 @@ export function useNodeSelection(filteredNodes: Ref<DisplayNode[]>) {
 
         const success = await copyToClipboard(selectedNodeUrls.join('\n'));
         if (success) {
-            toastStore.showToast(i18n.global.t('entities.node.selection.copyMultiple').replace('{count}', String(selectedNodeUrls.length)), 'success');
+            toastStore.showToast(i18n.global.t('entities.node.selection.copyMultiple', { count: selectedNodeUrls.length }), 'success');
         } else {
             toastStore.showToast(i18n.global.t('entities.node.selection.copyFailed'), 'error');
         }

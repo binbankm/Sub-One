@@ -48,10 +48,10 @@ export function useNodes(saveData: (reason: string, showToast?: boolean) => Prom
         await saveData(i18n.global.t('entities.node.actions.batchDelete'));
     }
 
-    async function addNodesFromBulk(nodes: Node[]) {
+    async function addNodesFromBulk(nodes: Node[], silent: boolean = true) {
         if (nodes.length > 0) {
             manualNodes.value.unshift(...nodes);
-            await saveData(i18n.global.t('entities.node.actions.batchImport'));
+            await saveData(i18n.global.t('entities.node.actions.batchImport'), !silent);
         }
     }
 

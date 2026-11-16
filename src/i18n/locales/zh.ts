@@ -50,6 +50,7 @@ export default {
                 "delete": "删除订阅",
                 "clear": "清空订阅",
                 "batchImport": "批量导入订阅",
+                "import": "导入",
                 "updateFailed": "更新失败",
                 "noEnabled": "没有启用的订阅",
                 "tgFail": "发送 TG 通知失败:"
@@ -125,7 +126,7 @@ export default {
                 "invalidUrl": "请输入有效的 URL (例如 https://example.com/...)",
                 "importFailedMsg": "导入失败: {msg}",
                 "emptyContent": "请粘贴订阅内容或上传文件",
-                "importSuccess": "导入成功！共添加 {count} 个节点",
+                "importSuccess": "🚀 导入成功！共添加 {count} 个节点",
                 "subsDetected": "检测到 {count} 个订阅链接，请使用 URL 导入模式或在订阅管理中添加。",
                 "backendParseFailed": "后端解析也失败了",
                 "importFailedMsgExt": "导入失败: {msg}。支持节点链接、Clash(YAML)、Base64 等格式。"

@@ -50,6 +50,7 @@ export default {
                 "delete": "Delete Subscription",
                 "clear": "Clear Subscriptions",
                 "batchImport": "Batch Import Subscriptions",
+                "import": "Import",
                 "updateFailed": "Update failed",
                 "noEnabled": "No enabled subscriptions",
                 "tgFail": "Failed to send TG notification:"
@@ -119,13 +120,13 @@ export default {
                 "fileTooLarge": "File is too large, please upload a file smaller than 5MB",
                 "fileRead": "File read: {name}",
                 "fileReadError": "Failed to read file",
-                "importSuccessMethod": "{method} successful! Added {count} nodes",
+                "importSuccessMethod": "🚀 {method} successful! Added {count} nodes",
                 "parseFailed": "Failed to parse any nodes, please check the content or URL.",
                 "emptyUrl": "Please enter a subscription URL",
                 "invalidUrl": "Please enter a valid URL (e.g. https://example.com/...)",
                 "importFailedMsg": "Import failed: {msg}",
                 "emptyContent": "Please paste subscription content or upload a file",
-                "importSuccess": "Import successful! Added {count} nodes",
+                "importSuccess": "🚀 Import successful! Added {count} nodes",
                 "subsDetected": "Detected {count} subscription URLs, please use URL import mode or add them in Subscription Management.",
                 "backendParseFailed": "Backend parsing also failed",
                 "importFailedMsgExt": "Import failed: {msg}. Supported formats: node links, Clash(YAML), Base64, etc."

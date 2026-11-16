@@ -463,7 +463,7 @@ const confirmClear = () => {
                     v-if="ruleCount > 0"
                     class="rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-300"
                 >
-                    {{ t('widgets.subscription.filterEditor.rulesCount').replace('{count}', String(ruleCount)) }}
+                    {{ t('widgets.subscription.filterEditor.rulesCount', { count: ruleCount }) }}
                 </span>
                 <button
                     class="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-danger-50 hover:text-danger-600 dark:text-gray-400 dark:hover:bg-danger-950/30 dark:hover:text-danger-400"

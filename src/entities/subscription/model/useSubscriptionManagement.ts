@@ -79,7 +79,7 @@ export function useSubscriptionManagement() {
 
         const success = await dataStore.updateSubscriptionNodes(subscriptionId);
         if (success) {
-            if (!silent) toastStore.showToast(i18n.global.t('entities.subscription.management.updated').replace('{name}', sub.name || ''), 'success');
+            if (!silent) toastStore.showToast(i18n.global.t('entities.subscription.management.updated', { name: sub.name || '' }), 'success');
             await dataStore.saveData(i18n.global.t('entities.subscription.actions.update'), false);
 
             // 发送 TG 通知（单个订阅更新）
@@ -92,7 +92,7 @@ export function useSubscriptionManagement() {
                 `\`${nodeCount}\` ${i18n.global.t('entities.subscription.tg.nodesSuffix')}`;
             await sendNotification(message);
         } else {
-            toastStore.showToast(i18n.global.t('entities.subscription.management.updateFailedMsg').replace('{msg}', sub.errorMsg || ''), 'error');
+            toastStore.showToast(i18n.global.t('entities.subscription.management.updateFailedMsg', { msg: sub.errorMsg || '' }), 'error');
         }
     };
 
@@ -102,17 +102,17 @@ export function useSubscriptionManagement() {
         try {
             const result = await dataStore.updateAllEnabledSubscriptions();
             if (result.success) {
-                toastStore.showToast(i18n.global.t('entities.subscription.management.batchUpdated').replace('{count}', String(result.count)), 'success');
+                toastStore.showToast(i18n.global.t('entities.subscription.management.batchUpdated', { count: result.count }), 'success');
                 await dataStore.saveData(i18n.global.t('entities.subscription.actions.update'), false);
 
                 // 发送 TG 通知（批量更新汇总）
                 const message = 
                     i18n.global.t('entities.subscription.tg.batchUpdateSuccess') +
-                    i18n.global.t('entities.subscription.tg.batchUpdateSuccessMsg').replace('{count}', String(result.count)) +
+                    i18n.global.t('entities.subscription.tg.batchUpdateSuccessMsg', { count: result.count }) +
                     i18n.global.t('entities.subscription.tg.batchUpdateAllSynced');
                 await sendNotification(message);
             } else {
-                toastStore.showToast(i18n.global.t('entities.subscription.management.batchFailedWithMessage').replace('{msg}', String(result.message)), 'error');
+                toastStore.showToast(i18n.global.t('entities.subscription.management.batchFailedWithMessage', { msg: String(result.message) }), 'error');
             }
         } catch (e) {
             toastStore.showToast(i18n.global.t('entities.subscription.management.batchFailed'), 'error');

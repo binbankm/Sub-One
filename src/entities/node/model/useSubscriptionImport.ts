@@ -52,7 +52,7 @@ export function useSubscriptionImport(
             if (typeof result === 'string') {
                 textContent.value = result;
                 errorMessage.value = '';
-                toastStore.showToast(i18n.global.t('entities.node.import.fileRead').replace('{name}', file.name), 'success');
+                toastStore.showToast(i18n.global.t('entities.node.import.fileRead', { name: file.name }), 'success');
             }
         };
         reader.onerror = () => {
@@ -92,7 +92,10 @@ export function useSubscriptionImport(
                 await props.onImportSuccess();
             }
             toastStore.showToast(
-                i18n.global.t('entities.node.import.importSuccessMethod').replace('{method}', methodMsg).replace('{count}', String(newNodes.length)),
+                i18n.global.t('entities.node.import.importSuccessMethod', {
+                    method: methodMsg || i18n.global.t('entities.subscription.actions.import'),
+                    count: newNodes.length
+                }),
                 'success'
             );
             emit('update:show', false);
@@ -121,7 +124,7 @@ export function useSubscriptionImport(
                         await props.onImportSuccess();
                     }
                     toastStore.showToast(
-                        i18n.global.t('entities.node.import.importSuccess').replace('{count}', String(nodes.length)),
+                        i18n.global.t('entities.node.import.importSuccess', { count: nodes.length }),
                         'success'
                     );
                     emit('update:show', false);
@@ -129,7 +132,7 @@ export function useSubscriptionImport(
                 } catch (error: unknown) {
                     console.error('Import failed:', error);
                     const msg = error instanceof Error ? error.message : String(error);
-                    errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg').replace('{msg}', msg);
+                    errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg', { msg });
                     return;
                 } finally {
                     isLoading.value = false;
@@ -163,7 +166,7 @@ export function useSubscriptionImport(
             } catch (error: unknown) {
                 console.error('Import failed:', error);
                 const msg = error instanceof Error ? error.message : String(error);
-                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg').replace('{msg}', msg);
+                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsg', { msg });
             } finally {
                 isLoading.value = false;
             }
@@ -182,10 +185,10 @@ export function useSubscriptionImport(
                     if (props.onImportSuccess) {
                         await props.onImportSuccess();
                     }
-                    toastStore.showToast(i18n.global.t('entities.node.import.importSuccess').replace('{count}', String(nodes.length)), 'success');
+                    toastStore.showToast(i18n.global.t('entities.node.import.importSuccess', { count: nodes.length }), 'success');
                     emit('update:show', false);
                 } else if (subs.length > 0) {
-                    errorMessage.value = i18n.global.t('entities.node.import.subsDetected').replace('{count}', String(subs.length));
+                    errorMessage.value = i18n.global.t('entities.node.import.subsDetected', { count: subs.length });
                 } else {
                     const response = await fetch('/api/node_count', {
                         method: 'POST',
@@ -202,7 +205,7 @@ export function useSubscriptionImport(
             } catch (error: unknown) {
                 console.error('Import failed:', error);
                 const msg = error instanceof Error ? error.message : String(error);
-                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsgExt').replace('{msg}', msg);
+                errorMessage.value = i18n.global.t('entities.node.import.importFailedMsgExt', { msg });
             } finally {
                 isLoading.value = false;
             }
