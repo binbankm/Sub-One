@@ -32,5 +32,9 @@ describe('Frontend Protocol Utilities', () => {
         expect(getProtocolInfo('shadowsocks').text).toBe('SS');
         expect(getProtocolInfo('hy2').text).toBe('HY2');
         expect(getProtocolInfo('vless').text).toBe('VLESS');
+        expect(getProtocolInfo('mieru').text).toBe('Mieru');
+        expect(getProtocolInfo('juicity').text).toBe('Juicity');
+        expect(getProtocolInfo('sudoku').text).toBe('Sudoku');
+        expect(getProtocolInfo('trusttunnel').text).toBe('TrustTunnel');
     });
 });

@@ -173,7 +173,7 @@ export function parseImportText(importText: string): ImportResult {
         // 检查一行中是否包含多个空格隔开的节点 URI
         if (!HTTP_REGEX.test(line) && NODE_PROTOCOL_REGEX.test(line)) {
             const matches = line.match(
-                /(?:ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5?|socks|snell|wireguard|wg|naive|naive\+https|naive\+http|ssh|mieru|juicity):\/\/[^\s]+/gi
+                /(?:ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5?|socks|snell|wireguard|wg|naive|naive\+https|naive\+http|ssh|mieru|juicity|sudoku|trusttunnel|tt):\/\/[^\s]+/gi
             );
             if (matches && matches.length > 1) {
                 for (const uri of matches) {

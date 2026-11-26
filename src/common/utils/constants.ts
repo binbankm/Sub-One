@@ -31,9 +31,10 @@ export const HTTP_REGEX = /^https?:\/\//;
  * - tuic (TUIC 协议)
  * - anytls (AnyTLS 协议)
  * - socks5 (SOCKS5 代理)
+ * - mieru / juicity / sudoku / trusttunnel (新兴代理协议)
  */
 export const NODE_PROTOCOL_REGEX =
-    /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5?|socks|snell|wireguard|wg|naive|naive\+https|naive\+http|ssh|mieru|juicity):\/\//i;
+    /^(ss|ssr|vmess|vless|trojan|hysteria2?|hy|hy2|tuic|anytls|socks5?|socks|snell|wireguard|wg|naive|naive\+https|naive\+http|ssh|mieru|juicity|sudoku|trusttunnel|tt):\/\//i;
 
 // ==================== 国家/地区映射 ====================
 

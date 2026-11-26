@@ -61,6 +61,10 @@ const protocols = [
     { label: 'Snell', value: 'snell' },
     { label: 'NaiveProxy', value: 'naive' },
     { label: 'SSH', value: 'ssh' },
+    { label: 'Mieru', value: 'mieru' },
+    { label: 'Juicity', value: 'juicity' },
+    { label: 'Sudoku', value: 'sudoku' },
+    { label: 'TrustTunnel', value: 'trusttunnel' },
     { label: 'Reality', value: 'reality' }
 ];
 

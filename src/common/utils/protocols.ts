@@ -194,6 +194,22 @@ export const getProtocolInfo = (protocol?: string): ProtocolInfo => {
                 bg: 'bg-lime-100 dark:bg-lime-900/30',
                 color: 'text-lime-700 dark:text-lime-300'
             };
+        case 'sudoku':
+            return {
+                text: 'Sudoku',
+                icon: '',
+                gradient: 'from-fuchsia-400 to-purple-500',
+                bg: 'bg-fuchsia-100 dark:bg-fuchsia-900/30',
+                color: 'text-fuchsia-700 dark:text-fuchsia-300'
+            };
+        case 'trusttunnel':
+            return {
+                text: 'TrustTunnel',
+                icon: '',
+                gradient: 'from-emerald-400 to-cyan-500',
+                bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+                color: 'text-emerald-700 dark:text-emerald-300'
+            };
         default:
             return {
                 text: 'Unknown',

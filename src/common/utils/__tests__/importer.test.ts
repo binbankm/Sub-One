@@ -64,6 +64,17 @@ describe('importer - parseImportText & node creation', () => {
         expect(nodes[2].name).toBe('NodeC');
     });
 
+    it('should parse emerging protocol URIs (sudoku, trusttunnel, tt, mieru, juicity) in single or multi-URI lines', () => {
+        const line =
+            'sudoku://key@1.1.1.1:443#Sudoku1 trusttunnel://u:p@2.2.2.2:443#TT1 tt://u:p@3.3.3.3:443#TT2 mieru://u:p@4.4.4.4:2012#Mieru1 juicity://u:p@5.5.5.5:443#Juicity1';
+        const { subs, nodes } = parseImportText(line);
+
+        expect(subs).toHaveLength(0);
+        expect(nodes).toHaveLength(5);
+        expect(nodes.map((n) => n.type)).toEqual(['sudoku', 'trusttunnel', 'trusttunnel', 'mieru', 'juicity']);
+        expect(nodes.map((n) => n.name)).toEqual(['Sudoku1', 'TT1', 'TT2', 'Mieru1', 'Juicity1']);
+    });
+
     it('should parse mixed subscriptions and nodes', () => {
         const text = `
             https://example.com/sub/token1
