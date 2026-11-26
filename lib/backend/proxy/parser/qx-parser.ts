@@ -2,10 +2,17 @@
  * Sub-One Quantumult X Parser
  *
  * 解析 Quantumult X 格式的代理行
- * 参考 qx.peg 逻辑进行 1:1 甚至超集还原
  */
 import type { ProxyNode, ProxyType } from '../types';
-import { parsePort, randomId } from '../utils';
+import { parseEndpoint, parsePort, randomId } from '../utils';
+
+function safeDecodeURIComponent(str: string): string {
+    try {
+        return decodeURIComponent(str);
+    } catch {
+        return str;
+    }
+}
 
 /**
  * 解析 Quantumult X 代理行
@@ -23,11 +30,11 @@ export function parseQX(line: string): ProxyNode | null {
         if (parts.length < 1) return null;
 
         const serverPort = parts[0];
-        const spIdx = serverPort.lastIndexOf(':');
-        if (spIdx === -1) return null;
+        const ep = parseEndpoint(serverPort);
+        if (!ep.server || ep.port === undefined) return null;
 
-        const server = serverPort.substring(0, spIdx);
-        const port = parsePort(serverPort.substring(spIdx + 1));
+        const server = ep.server;
+        const port = parsePort(ep.port);
 
         const proxy: Partial<ProxyNode> = {
             id: randomId(),
@@ -38,12 +45,19 @@ export function parseQX(line: string): ProxyNode | null {
         // QX 类型映射
         const typeMap: Record<string, ProxyType> = {
             shadowsocks: 'ss',
+            ss: 'ss',
+            shadowsocksr: 'ssr',
+            ssr: 'ssr',
             vmess: 'vmess',
             vless: 'vless',
             trojan: 'trojan',
             http: 'http',
+            https: 'https',
             socks5: 'socks5',
-            anytls: 'anytls'
+            socks: 'socks5',
+            anytls: 'anytls',
+            hysteria2: 'hysteria2',
+            hy2: 'hysteria2'
         };
         proxy.type = typeMap[rawType] || (rawType as ProxyType);
 
@@ -62,7 +76,7 @@ export function parseQX(line: string): ProxyNode | null {
 
         // QX 默认名称逻辑 (tag)
         proxy.name = params.tag
-            ? decodeURIComponent(params.tag)
+            ? safeDecodeURIComponent(params.tag)
             : `${proxy.type.toUpperCase()} ${server}:${port}`;
 
         mapQXParams(proxy, params);
@@ -95,6 +109,32 @@ function smartSplit(str: string): string[] {
     return result.filter((s) => s.length > 0);
 }
 
+function decodeQxAlpn(raw: string): string[] {
+    const trimmed = raw.trim();
+    if (/^[0-9a-fA-F]{4,}$/.test(trimmed) && trimmed.length % 2 === 0) {
+        const result: string[] = [];
+        let offset = 0;
+        while (offset + 2 <= trimmed.length) {
+            const len = parseInt(trimmed.substring(offset, offset + 2), 16);
+            offset += 2;
+            if (len <= 0 || offset + len * 2 > trimmed.length) {
+                return [trimmed];
+            }
+            const hexSlice = trimmed.substring(offset, offset + len * 2);
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = parseInt(hexSlice.substring(i * 2, i * 2 + 2), 16);
+            }
+            result.push(new TextDecoder().decode(bytes));
+            offset += len * 2;
+        }
+        if (result.length > 0 && offset === trimmed.length) {
+            return result;
+        }
+    }
+    return trimmed.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) {
     // 基础认证
     if (params.password) proxy.password = params.password;
@@ -107,43 +147,80 @@ function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) 
     if (params.method) proxy.cipher = params.method;
 
     // TLS 处理
-    if (params['over-tls'] === 'true') proxy.tls = true;
+    if (
+        params['over-tls'] === 'true' ||
+        proxy.type === 'https' ||
+        proxy.type === 'anytls' ||
+        proxy.type === 'hysteria2' ||
+        (proxy.type === 'trojan' && params['over-tls'] !== 'false')
+    )
+        proxy.tls = true;
     if (params['tls-verification'] === 'false') proxy['skip-cert-verify'] = true;
+    else if (params['tls-verification'] === 'true') proxy['skip-cert-verify'] = false;
     if (params['tls-host']) proxy.sni = params['tls-host'];
     if (params['tls-cert-sha256']) proxy['tls-fingerprint'] = params['tls-cert-sha256'];
-    if (params['tls-alpn']) proxy.alpn = params['tls-alpn'].split(',').map((s) => s.trim());
+    if (params['tls-pubkey-sha256']) proxy['tls-pubkey-sha256'] = params['tls-pubkey-sha256'];
+    if (params['tls-alpn']) proxy.alpn = decodeQxAlpn(params['tls-alpn']);
 
     // QX 特有的 TLS 选项
     if (params['tls-no-session-ticket'] === 'true') proxy['tls-no-session-ticket'] = true;
     if (params['tls-no-session-reuse'] === 'true') proxy['tls-no-session-reuse'] = true;
 
-    // Obfs / 传输层
-    const obfsType = params.obfs;
-    if (obfsType === 'ws' || obfsType === 'wss') {
-        proxy.network = 'ws';
-        if (obfsType === 'wss') proxy.tls = true;
-        proxy['ws-opts'] = {
-            path: params['obfs-uri'] || '/',
-            headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
-        };
-    } else if (obfsType === 'http') {
-        proxy.network = 'http';
-        proxy['http-opts'] = {
-            path: params['obfs-uri'] || '/',
-            headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
-        };
-    } else if (obfsType === 'h2' || obfsType === 'h2-tls') {
-        proxy.network = 'h2';
-        if (obfsType === 'h2-tls') proxy.tls = true;
-        proxy['h2-opts'] = {
-            path: params['obfs-uri'] || '/',
-            host: params['obfs-host'] ? [params['obfs-host']] : undefined
-        };
-    } else if (obfsType === 'tls' || obfsType === 'over-tls') {
-        proxy.tls = true;
-        if (proxy.type === 'ss') {
-            proxy.plugin = 'obfs';
-            proxy['plugin-opts'] = { mode: 'tls', host: params['obfs-host'] };
+    // SSR 专属 (先判断 SSR，避免被通用 obfs=http/tls 误判为 SS 插件)
+    if (params['ssr-protocol'] || proxy.type === 'ssr') {
+        proxy.type = 'ssr';
+        if (params['ssr-protocol']) proxy.protocol = params['ssr-protocol'];
+        if (params['ssr-protocol-param']) proxy['protocol-param'] = params['ssr-protocol-param'];
+        if (params.obfs) proxy.obfs = params.obfs;
+        if (params['obfs-param']) proxy['obfs-param'] = params['obfs-param'];
+    } else {
+        // Obfs / 传输层
+        const obfsType = params.obfs;
+        if (obfsType === 'ws' || obfsType === 'wss') {
+            if (obfsType === 'wss') proxy.tls = true;
+            if (proxy.type === 'ss') {
+                proxy.plugin = 'v2ray-plugin';
+                proxy['plugin-opts'] = {
+                    mode: 'websocket',
+                    tls: obfsType === 'wss',
+                    ...(params['obfs-host'] ? { host: params['obfs-host'] } : {}),
+                    ...(params['obfs-uri'] ? { path: params['obfs-uri'] } : {})
+                };
+            } else {
+                proxy.network = 'ws';
+                proxy['ws-opts'] = {
+                    path: params['obfs-uri'] || '/',
+                    headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
+                };
+            }
+        } else if (obfsType === 'http') {
+            if (proxy.type === 'ss') {
+                proxy.plugin = 'obfs';
+                proxy['plugin-opts'] = {
+                    mode: 'http',
+                    ...(params['obfs-host'] ? { host: params['obfs-host'] } : {}),
+                    ...(params['obfs-uri'] ? { path: params['obfs-uri'] } : {})
+                };
+            } else {
+                proxy.network = 'http';
+                proxy['http-opts'] = {
+                    path: params['obfs-uri'] || '/',
+                    headers: params['obfs-host'] ? { Host: params['obfs-host'] } : {}
+                };
+            }
+        } else if (obfsType === 'h2' || obfsType === 'h2-tls') {
+            proxy.network = 'h2';
+            if (obfsType === 'h2-tls') proxy.tls = true;
+            proxy['h2-opts'] = {
+                path: params['obfs-uri'] || '/',
+                host: params['obfs-host'] ? [params['obfs-host']] : undefined
+            };
+        } else if (obfsType === 'tls' || obfsType === 'over-tls') {
+            proxy.tls = true;
+            if (proxy.type === 'ss') {
+                proxy.plugin = 'obfs';
+                proxy['plugin-opts'] = { mode: 'tls', host: params['obfs-host'] };
+            }
         }
     }
 
@@ -156,13 +233,6 @@ function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) 
         proxy['udp-over-tcp'] = true;
         if (params['udp-over-tcp'] === 'sp.v1') proxy['udp-over-tcp-version'] = 1;
         if (params['udp-over-tcp'] === 'sp.v2') proxy['udp-over-tcp-version'] = 2;
-    }
-
-    // SSR 专属
-    if (params['ssr-protocol']) {
-        proxy.type = 'ssr';
-        proxy.protocol = params['ssr-protocol'];
-        proxy['protocol-param'] = params['ssr-protocol-param'];
     }
 
     // VMess AEAD
@@ -186,9 +256,23 @@ function mapQXParams(proxy: Partial<ProxyNode>, params: Record<string, string>) 
             'short-id': params['reality-hex-shortid']
         };
     }
+    if (!proxy.sni && params['obfs-host'] && (proxy.tls || proxy['reality-opts'])) {
+        proxy.sni = params['obfs-host'];
+    }
 
     // VLESS Flow
     if (params['vless-flow']) proxy.flow = params['vless-flow'];
+
+    // Hysteria2 参数
+    if (proxy.type === 'hysteria2') {
+        if (params['salamander-password']) {
+            proxy.obfs = 'salamander';
+            proxy['obfs-password'] = params['salamander-password'];
+        }
+        if (params['port-hopping']) proxy.ports = params['port-hopping'];
+        if (params.up) proxy.up = params.up;
+        if (params.down) proxy.down = params.down;
+    }
 
     // 测速
     if (params.server_check_url) proxy['test-url'] = params.server_check_url;

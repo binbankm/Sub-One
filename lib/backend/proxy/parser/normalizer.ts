@@ -46,11 +46,38 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     // 7. TLS 默认值处理
     if (proxy.tls === undefined) {
         // 某些协议默认开启 TLS
-        if (['hysteria2', 'tuic', 'https', 'anytls', 'naive'].includes(proxy.type)) {
+        if (
+            [
+                'trojan',
+                'hysteria',
+                'hysteria2',
+                'tuic',
+                'https',
+                'anytls',
+                'naive',
+                'juicity',
+                'trusttunnel'
+            ].includes(proxy.type)
+        ) {
             proxy.tls = true;
         } else {
             proxy.tls = false;
         }
+    }
+
+    // 7.1 统一 SNI / ALPN / 链式代理字段
+    if (proxy.servername && !proxy.sni) {
+        proxy.sni = proxy.servername;
+    }
+    if (typeof proxy.alpn === 'string') {
+        const alpnList = (proxy.alpn as string)
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        proxy.alpn = alpnList.length > 0 ? alpnList : undefined;
+    }
+    if (proxy['dialer-proxy'] && !proxy['underlying-proxy']) {
+        proxy['underlying-proxy'] = proxy['dialer-proxy'];
     }
 
     // 8. 默认名称补全
@@ -131,7 +158,16 @@ export function normalizeProxyNode(proxy: ProxyNode): ProxyNode {
     // 12. 标准化 ECH 选项
     if (proxy['ech-opts']) {
         const ech = proxy['ech-opts'] as Record<string, any>;
-        if (Object.keys(ech).filter(k => ech[k] != null && ech[k] !== '').length === 0) {
+        const cfg = ech['config-list'] ?? ech.config;
+        if (cfg !== undefined && !ech['config-list']) {
+            ech['config-list'] = Array.isArray(cfg) ? cfg : typeof cfg === 'string' && cfg ? [cfg] : undefined;
+            delete ech.config;
+        }
+        if (ech.query_server_name && !ech['query-server-name']) {
+            ech['query-server-name'] = ech.query_server_name;
+            delete ech.query_server_name;
+        }
+        if (Object.keys(ech).filter((k) => ech[k] != null && ech[k] !== '').length === 0) {
             delete proxy['ech-opts'];
         }
     }
@@ -173,11 +209,24 @@ function normalizeNetwork(proxy: ProxyNode) {
 
     // 处理旧式的 ws-path / ws-headers
     if (proxy.network === 'ws') {
+        const wsPath = (proxy as any)['ws-path'];
+        const wsHeaders = (proxy as any)['ws-headers'];
         if (!proxy['ws-opts']) {
             proxy['ws-opts'] = {
-                path: (proxy as any)['ws-path'] || '/',
-                headers: (proxy as any)['ws-headers'] || {}
+                path: wsPath || '/',
+                headers: wsHeaders || {}
             };
+        } else {
+            if (!proxy['ws-opts'].path && wsPath) {
+                proxy['ws-opts'].path = wsPath;
+            }
+            if (!proxy['ws-opts'].headers && wsHeaders) {
+                proxy['ws-opts'].headers = wsHeaders;
+            }
+        }
+        if (proxy['ws-opts'].headers && !proxy['ws-opts'].headers.Host && (proxy['ws-opts'].headers as any).host) {
+            proxy['ws-opts'].headers.Host = (proxy['ws-opts'].headers as any).host;
+            delete (proxy['ws-opts'].headers as any).host;
         }
         // 清理旧字段
         delete (proxy as any)['ws-path'];

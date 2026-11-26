@@ -476,3 +476,46 @@ export async function tryCatchAsync<T>(
         return defaultValue;
     }
 }
+
+/**
+ * 解析 host:port 或 [ipv6]:port 端点字符串
+ */
+export function parseEndpoint(endpoint: string): { server: string; port?: number } {
+    const trimmed = endpoint.trim();
+    if (!trimmed) return { server: '' };
+
+    if (trimmed.startsWith('[')) {
+        const closeIdx = trimmed.indexOf(']');
+        if (closeIdx !== -1) {
+            const server = trimmed.slice(1, closeIdx).trim();
+            const rest = trimmed.slice(closeIdx + 1).trim();
+            if (rest.startsWith(':')) {
+                const p = parseInt(rest.slice(1), 10);
+                return Number.isInteger(p) && p >= 0 ? { server, port: p } : { server };
+            }
+            return { server };
+        }
+    }
+
+    const firstColon = trimmed.indexOf(':');
+    const lastColon = trimmed.lastIndexOf(':');
+    if (firstColon !== -1 && firstColon === lastColon) {
+        const server = trimmed.slice(0, lastColon).trim();
+        const portStr = trimmed.slice(lastColon + 1).trim();
+        const p = parseInt(portStr, 10);
+        if (Number.isInteger(p) && p >= 0) {
+            return { server, port: p };
+        }
+    }
+
+    return { server: trimmed };
+}
+
+/**
+ * 格式化 server + port 为 endpoint（IPv6 自动加方括号）
+ */
+export function formatEndpoint(server: string, port?: number | string): string {
+    const clean = String(server || '').trim().replace(/^\[/, '').replace(/\]$/, '');
+    const host = clean.includes(':') ? `[${clean}]` : clean;
+    return port !== undefined && port !== '' ? `${host}:${port}` : host;
+}

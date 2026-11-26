@@ -28,6 +28,8 @@ export const PROXY_PROTOCOLS = [
     'ssh',
     'mieru',
     'juicity',
+    'sudoku',
+    'trusttunnel',
     'external',
     'direct',
     'reject'

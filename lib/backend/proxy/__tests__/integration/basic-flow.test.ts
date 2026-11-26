@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { convert, parse, process } from '../index';
+import { convert, parse, process } from '../../index';
 
 describe('Proxy Integration Tests', () => {
     const rawData = `

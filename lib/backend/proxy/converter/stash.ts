@@ -20,6 +20,7 @@ export class StashConverter extends ClashConverter {
             'vmess',
             'socks5',
             'http',
+            'https',
             'snell',
             'trojan',
             'tuic',
@@ -29,7 +30,11 @@ export class StashConverter extends ClashConverter {
             'hysteria2',
             'ssh',
             'juicity',
-            'anytls'
+            'anytls',
+            'mieru',
+            'naive',
+            'direct',
+            'reject'
         ];
 
         if (!supportedTypes.includes(proxy.type)) return false;
@@ -52,7 +57,10 @@ export class StashConverter extends ClashConverter {
                 'chacha20-ietf-poly1305',
                 'xchacha20-ietf-poly1305',
                 '2022-blake3-aes-128-gcm',
-                '2022-blake3-aes-256-gcm'
+                '2022-blake3-aes-256-gcm',
+                '2022-blake3-chacha20-poly1305',
+                'none',
+                'plain'
             ];
             if (!stashCiphers.includes(proxy.cipher || '')) return false;
         }
@@ -78,33 +86,33 @@ export class StashConverter extends ClashConverter {
         return true;
     }
 
-    protected processNode(proxy: ProxyNode): any {
-        // Super class processNode expects specific types if configured but we just pass empty options
-        const node = super.processNode(proxy, {});
+    protected processNode(proxy: ProxyNode, options: ConvertOptions = {}): any {
+        const node = super.processNode(proxy, options);
         if (!node) return null;
 
         // Stash specific adjustments
-        if (node.type === 'hysteria') {
-            if (node.up) {
-                node['up-speed'] = parseInt(String(node.up).match(/\d+/)?.[0] || '0');
-                delete node.up;
-            }
-            if (node.down) {
-                node['down-speed'] = parseInt(String(node.down).match(/\d+/)?.[0] || '0');
-                delete node.down;
-            }
-        } else if (node.type === 'hysteria2') {
-            if (node.password) {
+        if (node.type === 'hysteria' || node.type === 'hysteria2') {
+            if (node.type === 'hysteria2' && node.password) {
                 node.auth = node.password;
                 delete node.password;
             }
-            if (node.up) {
-                node['up-speed'] = parseInt(String(node.up).match(/\d+/)?.[0] || '0');
+            const upVal = node.up ?? node['up-mbps'];
+            if (upVal !== undefined) {
+                node['up-speed'] = parseInt(String(upVal).match(/\d+/)?.[0] || '0', 10);
                 delete node.up;
+                delete node['up-mbps'];
             }
-            if (node.down) {
-                node['down-speed'] = parseInt(String(node.down).match(/\d+/)?.[0] || '0');
+            const downVal = node.down ?? node['down-mbps'];
+            if (downVal !== undefined) {
+                node['down-speed'] = parseInt(String(downVal).match(/\d+/)?.[0] || '0', 10);
                 delete node.down;
+                delete node['down-mbps'];
+            }
+        } else if (node.type === 'juicity') {
+            if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
+            if (node.sni && !node.servername) {
+                node.servername = node.sni;
+                delete node.sni;
             }
         }
 
@@ -117,9 +125,11 @@ export class StashConverter extends ClashConverter {
             delete node['test-timeout'];
         }
 
-        if (node['tls-fingerprint']) {
-            node['server-cert-fingerprint'] = node['tls-fingerprint'];
+        const certFp = node['tls-fingerprint'] || node.fingerprint;
+        if (certFp) {
+            node['server-cert-fingerprint'] = certFp;
             delete node['tls-fingerprint'];
+            delete node.fingerprint;
         }
 
         if (!node['client-fingerprint'] && ['vmess', 'vless', 'trojan'].includes(node.type)) {

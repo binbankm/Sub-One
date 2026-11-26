@@ -48,6 +48,17 @@ export async function process(
         });
     }
 
+    // 5. 排序逻辑
+    if (options.sort && options.sort !== 'none') {
+        if (typeof options.sort === 'function') {
+            result.sort(options.sort);
+        } else if (options.sort === 'asc') {
+            result.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+        } else if (options.sort === 'desc') {
+            result.sort((a, b) => b.name.localeCompare(a.name, undefined, { numeric: true }));
+        }
+    }
+
     return result;
 }
 
@@ -162,6 +173,12 @@ function matchRule(node: ProxyNode, rule: string): boolean {
             const nodeType = node.type.toLowerCase();
             if (p === 'reality') {
                 return !!node['reality-opts'];
+            }
+            if (p === 'ech') {
+                return !!(node['ech-opts'] || node._ech || node._echConfigList);
+            }
+            if (p === 'xhttp' || p === 'splithttp') {
+                return node.network === 'xhttp' || node.network === 'splithttp';
             }
             if (p === 'wireguard' || p === 'wg') {
                 return nodeType === 'wireguard' || nodeType === 'wg';

@@ -8,6 +8,7 @@ import { Base64 } from 'js-base64';
 export type ContentFormat =
     | 'clash'
     | 'sip008'
+    | 'singbox'
     | 'uri-list'
     | 'base64'
     | 'surge'
@@ -33,9 +34,15 @@ export function detectFormat(content: string): ContentFormat {
         return 'html';
     }
 
-    // 2. SIP008 / JSON 检测
+    // 2. SIP008 / sing-box JSON 检测
     if (trimmed.startsWith('{') && trimmed.includes('"version"') && trimmed.includes('"servers"')) {
         return 'sip008';
+    }
+    if (
+        (trimmed.startsWith('{') && (trimmed.includes('"outbounds"') || trimmed.includes('"endpoints"'))) ||
+        (trimmed.startsWith('[') && trimmed.includes('"type"') && trimmed.includes('"tag"'))
+    ) {
+        return 'singbox';
     }
 
     // 3. Clash YAML 检测
@@ -63,26 +70,50 @@ export function detectFormat(content: string): ContentFormat {
     }
 
     // 5. Surge/Loon/QX 检测
-    // 特征：通常每行包含 = 和 , 且不是 Clash
-    if (isPlatformFormat(trimmed)) {
+    // 特征：通常每行包含 = 和 , 且不是 Clash (忽略 [Proxy] 等 INI section header)
+    const platformLine = getFirstPlatformLine(trimmed);
+    if (platformLine) {
         if (
-            /^.*=\s*(ss|shadowsocks|ssr|shadowsocksr|vmess|vless|trojan|http|https|snell|tuic|tuic-v5|hysteria|hysteria2|hy|hy2|wireguard|wg|anytls),/i.test(
-                trimmed
+            /^[^=]*=\s*(ss|shadowsocks|ssr|shadowsocksr|vmess|vless|trojan|http|https|socks5|socks5-tls|snell|tuic|tuic-v5|hysteria|hysteria2|hy|hy2|wireguard|wg|anytls|mieru|ssh|naive|external|direct|reject)(\s*,|\s*$)/i.test(
+                platformLine
             )
         ) {
+            const isSurgeExplicit =
+                /^\[WireGuard\s+/im.test(trimmed) ||
+                trimmed.includes('section-name=') ||
+                trimmed.includes('reality-public-key=') ||
+                trimmed.includes('udp-relay=') ||
+                trimmed.includes('ip-version=') ||
+                trimmed.includes('server-cert-fingerprint-sha256=');
             if (
-                trimmed.includes('peers=') ||
-                trimmed.includes('interface-ip=') ||
-                trimmed.includes('tls-profile=') ||
-                trimmed.includes('over-tls=') ||
-                trimmed.includes('transport=') ||
-                trimmed.includes('tls-name=')
+                !isSurgeExplicit &&
+                (/^[^=]*=\s*mieru(\s*,|\s*$)/i.test(platformLine) ||
+                    trimmed.includes('peers=') ||
+                    trimmed.includes('interface-ip=') ||
+                    trimmed.includes('tls-profile=') ||
+                    trimmed.includes('over-tls=') ||
+                    trimmed.includes('transport=') ||
+                    trimmed.includes('tls-name=') ||
+                    trimmed.includes('server-ports=') ||
+                    trimmed.includes('ip-mode=') ||
+                    trimmed.includes('server-dns=') ||
+                    trimmed.includes('tls-cert-sha256=') ||
+                    trimmed.includes('tls-pubkey-sha256=') ||
+                    trimmed.includes('obfs-name=') ||
+                    trimmed.includes('fast-open=') ||
+                    /(?:^|,\s*)public-key\s*=/.test(platformLine) ||
+                    /(?:^|,\s*)short-id\s*=/.test(platformLine) ||
+                    /(?:^|,\s*)spider-x\s*=/.test(platformLine))
             ) {
                 return 'loon';
             }
             return 'surge';
         }
-        if (/^(shadowsocks|ss|vmess|vless|trojan|http|socks5|anytls)\s*=/i.test(trimmed)) {
+        if (
+            /^(shadowsocks|shadowsocksr|ss|ssr|vmess|vless|trojan|http|https|socks5|socks|anytls|hysteria2|hy2)\s*=/i.test(
+                platformLine
+            )
+        ) {
             return 'qx';
         }
     }
@@ -90,7 +121,7 @@ export function detectFormat(content: string): ContentFormat {
     // 6. URI 列表检测
     // 逻辑：包含常见协议头
     if (
-        /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy|hy2|tuic|wg|wireguard|socks|socks5|http|https|snell|anytls|naive|naive\+https|naive\+http):\/\//im.test(
+        /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy|hy2|tuic|wg|wireguard|socks|socks5|http|https|snell|anytls|naive|naive\+https|naive\+http|ssh|mieru|juicity|sudoku|trusttunnel|tt):\/\//im.test(
             trimmed
         )
     ) {
@@ -101,17 +132,52 @@ export function detectFormat(content: string): ContentFormat {
 }
 
 /**
- * 判断是否可能是平台特定的代理行格式 (Surge, Loon, QX)
+ * 获取第一条有效的平台代理配置行（优先定位 [Proxy]/[server_local] section，跳过空行与注释）
  */
-function isPlatformFormat(str: string): boolean {
-    const lines = str
-        .split(/\r?\n/)
-        .filter((l) => l.trim().length > 0 && !l.startsWith('#') && !l.startsWith('//'));
-    if (lines.length === 0) return false;
+function getFirstPlatformLine(str: string): string | null {
+    const lines = str.split(/\r?\n/).map((l) => l.trim());
+    const proxyLinePattern =
+        /^(?:[^=]*=\s*(?:ss|shadowsocks|ssr|shadowsocksr|vmess|vless|trojan|http|https|socks5|socks5-tls|snell|tuic|tuic-v5|hysteria|hysteria2|hy|hy2|wireguard|wg|anytls|mieru|ssh|naive|external|direct|reject)(?:\s*,|\s*$)|(?:shadowsocks|shadowsocksr|ss|ssr|vmess|vless|trojan|http|https|socks5|socks|anytls|hysteria2|hy2)\s*=)/i;
 
-    // 取第一行检测
-    const firstLine = lines[0].trim();
-    return firstLine.includes('=') && firstLine.includes(',');
+    let hasProxySection = false;
+    let inProxySection = false;
+
+    for (const line of lines) {
+        if (!line || line.startsWith('#') || line.startsWith('//') || line.startsWith(';')) continue;
+        const secMatch = line.match(/^\[(.+)\]$/);
+        if (secMatch) {
+            const secName = secMatch[1].trim().toLowerCase();
+            if (secName === 'proxy' || secName === 'server_local') {
+                hasProxySection = true;
+                inProxySection = true;
+            } else {
+                inProxySection = false;
+            }
+            continue;
+        }
+        if (hasProxySection && inProxySection && line.includes('=') && proxyLinePattern.test(line)) {
+            return line;
+        }
+    }
+
+    if (hasProxySection) return null;
+
+    for (const line of lines) {
+        if (
+            !line ||
+            line.startsWith('#') ||
+            line.startsWith('//') ||
+            line.startsWith(';') ||
+            /^\[.*\]$/.test(line)
+        ) {
+            continue;
+        }
+        if (line.includes('=') && proxyLinePattern.test(line)) {
+            return line;
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -125,11 +191,28 @@ function isLikelyBase64(str: string): boolean {
     if (trimmed.length < 16) return false;
 
     try {
-        const decoded = Base64.decode(trimmed);
-        // 解码后去除首尾空白，再检测是否包含协议头
-        return /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy2|tuic|anytls|snell|wg|wireguard|socks|http|https|naive|naive\+https|naive\+http):\/\//im.test(
-            decoded.trim()
-        );
+        let sanitized = trimmed.replace(/-/g, '+').replace(/_/g, '/');
+        while (sanitized.length % 4) sanitized += '=';
+        const decoded = Base64.decode(sanitized).trim();
+        if (!decoded) return false;
+        // 解码后检测是否包含常见订阅协议头、Clash YAML、JSON 或 INI 配置
+        if (
+            /^(ss|ssr|vmess|vless|trojan|hysteria2|hysteria|hy2|tuic|anytls|snell|wg|wireguard|socks|http|https|naive|naive\+https|naive\+http|ssh|mieru|juicity|sudoku|trusttunnel|tt):\/\//im.test(
+                decoded
+            )
+        ) {
+            return true;
+        }
+        if (/^(proxies:|proxy-groups:|\[Proxy\]|\[server_local\])/im.test(decoded)) {
+            return true;
+        }
+        if (
+            (decoded.startsWith('{') && (decoded.includes('"outbounds"') || decoded.includes('"servers"'))) ||
+            getFirstPlatformLine(decoded) !== null
+        ) {
+            return true;
+        }
+        return false;
     } catch {
         return false;
     }

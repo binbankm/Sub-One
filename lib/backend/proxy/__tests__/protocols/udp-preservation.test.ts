@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parse } from '../parser/index';
-import { convert } from '../converter/index';
-import type { ProxyNode } from '../types';
+import { parse } from '../../parser/index';
+import { convert } from '../../converter/index';
+import type { ProxyNode } from '../../types';
 
 describe('UDP 属性保持与转换测试 (Issue: UDP 字段被强制置为 false 问题验证)', () => {
     // 辅助构造函数

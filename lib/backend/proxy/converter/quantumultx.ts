@@ -3,6 +3,7 @@
  */
 import { Buffer } from 'buffer';
 import type { ConvertOptions, ProxyNode } from '../types';
+import { formatEndpoint } from '../utils';
 import { BaseConverter } from './base';
 import { Result } from './utils';
 
@@ -56,6 +57,9 @@ export class QuantumultXConverter extends BaseConverter {
                 case 'anytls':
                     result = this.anytls(proxy);
                     break;
+                case 'hysteria2':
+                    result = this.hysteria2(proxy);
+                    break;
                 case 'http':
                 case 'https':
                     result = this.http(proxy);
@@ -89,7 +93,7 @@ export class QuantumultXConverter extends BaseConverter {
     private ss(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `shadowsocks=${proxy.server}:${proxy.port},method=${proxy.cipher || 'none'},password=${proxy.password}`
+            `shadowsocks=${formatEndpoint(proxy.server, proxy.port)},method=${proxy.cipher || 'none'},password=${proxy.password}`
         );
 
         if (proxy.plugin === 'obfs') {
@@ -113,7 +117,7 @@ export class QuantumultXConverter extends BaseConverter {
     private ssr(proxy: ProxyNode): string {
         const result = new Result(proxy);
         result.append(
-            `shadowsocks=${proxy.server}:${proxy.port},method=${proxy.cipher},password=${proxy.password}`
+            `shadowsocks=${formatEndpoint(proxy.server, proxy.port)},method=${proxy.cipher},password=${proxy.password}`
         );
         result.append(`,ssr-protocol=${proxy.protocol || 'origin'}`);
         result.appendIfPresent(`,ssr-protocol-param=${proxy['protocol-param']}`, 'protocol-param');
@@ -125,46 +129,58 @@ export class QuantumultXConverter extends BaseConverter {
     }
 
     private trojan(proxy: ProxyNode): string {
+        const net = proxy.network?.trim().toLowerCase();
+        if (net && !['tcp', 'ws'].includes(net)) {
+            throw new Error(`[QXConverter] Trojan does not support transport: ${proxy.network}`);
+        }
+        const tlsEnabled = proxy.tls !== false;
         const result = new Result(proxy);
-        result.append(`trojan=${proxy.server}:${proxy.port},password=${proxy.password}`);
+        result.append(`trojan=${formatEndpoint(proxy.server, proxy.port)},password=${proxy.password}`);
 
-        if (proxy.network === 'ws') {
-            result.append(`,obfs=${proxy.tls ? 'wss' : 'ws'}`);
+        if (net === 'ws') {
+            result.append(`,obfs=${tlsEnabled ? 'wss' : 'ws'}`);
             const wsOpts = (proxy['ws-opts'] || {}) as any;
             result.appendIfPresent(`,obfs-uri=${wsOpts.path || '/'}`, 'ws-opts.path');
-            result.appendIfPresent(`,obfs-host=${wsOpts.headers?.Host}`, 'ws-opts.headers.Host');
-        } else if (proxy.tls) {
+            const wsHost = wsOpts.headers?.Host || wsOpts.headers?.host || wsOpts.host;
+            if (wsHost) {
+                result.append(`,obfs-host=${Array.isArray(wsHost) ? wsHost[0] : wsHost}`);
+            }
+        } else if (tlsEnabled) {
             result.append(`,over-tls=true`);
         }
 
-        this.appendTLS(result, proxy);
+        this.appendTLS(result, { ...proxy, tls: tlsEnabled });
         this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private vmess(proxy: ProxyNode): string {
+        const net = proxy.network?.trim().toLowerCase();
+        if (net && !['tcp', 'ws', 'http'].includes(net)) {
+            throw new Error(`[QXConverter] VMess does not support transport: ${proxy.network}`);
+        }
         const result = new Result(proxy);
         result.append(
-            `vmess=${proxy.server}:${proxy.port},method=${proxy.cipher === 'auto' ? 'chacha20-ietf-poly1305' : proxy.cipher || 'none'},password=${proxy.uuid}`
+            `vmess=${formatEndpoint(proxy.server, proxy.port)},method=${proxy.cipher === 'auto' ? 'chacha20-ietf-poly1305' : proxy.cipher || 'none'},password=${proxy.uuid}`
         );
 
-        if (proxy.network === 'ws') {
+        if (net === 'ws') {
             result.append(`,obfs=${proxy.tls ? 'wss' : 'ws'}`);
-        } else if (proxy.network === 'http') {
+        } else if (net === 'http') {
             result.append(`,obfs=http`);
         } else if (proxy.tls || proxy['reality-opts']) {
             result.append(`,obfs=over-tls`);
         }
 
         // 只在 ws/http 传输时才读对应的 opts，避免 tcp 节点错误带入 ws 路径/Host
-        const netForOpts =
-            proxy.network === 'ws' || proxy.network === 'http' ? proxy.network : null;
+        const netForOpts = net === 'ws' || net === 'http' ? net : null;
         const opts = netForOpts ? ((proxy[`${netForOpts}-opts`] || {}) as any) : {};
         if (opts.path)
             result.append(`,obfs-uri=${Array.isArray(opts.path) ? opts.path[0] : opts.path}`);
-        if (opts.headers?.Host)
+        const vmessHost = opts.headers?.Host || opts.headers?.host || opts.host;
+        if (vmessHost)
             result.append(
-                `,obfs-host=${Array.isArray(opts.headers.Host) ? opts.headers.Host[0] : opts.headers.Host}`
+                `,obfs-host=${Array.isArray(vmessHost) ? vmessHost[0] : vmessHost}`
             );
 
         this.appendTLS(result, proxy);
@@ -177,30 +193,34 @@ export class QuantumultXConverter extends BaseConverter {
         if (proxy.encryption && proxy.encryption !== 'none') {
             throw new Error(`[QXConverter] VLESS encryption is not supported: ${proxy.encryption}`);
         }
+        const net = proxy.network?.trim().toLowerCase();
+        if (net && !['tcp', 'ws', 'h2', 'http'].includes(net)) {
+            throw new Error(`[QXConverter] VLESS does not support transport: ${proxy.network}`);
+        }
         const result = new Result(proxy);
-        result.append(`vless=${proxy.server}:${proxy.port},method=none,password=${proxy.uuid}`);
+        result.append(`vless=${formatEndpoint(proxy.server, proxy.port)},method=none,password=${proxy.uuid}`);
 
-        if (proxy.network === 'ws') {
+        if (net === 'ws') {
             result.append(`,obfs=${proxy.tls ? 'wss' : 'ws'}`);
-        } else if (proxy.network === 'h2') {
+        } else if (net === 'h2') {
             result.append(`,obfs=${proxy.tls ? 'h2-tls' : 'h2'}`);
-        } else if (proxy.network === 'http') {
+        } else if (net === 'http') {
             result.append(`,obfs=http`);
         } else if (proxy.tls || proxy['reality-opts']) {
             result.append(`,obfs=over-tls`);
         }
 
         // 只在 ws/http 传输时才读对应的 opts
-        const netForVlessOpts =
-            proxy.network === 'ws' || proxy.network === 'http' || proxy.network === 'h2' ? proxy.network : null;
+        const netForVlessOpts = net === 'ws' || net === 'http' || net === 'h2' ? net : null;
         const vlessOpts = netForVlessOpts ? ((proxy[`${netForVlessOpts}-opts`] || {}) as any) : {};
         if (vlessOpts.path)
             result.append(
                 `,obfs-uri=${Array.isArray(vlessOpts.path) ? vlessOpts.path[0] : vlessOpts.path}`
             );
-        if (vlessOpts.headers?.Host)
+        const vlessHost = vlessOpts.headers?.Host || vlessOpts.headers?.host || vlessOpts.host;
+        if (vlessHost)
             result.append(
-                `,obfs-host=${Array.isArray(vlessOpts.headers.Host) ? vlessOpts.headers.Host[0] : vlessOpts.headers.Host}`
+                `,obfs-host=${Array.isArray(vlessHost) ? vlessHost[0] : vlessHost}`
             );
 
         this.appendTLS(result, proxy);
@@ -211,7 +231,7 @@ export class QuantumultXConverter extends BaseConverter {
 
     private http(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`http=${proxy.server}:${proxy.port}`);
+        result.append(`http=${formatEndpoint(proxy.server, proxy.port)}`);
         result.appendIfPresent(`,username=${proxy.username}`, 'username');
         result.appendIfPresent(`,password=${proxy.password}`, 'password');
         if (proxy.tls || proxy.type === 'https') result.append(`,over-tls=true`);
@@ -222,7 +242,7 @@ export class QuantumultXConverter extends BaseConverter {
 
     private socks5(proxy: ProxyNode): string {
         const result = new Result(proxy);
-        result.append(`socks5=${proxy.server}:${proxy.port}`);
+        result.append(`socks5=${formatEndpoint(proxy.server, proxy.port)}`);
         result.appendIfPresent(`,username=${proxy.username}`, 'username');
         result.appendIfPresent(`,password=${proxy.password}`, 'password');
         if (proxy.tls) result.append(`,over-tls=true`);
@@ -240,7 +260,7 @@ export class QuantumultXConverter extends BaseConverter {
         }
 
         const result = new Result(proxy);
-        result.append(`anytls=${proxy.server}:${proxy.port}`);
+        result.append(`anytls=${formatEndpoint(proxy.server, proxy.port)}`);
         result.append(`,password=${proxy.password}`);
 
         // AnyTLS 强制 TLS
@@ -248,6 +268,45 @@ export class QuantumultXConverter extends BaseConverter {
         this.appendTLS(result, proxy);
         this.appendCommon(result, proxy);
 
+        return result.toString();
+    }
+
+    private hysteria2(proxy: ProxyNode): string {
+        const result = new Result(proxy);
+        result.append(`hysteria2=${formatEndpoint(proxy.server, proxy.port)}`);
+        const pass = proxy.password || proxy.auth;
+        if (pass) result.append(`,password=${pass}`);
+
+        const obfsPassword =
+            proxy['obfs-password'] ||
+            (proxy.obfs && proxy.obfs !== 'salamander' && proxy.obfs !== 'gecko' ? proxy.obfs : undefined);
+        if (obfsPassword) {
+            result.append(`,salamander-password=${obfsPassword}`);
+        }
+
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports) {
+            const normalizedPorts = String(ports).replace(/;/g, ',');
+            result.append(
+                normalizedPorts.includes(',')
+                    ? `,port-hopping="${normalizedPorts}"`
+                    : `,port-hopping=${normalizedPorts}`
+            );
+        }
+
+        const upVal = proxy['upload-bandwidth'] || proxy['up-mbps'] || proxy.up;
+        if (upVal) {
+            const up = String(upVal).match(/\d+/)?.[0];
+            if (up) result.append(`,up=${up}`);
+        }
+        const downVal = proxy['download-bandwidth'] || proxy['down-mbps'] || proxy.down;
+        if (downVal) {
+            const down = String(downVal).match(/\d+/)?.[0];
+            if (down) result.append(`,down=${down}`);
+        }
+
+        this.appendTLS(result, { ...proxy, tls: true });
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 

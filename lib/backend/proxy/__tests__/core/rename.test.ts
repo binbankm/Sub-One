@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { handleRenaming, process } from '../processor';
-import type { ProxyNode } from '../types';
+import { handleRenaming, process } from '../../processor';
+import type { ProxyNode } from '../../types';
 
 function createMockNode(name: string): ProxyNode {
     return {

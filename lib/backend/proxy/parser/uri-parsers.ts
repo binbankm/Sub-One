@@ -1775,6 +1775,99 @@ export function parseJuicity(uri: string): ProxyNode | null {
     }
 }
 
+/**
+ * 解析 Sudoku URI
+ * 格式: sudoku://[key@]server[:port][?key=val&aead-method=...&table-type=...&padding-min=...&padding-max=...][#name]
+ */
+export function parseSudoku(uri: string): ProxyNode | null {
+    try {
+        const line = uri.trim();
+        const parsed = /^sudoku:\/\/(?:([^@/?#]+)@)?(\[[^\]]+\]|[^:/?#]+)(?::(\d+))?\/?(?:\?([^#]*))?(?:#(.*))?$/i.exec(line);
+        if (!parsed) return null;
+        const [, userinfo, rawServer, portStr, query = '', name] = parsed;
+        const server = rawServer.replace(/^\[|\]$/g, '');
+        const port = portStr ? parsePort(portStr) : 443;
+        const params = query ? parseQueryParams(query) : {};
+
+        const key = params.key
+            ? decodeURIComponent(params.key)
+            : userinfo
+              ? decodeURIComponent(userinfo)
+              : undefined;
+
+        const proxy: ProxyNode = {
+            id: randomId(),
+            type: 'sudoku',
+            name: name ? decodeURIComponent(name) : `${server}:${port}`,
+            server,
+            port
+        };
+        if (key) proxy.key = key;
+        if (params['aead-method']) proxy['aead-method'] = params['aead-method'];
+        if (params['table-type']) proxy['table-type'] = params['table-type'];
+        if (params['padding-min'] !== undefined) {
+            const v = parseInt(params['padding-min'], 10);
+            if (!isNaN(v)) proxy['padding-min'] = v;
+        }
+        if (params['padding-max'] !== undefined) {
+            const v = parseInt(params['padding-max'], 10);
+            if (!isNaN(v)) proxy['padding-max'] = v;
+        }
+        if (params['enable-pure-downlink'] !== undefined) {
+            proxy['enable-pure-downlink'] = params['enable-pure-downlink'] === 'true' || params['enable-pure-downlink'] === '1';
+        }
+        if (params.multiplex || params.mux) {
+            proxy.multiplex = params.multiplex || params.mux;
+        }
+        return proxy;
+    } catch (e) {
+        console.error('[parseSudoku] Error:', e);
+        return null;
+    }
+}
+
+/**
+ * 解析 TrustTunnel URI
+ * 格式: trusttunnel://[user[:password]@]server[:port][?sni=...&alpn=...&insecure=1][#name] 或 tt://...
+ */
+export function parseTrustTunnel(uri: string): ProxyNode | null {
+    try {
+        const line = uri.trim();
+        const parsed = /^(?:trusttunnel|tt):\/\/(?:([^:@]+)(?::([^@]*))?@)?(\[[^\]]+\]|[^:/?#]+)(?::(\d+))?\/?(?:\?([^#]*))?(?:#(.*))?$/i.exec(line);
+        if (!parsed) return null;
+        const [, user, password, rawServer, portStr, query = '', name] = parsed;
+        const server = rawServer.replace(/^\[|\]$/g, '');
+        const port = portStr ? parsePort(portStr) : 443;
+        const params = query ? parseQueryParams(query) : {};
+
+        const proxy: ProxyNode = {
+            id: randomId(),
+            type: 'trusttunnel',
+            name: name ? decodeURIComponent(name) : `${server}:${port}`,
+            server,
+            port,
+            tls: true
+        };
+        if (user) proxy.username = decodeURIComponent(user);
+        if (password) proxy.password = decodeURIComponent(password);
+        if (params.sni) proxy.sni = params.sni;
+        if (params.alpn) proxy.alpn = params.alpn.split(',').map((s) => s.trim()).filter(Boolean);
+        if (params.insecure === '1' || params.allowInsecure === '1' || params['skip-cert-verify'] === 'true') {
+            proxy['skip-cert-verify'] = true;
+        }
+        if (params.fp || params.fingerprint) {
+            proxy['client-fingerprint'] = params.fp || params.fingerprint;
+        }
+        if (params.udp !== undefined) {
+            proxy.udp = params.udp === 'true' || params.udp === '1';
+        }
+        return proxy;
+    } catch (e) {
+        console.error('[parseTrustTunnel] Error:', e);
+        return null;
+    }
+}
+
 // ============================================================================
 // 导出所有解析器
 // ============================================================================
@@ -1803,7 +1896,10 @@ export const URI_PARSERS = {
     https: parseHTTP,
     ssh: parseSSH,
     mieru: parseMieru,
-    juicity: parseJuicity
+    juicity: parseJuicity,
+    sudoku: parseSudoku,
+    trusttunnel: parseTrustTunnel,
+    tt: parseTrustTunnel
 };
 
 /**

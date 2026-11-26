@@ -26,6 +26,8 @@ export class SurfboardConverter extends BaseConverter {
                     return this.trojan(p);
                 case 'vmess':
                     return this.vmess(p);
+                case 'vless':
+                    return this.vless(p);
                 case 'http':
                 case 'https':
                     return this.http(p);
@@ -41,6 +43,10 @@ export class SurfboardConverter extends BaseConverter {
                     return this.wireguard(p);
                 case 'anytls':
                     return this.anytls(p);
+                case 'direct':
+                    return `${p.name}=direct`;
+                case 'reject':
+                    return `${p.name}=reject`;
                 default:
                     console.warn(`[SurfboardConverter] Unsupported proxy type: ${p.type}`);
                     return '';
@@ -66,9 +72,37 @@ export class SurfboardConverter extends BaseConverter {
             result.append(`,obfs=${opts.mode || 'http'}`);
             result.appendIfPresent(`,obfs-host=${opts.host}`, 'plugin-opts.host');
             result.appendIfPresent(`,obfs-uri=${opts.path}`, 'plugin-opts.path');
+        } else if (proxy.plugin === 'shadow-tls' && proxy['plugin-opts']) {
+            const opts = proxy['plugin-opts'] as any;
+            if (opts.password) result.append(`,shadow-tls-password=${opts.password}`);
+            if (opts.host) result.append(`,shadow-tls-sni=${opts.host}`);
+            if (opts.version) result.append(`,shadow-tls-version=${opts.version}`);
+        } else if (proxy['shadow-tls-password']) {
+            result.append(`,shadow-tls-password=${proxy['shadow-tls-password']}`);
+            if (proxy['shadow-tls-sni']) result.append(`,shadow-tls-sni=${proxy['shadow-tls-sni']}`);
+            if (proxy['shadow-tls-version']) result.append(`,shadow-tls-version=${proxy['shadow-tls-version']}`);
         }
 
+        if (proxy['udp-over-tcp'] || proxy.uot) {
+            result.append(',udp-over-tcp=true');
+        }
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
+        return result.toString();
+    }
+
+    private vless(proxy: ProxyNode): string {
+        if (proxy['reality-opts']) {
+            throw new Error('[SurfboardConverter] Surfboard does not support VLESS Reality');
+        }
+        const result = new Result(proxy);
+        result.append(`${proxy.name}=vless,${proxy.server},${proxy.port},username=${proxy.uuid}`);
+        this.appendTransport(result, proxy);
+        result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
+        this.appendTlsProxyParams(result, proxy, !!proxy.tls);
+        result.appendIfPresent(`,tfo=${proxy.tfo}`, 'tfo');
+        result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
@@ -78,14 +112,12 @@ export class SurfboardConverter extends BaseConverter {
             `${proxy.name}=trojan,${proxy.server},${proxy.port},password=${proxy.password}`
         );
         this.appendTransport(result, proxy);
+        const tlsEnabled = proxy.tls !== false;
         result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(
-            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
-            'skip-cert-verify'
-        );
+        this.appendTlsProxyParams(result, proxy, tlsEnabled);
         result.appendIfPresent(`,tfo=${proxy.tfo}`, 'tfo');
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
@@ -95,14 +127,13 @@ export class SurfboardConverter extends BaseConverter {
         this.appendTransport(result, proxy);
         result.append(`,vmess-aead=${proxy.aead !== undefined ? proxy.aead : proxy.alterId === 0}`);
         result.appendIfPresent(`,tls=${!!proxy.tls}`, 'tls');
-        result.appendIfPresent(`,sni=${proxy.sni}`, 'sni');
-        result.appendIfPresent(
-            `,skip-cert-verify=${proxy['skip-cert-verify']}`,
-            'skip-cert-verify'
-        );
+        this.appendTlsProxyParams(result, proxy, !!proxy.tls);
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
+
+
 
     private http(proxy: ProxyNode): string {
         const result = new Result(proxy);
@@ -116,8 +147,11 @@ export class SurfboardConverter extends BaseConverter {
             'skip-cert-verify'
         );
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
+
+
 
     private socks5(proxy: ProxyNode): string {
         const result = new Result(proxy);
@@ -131,8 +165,11 @@ export class SurfboardConverter extends BaseConverter {
             'skip-cert-verify'
         );
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
+
+
 
     private snell(proxy: ProxyNode): string {
         if (proxy.version != null && ![1, 2, 3, 4, 5].includes(Number(proxy.version))) {
@@ -157,7 +194,7 @@ export class SurfboardConverter extends BaseConverter {
             result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
         }
         result.appendIfPresent(`,reuse=${proxy.reuse}`, 'reuse');
-        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
@@ -175,38 +212,55 @@ export class SurfboardConverter extends BaseConverter {
             const alpnStr = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
             result.append(`,alpn="${alpnStr}"`);
         }
-        if (proxy.ports) {
-            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports) {
+            result.append(`,port-hopping="${String(ports).replace(/,/g, ';')}"`);
         }
         if (proxy['hop-interval']) {
             result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
         }
+        if (proxy['congestion-controller']) {
+            result.append(`,congestion-controller=${proxy['congestion-controller']}`);
+        }
+        if (proxy['udp-relay-mode']) {
+            result.append(`,udp-relay-mode=${proxy['udp-relay-mode']}`);
+        }
+        if (proxy['reduce-rtt']) {
+            result.append(',reduce-rtt=true');
+        }
+        if (proxy['disable-sni']) {
+            result.append(',disable-sni=true');
+        }
         this.appendTlsProxyParams(result, proxy);
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private hysteria2(proxy: ProxyNode): string {
         if (
-            (proxy.obfs && proxy.obfs !== 'salamander') ||
-            (proxy['obfs-password'] && proxy.obfs !== 'salamander')
+            (proxy.obfs && !['salamander', 'gecko'].includes(proxy.obfs)) ||
+            (proxy['obfs-password'] && proxy.obfs && !['salamander', 'gecko'].includes(proxy.obfs))
         ) {
-            throw new Error(`[SurfboardConverter] Surfboard Hysteria2 only supports salamander obfs`);
+            throw new Error(`[SurfboardConverter] Surfboard Hysteria2 only supports salamander and gecko obfs`);
         }
 
         const result = new Result(proxy);
         result.append(`${proxy.name}=hysteria2,${proxy.server},${proxy.port}`);
-        if (proxy.password) {
-            result.append(`,password="${proxy.password}"`);
+        const authPass = proxy.password || proxy.auth;
+        if (authPass) {
+            result.append(`,password="${authPass}"`);
         }
-        if (proxy.ports) {
-            result.append(`,port-hopping="${String(proxy.ports).replace(/,/g, ';')}"`);
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports) {
+            result.append(`,port-hopping="${String(ports).replace(/,/g, ';')}"`);
         }
         if (proxy['hop-interval']) {
             result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
         }
         if (proxy['obfs-password']) {
-            result.append(`,salamander-password="${proxy['obfs-password']}"`);
+            const obfsKey = proxy.obfs === 'gecko' ? 'gecko-password' : 'salamander-password';
+            result.append(`,${obfsKey}="${proxy['obfs-password']}"`);
         }
 
         this.appendTlsProxyParams(result, proxy);
@@ -216,9 +270,12 @@ export class SurfboardConverter extends BaseConverter {
             const match = String(downVal).match(/\d+/);
             result.append(`,download-bandwidth=${match ? match[0] : 0}`);
         }
+        if (proxy.ecn) {
+            result.append(',ecn=true');
+        }
 
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
-        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
@@ -227,13 +284,13 @@ export class SurfboardConverter extends BaseConverter {
         result.append(`${proxy.name}=wireguard`);
         const sectionName = proxy['section-name'] || proxy._sectionName || proxy.name;
         result.append(`,section-name=${sectionName}`);
-        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
+        this.appendCommon(result, proxy);
         return result.toString();
     }
 
     private appendTlsProxyParams(result: Result, proxy: ProxyNode, enabled = true) {
         if (!enabled) return;
-        const fingerprint = proxy['tls-fingerprint'] || proxy['client-fingerprint'];
+        const fingerprint = proxy['tls-fingerprint'] || proxy['server-cert-fingerprint-sha256'];
         if (fingerprint) {
             result.append(`,server-cert-fingerprint-sha256=${fingerprint}`);
         }
@@ -261,23 +318,51 @@ export class SurfboardConverter extends BaseConverter {
         result.appendIfPresent(`,udp-relay=${proxy.udp}`, 'udp');
 
         // reuse
-        result.appendIfPresent(`,reuse=${proxy['reuse']}`, 'reuse');
+        if (proxy.reuse !== undefined) {
+            result.append(`,reuse=${proxy.reuse}`);
+        } else if (proxy['disable-reuse'] !== undefined) {
+            result.append(`,reuse=${!proxy['disable-reuse']}`);
+        }
+        result.appendIfPresent(
+            `,idle-session-check-interval=${proxy['idle-session-check-interval']}`,
+            'idle-session-check-interval'
+        );
+        result.appendIfPresent(
+            `,idle-session-timeout=${proxy['idle-session-timeout']}`,
+            'idle-session-timeout'
+        );
+        result.appendIfPresent(
+            `,min-idle-session=${proxy['min-idle-session']}`,
+            'min-idle-session'
+        );
 
-        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
+        this.appendCommon(result, proxy);
 
         return result.toString();
+    }
+
+    private appendCommon(result: Result, proxy: ProxyNode) {
+        const underlying = proxy['underlying-proxy'] || proxy['dialer-proxy'];
+        if (underlying) {
+            result.append(`,underlying-proxy=${underlying}`);
+        }
+        result.appendIfPresent(`,block-quic=${proxy['block-quic']}`, 'block-quic');
     }
 
     private appendTransport(result: Result, proxy: ProxyNode) {
         if (proxy.network === 'ws') {
             result.append(`,ws=true`);
             const opts = (proxy['ws-opts'] || {}) as any;
-            result.appendIfPresent(`,ws-path=${opts.path || '/'}`, 'ws-opts.path');
-            if (opts.headers) {
-                const headers = Object.entries(opts.headers)
+            const wsPath = opts.path || proxy['ws-path'];
+            if (wsPath) result.append(`,ws-path=${wsPath}`);
+            const rawHeaders = opts.headers || proxy['ws-headers'];
+            if (rawHeaders) {
+                const headers = Object.entries(rawHeaders)
                     .map(([k, v]) => `${k}:${k === 'Host' ? `"${v}"` : v}`)
                     .join('|');
                 if (headers) result.append(`,ws-headers=${headers}`);
+            } else if (opts.host) {
+                result.append(`,ws-headers=Host:"${opts.host}"`);
             }
         }
     }

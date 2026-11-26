@@ -5,8 +5,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { convert, parse } from '../index';
-import type { ProxyNode } from '../types';
+import { convert, parse } from '../../index';
+import type { ProxyNode } from '../../types';
 
 // ============================================================
 // 测试 URI 定义 —— 每个都是真实场景中的复杂协议组合

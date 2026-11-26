@@ -73,7 +73,14 @@ export class ClashConverter extends BaseConverter {
                 'hysteria',
                 'hysteria2',
                 'tuic',
-                'anytls'
+                'anytls',
+                'mieru',
+                'ssh',
+                'sudoku',
+                'trusttunnel',
+                'naive',
+                'direct',
+                'reject'
             ]
             : [
                 'ss',
@@ -230,11 +237,6 @@ export class ClashConverter extends BaseConverter {
                 }
             } else if (node.type === 'vless') {
                 node.cipher = 'none'; // VLESS always none in Clash Meta
-                if (node['ech-opts'] && node['ech-opts']['config-list']) {
-                    node['ech-opts'] = {
-                        'config-list': node['ech-opts']['config-list']
-                    };
-                }
             } else if (node.type === 'wireguard') {
                 node.keepalive = node.keepalive ?? node['persistent-keepalive'];
                 node['persistent-keepalive'] = node.keepalive;
@@ -245,11 +247,26 @@ export class ClashConverter extends BaseConverter {
                 if (ipWithCidr) node.ip = ipWithCidr;
                 const ipv6WithCidr = getWireGuardAddressWithCIDR(node, 'ipv6');
                 if (ipv6WithCidr) node.ipv6 = ipv6WithCidr;
+                delete node['ip-cidr'];
+                delete node['ipv6-cidr'];
                 if (node.reserved !== undefined) {
                     node.reserved = normalizeReserved(node.reserved);
                 }
                 if (node.mtu) {
                     node.mtu = parseInt(String(node.mtu), 10);
+                }
+                const awgKeys = ['jc', 'jmin', 'jmax', 's1', 's2', 'h1', 'h2', 'h3', 'h4'] as const;
+                const awgOpts: Record<string, any> = node['amnezia-wg-option']
+                    ? { ...node['amnezia-wg-option'] }
+                    : {};
+                for (const k of awgKeys) {
+                    if (node[k] !== undefined && awgOpts[k] === undefined) {
+                        awgOpts[k] = node[k];
+                    }
+                    delete node[k];
+                }
+                if (Object.keys(awgOpts).length > 0) {
+                    node['amnezia-wg-option'] = awgOpts;
                 }
                 if (Array.isArray(node.peers) && node.peers.length > 0) {
                     const firstPeer = node.peers[0];
@@ -358,13 +375,21 @@ export class ClashConverter extends BaseConverter {
                     node.servername = node.sni;
                     delete node.sni;
                 }
+                if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
                 if (node.reuse === false || node['disable-reuse']) {
                     node['disable-reuse'] = true;
                     delete node.reuse;
                 }
+            } else if (node.type === 'ssh') {
+                if (node.username && !node.user) {
+                    node.user = node.username;
+                    delete node.username;
+                }
+            } else if (node.type === 'naive' || node.type === 'trusttunnel') {
+                if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
             }
 
-            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls', 'naive'].includes(node.type)) {
+            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls', 'naive', 'trusttunnel'].includes(node.type)) {
                 delete node.tls;
             }
 
@@ -378,6 +403,19 @@ export class ClashConverter extends BaseConverter {
             }
 
             // Transport adjustments
+            if (node.network === 'httpupgrade') {
+                const huOpts = (node['httpupgrade-opts'] || node['ws-opts'] || {}) as Record<string, any>;
+                const wsHeaders = { ...(huOpts.headers || {}) };
+                if (huOpts.host && !wsHeaders.Host && !wsHeaders.host) {
+                    wsHeaders.Host = huOpts.host;
+                }
+                node.network = 'ws';
+                node['ws-opts'] = {
+                    path: huOpts.path || '/',
+                    ...(Object.keys(wsHeaders).length > 0 ? { headers: wsHeaders } : {})
+                };
+                delete node['httpupgrade-opts'];
+            }
             if (node.network === 'ws') {
                 node['ws-opts'] = node['ws-opts'] || {};
                 const networkPath = node['ws-path'] || node['ws-opts'].path;
@@ -391,13 +429,19 @@ export class ClashConverter extends BaseConverter {
                         }
                     }
                 }
-                const host = node['ws-headers']?.Host || node['ws-opts']?.headers?.Host;
+                const host =
+                    node['ws-headers']?.Host ||
+                    node['ws-opts']?.headers?.Host ||
+                    node['ws-opts']?.headers?.host;
                 if (host) {
                     node['ws-opts'].headers = node['ws-opts'].headers || {};
                     node['ws-opts'].headers.Host = host;
+                    if (node['ws-opts'].headers.host !== undefined) {
+                        delete node['ws-opts'].headers.host;
+                    }
                 }
             } else if (
-                (node.type === 'vmess' || node.type === 'vless') &&
+                ['vmess', 'vless', 'trojan'].includes(node.type) &&
                 node.network === 'http'
             ) {
                 node['http-opts'] = node['http-opts'] || {};
@@ -411,7 +455,7 @@ export class ClashConverter extends BaseConverter {
                     node['http-opts'].headers.Host = [node['http-opts'].headers.Host];
                 }
             } else if (
-                (node.type === 'vmess' || node.type === 'vless') &&
+                ['vmess', 'vless', 'trojan'].includes(node.type) &&
                 node.network === 'h2'
             ) {
                 if (node['h2-opts']) {
@@ -452,6 +496,21 @@ export class ClashConverter extends BaseConverter {
                     node['quic-opts']['header-type'] = node.headerType;
                     delete node.headerType;
                 }
+            }
+
+            if (this.isMeta && node['ech-opts'] && !node['reality-opts']) {
+                const rawEch = node['ech-opts'] as Record<string, any>;
+                const cfgList = rawEch['config-list'] ?? rawEch.config;
+                const queryServerName = rawEch['query-server-name'] ?? rawEch.query_server_name;
+                if (cfgList || queryServerName) {
+                    node['ech-opts'] = {
+                        enable: true,
+                        ...(cfgList ? { 'config-list': Array.isArray(cfgList) ? cfgList : [cfgList] } : {}),
+                        ...(queryServerName ? { 'query-server-name': queryServerName } : {})
+                    };
+                }
+            } else if (node['reality-opts'] && node['ech-opts']) {
+                delete node['ech-opts'];
             }
 
             if (this.isMeta && node['underlying-proxy']) {
@@ -504,8 +563,8 @@ export class ClashConverter extends BaseConverter {
             const orderedNode: any = {
                 name: node.name,
                 type: node.type,
-                server: node.server,
-                port: node.port
+                ...(node.server !== undefined ? { server: node.server } : {}),
+                ...(node.port !== undefined ? { port: node.port } : {})
             };
 
             // 按优先级添加其他字段
@@ -518,6 +577,7 @@ export class ClashConverter extends BaseConverter {
                 'user',
                 // 加密
                 'cipher',
+                'encryption',
                 'alterId',
                 'protocol',
                 'protocol-param',
@@ -535,13 +595,17 @@ export class ClashConverter extends BaseConverter {
                 'ca',
                 'ca-str',
                 'skip-cert-verify',
+                'name-cert-verify',
                 'client-fingerprint',
+                'jls-opts',
+                'restls-opts',
                 // 传输层
                 'network',
                 'flow',
                 'packet-encoding',
                 'packet-addr',
                 'xudp',
+                'smux',
                 // Reality
                 'reality-opts',
                 // ECH (ClashMeta)
@@ -581,6 +645,11 @@ export class ClashConverter extends BaseConverter {
                 'recv-window-conn',
                 'disable-mtu-discovery',
                 'fast-open',
+                'initial-stream-receive-window',
+                'max-stream-receive-window',
+                'initial-connection-receive-window',
+                'max-connection-receive-window',
+                'cwnd',
                 // TUIC
                 'token',
                 'congestion-controller',
@@ -598,6 +667,23 @@ export class ClashConverter extends BaseConverter {
                 'min-idle-session',
                 'max-stream-count',
                 'disable-reuse',
+                'client-metadata',
+                'padding-scheme',
+                // Mieru
+                'transport',
+                'multiplexing',
+                'port-range',
+                'port-hopping',
+                'port-hopping-interval',
+                // Sudoku
+                'key',
+                'aead-method',
+                'padding-min',
+                'padding-max',
+                'table-type',
+                'enable-pure-downlink',
+                'multiplex',
+                'httpmask',
                 // WireGuard
                 'private-key',
                 'public-key',
@@ -608,9 +694,13 @@ export class ClashConverter extends BaseConverter {
                 'ipv6',
                 'allowed-ips',
                 'remote-dns-resolve',
+                'dns',
+                'ip-stack',
+                'refresh-server-ip-interval',
                 'peers',
                 'keepalive',
                 'persistent-keepalive',
+                'amnezia-wg-option',
                 // Snell
                 'version',
                 // UDP/TCP

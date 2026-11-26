@@ -52,6 +52,16 @@ export class URIConverter extends BaseConverter {
                     return this.snell(p);
                 case 'naive':
                     return this.naive(p);
+                case 'ssh':
+                    return this.ssh(p);
+                case 'mieru':
+                    return this.mieru(p);
+                case 'juicity':
+                    return this.juicity(p);
+                case 'sudoku':
+                    return this.sudoku(p);
+                case 'trusttunnel':
+                    return this.trusttunnel(p);
                 default:
                     return '';
             }
@@ -123,7 +133,7 @@ export class URIConverter extends BaseConverter {
             host: '',
             path: '',
             tls: node.tls ? 'tls' : '',
-            sni: node.sni || '',
+            sni: node.sni || node.servername || '',
             alpn: Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn || '',
             fp: node['client-fingerprint'] || ''
         };
@@ -131,7 +141,11 @@ export class URIConverter extends BaseConverter {
         if (node.network === 'ws') {
             const opts = (node['ws-opts'] || {}) as any;
             config.path = node['ws-path'] || opts.path || '/';
-            config.host = node['ws-headers']?.Host || opts.headers?.Host || '';
+            config.host = node['ws-headers']?.Host || opts.headers?.Host || opts.headers?.host || opts.host || '';
+        } else if (node.network === 'httpupgrade') {
+            const opts = (node['httpupgrade-opts'] || node['ws-opts'] || {}) as any;
+            config.path = opts.path || '/';
+            config.host = opts.host || opts.headers?.Host || '';
         } else if (node.network === 'grpc') {
             const opts = (node['grpc-opts'] || {}) as any;
             config.path = node['grpc-service-name'] || opts['service-name'] || '';
@@ -164,7 +178,7 @@ export class URIConverter extends BaseConverter {
 
     private trojan(node: ProxyNode): string {
         const params = new URLSearchParams();
-        params.set('sni', node.sni || node.server.replace(/[\][]/g, ''));
+        params.set('sni', node.sni || node.servername || node.server.replace(/[\][]/g, ''));
         if (node['skip-cert-verify']) params.set('allowInsecure', '1');
         if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
         this.appendTransportParams(params, node);
@@ -172,7 +186,7 @@ export class URIConverter extends BaseConverter {
         let queryString = params.toString();
         if (queryString) queryString = '?' + queryString;
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `trojan://${node.password}@${node.server}:${node.port}${queryString}${hash}`;
+        return `trojan://${encodeURIComponent(node.password || '')}@${node.server}:${node.port}${queryString}${hash}`;
     }
 
     private hysteria(node: ProxyNode): string {
@@ -223,7 +237,6 @@ export class URIConverter extends BaseConverter {
         if (queryString) queryString = '?' + queryString;
 
         const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
-        return `hysteria2://${encodeURIComponent(node.password || '')}@${node.server}:${node.port}${queryString}${hash}`;
         return `hysteria2://${encodeURIComponent(pass)}@${node.server}:${node.port}${queryString}${hash}`;
     }
 
@@ -320,7 +333,8 @@ export class URIConverter extends BaseConverter {
             : '';
         const params = new URLSearchParams();
         if (node.tls) params.set('tls', '1');
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         if (node['skip-cert-verify']) params.set('skip-cert-verify', 'true');
         if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
         const query = params.toString() ? `?${params.toString()}` : '';
@@ -365,7 +379,8 @@ export class URIConverter extends BaseConverter {
 
     private naive(node: ProxyNode): string {
         const params = new URLSearchParams();
-        if (node.sni) params.set('sni', node.sni);
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
         const auth = node.username
             ? `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password || '')}@`
             : '';
@@ -394,6 +409,79 @@ export class URIConverter extends BaseConverter {
         return `snell://${encodeURIComponent(psk)}@${node.server}:${node.port}${queryString}${hash}`;
     }
 
+    private ssh(node: ProxyNode): string {
+        const user = node.username || node.user;
+        const auth = user
+            ? `${encodeURIComponent(user)}${node.password ? ':' + encodeURIComponent(node.password) : ''}@`
+            : '';
+        const params = new URLSearchParams();
+        if (node['private-key']) params.set('pk', node['private-key']);
+        if (node['private-key-passphrase']) params.set('passphrase', node['private-key-passphrase']);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `ssh://${auth}${node.server}:${node.port}${query}${hash}`;
+    }
+
+    private mieru(node: ProxyNode): string {
+        const auth = node.username
+            ? `${encodeURIComponent(node.username)}${node.password ? ':' + encodeURIComponent(node.password) : ''}@`
+            : '';
+        const params = new URLSearchParams();
+        if (node.transport) params.set('transport', String(node.transport));
+        if (node.multiplexing) params.set('multiplexing', String(node.multiplexing));
+        const hopping = node['port-hopping'] || node['port-range'];
+        if (hopping) params.set('port-hopping', String(hopping));
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `mieru://${auth}${node.server}:${node.port}${query}${hash}`;
+    }
+
+    private juicity(node: ProxyNode): string {
+        const auth = node.uuid
+            ? `${encodeURIComponent(node.uuid)}:${encodeURIComponent(node.password || '')}@`
+            : '';
+        const params = new URLSearchParams();
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
+        if (node['skip-cert-verify']) params.set('allow_insecure', '1');
+        if (node['congestion-controller']) params.set('congestion_control', node['congestion-controller']);
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `juicity://${auth}${node.server}:${node.port}${query}${hash}`;
+    }
+
+    private sudoku(node: ProxyNode): string {
+        const auth = node.key ? `${encodeURIComponent(node.key)}@` : '';
+        const params = new URLSearchParams();
+        if (node['aead-method']) params.set('aead-method', String(node['aead-method']));
+        if (node['table-type']) params.set('table-type', String(node['table-type']));
+        if (node['padding-min'] !== undefined) params.set('padding-min', String(node['padding-min']));
+        if (node['padding-max'] !== undefined) params.set('padding-max', String(node['padding-max']));
+        if (node['enable-pure-downlink'] !== undefined) {
+            params.set('enable-pure-downlink', node['enable-pure-downlink'] ? 'true' : 'false');
+        }
+        if (node.multiplex !== undefined) params.set('multiplex', String(node.multiplex));
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `sudoku://${auth}${node.server}:${node.port}${query}${hash}`;
+    }
+
+    private trusttunnel(node: ProxyNode): string {
+        const auth = node.username
+            ? `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password || '')}@`
+            : '';
+        const params = new URLSearchParams();
+        const sni = node.sni || node.servername;
+        if (sni) params.set('sni', sni);
+        if (node.alpn) params.set('alpn', Array.isArray(node.alpn) ? node.alpn.join(',') : node.alpn);
+        if (node['skip-cert-verify']) params.set('insecure', '1');
+        if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
+        if (node.udp !== undefined) params.set('udp', node.udp ? '1' : '0');
+        const query = params.toString() ? `?${params.toString()}` : '';
+        const hash = node.name ? `#${encodeURIComponent(String(node.name))}` : '';
+        return `trusttunnel://${auth}${node.server}:${node.port}${query}${hash}`;
+    }
+
     private appendTransportParams(params: URLSearchParams, node: ProxyNode) {
         if (!node.network) return;
 
@@ -405,13 +493,16 @@ export class URIConverter extends BaseConverter {
         const opts = (node[`${node.network}-opts`] || {}) as any;
         if (opts) {
             if (opts.path) params.set('path', Array.isArray(opts.path) ? opts.path[0] : opts.path);
-            if (opts.headers?.Host)
+            const optHost = opts.headers?.Host || opts.headers?.host || opts.host;
+            if (optHost)
                 params.set(
                     'host',
-                    Array.isArray(opts.headers.Host) ? opts.headers.Host[0] : opts.headers.Host
+                    Array.isArray(optHost) ? optHost[0] : optHost
                 );
             if (node.network === 'grpc') {
-                if (opts['service-name']) params.set('serviceName', opts['service-name']);
+                const sn =
+                    node['grpc-service-name'] || opts['service-name'] || opts['grpc-service-name'];
+                if (sn) params.set('serviceName', sn);
                 if (opts['_grpc-type']) params.set('mode', opts['_grpc-type']);
                 if (opts['_grpc-authority']) params.set('authority', opts['_grpc-authority']);
             } else if (node.network === 'kcp') {
@@ -510,7 +601,12 @@ export class URIConverter extends BaseConverter {
         }
 
         // Transport options
-        if (node.network === 'ws' && node['ws-opts']) {
+        if (node.network === 'httpupgrade') {
+            const huOpts = (node['httpupgrade-opts'] || node['ws-opts'] || {}) as Record<string, any>;
+            params.set('path', huOpts.path || '/');
+            const h = huOpts.host || huOpts.headers?.Host || huOpts.headers?.host;
+            if (h) params.set('host', Array.isArray(h) ? h[0] : h);
+        } else if (node.network === 'ws' && node['ws-opts']) {
             const wsOpts = node['ws-opts'] as Record<string, any>;
             let p = node['ws-path'] || wsOpts.path || '/';
             if (wsOpts['max-early-data']) {
@@ -518,11 +614,16 @@ export class URIConverter extends BaseConverter {
                 p = `${p}${sep}ed=${wsOpts['max-early-data']}`;
             }
             params.set('path', p);
-            const h = node['ws-headers']?.Host || wsOpts.headers?.Host;
+            const h =
+                node['ws-headers']?.Host ||
+                wsOpts.headers?.Host ||
+                wsOpts.headers?.host ||
+                wsOpts.host;
             if (h) params.set('host', Array.isArray(h) ? h[0] : h);
         } else if (node.network === 'grpc') {
             const opts = (node['grpc-opts'] || {}) as any;
-            const sn = node['grpc-service-name'] || opts['service-name'];
+            const sn =
+                node['grpc-service-name'] || opts['service-name'] || opts['grpc-service-name'];
             if (sn) params.set('serviceName', sn);
             if (opts['_grpc-type']) params.set('mode', opts['_grpc-type']);
             if (opts['_grpc-authority']) params.set('authority', opts['_grpc-authority']);

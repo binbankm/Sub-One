@@ -27,6 +27,8 @@ export type ProxyType =
     | 'ssh' // SSH
     | 'mieru' // Mieru
     | 'juicity' // Juicity
+    | 'sudoku' // Sudoku
+    | 'trusttunnel' // TrustTunnel
     | 'external' // Surge External
     | 'direct' // Direct
     | 'reject'; // Reject
@@ -505,6 +507,7 @@ export interface ProcessOptions {
     dedupe?: boolean; // 是否去重
     includeRules?: string[]; // 包含规则列表
     excludeRules?: string[]; // 排除规则列表
+    sort?: 'asc' | 'desc' | 'none' | ((a: ProxyNode, b: ProxyNode) => number); // 节点排序
 }
 
 // ============================================================================

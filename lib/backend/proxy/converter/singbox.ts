@@ -2,7 +2,7 @@
  * Sub-One Sing-box Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
-import { getWireGuardAddressWithCIDR, normalizeReserved } from '../utils';
+import { getWireGuardAddressWithCIDR, normalizeReserved, parseEndpoint } from '../utils';
 import { BaseConverter } from './base';
 import { isPresent } from './utils';
 
@@ -10,7 +10,22 @@ export class SingboxConverter extends BaseConverter {
     name = 'Singbox';
 
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
-        const outbounds = nodes.flatMap((node) => {
+        const nameCount = new Map<string, number>();
+        const nameIndex = new Map<string, number>();
+        nodes.forEach((node) => {
+            nameCount.set(node.name, (nameCount.get(node.name) || 0) + 1);
+        });
+
+        const dedupedNodes = nodes.map((node) => {
+            if ((nameCount.get(node.name) || 0) > 1) {
+                const idx = (nameIndex.get(node.name) || 0) + 1;
+                nameIndex.set(node.name, idx);
+                return { ...node, name: `${node.name}_${idx}` };
+            }
+            return node;
+        });
+
+        const outbounds = dedupedNodes.flatMap((node) => {
             const result = this.toOutbound(node);
             if (!result) return [];
             return Array.isArray(result) ? result : [result];
@@ -74,9 +89,23 @@ export class SingboxConverter extends BaseConverter {
                     if (node.plugin === 'obfs') {
                         outbound.plugin = 'obfs';
                         outbound.plugin_opts = `mode=${node['plugin-opts']?.mode || 'http'}${node['plugin-opts']?.host ? ';host=' + node['plugin-opts'].host : ''}`;
-                    } else if (node.plugin === 'shadow-tls') {
+                    } else if (node.plugin === 'v2ray-plugin' && node['plugin-opts']) {
+                        const opts = node['plugin-opts'] as Record<string, any>;
+                        const parts: string[] = [`mode=${opts.mode || 'websocket'}`];
+                        if (opts.host) parts.push(`host=${opts.host}`);
+                        if (opts.path) parts.push(`path=${opts.path}`);
+                        if (opts.tls) parts.push('tls');
+                        outbound.plugin = 'v2ray-plugin';
+                        outbound.plugin_opts = parts.join(';');
+                    } else if (
+                        node.plugin === 'shadow-tls' ||
+                        (!node.plugin && (node['shadow-tls-password'] || node['shadow-tls-sni']))
+                    ) {
                         // shadow-tls: 拆分为 shadowsocks + shadowtls 两个 outbound
                         const opts = (node['plugin-opts'] || {}) as any;
+                        const stHost = opts.host || node['shadow-tls-sni'] || node.sni || '';
+                        const stPassword = opts.password || node['shadow-tls-password'] || '';
+                        const stVersion = opts.version ?? node['shadow-tls-version'] ?? 3;
                         const stTag = `${node.name}_shadowtls`;
                         outbound.detour = stTag;
                         if (node['udp-over-tcp'])
@@ -89,11 +118,11 @@ export class SingboxConverter extends BaseConverter {
                             tag: stTag,
                             server: node.server,
                             server_port: node.port,
-                            version: opts.version || 3,
-                            password: opts.password,
+                            version: stVersion,
+                            password: stPassword,
                             tls: {
                                 enabled: true,
-                                server_name: opts.host,
+                                server_name: stHost,
                                 utls: {
                                     enabled: true,
                                     fingerprint: node['client-fingerprint'] || 'chrome'
@@ -302,6 +331,7 @@ export class SingboxConverter extends BaseConverter {
                     if (node['disable-chrome-parrot']) outbound.disable_chrome_parrot = true;
                     if (node['fast-open']) outbound.udp_fragment = true;
                     if (node['disable-mtu-discovery']) outbound.disable_mtu_discovery = true;
+                    if (node.network && ['tcp', 'udp'].includes(node.network)) outbound.network = node.network;
                     this.appendTLS(outbound, node);
                     break;
                 case 'tuic': {
@@ -320,6 +350,7 @@ export class SingboxConverter extends BaseConverter {
                         outbound.heartbeat = /^\d+$/.test(hi) ? `${hi}ms` : hi;
                     }
                     if (node['udp-over-stream']) outbound.udp_over_stream = true;
+                    if (node.network && ['tcp', 'udp'].includes(node.network)) outbound.network = node.network;
                     this.appendTLS(outbound, node);
                     break;
                 }
@@ -340,15 +371,11 @@ export class SingboxConverter extends BaseConverter {
                     const wgPeers = node.peers;
                     if (wgPeers && wgPeers.length > 0) {
                         outbound.peers = wgPeers.map((p: any) => {
+                            const ep = p.endpoint ? parseEndpoint(p.endpoint) : undefined;
                             const peer: any = {
-                                server:
-                                    p.server ||
-                                    (p.endpoint ? p.endpoint.split(':')[0] : node.server),
+                                server: p.server || ep?.server || node.server,
                                 server_port: parseInt(
-                                    String(
-                                        p.port ||
-                                        (p.endpoint ? p.endpoint.split(':')[1] : node.port)
-                                    ),
+                                    String(p.port || ep?.port || node.port),
                                     10
                                 ),
                                 public_key: p['public-key'] || p.publicKey,
@@ -366,12 +393,13 @@ export class SingboxConverter extends BaseConverter {
                     } else {
                         // 单 peer 结构
                         const firstPeer = wgPeers && wgPeers.length === 1 ? wgPeers[0] : null;
+                        const firstEp = firstPeer?.endpoint ? parseEndpoint(firstPeer.endpoint) : undefined;
                         if (!outbound.server && firstPeer) {
-                            outbound.server = firstPeer.server || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[0] : undefined);
+                            outbound.server = firstPeer.server || firstEp?.server;
                         }
                         if (!outbound.server_port && firstPeer) {
                             outbound.server_port = parseInt(
-                                String(firstPeer.port || (firstPeer.endpoint ? firstPeer.endpoint.split(':')[1] : 51820)),
+                                String(firstPeer.port || firstEp?.port || 51820),
                                 10
                             );
                         }
@@ -410,18 +438,57 @@ export class SingboxConverter extends BaseConverter {
                     if (node['disable-reuse'] != null) outbound.disable_reuse = !!node['disable-reuse'];
                     if (node.reuse === false) outbound.disable_reuse = true;
                     // session 相关参数
-                    if (/^\d+$/.test(String(node['idle-session-check-interval'])))
-                        outbound.idle_session_check_interval = `${node['idle-session-check-interval']}s`;
-                    if (/^\d+$/.test(String(node['idle-session-timeout'])))
-                        outbound.idle_session_timeout = `${node['idle-session-timeout']}s`;
+                    if (node['idle-session-check-interval'] != null) {
+                        const val = String(node['idle-session-check-interval']).trim();
+                        if (/^\d+$/.test(val)) outbound.idle_session_check_interval = `${val}s`;
+                        else if (/^\d+(?:ns|us|µs|ms|s|m|h)$/.test(val)) outbound.idle_session_check_interval = val;
+                    }
+                    if (node['idle-session-timeout'] != null) {
+                        const val = String(node['idle-session-timeout']).trim();
+                        if (/^\d+$/.test(val)) outbound.idle_session_timeout = `${val}s`;
+                        else if (/^\d+(?:ns|us|µs|ms|s|m|h)$/.test(val)) outbound.idle_session_timeout = val;
+                    }
                     if (/^\d+$/.test(String(node['min-idle-session'])))
                         outbound.min_idle_session = parseInt(String(node['min-idle-session']), 10);
+                    if (Array.isArray(node['padding-scheme'] || node.padding_scheme)) {
+                        outbound.padding_scheme = node['padding-scheme'] || node.padding_scheme;
+                    }
                     this.appendTLS(outbound, node);
                     break;
             }
 
-            // Common opts
+            // Multiplex (smux)
+            const mux = node.smux || node.multiplex;
+            if (mux && typeof mux === 'object' && mux.enabled && ['ss', 'vmess', 'vless', 'trojan'].includes(node.type)) {
+                const multiplex: Record<string, any> = {
+                    enabled: true,
+                    protocol: mux.protocol || 'h2mux'
+                };
+                if (mux['max-connections'] || mux.max_connections) {
+                    multiplex.max_connections = mux['max-connections'] || mux.max_connections;
+                }
+                if (mux['min-streams'] || mux.min_streams) {
+                    multiplex.min_streams = mux['min-streams'] || mux.min_streams;
+                }
+                if (mux['max-streams'] || mux.max_streams) {
+                    multiplex.max_streams = mux['max-streams'] || mux.max_streams;
+                }
+                if (mux.padding !== undefined) multiplex.padding = !!mux.padding;
+                if (mux.brutal) multiplex.brutal = mux.brutal;
+                outbound.multiplex = multiplex;
+            }
+
+            // Common & Dialer opts
             if (node.tfo) outbound.tcp_fast_open = true;
+            if (node['interface-name'] || node.interface) {
+                outbound.bind_interface = node['interface-name'] || node.interface;
+            }
+            if (node['routing-mark'] != null) outbound.routing_mark = node['routing-mark'];
+            if (node['domain-strategy'] || node.domain_strategy) {
+                outbound.domain_strategy = node['domain-strategy'] || node.domain_strategy;
+            }
+            if (node['tcp-multi-path'] || node.mptcp) outbound.tcp_multi_path = true;
+            if (node['udp-fragment']) outbound.udp_fragment = true;
             if (node['underlying-proxy'] || node['dialer-proxy'])
                 outbound.detour =
                     outbound.detour || node['underlying-proxy'] || node['dialer-proxy'];
@@ -448,7 +515,7 @@ export class SingboxConverter extends BaseConverter {
             alpn: Array.isArray(node.alpn) ? node.alpn : node.alpn ? [node.alpn] : undefined
         };
 
-        if (node['client-fingerprint']) {
+        if (node['client-fingerprint'] && !['hysteria', 'hysteria2', 'tuic'].includes(node.type)) {
             tls.utls = { enabled: true, fingerprint: node['client-fingerprint'] };
         }
 
@@ -461,27 +528,24 @@ export class SingboxConverter extends BaseConverter {
             if (!tls.utls) {
                 tls.utls = { enabled: true, fingerprint: 'chrome' };
             }
-        }
+        } else if (node['ech-opts']) {
+            // sing-box 1.11/1.12 中 REALITY 与标准 TLS ECH 互斥
+            const ech = node['ech-opts'] as Record<string, any>;
+            const echConfig = ech.config ?? ech['config-list'];
+            const configArray = Array.isArray(echConfig)
+                ? echConfig
+                : typeof echConfig === 'string' && echConfig
+                    ? [echConfig]
+                    : undefined;
+            const queryServerName = ech['query-server-name'] ?? ech.query_server_name;
 
-        if (node['ech-opts']) {
-            const ech = node['ech-opts'];
-            if (ech['config-list'] && ech['config-list'].length > 0) {
+            if ((configArray && configArray.length > 0) || queryServerName) {
                 tls.ech = {
                     enabled: true,
-                    config_list: ech['config-list']
+                    ...(configArray && configArray.length > 0 ? { config: configArray } : {}),
+                    ...(queryServerName ? { query_server_name: queryServerName } : {})
                 };
             }
-        }
-
-        if (node['client-fingerprint'] && !['hysteria', 'hysteria2', 'tuic'].includes(node.type)) {
-            tls.utls = {
-                enabled: true,
-                fingerprint: node['client-fingerprint']
-            };
-        }
-
-        if (node['tls-fingerprint']) {
-            tls.certificate_public_key_sha256 = node['tls-fingerprint'];
         }
 
         const sha256Fingerprint = node['server-cert-fingerprint-sha256'] || node['tls-fingerprint'] || node.fingerprint;
@@ -492,13 +556,20 @@ export class SingboxConverter extends BaseConverter {
             }
         }
         if (node['tls-pubkey-sha256']) {
-            tls.certificate_public_key_sha256 = node['tls-pubkey-sha256'];
+            tls.certificate_public_key_sha256 = Array.isArray(node['tls-pubkey-sha256'])
+                ? node['tls-pubkey-sha256']
+                : [node['tls-pubkey-sha256']];
         }
 
         if (node.ca) tls.certificate_path = String(node.ca);
         if (node.ca_str) tls.certificate = [String(node.ca_str)];
         if (node['ca-str']) tls.certificate = [String(node['ca-str'])];
         if (node['disable-sni']) tls.disable_sni = true;
+        if (node['tls-fragment'] || node.tls_fragment) tls.fragment = true;
+        if (node['tls-fragment-fallback-delay']) {
+            tls.fragment_fallback_delay = String(node['tls-fragment-fallback-delay']);
+        }
+        if (node['record-fragment'] || node.record_fragment) tls.record_fragment = true;
 
         outbound.tls = tls;
     }
@@ -530,12 +601,16 @@ export class SingboxConverter extends BaseConverter {
             }
         } else if (node.network === 'grpc') {
             transport.service_name =
-                node['grpc-service-name'] || node['grpc-opts']?.['service-name'] || '';
+                node['grpc-service-name'] ||
+                node['grpc-opts']?.['service-name'] ||
+                node['grpc-opts']?.['grpc-service-name'] ||
+                '';
             transport.idle_timeout = (node['grpc-opts'] as any)?.idle_timeout || '15s';
         } else if (node.network === 'h2' || node.network === 'http') {
             transport.type = 'http';
             transport.path = node['h2-opts']?.path || node['http-opts']?.path || '/';
-            transport.host = node['h2-opts']?.host || node['http-opts']?.headers?.Host || [];
+            const rawHost = node['h2-opts']?.host ?? node['http-opts']?.headers?.Host;
+            transport.host = Array.isArray(rawHost) ? rawHost : rawHost ? [String(rawHost)] : [];
         } else if (node.network === 'xhttp' || node.network === 'splithttp') {
             transport.type = 'splithttp';
             const xopts = node['xhttp-opts'] as Record<string, any>;

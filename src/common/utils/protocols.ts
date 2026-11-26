@@ -24,6 +24,9 @@ export const getProtocol = (url?: string): string => {
         if (lowerUrl.startsWith('ssh://')) return 'ssh';
         if (lowerUrl.startsWith('mieru://')) return 'mieru';
         if (lowerUrl.startsWith('juicity://')) return 'juicity';
+        if (lowerUrl.startsWith('sudoku://')) return 'sudoku';
+        if (lowerUrl.startsWith('trusttunnel://') || lowerUrl.startsWith('tt://'))
+            return 'trusttunnel';
         if (lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) return 'http';
     } catch {
         return 'unknown';

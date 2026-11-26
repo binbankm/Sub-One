@@ -2,7 +2,7 @@
  * Sub-One Loon Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
-import { normalizeReserved } from '../utils';
+import { formatEndpoint, normalizeReserved, parseEndpoint } from '../utils';
 import { BaseConverter } from './base';
 import { Result, isPresent } from './utils';
 
@@ -117,12 +117,24 @@ export class LoonConverter extends BaseConverter {
                 case 'anytls':
                     result = this.anytls(proxy);
                     break;
+                case 'mieru':
+                    result = this.mieru(proxy);
+                    break;
+                case 'direct':
+                case 'reject':
+                    result = `${proxy.name}=${proxy.type}`;
+                    break;
                 default:
                     console.warn(`[LoonConverter] Unsupported proxy type: ${proxy.type}`);
                     return '';
             }
-            if (result && Array.isArray(proxy['server-dns']) && proxy['server-dns'].length > 0) {
-                result += `,server-dns="${proxy['server-dns'].join(',')}"`;
+            if (result && proxy['server-dns']) {
+                const dnsList = Array.isArray(proxy['server-dns'])
+                    ? proxy['server-dns']
+                    : String(proxy['server-dns']).split(',').map((s) => s.trim()).filter(Boolean);
+                if (dnsList.length > 0) {
+                    result += `,server-dns="${dnsList.join(',')}"`;
+                }
             }
             return result;
         } catch (e) {
@@ -186,7 +198,12 @@ export class LoonConverter extends BaseConverter {
             result.append(`,transport=ws`);
             const wsOpts = (proxy['ws-opts'] || {}) as any;
             result.appendIfPresent(`,path=${wsOpts.path || '/'}`, 'ws-opts.path');
-            result.appendIfPresent(`,host=${wsOpts.headers?.Host}`, 'ws-opts.headers.Host');
+            const wsHost = wsOpts.headers?.Host || wsOpts.host;
+            if (wsHost) {
+                result.append(`,host=${Array.isArray(wsHost) ? wsHost[0] : wsHost}`);
+            }
+        } else if (proxy.network === 'grpc' || proxy.network === 'xhttp' || proxy.network === 'splithttp') {
+            this.appendTransport(result, proxy);
         }
 
         result.appendIfPresent(
@@ -234,7 +251,22 @@ export class LoonConverter extends BaseConverter {
         if (isReality) {
             appendReality(result, proxy);
         } else {
-            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            const sni = proxy.sni || proxy.servername;
+            if (sni) result.append(`,tls-name=${sni}`);
+            result.appendIfPresent(
+                `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
+                'tls-fingerprint'
+            );
+            result.appendIfPresent(
+                `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
+                'tls-pubkey-sha256'
+            );
+        }
+
+        appendTlsProfile(result, proxy);
+        if (proxy.alpn) {
+            const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
+            if (alpn) result.append(`,alpn="${alpn}"`);
         }
 
         // aead 字段存在时: true→alterId=0 (AEAD开启), false→alterId=1; 不存在时直接用 alterId
@@ -248,11 +280,6 @@ export class LoonConverter extends BaseConverter {
     }
 
     private vless(proxy: ProxyNode): string {
-        if (proxy.encryption && proxy.encryption !== 'none') {
-            throw new Error(
-                `[LoonConverter] VLESS encryption is not supported: ${proxy.encryption}`
-            );
-        }
         const result = new Result(proxy);
         result.append(`${proxy.name}=vless,${proxy.server},${proxy.port},"${proxy.uuid}"`);
         this.appendTransport(result, proxy);
@@ -261,6 +288,16 @@ export class LoonConverter extends BaseConverter {
             `,skip-cert-verify=${proxy['skip-cert-verify']}`,
             'skip-cert-verify'
         );
+        if (proxy.encryption && proxy.encryption !== 'none') {
+            const parts = String(proxy.encryption).split('.');
+            if (parts.length >= 4 && parts[0] === 'mlkem768x25519plus') {
+                result.append(`,encryption-mode=${parts[1]}`);
+                result.append(`,encryption-rtt=${parts[2]}`);
+                result.append(`,encryption-public-keys="${parts.slice(3).join('.')}"`);
+            } else {
+                result.append(`,encryption-mode=native,encryption-public-keys="${proxy.encryption}"`);
+            }
+        }
         if (proxy.flow) result.append(`,flow=${proxy.flow}`);
         if (proxy['reality-opts']) {
             appendReality(result, proxy);
@@ -270,10 +307,15 @@ export class LoonConverter extends BaseConverter {
                 'reality-opts.spider-x'
             );
         } else {
-            result.appendIfPresent(`,tls-name=${proxy.sni}`, 'sni');
+            const sni = proxy.sni || proxy.servername;
+            if (sni) result.append(`,tls-name=${sni}`);
             result.appendIfPresent(
                 `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
                 'tls-fingerprint'
+            );
+            result.appendIfPresent(
+                `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
+                'tls-pubkey-sha256'
             );
         }
         // TLS profile
@@ -314,9 +356,9 @@ export class LoonConverter extends BaseConverter {
         if (Array.isArray(p.peers) && p.peers.length > 0) {
             const peer = p.peers[0];
             if (peer.endpoint) {
-                const [server, port] = peer.endpoint.split(':');
-                p.server = server;
-                p.port = parseInt(port || '51820', 10);
+                const ep = parseEndpoint(peer.endpoint);
+                p.server = ep.server;
+                p.port = ep.port ?? 51820;
             } else {
                 if (peer.server) p.server = peer.server;
                 if (peer.port) p.port = parseInt(String(peer.port), 10);
@@ -333,10 +375,10 @@ export class LoonConverter extends BaseConverter {
         result.append(`${p.name}=wireguard`);
         result.appendIfPresent(`,interface-ip=${p.ip}`, 'ip');
         result.appendIfPresent(`,interface-ipv6=${p.ipv6}`, 'ipv6');
-        result.appendIfPresent(
-            `,private-key="${p['private-key'] || p.privateKey}"`,
-            'private-key'
-        );
+        const privKey = p['private-key'] || p.privateKey;
+        if (privKey) {
+            result.append(`,private-key="${privKey}"`);
+        }
         result.appendIfPresent(`,mtu=${p.mtu}`, 'mtu');
         // DNS: 区分 IPv4 (dns=) 和 IPv6 (dnsv6=)
         if (p.dns) {
@@ -354,10 +396,10 @@ export class LoonConverter extends BaseConverter {
             if (dns) result.append(`,dns=${dns}`);
             if (dnsv6) result.append(`,dnsv6=${dnsv6}`);
         }
-        result.appendIfPresent(
-            `,keepalive=${p.keepalive || p['persistent-keepalive']}`,
-            'keepalive'
-        );
+        const ka = p.keepalive ?? p['persistent-keepalive'];
+        if (ka) {
+            result.append(`,keepalive=${ka}`);
+        }
 
         const publicKey = p['public-key'] || p.publicKey;
         const rawAllowed = p['allowed-ips'];
@@ -372,7 +414,7 @@ export class LoonConverter extends BaseConverter {
                 : '';
 
         result.append(
-            `,peers=[{public-key="${publicKey}",allowed-ips="${allowedIps}",endpoint=${p.server}:${p.port}${reserved}${psk}}]`
+            `,peers=[{public-key="${publicKey}",allowed-ips="${allowedIps}",endpoint=${formatEndpoint(p.server, p.port)}${reserved}${psk}}]`
         );
 
         return result.toString();
@@ -416,6 +458,15 @@ export class LoonConverter extends BaseConverter {
             `,tls-cert-sha256=${proxy['tls-fingerprint']}`,
             'tls-fingerprint'
         );
+        result.appendIfPresent(
+            `,tls-pubkey-sha256=${proxy['tls-pubkey-sha256']}`,
+            'tls-pubkey-sha256'
+        );
+        const up = proxy['up-mbps'] || proxy.up;
+        if (up) {
+            const upVal = String(up).match(/\d+/)?.[0] || '0';
+            result.append(`,upload-bandwidth=${upVal}`);
+        }
         const down = proxy['down-mbps'] || proxy.down;
         if (down) {
             const downVal = String(down).match(/\d+/)?.[0] || '0';
@@ -457,6 +508,12 @@ export class LoonConverter extends BaseConverter {
         if (proxy['udp-relay-mode']) {
             result.append(`,udp-relay-mode=${proxy['udp-relay-mode']}`);
         }
+        if (proxy['reduce-rtt']) {
+            result.append(',reduce-rtt=true');
+        }
+        if (proxy['disable-sni']) {
+            result.append(',disable-sni=true');
+        }
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -469,9 +526,20 @@ export class LoonConverter extends BaseConverter {
         );
         const obfs = proxy['obfs-opts']?.mode || proxy.obfs;
         const obfsHost = proxy['obfs-opts']?.host || proxy['obfs-host'];
+        const obfsUri = proxy['obfs-opts']?.path;
         if (obfs) result.append(`,obfs=${obfs}`);
         if (obfsHost) result.append(`,obfs-host=${obfsHost}`);
+        if (obfsUri) result.append(`,obfs-uri=${obfsUri}`);
         if (proxy.reuse !== undefined) result.append(`,reuse=${proxy.reuse}`);
+        this.appendCommon(result, proxy);
+        return result.toString();
+    }
+
+    private mieru(proxy: ProxyNode): string {
+        const result = new Result(proxy);
+        result.append(
+            `${proxy.name}=mieru,${proxy.server},${proxy.port},"${proxy.username || ''}","${proxy.password || ''}"`
+        );
         this.appendCommon(result, proxy);
         return result.toString();
     }
@@ -482,7 +550,15 @@ export class LoonConverter extends BaseConverter {
         result.append(`${proxy.name}=anytls,${proxy.server},${proxy.port},"${proxy.password}"`);
 
         // Session 参数（只附加整数值）
-        for (const key of ['idle-session-timeout', 'max-stream-count'] as const) {
+        if (proxy.reuse !== undefined) {
+            result.append(`,reuse=${proxy.reuse}`);
+        }
+        for (const key of [
+            'idle-session-check-interval',
+            'idle-session-timeout',
+            'min-idle-session',
+            'max-stream-count'
+        ] as const) {
             if (isPresent(proxy, key) && Number.isInteger(proxy[key])) {
                 result.append(`,${key}=${proxy[key]}`);
             }
@@ -518,8 +594,11 @@ export class LoonConverter extends BaseConverter {
         result.appendIfPresent(`,fast-open=${proxy.tfo}`, 'tfo');
 
         // block-quic
-        if (proxy['block-quic'] === 'on') result.append(',block-quic=true');
-        else if (proxy['block-quic'] === 'off') result.append(',block-quic=false');
+        if (proxy['block-quic'] === 'on' || proxy['block-quic'] === true) {
+            result.append(',block-quic=true');
+        } else if (proxy['block-quic'] === 'off' || proxy['block-quic'] === false) {
+            result.append(',block-quic=false');
+        }
 
         // UDP
         if (proxy.udp) result.append(`,udp=true`);
@@ -528,6 +607,12 @@ export class LoonConverter extends BaseConverter {
         if (proxy['ip-version']) {
             const val = ipVersions[proxy['ip-version']] || proxy['ip-version'];
             result.append(`,ip-mode=${val}`);
+        }
+
+        // Underlying proxy
+        const underlying = proxy['underlying-proxy'] || proxy['dialer-proxy'];
+        if (underlying) {
+            result.append(`,underlying-proxy=${underlying}`);
         }
 
         return result.toString();
@@ -545,11 +630,42 @@ export class LoonConverter extends BaseConverter {
                 path = `${path}${sep}ed=${ed}`;
             }
             result.append(`,path=${path}`);
-            result.appendIfPresent(`,host=${wsOpts.headers?.Host}`, 'ws-opts.headers.Host');
+            const wsHost = wsOpts.headers?.Host || wsOpts.host;
+            if (wsHost) {
+                result.append(`,host=${Array.isArray(wsHost) ? wsHost[0] : wsHost}`);
+            }
+        } else if (network === 'xhttp' || network === 'splithttp') {
+            result.append(`,transport=xhttp`);
+            const xOpts = (proxy['xhttp-opts'] || {}) as any;
+            if (xOpts.path) result.append(`,path=${xOpts.path}`);
+            if (xOpts.host) result.append(`,host=${xOpts.host}`);
+            if (xOpts.mode) result.append(`,xhttp-mode=${xOpts.mode}`);
+            if (xOpts.xmux && typeof xOpts.xmux === 'object') {
+                const xmuxMap = [
+                    ['max-connections', 'xhttp-xmux-max-connections'],
+                    ['max-concurrency', 'xhttp-xmux-max-concurrency'],
+                    ['c-max-reuse-times', 'xhttp-xmux-c-max-reuse-times'],
+                    ['h-max-request-times', 'xhttp-xmux-h-max-request-times'],
+                    ['h-max-reusable-secs', 'xhttp-xmux-h-max-reusable-secs'],
+                    ['h-keep-alive-period', 'xhttp-xmux-h-keep-alive-period']
+                ] as const;
+                for (const [optKey, loonKey] of xmuxMap) {
+                    const val = xOpts.xmux[optKey];
+                    if (val !== undefined && val !== '') {
+                        result.append(`,${loonKey}=${val}`);
+                    }
+                }
+            }
         } else if (network === 'grpc') {
             result.append(`,transport=grpc`);
             const grpcOpts = (proxy['grpc-opts'] || {}) as any;
-            result.appendIfPresent(`,path=${grpcOpts['service-name']}`, 'grpc-opts.service-name');
+            const serviceName =
+                grpcOpts['service-name'] ||
+                grpcOpts['grpc-service-name'] ||
+                proxy['grpc-service-name'];
+            if (serviceName) {
+                result.append(`,path=${serviceName}`);
+            }
         } else if (network === 'http') {
             result.append(`,transport=http`);
             const opts = (proxy['http-opts'] || {}) as any;
@@ -572,7 +688,15 @@ export class LoonConverter extends BaseConverter {
             result.append(`,ip-mode=${val}`);
         }
 
-        if (proxy['block-quic'] === 'on') result.append(',block-quic=true');
-        else if (proxy['block-quic'] === 'off') result.append(',block-quic=false');
+        if (proxy['block-quic'] === 'on' || proxy['block-quic'] === true) {
+            result.append(',block-quic=true');
+        } else if (proxy['block-quic'] === 'off' || proxy['block-quic'] === false) {
+            result.append(',block-quic=false');
+        }
+
+        const underlying = proxy['underlying-proxy'] || proxy['dialer-proxy'];
+        if (underlying) {
+            result.append(`,underlying-proxy=${underlying}`);
+        }
     }
 }

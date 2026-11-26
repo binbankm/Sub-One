@@ -33,7 +33,19 @@ export class ShadowrocketConverter extends BaseConverter {
             const node: any = JSON.parse(JSON.stringify(proxy));
 
             // Type-specific field mapping (Similar to Clash Meta but for Shadowrocket)
-            if (node.type === 'vmess') {
+            if (node.type === 'ss') {
+                if (!node.plugin && (node['shadow-tls-password'] || node['shadow-tls-sni'])) {
+                    node.plugin = 'shadow-tls';
+                    node['plugin-opts'] = {
+                        host: node['shadow-tls-sni'] || node.sni || '',
+                        password: node['shadow-tls-password'] || '',
+                        version: node['shadow-tls-version'] ?? 3
+                    };
+                }
+                delete node['shadow-tls-password'];
+                delete node['shadow-tls-sni'];
+                delete node['shadow-tls-version'];
+            } else if (node.type === 'vmess') {
                 if (isPresent(node, 'aead')) {
                     if (node.aead) node.alterId = 0;
                     delete node.aead;
@@ -81,6 +93,17 @@ export class ShadowrocketConverter extends BaseConverter {
                 const ipv6 = getWireGuardAddressWithCIDR(proxy, 'ipv6');
                 if (ipv4) node.ip = ipv4;
                 if (ipv6) node.ipv6 = ipv6;
+                const awgKeys = ['jc', 'jmin', 'jmax', 's1', 's2', 'h1', 'h2', 'h3', 'h4'] as const;
+                const awgOpts: Record<string, any> = node['amnezia-wg-option'] ? { ...node['amnezia-wg-option'] } : {};
+                for (const k of awgKeys) {
+                    if (node[k] !== undefined && awgOpts[k] === undefined) {
+                        awgOpts[k] = node[k];
+                    }
+                    delete node[k];
+                }
+                if (Object.keys(awgOpts).length > 0) {
+                    node['amnezia-wg-option'] = awgOpts;
+                }
             } else if (node.type === 'snell') {
                 if (node.password && !node.psk) node.psk = node.password;
                 if (node.psk && !node.password) node.password = node.psk;
@@ -107,13 +130,20 @@ export class ShadowrocketConverter extends BaseConverter {
                     node['disable-reuse'] = true;
                     delete node.reuse;
                 }
+                if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
+                if (node.sni && !node.servername) {
+                    node.servername = node.sni;
+                    delete node.sni;
+                }
+            } else if (node.type === 'naive' || node.type === 'trusttunnel' || node.type === 'juicity') {
+                if (node.alpn) node.alpn = Array.isArray(node.alpn) ? node.alpn : [node.alpn];
                 if (node.sni && !node.servername) {
                     node.servername = node.sni;
                     delete node.sni;
                 }
             }
 
-            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls'].includes(node.type)) {
+            if (['trojan', 'tuic', 'hysteria', 'hysteria2', 'anytls', 'naive', 'trusttunnel', 'juicity'].includes(node.type)) {
                 delete node.tls;
             }
 
@@ -130,10 +160,26 @@ export class ShadowrocketConverter extends BaseConverter {
                 node['client-fingerprint'] = 'chrome';
             }
 
-            if (node['ech-opts'] && node['ech-opts']['config-list']) {
-                node['ech-opts'] = {
-                    'config-list': node['ech-opts']['config-list']
+            if (node['reality-opts']) {
+                delete node['ech-opts'];
+            } else if (node['ech-opts']) {
+                const rawEch = node['ech-opts'] as Record<string, any>;
+                const cfgList = rawEch['config-list'] ?? rawEch.config;
+                const echOpts: Record<string, any> = {
+                    enable: rawEch.enable ?? true
                 };
+                if (cfgList) {
+                    echOpts['config-list'] = Array.isArray(cfgList) ? cfgList : [cfgList];
+                }
+                if (rawEch['query-server-name']) {
+                    echOpts['query-server-name'] = rawEch['query-server-name'];
+                }
+                node['ech-opts'] = echOpts;
+            }
+
+            // Normalize splithttp to xhttp
+            if (node.network === 'splithttp') {
+                node.network = 'xhttp';
             }
 
             // Move SNI to servername for Clash YAML compatibility used by Shadowrocket
@@ -177,7 +223,9 @@ export class ShadowrocketConverter extends BaseConverter {
             delete node.subName;
             delete node.id;
             delete node.resolved;
-            delete node.encryption; // VLESS uses cipher: none instead
+            if (!node.encryption || node.encryption === 'none') {
+                delete node.encryption; // VLESS uses cipher: none when no VLESS encryption is set
+            }
 
             if (node['tls-fingerprint']) {
                 node.fingerprint = node['tls-fingerprint'];

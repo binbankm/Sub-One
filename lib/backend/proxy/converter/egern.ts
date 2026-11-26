@@ -15,7 +15,20 @@ export class EgernConverter extends BaseConverter {
     async convert(nodes: ProxyNode[], _options: ConvertOptions = {}): Promise<string> {
         const list = nodes
             .map((node) => this.convertSingle(node))
-            .filter(Boolean);
+            .filter((p): p is EgernProxy => Boolean(p));
+
+        const nameCount = new Map<string, number>();
+        const nameIndex = new Map<string, number>();
+        list.forEach((p) => {
+            nameCount.set(p.name, (nameCount.get(p.name) || 0) + 1);
+        });
+        list.forEach((p) => {
+            if ((nameCount.get(p.name) || 0) > 1) {
+                const idx = (nameIndex.get(p.name) || 0) + 1;
+                nameIndex.set(p.name, idx);
+                p.name = `${p.name}_${idx}`;
+            }
+        });
 
         return (
             'proxies:\n' +
@@ -78,6 +91,22 @@ export class EgernConverter extends BaseConverter {
                 } else if (['off', 'false', false, '0', 0].includes(bq as any)) {
                     result.block_quic = false;
                 }
+                const underlying = proxy['underlying-proxy'] || proxy['dialer-proxy'];
+                if (underlying) {
+                    result.underlying_proxy = underlying;
+                }
+                if (!proxy['reality-opts'] && proxy['ech-opts']) {
+                    const rawEch = proxy['ech-opts'] as Record<string, any>;
+                    const cfgList = rawEch['config-list'] ?? rawEch.config;
+                    const qsn = rawEch['query-server-name'] ?? rawEch.query_server_name;
+                    if (cfgList || qsn) {
+                        result.ech = {
+                            enabled: true,
+                            ...(cfgList ? { config_list: Array.isArray(cfgList) ? cfgList : [cfgList] } : {}),
+                            ...(qsn ? { query_server_name: qsn } : {}),
+                        };
+                    }
+                }
             }
             return result;
         } catch (e) {
@@ -99,7 +128,12 @@ export class EgernConverter extends BaseConverter {
             port: proxy.port,
             password: proxy.password,
             tfo: getTfo(proxy),
+            udp_relay: getUdpRelay(proxy),
         };
+
+        if (proxy['udp-over-tcp'] || proxy.uot) {
+            result.udp_over_tcp = true;
+        }
 
         // obfs plugin
         if (proxy.plugin === 'obfs') {
@@ -290,7 +324,7 @@ export class EgernConverter extends BaseConverter {
             name: proxy.name,
             server: proxy.server,
             port: proxy.port,
-            auth: proxy.password,
+            auth: proxy.password || proxy.auth,
             tfo: getTfo(proxy),
             udp_relay: getUdpRelay(proxy),
             sni: getSni(proxy),
@@ -298,7 +332,8 @@ export class EgernConverter extends BaseConverter {
             reality: getReality(proxy),
         };
 
-        if (proxy.ports) result.port_hopping = proxy.ports;
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports) result.port_hopping = ports;
         if (proxy['hop-interval']) result.port_hopping_interval = proxy['hop-interval'];
 
         // obfs
@@ -325,7 +360,7 @@ export class EgernConverter extends BaseConverter {
             server: proxy.server,
             port: proxy.port,
             uuid: proxy.uuid,
-            password: proxy.password,
+            password: proxy.password || proxy.token,
             tfo: getTfo(proxy),
             udp_relay: getUdpRelay(proxy),
             sni: getSni(proxy),
@@ -334,7 +369,11 @@ export class EgernConverter extends BaseConverter {
             congestion_control: proxy['congestion-controller'] || 'bbr',
         };
 
-        if (proxy.ports) result.port_hopping = proxy.ports;
+        if (proxy['udp-relay-mode']) result.udp_relay_mode = proxy['udp-relay-mode'];
+        if (proxy['reduce-rtt'] ?? proxy.zero_rtt_handshake) result.reduce_rtt = true;
+        if (proxy['heartbeat-interval']) result.heartbeat_interval = proxy['heartbeat-interval'];
+        const ports = proxy.ports || proxy['server-ports'];
+        if (ports) result.port_hopping = ports;
         if (proxy['hop-interval']) result.port_hopping_interval = proxy['hop-interval'];
 
         if (proxy.alpn) {
@@ -347,7 +386,8 @@ export class EgernConverter extends BaseConverter {
     }
 
     // ── WireGuard ────────────────────────────────────────────
-    private wireguard(proxy: ProxyNode): EgernProxy {
+    private wireguard(rawProxy: ProxyNode): EgernProxy {
+        const proxy: ProxyNode = { ...rawProxy };
         if (Array.isArray(proxy.peers) && proxy.peers.length > 0) {
             const peer = proxy.peers[0];
             if (peer.server) proxy.server = peer.server;
@@ -423,6 +463,20 @@ export class EgernConverter extends BaseConverter {
 
         if (proxy.reuse !== undefined) {
             result.reuse = proxy.reuse;
+        } else if (proxy['disable-reuse'] !== undefined) {
+            result.reuse = !proxy['disable-reuse'];
+        }
+        if (proxy.alpn) {
+            result.alpn = Array.isArray(proxy.alpn) ? proxy.alpn : [proxy.alpn];
+        }
+        if (proxy['idle-session-check-interval'] !== undefined) {
+            result.idle_session_check_interval = proxy['idle-session-check-interval'];
+        }
+        if (proxy['idle-session-timeout'] !== undefined) {
+            result.idle_session_timeout = proxy['idle-session-timeout'];
+        }
+        if (proxy['min-idle-session'] !== undefined) {
+            result.min_idle_session = proxy['min-idle-session'];
         }
 
         appendShadowTls(result, proxy);
@@ -452,9 +506,14 @@ export class EgernConverter extends BaseConverter {
             result.udp_relay = getUdpRelay(proxy);
         }
 
-        if (proxy.obfs || proxy['obfs-opts']?.mode) {
-            result.obfs = proxy['obfs-opts']?.mode || proxy.obfs;
-            result.obfs_host = proxy['obfs-opts']?.host || proxy['obfs-host'];
+        if (proxy.plugin === 'shadow-tls' || isPresent(proxy, 'shadow-tls-password')) {
+            appendShadowTls(result, proxy);
+        } else if (proxy.obfs || proxy['obfs-opts']?.mode) {
+            const obfsMode = proxy['obfs-opts']?.mode || proxy.obfs;
+            if (obfsMode !== 'shadow-tls') {
+                result.obfs = obfsMode;
+                result.obfs_host = proxy['obfs-opts']?.host || proxy['obfs-host'];
+            }
         }
 
         if (proxy.reuse !== undefined) {
@@ -509,10 +568,11 @@ function buildTransport(proxy: ProxyNode): Record<string, any> | undefined {
     if (network === 'ws') {
         const wsOpts = (proxy['ws-opts'] || {}) as any;
         const key = proxy.tls ? 'wss' : 'ws';
+        const wsHost = wsOpts.headers?.Host || wsOpts.headers?.host || wsOpts.host;
         return {
             [key]: {
                 path: wsOpts.path,
-                headers: wsOpts.headers?.Host ? { Host: wsOpts.headers.Host } : undefined,
+                headers: wsHost ? { Host: wsHost } : undefined,
                 sni: proxy.tls ? getSni(proxy) : undefined,
                 skip_tls_verify: proxy.tls ? proxy['skip-cert-verify'] : undefined,
                 reality: proxy.tls ? getReality(proxy) : undefined,
@@ -562,7 +622,10 @@ function buildTransport(proxy: ProxyNode): Record<string, any> | undefined {
         const grpcOpts = (proxy['grpc-opts'] || {}) as any;
         return {
             grpc: {
-                service_name: grpcOpts['grpc-service-name'],
+                service_name:
+                    grpcOpts['grpc-service-name'] ||
+                    grpcOpts['service-name'] ||
+                    proxy['grpc-service-name'],
                 sni: getSni(proxy),
                 reality: getReality(proxy),
                 skip_tls_verify: proxy['skip-cert-verify'],
@@ -570,12 +633,32 @@ function buildTransport(proxy: ProxyNode): Record<string, any> | undefined {
         };
     }
 
-    if (network === 'tcp') {
+    if (network === 'xhttp' || network === 'splithttp') {
+        const xOpts = (proxy['xhttp-opts'] || {}) as any;
         const isTls = proxy.tls || !!proxy['reality-opts'];
+        return {
+            xhttp: {
+                mode: xOpts.mode,
+                path: xOpts.path,
+                host: xOpts.host,
+                headers: xOpts.headers,
+                ...(isTls
+                    ? {
+                        sni: getSni(proxy),
+                        skip_tls_verify: proxy['skip-cert-verify'],
+                        reality: getReality(proxy),
+                    }
+                    : {}),
+            },
+        };
+    }
+
+    if (network === 'tcp' || proxy.type === 'trojan' || proxy.tls || proxy['reality-opts']) {
+        const isTls = proxy.type === 'trojan' || proxy.tls || !!proxy['reality-opts'];
         if (isTls) {
             return {
                 tls: {
-                    sni: getSni(proxy),
+                    sni: getSni(proxy) || (proxy.type === 'trojan' ? proxy.server : undefined),
                     skip_tls_verify: proxy['skip-cert-verify'],
                     reality: getReality(proxy),
                 },

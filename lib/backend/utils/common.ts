@@ -47,8 +47,8 @@ export function isSafePublicUrl(urlString?: string): boolean {
 
         // 3. 通用点分十进制与私网/保留 IPv4 段匹配（支持 *.127.0.0.1.nip.io 等 DNS Rebinding 通配域名）
         if (
-            /(^|\.)(127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|0\.0\.0\.0)$/.test(cleanHost) ||
-            /(^|\.)172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+$/.test(cleanHost)
+            /(^|\.)(127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|0\.0\.0\.0)(\.|$)/.test(cleanHost) ||
+            /(^|\.)172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(\.|$)/.test(cleanHost)
         ) {
             return false;
         }

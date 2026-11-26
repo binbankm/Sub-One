@@ -2,7 +2,7 @@
  * Sub-One Surge Converter
  */
 import type { ConvertOptions, ProxyNode } from '../types';
-import { normalizeReserved } from '../utils';
+import { formatEndpoint, normalizeReserved, parseEndpoint } from '../utils';
 import { BaseConverter } from './base';
 import { Result, isPresent } from './utils';
 
@@ -171,7 +171,14 @@ export class SurgeConverter extends BaseConverter {
             if (reality['short-id']) {
                 result.append(`,reality-short-id=${reality['short-id']}`);
             }
+            const spx = reality['_spider-x'] || reality['spider-x'];
+            if (spx) {
+                result.append(`,reality-spider-x=${spx}`);
+            }
             result.appendIfPresent(`,sni="${proxy.sni}"`, 'sni');
+            if (proxy['client-fingerprint']) {
+                result.append(`,client-fingerprint=${proxy['client-fingerprint']}`);
+            }
             if (proxy.alpn) {
                 const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(';') : proxy.alpn;
                 result.append(`,alpn=${alpn}`);
@@ -213,15 +220,21 @@ export class SurgeConverter extends BaseConverter {
         result.append(
             `${proxy.name}=snell,${proxy.server},${proxy.port},psk=${psk},version=${proxy.version || 3}`
         );
-        if (Number(proxy.version) === 6 && proxy.mode) {
-            result.append(`,mode=${proxy.mode}`);
+        if (Number(proxy.version) === 6) {
+            if (proxy.mode) result.append(`,mode=${proxy.mode}`);
+            if (proxy['quic-proxy-mode']) result.append(',quic-proxy-mode=true');
+            if (proxy.userkey || proxy._userkey) result.append(`,userkey=${proxy.userkey || proxy._userkey}`);
         }
         const obfs = proxy['obfs-opts']?.mode || proxy.obfs;
         const obfsHost = proxy['obfs-opts']?.host || proxy['obfs-host'];
+        const obfsUri = proxy['obfs-opts']?.path;
         if (obfs) {
             result.append(`,obfs=${obfs}`);
             if (obfsHost) {
                 result.append(`,obfs-host=${obfsHost}`);
+            }
+            if (obfsUri) {
+                result.append(`,obfs-uri=${obfsUri}`);
             }
         }
         if (proxy.reuse !== undefined) {
@@ -247,6 +260,18 @@ export class SurgeConverter extends BaseConverter {
         }
         if (proxy['hop-interval']) {
             result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
+        }
+        if (proxy['congestion-controller']) {
+            result.append(`,congestion-controller=${proxy['congestion-controller']}`);
+        }
+        if (proxy['udp-relay-mode']) {
+            result.append(`,udp-relay-mode=${proxy['udp-relay-mode']}`);
+        }
+        if (proxy['reduce-rtt']) {
+            result.append(',reduce-rtt=true');
+        }
+        if (proxy['disable-sni']) {
+            result.append(',disable-sni=true');
         }
         this.appendTLS(result, proxy, false);
         this.appendCommon(result, proxy);
@@ -275,6 +300,11 @@ export class SurgeConverter extends BaseConverter {
         if (proxy['hop-interval']) {
             result.append(`,port-hopping-interval=${proxy['hop-interval']}`);
         }
+        const upVal = proxy['upload-bandwidth'] || proxy['up-mbps'] || proxy.up;
+        if (upVal) {
+            const up = String(upVal).match(/\d+/)?.[0] || '0';
+            result.append(`,upload-bandwidth=${up}`);
+        }
         const downVal = proxy['download-bandwidth'] || proxy['down-mbps'] || proxy.down;
         if (downVal) {
             const down = String(downVal).match(/\d+/)?.[0] || '0';
@@ -298,9 +328,9 @@ export class SurgeConverter extends BaseConverter {
         if (Array.isArray(p.peers) && p.peers.length > 0) {
             const peer = p.peers[0];
             if (peer.endpoint) {
-                const [server, port] = peer.endpoint.split(':');
-                p.server = server;
-                p.port = parseInt(port || '51820', 10);
+                const ep = parseEndpoint(peer.endpoint);
+                p.server = ep.server;
+                p.port = ep.port ?? 51820;
             } else {
                 if (peer.server) p.server = peer.server;
                 if (peer.port) p.port = parseInt(String(peer.port), 10);
@@ -347,7 +377,7 @@ export class SurgeConverter extends BaseConverter {
         const peerParts = [
             `public-key = ${p['public-key'] || p.publicKey}`,
             allowedIps ? `allowed-ips = "${allowedIps}"` : '',
-            `endpoint = ${p.server}:${p.port}`,
+            `endpoint = ${formatEndpoint(p.server, p.port)}`,
             p['persistent-keepalive'] || p.keepalive
                 ? `keepalive = ${p['persistent-keepalive'] || p.keepalive}`
                 : '',
@@ -398,6 +428,12 @@ export class SurgeConverter extends BaseConverter {
             result.append(`,reuse=${proxy.reuse}`);
         }
         if (
+            isPresent(proxy, 'idle-session-check-interval') &&
+            Number.isInteger(proxy['idle-session-check-interval'])
+        ) {
+            result.append(`,idle-session-check-interval=${proxy['idle-session-check-interval']}`);
+        }
+        if (
             isPresent(proxy, 'idle-session-timeout') &&
             Number.isInteger(proxy['idle-session-timeout'])
         ) {
@@ -412,16 +448,38 @@ export class SurgeConverter extends BaseConverter {
     }
 
     private appendTransport(result: Result, proxy: ProxyNode) {
-        if (proxy.network === 'ws') {
+        if (proxy.network === 'ws' || proxy.network === 'httpupgrade') {
             result.append(`,ws=true`);
-            const opts = (proxy['ws-opts'] || {}) as any;
-            result.appendIfPresent(`,ws-path=${opts.path || '/'}`, 'ws-opts.path');
+            if (proxy.network === 'httpupgrade') {
+                result.append(',ws-http-upgrade=true');
+            }
+            const opts = ((proxy.network === 'httpupgrade' ? proxy['httpupgrade-opts'] : proxy['ws-opts']) || proxy['ws-opts'] || {}) as any;
+            const wsPath = opts.path || proxy['ws-path'];
+            if (wsPath) {
+                result.append(`,ws-path=${wsPath}`);
+            }
             if (opts.headers) {
                 const headers = Object.entries(opts.headers)
                     .map(([k, v]) => `${k}:"${v}"`)
                     .join('|');
                 if (headers) result.append(`,ws-headers=${headers}`);
+            } else if (opts.host) {
+                result.append(`,ws-headers=Host:"${opts.host}"`);
             }
+        } else if (proxy.network === 'grpc') {
+            result.append(',grpc=true');
+            const grpc = proxy['grpc-opts'] as any;
+            const serviceName =
+                grpc?.['service-name'] || grpc?.['grpc-service-name'] || proxy['grpc-service-name'];
+            if (serviceName) {
+                result.append(`,grpc-service-name=${serviceName}`);
+            }
+        } else if (proxy.network === 'xhttp' || proxy.network === 'splithttp') {
+            result.append(',xhttp=true');
+            const xhttp = proxy['xhttp-opts'] as any;
+            if (xhttp?.path) result.append(`,xhttp-path=${xhttp.path}`);
+            if (xhttp?.host) result.append(`,xhttp-host=${xhttp.host}`);
+            if (xhttp?.mode) result.append(`,xhttp-mode=${xhttp.mode}`);
         }
     }
 
@@ -447,11 +505,22 @@ export class SurgeConverter extends BaseConverter {
                 const alpn = Array.isArray(proxy.alpn) ? proxy.alpn.join(',') : proxy.alpn;
                 result.append(`,alpn=${alpn}`);
             }
+            if (proxy['client-fingerprint']) {
+                result.append(`,client-fingerprint=${proxy['client-fingerprint']}`);
+            }
             if (proxy['reality-opts']) {
                 const r = proxy['reality-opts'];
-                result.appendIfPresent(`,reality-public-key=${r['public-key']}`, 'public-key');
-                result.appendIfPresent(`,reality-short-id=${r['short-id']}`, 'short-id');
-                result.appendIfPresent(`,reality-spider-x=${r['_spider-x']}`, '_spider-x');
+                if (r['public-key']) result.append(`,reality-public-key=${r['public-key']}`);
+                if (r['short-id']) result.append(`,reality-short-id=${r['short-id']}`);
+                const spx = r['_spider-x'] || r['spider-x'];
+                if (spx) result.append(`,reality-spider-x=${spx}`);
+            } else if (proxy['ech-opts']) {
+                const rawEch = proxy['ech-opts'] as Record<string, any>;
+                const cfg = rawEch.config ?? rawEch['config-list'];
+                const echStr = Array.isArray(cfg) ? cfg[0] : cfg;
+                if (echStr) {
+                    result.append(`,ech-config=${echStr}`);
+                }
             }
         }
     }
@@ -464,10 +533,11 @@ export class SurgeConverter extends BaseConverter {
             result.append(`,ip-version=${val}`);
         }
         result.appendIfPresent(`,test-url=${proxy['test-url']}`, 'test-url');
-        result.appendIfPresent(
-            `,underlying-proxy=${proxy['underlying-proxy'] || proxy['dialer-proxy']}`,
-            'underlying-proxy'
-        );
+        result.appendIfPresent(`,interface=${proxy['interface-name']}`, 'interface-name');
+        const underlying = proxy['underlying-proxy'] || proxy['dialer-proxy'];
+        if (underlying) {
+            result.append(`,underlying-proxy=${underlying}`);
+        }
         const blockQuic = proxy['block-quic'] ?? proxy.block_quic;
         if (blockQuic !== undefined) {
             result.append(`,block-quic=${blockQuic}`);

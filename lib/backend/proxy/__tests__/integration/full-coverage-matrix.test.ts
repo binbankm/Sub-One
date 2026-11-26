@@ -9,8 +9,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { convert, parse } from '../index';
-import type { ProxyNode } from '../types';
+import { convert, parse } from '../../index';
+import type { ProxyNode } from '../../types';
 
 // ============================================================================
 // Helper: 快速创建 ProxyNode

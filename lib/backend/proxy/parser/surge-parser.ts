@@ -96,8 +96,14 @@ export function parseSurge(line: string): ProxyNode | null {
             port,
             ports: portHopping
         };
+        if (rawType === 'tuic-v5') {
+            proxy.version = 5;
+        }
+        if (rawType === 'socks5-tls') {
+            proxy.tls = true;
+        }
 
-        // 4. 解析命名参数
+        // 4. 解析命名参数 (以及 http/https/socks5 的位置认证参数)
         const params: Record<string, string> = {};
         for (let i = 3; i < parts.length; i++) {
             const part = parts[i];
@@ -107,6 +113,15 @@ export function parseSurge(line: string): ProxyNode | null {
                     .join('=')
                     .trim()
                     .replace(/^"(.*)"$/, '$1');
+            } else if (
+                ['http', 'https', 'socks5'].includes(proxy.type || '') &&
+                (i === 3 || i === 4)
+            ) {
+                const unquoted = part.trim().replace(/^"(.*)"$/, '$1');
+                if (i === 3 && !params.username) params.username = unquoted;
+                else if (i === 4 && !params.password) params.password = unquoted;
+            } else if (proxy.type === 'snell' && i === 3 && !params.psk) {
+                params.psk = part.trim().replace(/^"(.*)"$/, '$1');
             } else {
                 params[part.trim().toLowerCase()] = 'true';
             }
@@ -165,23 +180,66 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
     if (params.psk) proxy.password = params.psk;
     if (params['encrypt-method']) proxy.cipher = params['encrypt-method'];
 
-    // TLS - anytls 协议始终使用 TLS
-    proxy.tls = params.tls === 'true' || proxy.type === 'https' || proxy.type === 'anytls';
+    // TLS - https/anytls/trojan/tuic/hysteria2 协议默认使用 TLS
+    const implicitTls = ['https', 'anytls', 'trojan', 'tuic', 'hysteria2'].includes(proxy.type || '');
+    proxy.tls =
+        params.tls === 'true' ||
+        proxy.tls === true ||
+        (implicitTls && params.tls !== 'false');
     if (params.sni) proxy.sni = params.sni;
     if (params['skip-cert-verify'])
         proxy['skip-cert-verify'] = params['skip-cert-verify'] === 'true';
     if (params['server-cert-fingerprint-sha256'])
         proxy['tls-fingerprint'] = params['server-cert-fingerprint-sha256'];
+    if (params['server-cert-verify-name'])
+        proxy['name-cert-verify'] = params['server-cert-verify-name'];
     if (params['client-fingerprint']) proxy['client-fingerprint'] = params['client-fingerprint'];
+    if (params['ech-config']) {
+        proxy['ech-opts'] = {
+            enable: true,
+            'config-list': [params['ech-config']]
+        };
+    }
+    if (params.alpn) {
+        proxy.alpn = params.alpn.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+    }
 
-    // TCP / UDP / TFO
+    // TCP / UDP / TFO / 通用平台参数
     if (params.tfo || params['fast-open'])
         proxy.tfo = (params.tfo || params['fast-open']) === 'true';
-    if (params.udp) proxy.udp = params.udp === 'true';
+    if (params.udp || params['udp-relay'])
+        proxy.udp = (params.udp || params['udp-relay']) === 'true';
+    if (params['underlying-proxy']) proxy['underlying-proxy'] = params['underlying-proxy'];
+    if (params.interface) proxy['interface-name'] = params.interface;
+    if (params['test-url']) proxy['test-url'] = params['test-url'];
+    if (params['test-timeout']) {
+        const tt = parseInt(params['test-timeout'], 10);
+        if (!isNaN(tt)) proxy['test-timeout'] = tt;
+    }
+    if (params['block-quic']) {
+        if (params['block-quic'] === 'true' || params['block-quic'] === 'on') proxy['block-quic'] = true;
+        else if (params['block-quic'] === 'false' || params['block-quic'] === 'off') proxy['block-quic'] = false;
+        else proxy['block-quic'] = params['block-quic'];
+    }
+    if (params['ip-version']) {
+        const surgeIpMap: Record<string, string> = {
+            dual: 'dual',
+            'v4-only': 'ipv4',
+            'v6-only': 'ipv6',
+            'prefer-v4': 'ipv4-prefer',
+            'prefer-v6': 'ipv6-prefer'
+        };
+        proxy['ip-version'] = surgeIpMap[params['ip-version']] || params['ip-version'];
+    }
+    if (params['port-hopping-interval']) {
+        const hi = parseInt(params['port-hopping-interval'], 10);
+        if (!isNaN(hi)) proxy['hop-interval'] = hi;
+    }
 
     // 传输层
     if (params.ws === 'true' || params.obfs === 'ws' || params.obfs === 'wss') {
-        proxy.network = 'ws';
+        const isHttpUpgrade = params['ws-http-upgrade'] === 'true';
+        proxy.network = isHttpUpgrade ? 'httpupgrade' : 'ws';
         let headers: Record<string, string> = {};
         if (params['ws-headers']) {
             for (const item of params['ws-headers'].split('|')) {
@@ -195,21 +253,26 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
         } else if (params['obfs-host']) {
             headers = { Host: params['obfs-host'] };
         }
-        proxy['ws-opts'] = {
+        const opts = {
             path: params['ws-path'] || params['obfs-path'] || '/',
             headers
         };
+        if (isHttpUpgrade) {
+            proxy['httpupgrade-opts'] = opts;
+        } else {
+            proxy['ws-opts'] = opts;
+        }
         if (params.obfs === 'wss') proxy.tls = true;
         if (proxy.type === 'ss') {
             proxy.plugin = 'v2ray-plugin';
             proxy['plugin-opts'] = {
                 mode: 'websocket',
                 host: headers.Host || proxy.sni,
-                path: proxy['ws-opts'].path,
+                path: opts.path,
                 tls: proxy.tls
             };
         }
-    } else if (params.obfs === 'http') {
+    } else if (params.obfs === 'http' && proxy.type !== 'snell' && proxy.type !== 'ss') {
         proxy.network = 'http';
         proxy['http-opts'] = {
             path: params['obfs-path'] || '/',
@@ -231,6 +294,27 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
 
     // 协议特定
     switch (proxy.type) {
+        case 'ss':
+            if (params['shadow-tls-password']) {
+                proxy.plugin = 'shadow-tls';
+                proxy['plugin-opts'] = {
+                    password: params['shadow-tls-password'],
+                    ...(params['shadow-tls-sni'] ? { host: params['shadow-tls-sni'] } : {}),
+                    ...(params['shadow-tls-version']
+                        ? { version: parseInt(params['shadow-tls-version'], 10) }
+                        : {})
+                };
+                if (params['udp-port']) proxy['udp-port'] = parseInt(params['udp-port'], 10);
+            } else if (params.obfs === 'http' || params.obfs === 'tls') {
+                proxy.plugin = 'obfs';
+                proxy['plugin-opts'] = {
+                    mode: params.obfs,
+                    ...(params['obfs-host'] ? { host: params['obfs-host'] } : {}),
+                    ...(params['obfs-uri'] ? { path: params['obfs-uri'] } : {})
+                };
+            }
+            if (params['udp-over-tcp'] === 'true') proxy['udp-over-tcp'] = true;
+            break;
         case 'vmess':
             proxy.uuid = params.username;
             proxy.alterId = 0; // Surge 始终使用 AEAD 模式
@@ -244,6 +328,11 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
                     'public-key': params['reality-public-key'] || params['public-key'],
                     'short-id': params['reality-short-id'] || params['short-id'] || ''
                 };
+                const spx = params['reality-spider-x'] || params['spider-x'];
+                if (spx) {
+                    realityOpts['spider-x'] = spx;
+                    realityOpts['_spider-x'] = spx;
+                }
                 const mlkem = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params['support-x25519-mlkem768'] ?? params.mlkem;
                 if (mlkem !== undefined && ['1', 't', 'T', 'true', 'TRUE', 'True', true].includes(mlkem)) {
                     realityOpts['support-x25519mlkem768'] = true;
@@ -261,10 +350,12 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
                 proxy['congestion-controller'] = params['congestion-controller'];
             if (params['udp-relay-mode']) proxy['udp-relay-mode'] = params['udp-relay-mode'];
             if (params['reduce-rtt'] === 'true') proxy['reduce-rtt'] = true;
+            if (params['disable-sni'] === 'true') proxy['disable-sni'] = true;
             break;
         case 'hysteria2':
             // password 已由通用逻辑处理
-            if (params.up) proxy.up = params.up;
+            if (params.up || params['upload-bandwidth'])
+                proxy.up = params['upload-bandwidth'] || params.up;
             if (params.down || params['download-bandwidth'])
                 proxy.down = params['download-bandwidth'] || params.down;
             if (params['salamander-password']) {
@@ -277,16 +368,22 @@ function mapSurgeParams(proxy: Partial<ProxyNode>, params: Record<string, string
             break;
         case 'snell':
             if (params.version) proxy.version = parseInt(params.version, 10);
+            if (params.mode) proxy.mode = params.mode;
+            if (params['quic-proxy-mode'] === 'true') proxy['quic-proxy-mode'] = true;
+            if (params.userkey) proxy.userkey = params.userkey;
+            if (params.reuse !== undefined) proxy.reuse = params.reuse === 'true';
             if (params.obfs) proxy.obfs = params.obfs;
             if (params['obfs-host']) proxy['obfs-host'] = params['obfs-host'];
-            if (proxy.obfs || proxy['obfs-host']) {
+            if (proxy.obfs || proxy['obfs-host'] || params['obfs-uri']) {
                 proxy['obfs-opts'] = {
                     mode: proxy.obfs,
-                    host: proxy['obfs-host']
+                    host: proxy['obfs-host'],
+                    ...(params['obfs-uri'] ? { path: params['obfs-uri'] } : {})
                 };
             }
             break;
         case 'anytls':
+            if (params.reuse !== undefined) proxy.reuse = params.reuse === 'true';
             // AnyTLS session 相关参数
             if (params['idle-session-check-interval']) {
                 const v = parseInt(params['idle-session-check-interval'], 10);
