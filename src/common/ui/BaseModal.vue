@@ -27,11 +27,15 @@
   ==================================================
 -->
 
+<script lang="ts">
+const openModalStack: symbol[] = [];
+</script>
+
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         /** 显示状态 */
         show: boolean;
@@ -86,12 +90,39 @@ defineSlots<{
 
 // ==================== 事件处理 ====================
 
+const modalId = Symbol('BaseModal');
+
+const removeFromStack = () => {
+    const idx = openModalStack.indexOf(modalId);
+    if (idx !== -1) {
+        openModalStack.splice(idx, 1);
+    }
+};
+
+watch(
+    () => props.show,
+    (isVisible) => {
+        if (isVisible) {
+            if (!openModalStack.includes(modalId)) {
+                openModalStack.push(modalId);
+            }
+        } else {
+            removeFromStack();
+        }
+    },
+    { immediate: true }
+);
+
 /**
  * 键盘事件处理
- * ESC 键关闭模态框
+ * ESC 键仅关闭当前最顶层的模态框
  */
 const handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (
+        props.show &&
+        e.key === 'Escape' &&
+        openModalStack[openModalStack.length - 1] === modalId
+    ) {
         emit('update:show', false);
     }
 };
@@ -109,7 +140,10 @@ const handleConfirm = () => {
 // ==================== 生命周期 ====================
 
 onMounted(() => window.addEventListener('keydown', handleKeydown));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+onUnmounted(() => {
+    removeFromStack();
+    window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>

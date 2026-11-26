@@ -214,8 +214,12 @@ export class ClashConverter extends BaseConverter {
                 }
                 if (node.uot || node['udp-over-tcp']) {
                     node['udp-over-tcp'] = true;
-                    if (node['udp-over-tcp-version'] === 1 || node['udp-over-tcp-version'] === 2) {
-                        node['udp-over-tcp-version'] = node['udp-over-tcp-version'];
+                    if (
+                        node['udp-over-tcp-version'] !== undefined &&
+                        node['udp-over-tcp-version'] !== 1 &&
+                        node['udp-over-tcp-version'] !== 2
+                    ) {
+                        delete node['udp-over-tcp-version'];
                     }
                     delete node.uot;
                 }

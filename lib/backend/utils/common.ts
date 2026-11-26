@@ -63,3 +63,60 @@ export function isSafePublicUrl(urlString?: string): boolean {
         return false;
     }
 }
+
+/**
+ * 安全的 HTTP 请求封装：校验初始 URL 与所有重定向目标，防止 SSRF 绕过
+ */
+export async function safeFetch(
+    url: string,
+    init: RequestInit & { cf?: Record<string, unknown> } = {},
+    maxRedirects = 5
+): Promise<Response> {
+    let currentUrl = url;
+    for (let i = 0; i <= maxRedirects; i++) {
+        if (!isSafePublicUrl(currentUrl)) {
+            throw new Error(`Forbidden or unsafe URL: ${currentUrl}`);
+        }
+        const response = await fetch(
+            new Request(currentUrl, {
+                ...init,
+                redirect: 'manual'
+            } as RequestInit)
+        );
+
+        if (response.status >= 300 && response.status < 400) {
+            const location = response.headers.get('location');
+            if (!location) {
+                return response;
+            }
+            currentUrl = new URL(location, currentUrl).toString();
+            continue;
+        }
+
+        return response;
+    }
+    throw new Error(`Too many redirects (>${maxRedirects}) fetching ${url}`);
+}
+
+/**
+ * 解析 subscription-userinfo 响应头
+ */
+export function parseUserInfoHeader(
+    header: string | null
+): { upload?: number; download?: number; total?: number; expire?: number } | null {
+    if (!header) return null;
+    const info: Record<string, number> = {};
+    header.split(';').forEach((part) => {
+        const eqIndex = part.indexOf('=');
+        if (eqIndex === -1) return;
+        const key = part.slice(0, eqIndex).trim();
+        const value = part.slice(eqIndex + 1).trim();
+        if (key && value) {
+            const numValue = Number(value);
+            if (!isNaN(numValue)) {
+                info[key] = numValue;
+            }
+        }
+    });
+    return Object.keys(info).length > 0 ? info : null;
+}

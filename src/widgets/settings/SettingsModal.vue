@@ -51,31 +51,31 @@ const isChangingPassword = ref(false);
 
 const handleChangePassword = async () => {
     if (!oldPassword.value) {
-        showToast('请输入原密码', 'error');
+        showToast(t('widgets.settings.modal.oldPasswordRequired'), 'error');
         return;
     }
     if (!newPassword.value) {
-        showToast('请输入新密码', 'error');
+        showToast(t('widgets.settings.modal.newPasswordRequired'), 'error');
         return;
     }
     if (newPassword.value.length < 6) {
-        showToast('新密码长度至少为 6 位', 'error');
+        showToast(t('widgets.settings.modal.passwordTooShort'), 'error');
         return;
     }
     if (newPassword.value !== confirmPassword.value) {
-        showToast('两次输入的新密码不一致', 'error');
+        showToast(t('widgets.settings.modal.passwordMismatch'), 'error');
         return;
     }
     isChangingPassword.value = true;
     try {
         const res = await changePassword(newPassword.value, oldPassword.value || undefined);
         if (res.success) {
-            showToast(res.message || '密码修改成功', 'success');
+            showToast(res.message || t('widgets.settings.modal.passwordChangeSuccess'), 'success');
             oldPassword.value = '';
             newPassword.value = '';
             confirmPassword.value = '';
         } else {
-            showToast(res.error || '密码修改失败', 'error');
+            showToast(res.error || t('widgets.settings.modal.passwordChangeFail'), 'error');
         }
     } finally {
         isChangingPassword.value = false;

@@ -6,7 +6,7 @@ import { checkAndNotify, sendTgNotification } from '../services/notification';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
 import { Env } from '../types';
-import { isSafePublicUrl } from '../utils/common';
+import { isSafePublicUrl, parseUserInfoHeader, safeFetch } from '../utils/common';
 
 /**
  * 记录定时任务执行历史（保留最新 10 条）
@@ -60,14 +60,11 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
         if (!sub.url.startsWith('http') || !sub.enabled || !isSafePublicUrl(sub.url)) return;
 
         try {
-            const response = await fetch(
-                new Request(sub.url, {
-                    headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                    redirect: 'follow',
-                    cf: { insecureSkipVerify: true },
-                    signal: AbortSignal.timeout(15000)
-                } as any)
-            );
+            const response = await safeFetch(sub.url, {
+                headers: { 'User-Agent': GLOBAL_USER_AGENT },
+                cf: { insecureSkipVerify: true },
+                signal: AbortSignal.timeout(15000)
+            });
 
             if (response.ok) {
                 const updateData: {
@@ -79,22 +76,15 @@ export async function handleCronTrigger(env: Env): Promise<Response> {
                 let hasUpdate = false;
 
                 // 1. 提取流量信息（从headers）
-                const userInfoHeader = response.headers.get('subscription-userinfo');
-                if (userInfoHeader) {
-                    const info: Partial<SubscriptionUserInfo> = {};
-                    userInfoHeader.split(';').forEach((part) => {
-                        const [key, value] = part.trim().split('=');
-                        if (key && value) {
-                            const numValue = Number(value);
-                            if (!isNaN(numValue)) {
-                                (info as Record<string, number>)[key] = numValue;
-                            }
-                        }
-                    });
+                const parsedInfo = parseUserInfoHeader(
+                    response.headers.get('subscription-userinfo')
+                );
+                if (parsedInfo) {
+                    const info = parsedInfo as SubscriptionUserInfo;
 
                     // 临时更新本地副本用于检查通知（不影响最终写入）
-                    sub.userInfo = info as SubscriptionUserInfo;
-                    updateData.userInfo = info as SubscriptionUserInfo;
+                    sub.userInfo = info;
+                    updateData.userInfo = info;
 
                     // 检查到期和流量预警
                     await checkAndNotify(sub, settings as AppConfig);

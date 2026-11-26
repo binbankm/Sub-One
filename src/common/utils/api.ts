@@ -14,6 +14,34 @@ import type { ApiResponse, AppConfig, Profile, Subscription, SubscriptionUserInf
 // 导出 ApiResponse 类型供其他模块使用
 export type { ApiResponse };
 
+let isHandlingUnauthorized = false;
+
+/**
+ * 统一请求封装：自动处理 401 会话过期并跳转登录页
+ */
+async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const response = await fetch(input, init);
+    if (response.status === 401 && !isHandlingUnauthorized) {
+        isHandlingUnauthorized = true;
+        try {
+            const [{ useSessionStore }, { default: router }] = await Promise.all([
+                import('@/stores/useSessionStore'),
+                import('@/app/router')
+            ]);
+            const sessionStore = useSessionStore();
+            sessionStore.sessionState = 'loggedOut';
+            if (router.currentRoute.value.name !== 'login') {
+                await router.push({ name: 'login' });
+            }
+        } catch (err) {
+            console.error('Failed to handle 401 redirect:', err);
+        } finally {
+            isHandlingUnauthorized = false;
+        }
+    }
+    return response;
+}
+
 // ==================== 数据获取 ====================
 
 /**
@@ -32,7 +60,7 @@ export async function fetchInitialData(): Promise<{
 } | null> {
     try {
         // 发送 GET 请求获取数据
-        const response = await fetch('/api/data');
+        const response = await apiFetch('/api/data');
 
         // 检查 HTTP 响应状态
         if (!response.ok) {
@@ -137,7 +165,7 @@ export async function login(
  */
 export async function logout(): Promise<boolean> {
     try {
-        const response = await fetch('/api/logout', {
+        const response = await apiFetch('/api/logout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -169,7 +197,7 @@ export async function saveSubs(subs: Subscription[], profiles: Profile[]): Promi
         }
 
         // 发送 POST 请求保存数据
-        const response = await fetch('/api/subs', {
+        const response = await apiFetch('/api/subs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             // 将 subs 和 profiles 一起发送到后端
@@ -249,14 +277,15 @@ export async function saveAllData(data: {
  * @returns {Promise} 返回包含 count 和 userInfo 的对象
  */
 export async function fetchNodeCount(
-    subUrl: string
+    subUrl: string,
+    subId?: string
 ): Promise<{ count: number; userInfo: SubscriptionUserInfo | null }> {
     try {
         // 发送 POST 请求获取节点统计信息
-        const res = await fetch('/api/node_count', {
+        const res = await apiFetch('/api/node_count', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: subUrl })
+            body: JSON.stringify({ url: subUrl, ...(subId ? { id: subId } : {}) })
         });
 
         // 解析响应数据
@@ -284,7 +313,7 @@ export async function fetchNodeCount(
 export async function fetchSettings(): Promise<Partial<AppConfig>> {
     try {
         // 发送 GET 请求获取配置
-        const response = await fetch('/api/settings');
+        const response = await apiFetch('/api/settings');
         if (!response.ok) return {};
 
         return await response.json();
@@ -307,7 +336,7 @@ export async function fetchSettings(): Promise<Partial<AppConfig>> {
 export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
     try {
         // 发送 POST 请求保存配置
-        const response = await fetch('/api/settings', {
+        const response = await apiFetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(settings)
@@ -358,7 +387,7 @@ export async function saveSettings(settings: AppConfig): Promise<ApiResponse> {
 export async function batchUpdateNodes(subscriptionIds: string[]): Promise<ApiResponse> {
     try {
         // 发送 POST 请求批量更新
-        const response = await fetch('/api/batch_update_nodes', {
+        const response = await apiFetch('/api/batch_update_nodes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subscriptionIds })
@@ -399,7 +428,7 @@ export async function testLatency(
 ): Promise<{ success: boolean; latency?: number; message?: string; status?: number }> {
     try {
         // 发送 POST 请求进行延迟测试
-        const response = await fetch('/api/latency_test', {
+        const response = await apiFetch('/api/latency_test', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url })
@@ -441,7 +470,7 @@ export async function exportBackup(): Promise<{
     error?: string;
 }> {
     try {
-        const response = await fetch('/api/backup/export', {
+        const response = await apiFetch('/api/backup/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -483,7 +512,7 @@ export async function importBackup(
     mode: 'overwrite' | 'merge' = 'overwrite'
 ): Promise<ApiResponse> {
     try {
-        const response = await fetch('/api/backup/import', {
+        const response = await apiFetch('/api/backup/import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: backupData, mode })
@@ -523,7 +552,7 @@ export async function validateBackupFile(backupData: unknown): Promise<{
     metadata?: unknown;
 }> {
     try {
-        const response = await fetch('/api/backup/validate', {
+        const response = await apiFetch('/api/backup/validate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: backupData })
@@ -551,7 +580,7 @@ export async function validateBackupFile(backupData: unknown): Promise<{
  */
 export async function createSnapshot(name: string): Promise<ApiResponse & { data?: any }> {
     try {
-        const response = await fetch('/api/backup/snapshot/create', {
+        const response = await apiFetch('/api/backup/snapshot/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name })
@@ -568,7 +597,7 @@ export async function createSnapshot(name: string): Promise<ApiResponse & { data
  */
 export async function fetchSnapshots(): Promise<{ success: boolean; data: any[] }> {
     try {
-        const response = await fetch('/api/backup/snapshot/list');
+        const response = await apiFetch('/api/backup/snapshot/list');
         return await response.json();
     } catch (error) {
         console.error('Failed to fetch snapshot list:', error);
@@ -581,7 +610,7 @@ export async function fetchSnapshots(): Promise<{ success: boolean; data: any[] 
  */
 export async function deleteSnapshot(id: string): Promise<boolean> {
     try {
-        const response = await fetch('/api/backup/snapshot/delete', {
+        const response = await apiFetch('/api/backup/snapshot/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })
@@ -601,7 +630,7 @@ export async function batchDeleteSnapshots(
     ids: string[]
 ): Promise<{ success: boolean; deletedCount?: number; message?: string }> {
     try {
-        const response = await fetch('/api/backup/snapshot/batch_delete', {
+        const response = await apiFetch('/api/backup/snapshot/batch_delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ids })
@@ -621,7 +650,7 @@ export async function restoreSnapshot(
     mode: 'overwrite' | 'merge' = 'overwrite'
 ): Promise<ApiResponse> {
     try {
-        const response = await fetch('/api/backup/snapshot/restore', {
+        const response = await apiFetch('/api/backup/snapshot/restore', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, mode })
@@ -647,7 +676,7 @@ export async function restoreSnapshot(
  */
 export async function sendNotification(message: string): Promise<ApiResponse> {
     try {
-        const response = await fetch('/api/notify', {
+        const response = await apiFetch('/api/notify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message })
@@ -676,7 +705,7 @@ export async function sendNotification(message: string): Promise<ApiResponse> {
  */
 export async function fetchCronHistory(): Promise<{ id: string; timestamp: number; status: 'success' | 'warning' | 'error'; triggerType: string; updatedCount: number; totalCount: number; message: string }[]> {
     try {
-        const response = await fetch('/api/cron/history');
+        const response = await apiFetch('/api/cron/history');
         if (!response.ok) return [];
         const data = (await response.json()) as any;
         return data.history || [];
@@ -690,7 +719,7 @@ export async function fetchCronHistory(): Promise<{ id: string; timestamp: numbe
  */
 export async function clearCronHistory(): Promise<boolean> {
     try {
-        const response = await fetch('/api/cron/history/clear', { method: 'POST' });
+        const response = await apiFetch('/api/cron/history/clear', { method: 'POST' });
         return response.ok;
     } catch {
         return false;
@@ -705,7 +734,7 @@ export async function changePassword(
     oldPassword?: string
 ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
-        const response = await fetch('/api/user/password', {
+        const response = await apiFetch('/api/user/password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ newPassword, oldPassword })
@@ -725,7 +754,7 @@ export async function changePassword(
  */
 export async function fetchCurrentUser(): Promise<any | null> {
     try {
-        const response = await fetch('/api/user/profile');
+        const response = await apiFetch('/api/user/profile');
         if (!response.ok) return null;
         const data = (await response.json()) as any;
         return data.user || null;
@@ -739,7 +768,7 @@ export async function fetchCurrentUser(): Promise<any | null> {
  */
 export async function fetchUsers(): Promise<any[]> {
     try {
-        const response = await fetch('/api/users');
+        const response = await apiFetch('/api/users');
         if (!response.ok) return [];
         const data = (await response.json()) as any;
         return data.data || [];
@@ -757,7 +786,7 @@ export async function createNewUser(
     role: 'admin' | 'user' = 'user'
 ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-        const response = await fetch('/api/users', {
+        const response = await apiFetch('/api/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password, role })
@@ -777,7 +806,7 @@ export async function createNewUser(
  */
 export async function deleteUserAccount(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const response = await fetch('/api/users/delete', {
+        const response = await apiFetch('/api/users/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })

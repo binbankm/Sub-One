@@ -95,7 +95,7 @@ export async function checkAndNotify(sub: Subscription, settings: AppConfig): Pr
                 
                 const message = 
                     `┏━━━━━━━━━━━━━━━━━━━━━┓\n` +
-                    `┃  � 流量预警 ${statusIcon}  ┃\n` +
+                    `┃  📊 流量预警 ${statusIcon}  ┃\n` +
                     `┗━━━━━━━━━━━━━━━━━━━━━┛\n\n` +
                     `📌 *订阅名称*\n` +
                     `\`${sub.name || '未命名'}\`\n\n` +

@@ -70,7 +70,7 @@ async function getCryptoKey(secret: string): Promise<CryptoKey> {
 
 /**
  * 生成安全的会话Token（带HMAC签名）
- * 格式：userId:username:timestamp:random:signature
+ * 格式：encodedUserId:encodedUsername:timestamp:random:signature
  */
 export async function generateSecureToken(
     env: Env,
@@ -82,7 +82,7 @@ export async function generateSecureToken(
     const random = Array.from(randomBytes)
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
-    const message = `${userId}:${username}:${timestamp}:${random}`;
+    const message = `${encodeURIComponent(userId)}:${encodeURIComponent(username)}:${timestamp}:${random}`;
 
     const secret = await getAppSecret(env);
     const key = await getCryptoKey(secret);
@@ -95,6 +95,17 @@ export async function generateSecureToken(
         .join('');
 
     return `${message}:${sigHex}`;
+}
+
+function hexToUint8Array(hex: string): Uint8Array | null {
+    if (!hex || hex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(hex)) {
+        return null;
+    }
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return bytes;
 }
 
 /**
@@ -112,7 +123,7 @@ export async function verifySecureToken(
 
         // 格式：userId:username:timestamp:random:signature（5部分）
         if (parts.length === 5) {
-            const [userId, username, timestampStr, random, providedSig] = parts;
+            const [encodedUserId, encodedUsername, timestampStr, random, providedSig] = parts;
             const timestamp = parseInt(timestampStr, 10);
 
             // 检查过期
@@ -120,26 +131,29 @@ export async function verifySecureToken(
                 return { valid: false };
             }
 
-            // 验证签名
-            const message = `${userId}:${username}:${timestampStr}:${random}`;
+            const sigBytes = hexToUint8Array(providedSig);
+            if (!sigBytes) {
+                return { valid: false };
+            }
 
-            const expectedSig = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
+            // 验证签名（使用 crypto.subtle.verify 进行常量时间校验）
+            const message = `${encodedUserId}:${encodedUsername}:${timestampStr}:${random}`;
+            const isValid = await crypto.subtle.verify(
+                'HMAC',
+                key,
+                sigBytes as BufferSource,
+                encoder.encode(message)
+            );
 
-            const expectedSigHex = Array.from(new Uint8Array(expectedSig))
-                .map((b) => b.toString(16).padStart(2, '0'))
-                .join('');
-
-            // 使用常量时间比较（虽然 JS String 比较很难做到绝对常量时间，但优于直接 ===）
-            if (providedSig === expectedSigHex) {
-                return { valid: true, userId, username };
+            if (isValid) {
+                return {
+                    valid: true,
+                    userId: decodeURIComponent(encodedUserId),
+                    username: decodeURIComponent(encodedUsername)
+                };
             }
             return { valid: false };
         }
-
-        // 旧格式（向后兼容，但使用新 Secret 验证）：timestamp:random:signature（3部分）
-        // 注意：如果你切换了 Secret 生成逻辑，旧 Token 本来就会全部失效，
-        // 所以这里其实很难兼容以前用 'default-secret' 签发的 Token。
-        // 为了安全起见，我们不再支持旧的签名验证，强制用户重新登录。
 
         return { valid: false };
     } catch (e) {
@@ -154,9 +168,10 @@ export async function authMiddleware(
     env: Env
 ): Promise<{ valid: boolean; userId?: string; username?: string }> {
     const cookie = request.headers.get('Cookie');
-    const sessionCookie = cookie?.split(';').find((c) => c.trim().startsWith(`${COOKIE_NAME}=`));
+    const prefix = `${COOKIE_NAME}=`;
+    const sessionCookie = cookie?.split(';').find((c) => c.trim().startsWith(prefix));
     if (!sessionCookie) return { valid: false };
-    const token = sessionCookie.split('=')[1];
+    const token = sessionCookie.trim().slice(prefix.length);
 
     if (!token) return { valid: false };
 

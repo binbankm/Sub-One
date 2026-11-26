@@ -20,12 +20,21 @@ export const useDataStore = defineStore('data', () => {
     // Instantiate domains
     const { config, isInitialized, isLoading, hasUnsavedChanges, updateConfig } = useConfig();
 
+    let pendingSave: { reason: string; showSuccessToast: boolean } | null = null;
+
     // We bind saveData early so domains can use it
     async function saveData(
         reason: string = i18n.global.t('app.stores.data.dataChanged'),
         showSuccessToast: boolean = true
     ): Promise<boolean> {
-        if (isLoading.value) return false;
+        if (isLoading.value) {
+            // 队列记录最新一次保存请求，避免连续快速操作时静默丢写
+            pendingSave = {
+                reason,
+                showSuccessToast: pendingSave ? pendingSave.showSuccessToast || showSuccessToast : showSuccessToast
+            };
+            return true;
+        }
 
         const combinedSubs = [
             ...subscriptions.value,
@@ -45,7 +54,9 @@ export const useDataStore = defineStore('data', () => {
             const response = await api.saveAllData(payload);
 
             if (response.success) {
-                if (showSuccessToast) showToast(`${reason} ${i18n.global.t('app.stores.data.savedSuffix')}`, 'success');
+                if (showSuccessToast && !pendingSave) {
+                    showToast(`${reason} ${i18n.global.t('app.stores.data.savedSuffix')}`, 'success');
+                }
                 hasUnsavedChanges.value = false;
                 return true;
             } else {
@@ -58,6 +69,11 @@ export const useDataStore = defineStore('data', () => {
             return false;
         } finally {
             isLoading.value = false;
+            if (pendingSave) {
+                const next = pendingSave;
+                pendingSave = null;
+                void saveData(next.reason, next.showSuccessToast);
+            }
         }
     }
 

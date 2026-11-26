@@ -618,4 +618,94 @@ describe('P0, P1, P2 Fixes Verification', () => {
             expect(resByQuery.status).toBe(200);
         });
     });
+
+    describe('15. Security & Robustness Fixes', () => {
+        it('should block regular users from PUT/DELETE /api/users, /api/backup/export, and /api/settings POST', async () => {
+            const store = new Map<string, any>();
+            const mockEnv: any = {
+                SUB_ONE_KV: {
+                    get: async (k: string, type?: string) => {
+                        const val = store.get(k);
+                        if (val === undefined) return null;
+                        return type === 'json' ? JSON.parse(val) : val;
+                    },
+                    put: async (k: string, v: string) => { store.set(k, v); },
+                    delete: async (k: string) => { store.delete(k); }
+                }
+            };
+
+            const adminUser = await createUser(mockEnv, 'admin', 'adminPass123', 'admin');
+            const regularUser = await createUser(mockEnv, 'user:colon', 'userPass123', 'user');
+            const { generateSecureToken, verifySecureToken, COOKIE_NAME } = await import('../api/auth');
+
+            // Username with colon should encode/verify cleanly
+            const regularToken = await generateSecureToken(mockEnv, regularUser.id, regularUser.username);
+            const verified = await verifySecureToken(regularToken, mockEnv);
+            expect(verified.valid).toBe(true);
+            expect(verified.username).toBe('user:colon');
+
+            // PUT /api/users as regular user -> 403
+            const resPut = await handleApiRequest(new Request('http://localhost/api/users', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Cookie: `${COOKIE_NAME}=${regularToken}` },
+                body: JSON.stringify({ id: regularUser.id, role: 'admin' })
+            }), mockEnv);
+            expect(resPut.status).toBe(403);
+
+            // DELETE /api/users as regular user -> 403
+            const resDel = await handleApiRequest(new Request(`http://localhost/api/users?id=${adminUser.id}`, {
+                method: 'DELETE',
+                headers: { Cookie: `${COOKIE_NAME}=${regularToken}` }
+            }), mockEnv);
+            expect(resDel.status).toBe(403);
+
+            // POST /api/backup/export as regular user -> 403
+            const resExport = await handleApiRequest(new Request('http://localhost/api/backup/export', {
+                method: 'POST',
+                headers: { Cookie: `${COOKIE_NAME}=${regularToken}` }
+            }), mockEnv);
+            expect(resExport.status).toBe(403);
+
+            // POST /api/settings as regular user -> 403
+            const resSettings = await handleApiRequest(new Request('http://localhost/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Cookie: `${COOKIE_NAME}=${regularToken}` },
+                body: JSON.stringify({ FileName: 'hacked' })
+            }), mockEnv);
+            expect(resSettings.status).toBe(403);
+        });
+
+        it('should return 400 on malformed JSON in /api/node_count and /api/latency_test', async () => {
+            const store = new Map<string, any>();
+            const mockEnv: any = {
+                SUB_ONE_KV: {
+                    get: async (k: string, type?: string) => {
+                        const val = store.get(k);
+                        if (val === undefined) return null;
+                        return type === 'json' ? JSON.parse(val) : val;
+                    },
+                    put: async (k: string, v: string) => { store.set(k, v); },
+                    delete: async (k: string) => { store.delete(k); }
+                }
+            };
+
+            const adminUser = await createUser(mockEnv, 'admin', 'adminPass123', 'admin');
+            const { generateSecureToken, COOKIE_NAME } = await import('../api/auth');
+            const token = await generateSecureToken(mockEnv, adminUser.id, adminUser.username);
+
+            const resNodeCount = await handleApiRequest(new Request('http://localhost/api/node_count', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Cookie: `${COOKIE_NAME}=${token}` },
+                body: '{invalid-json'
+            }), mockEnv);
+            expect(resNodeCount.status).toBe(400);
+
+            const resLatency = await handleApiRequest(new Request('http://localhost/api/latency_test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Cookie: `${COOKIE_NAME}=${token}` },
+                body: '{invalid-json'
+            }), mockEnv);
+            expect(resLatency.status).toBe(400);
+        });
+    });
 });

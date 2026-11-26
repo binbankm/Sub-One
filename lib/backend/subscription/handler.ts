@@ -5,6 +5,7 @@ import { AppConfig, Profile, SubConfig, Subscription } from '../proxy/types';
 import { StorageFactory } from '../services/storage';
 import { getStorageBackendInfo } from '../services/storage-backend';
 import { Env } from '../types';
+import { isSafePublicUrl, safeFetch } from '../utils/common';
 
 // 去除旧的单例
 // const subscriptionParser = new SubscriptionParser();
@@ -44,18 +45,15 @@ async function generateCombinedNodeList(
     // 2. 处理 HTTP 订阅
     const httpSubs = subs.filter((sub) => {
         const url = sub.url || '';
-        return url.toLowerCase().startsWith('http');
+        return url.toLowerCase().startsWith('http') && isSafePublicUrl(url);
     });
     const subPromises = httpSubs.map(async (sub) => {
         try {
-            const response = await fetch(
-                new Request(sub.url, {
-                    headers: { 'User-Agent': userAgent },
-                    redirect: 'follow',
-                    cf: { insecureSkipVerify: true },
-                    signal: AbortSignal.timeout(15000)
-                } as any)
-            );
+            const response = await safeFetch(sub.url, {
+                headers: { 'User-Agent': userAgent },
+                cf: { insecureSkipVerify: true },
+                signal: AbortSignal.timeout(15000)
+            });
 
             if (!response.ok) return [];
             const text = await response.text();

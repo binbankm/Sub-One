@@ -27,8 +27,64 @@ import {
     verifyPassword
 } from '../services/users';
 import { Env } from '../types';
-import { isSafePublicUrl } from '../utils/common';
+import { isSafePublicUrl, parseUserInfoHeader, safeFetch } from '../utils/common';
 import { COOKIE_NAME, SESSION_DURATION, authMiddleware, generateSecureToken } from './auth';
+
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(request: Request): string {
+    return (
+        request.headers.get('cf-connecting-ip') ||
+        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+        'unknown'
+    );
+}
+
+function isLoginRateLimited(ip: string): boolean {
+    const entry = loginAttempts.get(ip);
+    if (!entry) return false;
+    if (Date.now() > entry.resetAt) {
+        loginAttempts.delete(ip);
+        return false;
+    }
+    return entry.count >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordLoginFailure(ip: string): void {
+    const now = Date.now();
+    const entry = loginAttempts.get(ip);
+    if (!entry || now > entry.resetAt) {
+        loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    } else {
+        entry.count += 1;
+    }
+}
+
+function clearLoginFailures(ip: string): void {
+    loginAttempts.delete(ip);
+}
+
+function isHttpsRequest(request: Request): boolean {
+    if (request.url.startsWith('https://')) return true;
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+    return forwardedProto?.split(',')[0].trim().toLowerCase() === 'https';
+}
+
+async function requireAdmin(env: Env, userId?: string): Promise<Response | null> {
+    if (!userId) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+    const users = await getAllUsers(env);
+    const currentUser = users.find((u) => u.id === userId);
+    if (!currentUser || currentUser.role !== 'admin') {
+        return new Response(JSON.stringify({ error: '权限不足，仅管理员可执行此操作' }), {
+            status: 403
+        });
+    }
+    return null;
+}
 
 // const subscriptionParser = new SubscriptionParser();
 
@@ -99,7 +155,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             const user = await createUser(env, username, password, 'admin');
             const token = await generateSecureToken(env, user.id, user.username);
 
-            const isSecure = request.url.startsWith('https://');
+            const isSecure = isHttpsRequest(request);
             const headers = new Headers({ 'Content-Type': 'application/json' });
             const secureFlag = isSecure ? ' Secure;' : '';
             headers.append(
@@ -140,6 +196,14 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         const authResult = await authMiddleware(request, env);
         if (!authResult.valid) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+        }
+        const adminError = await requireAdmin(env, authResult.userId);
+        if (adminError) return adminError;
+        if (!env.SUB_ONE_KV) {
+            return new Response(
+                JSON.stringify({ success: false, message: '未配置 KV 存储绑定，无法执行迁移。' }),
+                { status: 400 }
+            );
         }
         try {
             const oldData = await env.SUB_ONE_KV.get(OLD_KV_KEY, 'json');
@@ -219,6 +283,13 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
     if (path === '/login') {
         if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+        const clientIp = getClientIp(request);
+        if (isLoginRateLimited(clientIp)) {
+            return new Response(
+                JSON.stringify({ error: '登录失败次数过多，请稍后再试' }),
+                { status: 429, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
         try {
             const { username, password } = (await request.json()) as {
                 username?: string;
@@ -235,8 +306,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
             const user = await authenticateUser(env, username, password);
 
             if (user) {
+                clearLoginFailures(clientIp);
                 const token = await generateSecureToken(env, user.id, user.username);
-                const isSecure = request.url.startsWith('https://');
+                const isSecure = isHttpsRequest(request);
                 const headers = new Headers({ 'Content-Type': 'application/json' });
                 const secureFlag = isSecure ? ' Secure;' : '';
                 headers.append(
@@ -252,6 +324,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 );
             }
 
+            recordLoginFailure(clientIp);
             return new Response(JSON.stringify({ error: '用户名或密码错误' }), { status: 401 });
         } catch (e: any) {
             console.error('[API Error /login]', e);
@@ -281,6 +354,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
         case '/cron/history/clear': {
             if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+            const adminError = await requireAdmin(env, authResult.userId);
+            if (adminError) return adminError;
             try {
                 const storage = await getStorage(env);
                 await storage.put(KV_KEY_CRON_LOGS, []);
@@ -293,7 +368,7 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         }
 
         case '/logout': {
-            const isSecure = request.url.startsWith('https://');
+            const isSecure = isHttpsRequest(request);
             const headers = new Headers({ 'Content-Type': 'application/json' });
             const secureFlag = isSecure ? ' Secure;' : '';
             headers.append(
@@ -515,6 +590,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     });
                 }
             } else if (request.method === 'PUT') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const body = (await request.json()) as {
                         id?: string;
@@ -547,6 +624,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     return new Response(JSON.stringify({ error: e?.message || '更新用户失败' }), { status: 500 });
                 }
             } else if (request.method === 'DELETE') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     let id = url.searchParams.get('id');
                     if (!id) {
@@ -675,17 +754,27 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/node_count': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
-            const {
-                url: subUrl,
-                content: rawContent,
-                returnNodes = false,
-                exclude = ''
-            } = (await request.json()) as {
+            let body: {
+                id?: string;
                 url?: string;
                 content?: string;
                 returnNodes?: boolean;
                 exclude?: string;
             };
+            try {
+                body = (await request.json()) as typeof body;
+            } catch {
+                return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+                    status: 400
+                });
+            }
+            const {
+                id: subId,
+                url: subUrl,
+                content: rawContent,
+                returnNodes = false,
+                exclude = ''
+            } = body;
 
             // 验证参数：必须提供 url 或 content 其中之一（对 url 执行 SSRF 安全校验）
             if (
@@ -734,28 +823,19 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 }
 
                 // 情况二：通过 URL 下载（合并单次请求，提升50%抓取速度并防止机场防刷限制）
-                const response = await fetch(new Request(subUrl!, {
+                const response = await safeFetch(subUrl!, {
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                    redirect: 'follow',
                     cf: { insecureSkipVerify: true },
                     signal: AbortSignal.timeout(15000)
-                } as any));
+                });
 
                 if (response.ok) {
                     // 1. 提取流量信息
-                    const userInfoHeader = response.headers.get('subscription-userinfo');
-                    if (userInfoHeader) {
-                        const info: Partial<SubscriptionUserInfo> = {};
-                        userInfoHeader.split(';').forEach((part) => {
-                            const [key, value] = part.trim().split('=');
-                            if (key && value) {
-                                const numValue = Number(value);
-                                if (!isNaN(numValue)) {
-                                    (info as any)[key] = numValue;
-                                }
-                            }
-                        });
-                        result.userInfo = info;
+                    const parsedInfo = parseUserInfoHeader(
+                        response.headers.get('subscription-userinfo')
+                    );
+                    if (parsedInfo) {
+                        result.userInfo = parsedInfo;
                     }
 
                     // 2. 处理并解析节点数据
@@ -794,7 +874,9 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     const storage = await getStorage(env);
                     // 重新获取最新数据以减少竞争冲突
                     const latestSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
-                    const subToUpdate = latestSubs.find((s) => s.url === subUrl);
+                    const subToUpdate = subId
+                        ? latestSubs.find((s) => s.id === subId)
+                        : latestSubs.find((s) => s.url === subUrl);
 
                     if (subToUpdate) {
                         subToUpdate.nodeCount = result.count;
@@ -832,7 +914,10 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 const storage = await getStorage(env);
                 const allSubs = (await storage.get<Subscription[]>(KV_KEY_SUBS)) || [];
                 const subsToUpdate = allSubs.filter(
-                    (sub) => subscriptionIds.includes(sub.id) && sub.url.startsWith('http')
+                    (sub) =>
+                        subscriptionIds.includes(sub.id) &&
+                        sub.url.startsWith('http') &&
+                        isSafePublicUrl(sub.url)
                 );
 
                 console.log(
@@ -842,28 +927,19 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 // 并行更新所有订阅的节点信息
                 const updatePromises = subsToUpdate.map(async (sub) => {
                     try {
-                        const response = await fetch(
-                            new Request(sub.url, {
-                                headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                                redirect: 'follow',
-                                cf: { insecureSkipVerify: true },
-                                signal: AbortSignal.timeout(15000)
-                            } as any)
-                        );
+                        const response = await safeFetch(sub.url, {
+                            headers: { 'User-Agent': GLOBAL_USER_AGENT },
+                            cf: { insecureSkipVerify: true },
+                            signal: AbortSignal.timeout(15000)
+                        });
 
                         if (response.ok) {
                             // 更新流量信息
-                            const userInfoHeader = response.headers.get('subscription-userinfo');
-                            if (userInfoHeader) {
-                                const info: Partial<SubscriptionUserInfo> = {};
-                                userInfoHeader.split(';').forEach((part) => {
-                                    const [key, value] = part.trim().split('=');
-                                    if (key && value)
-                                        (info as any)[key] = /^\d+$/.test(value)
-                                            ? Number(value)
-                                            : value;
-                                });
-                                sub.userInfo = info as SubscriptionUserInfo;
+                            const parsedInfo = parseUserInfoHeader(
+                                response.headers.get('subscription-userinfo')
+                            );
+                            if (parsedInfo) {
+                                sub.userInfo = parsedInfo as SubscriptionUserInfo;
                             }
 
                             // 更新节点数量
@@ -989,6 +1065,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 }
             }
             if (request.method === 'POST') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const newSettings = (await request.json()) as any;
                     const storage = await getStorage(env);
@@ -1043,7 +1121,15 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/latency_test': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
-            const { url: testUrl } = (await request.json()) as any;
+            let body: { url?: string };
+            try {
+                body = (await request.json()) as { url?: string };
+            } catch {
+                return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+                    status: 400
+                });
+            }
+            const { url: testUrl } = body;
 
             if (
                 !testUrl ||
@@ -1061,13 +1147,12 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-                const response = await fetch(testUrl, {
+                const response = await safeFetch(testUrl, {
                     method: 'HEAD', // Try HEAD first for speed
                     headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                    redirect: 'follow',
                     signal: controller.signal,
                     cf: { insecureSkipVerify: true }
-                } as any);
+                });
 
                 clearTimeout(timeoutId);
                 const endTime = Date.now();
@@ -1088,13 +1173,12 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
                     const controllerGet = new AbortController();
                     const timeoutIdGet = setTimeout(() => controllerGet.abort(), 10000);
 
-                    const responseGet = await fetch(testUrl, {
+                    const responseGet = await safeFetch(testUrl, {
                         method: 'GET',
                         headers: { 'User-Agent': GLOBAL_USER_AGENT },
-                        redirect: 'follow',
                         signal: controllerGet.signal,
                         cf: { insecureSkipVerify: true }
-                    } as any);
+                    });
 
                     clearTimeout(timeoutIdGet);
                     const endTimeGet = Date.now();
@@ -1154,6 +1238,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
 
             // POST: 切换存储后端
             if (request.method === 'POST') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const { backend } = (await request.json()) as { backend?: string };
 
@@ -1209,6 +1295,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/storage/migrate': {
             // POST: 执行数据迁移
             if (request.method === 'POST') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const { targetBackend } = (await request.json()) as { targetBackend?: string };
 
@@ -1267,6 +1355,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/export': {
             // 导出所有数据为备份文件
             if (request.method === 'POST') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const storage = await getStorage(env);
                     const backendInfo = await getStorageBackendInfo(env);
@@ -1306,6 +1396,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/import': {
             // 导入备份数据
             if (request.method === 'POST') {
+                const adminError = await requireAdmin(env, authResult.userId);
+                if (adminError) return adminError;
                 try {
                     const { data: backupData, mode } = (await request.json()) as {
                         data: any;
@@ -1394,6 +1486,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/snapshot/create': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
+            const adminError = await requireAdmin(env, authResult.userId);
+            if (adminError) return adminError;
             try {
                 const { name } = (await request.json()) as { name?: string };
                 const storage = await getStorage(env);
@@ -1448,6 +1542,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/snapshot/batch_delete': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
+            const adminError = await requireAdmin(env, authResult.userId);
+            if (adminError) return adminError;
             try {
                 const { ids } = (await request.json()) as { ids: string[] };
                 if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -1478,6 +1574,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/snapshot/delete': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
+            const adminError = await requireAdmin(env, authResult.userId);
+            if (adminError) return adminError;
             try {
                 const { id } = (await request.json()) as { id: string };
                 if (!id)
@@ -1505,6 +1603,8 @@ export async function handleApiRequest(request: Request, env: Env): Promise<Resp
         case '/backup/snapshot/restore': {
             if (request.method !== 'POST')
                 return new Response('Method Not Allowed', { status: 405 });
+            const adminError = await requireAdmin(env, authResult.userId);
+            if (adminError) return adminError;
             try {
                 const { id, mode } = (await request.json()) as { id: string; mode?: ImportMode };
                 if (!id)

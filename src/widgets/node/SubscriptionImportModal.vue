@@ -26,7 +26,8 @@ const props = withDefaults(
         initialMode?: 'url' | 'text';
     }>(),
     {
-        initialMode: 'url'
+        initialMode: 'url',
+        onImportSuccess: undefined
     }
 );
 

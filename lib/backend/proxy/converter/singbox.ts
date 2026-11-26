@@ -105,7 +105,7 @@ export class SingboxConverter extends BaseConverter {
                         (outbound as any).__extra = stOutbound;
                     }
                     break;
-                case 'ssr':
+                case 'ssr': {
                     outbound.method = node.cipher;
                     outbound.password = node.password;
                     if (node.protocol) outbound.protocol = node.protocol;
@@ -115,7 +115,8 @@ export class SingboxConverter extends BaseConverter {
                     const ssrObfsParam = node['obfs-param'] || node.obfs_param;
                     if (ssrObfsParam) outbound.obfs_param = ssrObfsParam;
                     break;
-                case 'ssh':
+                }
+                case 'ssh': {
                     if (node.username) outbound.user = node.username;
                     if (node.password) outbound.password = node.password;
                     const sshPrivateKey = node['private-key'] || node.privateKey;
@@ -136,6 +137,7 @@ export class SingboxConverter extends BaseConverter {
                     if (node['host-key-algorithms'])
                         outbound.host_key_algorithms = node['host-key-algorithms'];
                     break;
+                }
                 case 'naive':
                     outbound.username = node.username;
                     outbound.password = node.password;
@@ -302,7 +304,7 @@ export class SingboxConverter extends BaseConverter {
                     if (node['disable-mtu-discovery']) outbound.disable_mtu_discovery = true;
                     this.appendTLS(outbound, node);
                     break;
-                case 'tuic':
+                case 'tuic': {
                     outbound.uuid = node.uuid;
                     outbound.password = node.password || node.token;
                     const congestion = node['congestion-controller'] || node.congestion_control;
@@ -320,6 +322,7 @@ export class SingboxConverter extends BaseConverter {
                     if (node['udp-over-stream']) outbound.udp_over_stream = true;
                     this.appendTLS(outbound, node);
                     break;
+                }
                 case 'wireguard': {
                     const localAddr: string[] = [];
                     const ipWithCidr = getWireGuardAddressWithCIDR(node, 'ipv4');

@@ -58,7 +58,7 @@ export function useSubscriptions(
 
         sub.isUpdating = true;
         try {
-            const result = await api.fetchNodeCount(sub.url);
+            const result = await api.fetchNodeCount(sub.url, sub.id);
             if (result && typeof result.count === 'number') {
                 sub.nodeCount = result.count;
                 if (result.userInfo) {
